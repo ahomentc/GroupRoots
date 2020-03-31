@@ -15,6 +15,7 @@ struct GroupPost: Equatable {
     let user: User
     let group: Group
     let imageUrl: String
+    let videoUrl: String
     let caption: String
     let creationDate: Date
     
@@ -25,6 +26,7 @@ struct GroupPost: Equatable {
         self.group = group
         self.user = user ?? User(uid: "", dictionary: ["" : ""])
         self.imageUrl = dictionary["imageUrl"] as? String ?? ""
+        self.videoUrl = dictionary["videoUrl"] as? String ?? ""
         self.caption = dictionary["caption"] as? String ?? ""
         self.id = dictionary["id"] as? String ?? ""
         

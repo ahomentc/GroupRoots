@@ -35,6 +35,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     var viewersForPosts = [String: [User]]()
     var numViewsForPost = [String: Int]()
     var numCommentsForPosts = [String: Int]()
+    var syncDone = false
     
     var groupPosts: [GroupPost]? {
         didSet {
@@ -61,9 +62,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
                                 Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
                                     sync.leave()
                                     self.numViewsForPost[groupPost.id] = views_count
-                                    DispatchQueue.main.async{
-                                        self.collectionView.reloadData()
-                                    }
+                                    self.reloadGroupData()
                                     if viewer_ids.count > 0 {
                                         var viewers = [User]()
                                         let viewersSync = DispatchGroup()
@@ -102,9 +101,8 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
                 }
             })
             sync.notify(queue: .main) {
-                DispatchQueue.main.async{
-                    self.collectionView.reloadData()
-                }
+                self.syncDone = true
+                self.reloadGroupData()
             }
         }
     }
@@ -117,17 +115,13 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     
     var totalPostsNum: Int? {
         didSet {
-            DispatchQueue.main.async{
-                self.collectionView.reloadData()
-            }
+            reloadGroupData()
         }
     }
     
     var groupPostsIds2D: [String]? {
         didSet {
-            DispatchQueue.main.async{
-                self.collectionView.reloadData()
-            }
+            reloadGroupData()
         }
     }
     
@@ -149,6 +143,17 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         setupViews()
+    }
+    
+    func reloadGroupData(){
+        guard totalPostsNum != nil else { return }
+        guard groupPostsIds2D != nil else { return }
+        guard numViewsForPost != nil else { return }
+        if !syncDone { return }
+        
+        DispatchQueue.main.async{
+            self.collectionView.reloadData()
+        }
     }
     
     func setupViews() {
@@ -221,6 +226,17 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
             }
         }
     }
+    
+    func pauseVisibleVideo() {
+        collectionView.visibleCells.forEach { cell in
+            // TODO: write logic to stop the video before it begins scrolling
+            (cell as! FeedPostCell).player.pause()
+        }
+    }
+    
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        self.pauseVisibleVideo()
+    }
 
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         let endPos = scrollView.contentOffset.x
@@ -232,6 +248,10 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         if !decelerate {
             self.stoppedScrolling(endPos: endPos)
         }
+//        collectionView.visibleCells.forEach { cell in
+//           //  TODO: write logic to start the video after it ends scrolling
+//            (cell as! FeedPostCell).player.playFromCurrentTime()
+//        }
     }
 
     func stoppedScrolling(endPos: CGFloat) {
@@ -325,6 +345,9 @@ extension MyCell: UICollectionViewDelegateFlowLayout {
 extension MyCell: FeedPostCellHeaderDelegate {
     
     func didTapGroup() {
+        collectionView.visibleCells.forEach { cell in
+            (cell as! FeedPostCell).playButton.isHidden = false
+        }
         guard let group = groupPosts?[0].group else { return }
         delegate?.didTapGroup(group: group)
     }

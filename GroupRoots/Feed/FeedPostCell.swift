@@ -8,6 +8,7 @@
 
 import UIKit
 import Firebase
+import Player
 
 protocol InnerPostCellDelegate {
     func didTapComment(groupPost: GroupPost)
@@ -46,6 +47,16 @@ class FeedPostCell: UICollectionViewCell {
             setupViewsButton(viewsCount: numViewsForPost!)
         }
     }
+    
+    lazy var playButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(#imageLiteral(resourceName: "play2").withRenderingMode(.alwaysOriginal), for: .normal)
+//        button.addTarget(self, action: #selector(showViewers), for: .touchUpInside)
+        button.layer.zPosition = 10;
+        button.isEnabled = false
+        button.isHidden = true
+        return button
+    }()
     
     private lazy var postedByLabel: UILabel = {
         let label = UILabel()
@@ -106,6 +117,7 @@ class FeedPostCell: UICollectionViewCell {
         let button = UIButton(type: .system)
         button.setImage(#imageLiteral(resourceName: "eye").withRenderingMode(.alwaysOriginal), for: .normal)
         button.addTarget(self, action: #selector(showViewers), for: .touchUpInside)
+        button.layer.zPosition = 4;
         button.isHidden = true
         return button
     }()
@@ -132,6 +144,7 @@ class FeedPostCell: UICollectionViewCell {
         label.setTitleColor(.white, for: .normal)
         label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         label.setTitle("Show More", for: .normal)
+        label.layer.zPosition = 4;
         label.contentHorizontalAlignment = .left
         label.addTarget(self, action: #selector(handleComment), for: .touchUpInside)
         label.isUserInteractionEnabled = true
@@ -143,6 +156,7 @@ class FeedPostCell: UICollectionViewCell {
         label.setTitleColor(.white, for: .normal)
         label.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: UIFont.Weight.medium)
         label.setTitle("Comment", for: .normal)
+        label.layer.zPosition = 4;
         label.contentHorizontalAlignment = .left
         label.addTarget(self, action: #selector(handleComment), for: .touchUpInside)
         label.isUserInteractionEnabled = true
@@ -158,6 +172,8 @@ class FeedPostCell: UICollectionViewCell {
         iv.backgroundColor = UIColor(white: 0, alpha: 1)
         return iv
     }()
+    
+    var player = Player()
     
     private let coverView: UIView = {
         let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 250))
@@ -246,17 +262,23 @@ class FeedPostCell: UICollectionViewCell {
         photoImageView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         photoImageView.center = CGPoint(x: UIScreen.main.bounds.width  / 2, y: UIScreen.main.bounds.height / 2)
         insertSubview(photoImageView, at: 0)
+        photoImageView.isHidden = false
+        
+        insertSubview(player.view, at: 0)
+        player.view.isHidden = true
+        
+        addSubview(playButton)
+        playButton.anchor(top: topAnchor, left: leftAnchor, bottom:bottomAnchor, right: rightAnchor, paddingLeft: 10)
+                
         configurePost()
     }
     
     private func configurePost() {
         guard let groupPost = groupPost else { return }
+        
         setupAttributedCaption(groupPost: groupPost)
         setupGroupPoster(groupPost: groupPost)
         setupTimeLabel(groupPost: groupPost)
-        photoImageView.loadImageWithCompletion(urlString: groupPost.imageUrl, completion: { () in
-            self.setImageDimensions()
-        })
         
         self.viewButton.isHidden = true
         let attributedText = NSAttributedString(string: "", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 17), NSAttributedString.Key.foregroundColor: UIColor.white])
@@ -265,8 +287,25 @@ class FeedPostCell: UICollectionViewCell {
         // need to set dimensions again in case the image is already loaded
         setImageDimensions()
         delegate?.didView(groupPost: groupPost)
+        
+        // is a picture
+        if groupPost.videoUrl == "" {
+            photoImageView.isHidden = false
+            self.player.view.isHidden = true
+            photoImageView.loadImageWithCompletion(urlString: groupPost.imageUrl, completion: { () in
+                self.setImageDimensions()
+            })
+        }
+        else {
+            photoImageView.isHidden = true
+            self.player.view.isHidden = false
+            self.player.url = URL(string: groupPost.videoUrl)
+            self.player.playbackLoops = true
+            self.player.playerView.playerBackgroundColor = .clear
+            self.player.playFromCurrentTime()
+        }
     }
-    
+
     private func setImageDimensions(){
         let width = self.photoImageView.image?.size.width
         let height = self.photoImageView.image?.size.height
@@ -288,18 +327,43 @@ class FeedPostCell: UICollectionViewCell {
         }
     }
     
+//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+//        if let touch = touches.first {
+//            // could also use touches for going to user profile maybe
+//            let position = touch.location(in: self.photoImageView)
+//            if position.y > 0 {
+//                if position.x > self.photoImageView.frame.size.width / 2 {
+//                    delegate?.goToImage(for: self, isRight: true)
+//                }
+//                else {
+//                    delegate?.goToImage(for: self, isRight: false)
+//                }
+//            }
+//        }
+//    }
+    
+//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+//        if let touch = touches.first {
+//            if self.player.playbackState == .paused {
+//                self.player.playFromCurrentTime()
+//            }
+//            else if self.player.playbackState == .playing {
+//                self.player.pause()
+//            }
+//        }
+//    }
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if let touch = touches.first {
-            // could also use touches for going to user profile maybe
-            let position = touch.location(in: self.photoImageView)
-            if position.y > 0 {
-                if position.x > self.photoImageView.frame.size.width / 2 {
-                    delegate?.goToImage(for: self, isRight: true)
-                }
-                else {
-                    delegate?.goToImage(for: self, isRight: false)
-                }
-            }
+        if touches.first != nil {
+            self.player.pause()
+            self.playButton.isHidden = true
+        }
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if touches.first != nil {
+            self.player.playFromCurrentTime()
+            self.playButton.isHidden = true
         }
     }
     
@@ -375,16 +439,19 @@ class FeedPostCell: UICollectionViewCell {
     }
     
     @objc private func handleComment() {
+        playButton.isHidden = false
         guard let groupPost = groupPost else { return }
         delegate?.didTapComment(groupPost: groupPost)
     }
     
     @objc private func handleDidTapCommentUser() {
+        playButton.isHidden = false
         guard let commentUser = commentUser else { return }
         delegate?.didTapUser(user: commentUser)
     }
     
     @objc private func handleDidTapPostGroup() {
+        playButton.isHidden = false
         guard let groupPost = groupPost else { return }
         delegate?.didTapGroup(group: groupPost.group)
     }

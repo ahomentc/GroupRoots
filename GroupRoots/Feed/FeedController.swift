@@ -51,7 +51,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
-        
+//        handleRefresh()
         self.configureNavBar()
     }
     
@@ -272,6 +272,13 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     @objc private func handleRefresh() {
         showEmptyStateViewIfNeeded()
         fetchBaseGroupPosts()
+    }
+    
+    override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        collectionView.visibleCells.forEach { cell in
+            // TODO: write logic to stop the video before it begins scrolling
+            (cell as! MyCell).pauseVisibleVideo()
+        }
     }
     
     override func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {

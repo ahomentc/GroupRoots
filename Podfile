@@ -23,6 +23,7 @@ target 'GroupRoots' do
 
   pod "BSImagePicker", "~> 2.8"
   pod 'YPImagePicker'
+  pod "Player", "~> 0.13.2"
 
   pod "UPCarouselFlowLayout"
 
