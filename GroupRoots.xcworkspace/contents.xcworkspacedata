@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:/Users/andrei/GroupRoots/GroupRoots/GoogleService-Info.plist">
+   </FileRef>
+   <Group
+      location = "group:InstagramClone/Assets.xcassets/icon"
+      name = "icon">
+      <FileRef
+         location = "group:29_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:180_4.png">
+      </FileRef>
+      <FileRef
+         location = "group:1024.png">
+      </FileRef>
+      <FileRef
+         location = "group:76.png">
+      </FileRef>
+      <FileRef
+         location = "group:29_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:60.png">
+      </FileRef>
+      <FileRef
+         location = "group:1024_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:180_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:180_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:58.png">
+      </FileRef>
+      <FileRef
+         location = "group:1024_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:167.png">
+      </FileRef>
+      <FileRef
+         location = "group:76_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:29.png">
+      </FileRef>
+      <FileRef
+         location = "group:76_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:120_4.png">
+      </FileRef>
+      <FileRef
+         location = "group:167_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:167_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:120_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:120_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:120.png">
+      </FileRef>
+      <FileRef
+         location = "group:20.png">
+      </FileRef>
+      <FileRef
+         location = "group:20_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:58_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:58_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:20_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:152_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:152_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:87_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:87_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:80_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:180.png">
+      </FileRef>
+      <FileRef
+         location = "group:40_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:untitled.png">
+      </FileRef>
+      <FileRef
+         location = "group:40_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:80_2.png">
+      </FileRef>
+      <FileRef
+         location = "group:80.png">
+      </FileRef>
+      <FileRef
+         location = "group:40.png">
+      </FileRef>
+      <FileRef
+         location = "group:87.png">
+      </FileRef>
+      <FileRef
+         location = "group:152.png">
+      </FileRef>
+      <FileRef
+         location = "group:60_3.png">
+      </FileRef>
+      <FileRef
+         location = "group:60_2.png">
+      </FileRef>
+   </Group>
+   <FileRef
+      location = "group:/Users/andrei/GroupRoots/GroupRoots.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Pods/Pods.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:GroupRoots.xcodeproj">
+   </FileRef>
+</Workspace>
