@@ -45,10 +45,10 @@ class UserSearchCell: UICollectionViewCell {
         addSubview(usernameLabel)
         usernameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 8)
         
-        let separatorView = UIView()
-        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
-        addSubview(separatorView)
-        separatorView.anchor(left: usernameLabel.leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 0.5)
+//        let separatorView = UIView()
+//        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
+//        addSubview(separatorView)
+//        separatorView.anchor(left: usernameLabel.leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 0.5)
     }
     
     private func configureCell() {

@@ -15,7 +15,6 @@ target 'GroupRoots' do
   pod 'Firebase/Storage'
   pod 'Firebase/Core'
   pod 'Firebase/Analytics'
-  pod 'Firebase/DynamicLinks'
 
   pod 'Firebase/Messaging'
   

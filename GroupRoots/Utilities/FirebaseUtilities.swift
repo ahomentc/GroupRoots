@@ -28,6 +28,7 @@ extension Auth {
                         })
                     } else {
                         self.uploadUser(withUID: uid, username: username) {
+                            print("7")
                             completion(nil)
                         }
                     }
@@ -840,6 +841,33 @@ extension Database {
         }
     }
     
+    func groupnameExists(groupname: String, completion: @escaping (Bool) -> ()) {
+        Database.database().reference().child("groupnames").child(groupname).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard (snapshot.value as? String) != nil else {
+                completion(false)
+                return
+            }
+            completion(true)
+        }) { (err) in
+            print("Failed to check groupname in database:", err)
+        }
+    }
+    
+    func searchForGroup(groupname: String, completion: @escaping (Group) -> ()) {
+        Database.database().reference().child("groupnames").child(groupname).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard let groupid = snapshot.value as? String else { return }
+            Database.database().reference().child("groups").child(groupid).observeSingleEvent(of: .value, with: { (snapshot) in
+                guard let groupDictionary = snapshot.value as? [String: Any] else { return }
+                let group = Group(groupId: groupid, dictionary: groupDictionary)
+                completion(group)
+            }) { (err) in
+                print("Failed to fetch user from database:", err)
+            }
+        }) { (err) in
+            print("Failed to fetch user from database:", err)
+        }
+    }
+    
     //MARK: GroupMembership
     func isInGroup(groupId: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
@@ -885,78 +913,105 @@ extension Database {
         guard let groupId = userGroupRef.key else { return }
         let isPrivateString = isPrivate ? "true" : "false"
         // check if the image is nul or not
-        if let image = image {
-            Storage.storage().uploadGroupProfileImage(image: image, completion: { (groupProfileImageUrl) in
-                let values = ["id": groupId, "groupname": groupname, "bio": bio,"imageUrl": groupProfileImageUrl, "imageWidth": image.size.width, "imageHeight": image.size.height, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
-                userGroupRef.updateChildValues(values) { (err, ref) in
-                    if let err = err {
-                        print("Failed to save post to database", err)
-                        completion(err)
-                        return
-                    }
-                    completion(nil)
-                }
-            })
-        }
-        else{
-            let values = ["id": groupId, "groupname": groupname, "bio": bio, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
-            userGroupRef.updateChildValues(values) { (err, ref) in
-                if let err = err {
-                    print("Failed to save post to database", err)
-                    completion(err)
-                    return
-                }
-                completion(nil)
-            }
-        }
-    
-        // connect user to group as a member
-        // add uid to group
-        let values = [uid: 1]
-        Database.database().reference().child("groups").child(groupId).child("members").updateChildValues(values) { (err, ref) in
-            if let err = err {
-                completion(err)
-                return
-            }
-            // add groupId to user
-            let values = [groupId: 1]
-            Database.database().reference().child("users").child(uid).child("groups").updateChildValues(values) { (err, ref) in
-                if let err = err {
-                    completion(err)
-                    return
-                }
-                // add invitation code with groupId as value
-                // increment value under groupId when user signs up with it until gets to 100 users
-                // ^^ but do this later
-                let values = [groupId: 1]
-                let code = String(groupId.suffix(6))
-                let invitationRef = Database.database().reference().child("inviteCodes").child(code)
-                invitationRef.updateChildValues(values) { (err, ref) in
-                    if let err = err {
-                        completion(err)
-                        return
-                    }
-                    
-                    // auto subscribe user to group
-                    Database.database().addToGroupFollowers(groupId: groupId, withUID: uid) { (err) in
-                        if err != nil {
-                            completion(err);return
-                        }
-                        Database.database().addToGroupsFollowing(groupId: groupId, withUID: uid) { (err) in
-                            if err != nil {
-                                completion(err);return
+        Database.database().groupnameExists(groupname: groupname, completion: { (exists) in
+            let sync = DispatchGroup()
+            sync.enter()
+            if !exists{
+                if let image = image {
+                    Storage.storage().uploadGroupProfileImage(image: image, completion: { (groupProfileImageUrl) in
+                        let values = ["id": groupId, "groupname": groupname, "bio": bio,"imageUrl": groupProfileImageUrl, "imageWidth": image.size.width, "imageHeight": image.size.height, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
+                        userGroupRef.updateChildValues(values) { (err, ref) in
+                            if let err = err {
+                                print("Failed to save post to database", err)
+                                completion(err)
+                                return
                             }
-                            Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: uid, completion: { (err) in
-                                if err != nil {
-                                    completion(err);return
+                            let values_inverted = [groupname: groupId]
+                            Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
+                                if let err = err {
+                                    print("Failed to upload user to database:", err)
+                                    return
                                 }
-                                completion(nil)
+                                sync.leave()
                             })
                         }
+                    })
+                }
+                else{
+                    let values = ["id": groupId, "groupname": groupname, "bio": bio, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
+                    userGroupRef.updateChildValues(values) { (err, ref) in
+                        if let err = err {
+                            print("Failed to save post to database", err)
+                            completion(err)
+                            return
+                        }
+                        let values_inverted = [groupname: groupId]
+                        Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
+                            if let err = err {
+                                print("Failed to upload user to database:", err)
+                                return
+                            }
+                            sync.leave()
+                        })
+                    }
+                }
+            
+                sync.notify(queue: .main) {
+                    // connect user to group as a member
+                    // add uid to group
+                    let values = [uid: 1]
+                    Database.database().reference().child("groups").child(groupId).child("members").updateChildValues(values) { (err, ref) in
+                        if let err = err {
+                            completion(err)
+                            return
+                        }
+                        // add groupId to user
+                        let values = [groupId: 1]
+                        Database.database().reference().child("users").child(uid).child("groups").updateChildValues(values) { (err, ref) in
+                            if let err = err {
+                                completion(err)
+                                return
+                            }
+                            // add invitation code with groupId as value
+                            // increment value under groupId when user signs up with it until gets to 100 users
+                            // ^^ but do this later
+                            let values = [groupId: 1]
+                            let code = String(groupId.suffix(6))
+                            let invitationRef = Database.database().reference().child("inviteCodes").child(code)
+                            invitationRef.updateChildValues(values) { (err, ref) in
+                                if let err = err {
+                                    completion(err)
+                                    return
+                                }
+                                
+                                // auto subscribe user to group
+                                Database.database().addToGroupFollowers(groupId: groupId, withUID: uid) { (err) in
+                                    if err != nil {
+                                        completion(err);return
+                                    }
+                                    Database.database().addToGroupsFollowing(groupId: groupId, withUID: uid) { (err) in
+                                        if err != nil {
+                                            completion(err);return
+                                        }
+                                        Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: uid, completion: { (err) in
+                                            if err != nil {
+                                                completion(err);return
+                                            }
+                                            completion(nil)
+                                        })
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
-        }
+            else {
+                let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Groupname Taken"])
+                completion(error)
+                return
+            }
+        })
     }
     
     func joinGroup(groupId: String, completion: @escaping (Error?) -> ()) {

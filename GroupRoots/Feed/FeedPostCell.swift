@@ -9,6 +9,7 @@
 import UIKit
 import Firebase
 import Player
+import AVFoundation
 
 protocol InnerPostCellDelegate {
     func didTapComment(groupPost: GroupPost)
@@ -18,6 +19,7 @@ protocol InnerPostCellDelegate {
     func didView(groupPost: GroupPost)
     func didTapViewers(groupPost: GroupPost)
     func goToImage(for cell: FeedPostCell, isRight: Bool)
+    func requestPlay(for cell: FeedPostCell)
 }
 
 class FeedPostCell: UICollectionViewCell {
@@ -48,15 +50,16 @@ class FeedPostCell: UICollectionViewCell {
         }
     }
     
-    lazy var playButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(#imageLiteral(resourceName: "play2").withRenderingMode(.alwaysOriginal), for: .normal)
-//        button.addTarget(self, action: #selector(showViewers), for: .touchUpInside)
-        button.layer.zPosition = 10;
-        button.isEnabled = false
-        button.isHidden = true
-        return button
-    }()
+    var isScrolling: Bool? {
+        didSet {
+            configurePost()
+        }
+    }
+    var isScrollingVertically: Bool? {
+        didSet {
+            configurePost()
+        }
+    }
     
     private lazy var postedByLabel: UILabel = {
         let label = UILabel()
@@ -266,15 +269,13 @@ class FeedPostCell: UICollectionViewCell {
         
         insertSubview(player.view, at: 0)
         player.view.isHidden = true
-        
-        addSubview(playButton)
-        playButton.anchor(top: topAnchor, left: leftAnchor, bottom:bottomAnchor, right: rightAnchor, paddingLeft: 10)
-                
-        configurePost()
+                        
     }
     
     private func configurePost() {
         guard let groupPost = groupPost else { return }
+        guard let isScrollingVertically = isScrollingVertically else { return }
+        guard let isScrolling = isScrolling else { return }
         
         setupAttributedCaption(groupPost: groupPost)
         setupGroupPoster(groupPost: groupPost)
@@ -287,11 +288,13 @@ class FeedPostCell: UICollectionViewCell {
         // need to set dimensions again in case the image is already loaded
         setImageDimensions()
         delegate?.didView(groupPost: groupPost)
-        
         // is a picture
         if groupPost.videoUrl == "" {
             photoImageView.isHidden = false
             self.player.view.isHidden = true
+            self.player.url = URL(string: "")
+            self.player.pause()
+            self.player.muted = true
             photoImageView.loadImageWithCompletion(urlString: groupPost.imageUrl, completion: { () in
                 self.setImageDimensions()
             })
@@ -301,8 +304,16 @@ class FeedPostCell: UICollectionViewCell {
             self.player.view.isHidden = false
             self.player.url = URL(string: groupPost.videoUrl)
             self.player.playbackLoops = true
+            self.player.muted = false
             self.player.playerView.playerBackgroundColor = .clear
-            self.player.playFromCurrentTime()
+            do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
+            
+//            print(self.player.url)
+//            if !isScrollingVertically && !isScrolling && (self.player.playbackState == .stopped || self.player.playbackState == .paused) {
+//                print(self.player.url)
+//                self.player.playFromCurrentTime()
+//            }
+            self.delegate?.requestPlay(for: self)
         }
     }
 
@@ -327,43 +338,17 @@ class FeedPostCell: UICollectionViewCell {
         }
     }
     
-//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-//        if let touch = touches.first {
-//            // could also use touches for going to user profile maybe
-//            let position = touch.location(in: self.photoImageView)
-//            if position.y > 0 {
-//                if position.x > self.photoImageView.frame.size.width / 2 {
-//                    delegate?.goToImage(for: self, isRight: true)
-//                }
-//                else {
-//                    delegate?.goToImage(for: self, isRight: false)
-//                }
-//            }
-//        }
-//    }
-    
-//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-//        if let touch = touches.first {
-//            if self.player.playbackState == .paused {
-//                self.player.playFromCurrentTime()
-//            }
-//            else if self.player.playbackState == .playing {
-//                self.player.pause()
-//            }
-//        }
-//    }
-    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if touches.first != nil {
             self.player.pause()
-            self.playButton.isHidden = true
         }
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if touches.first != nil {
+        if touches.first != nil && self.player.url?.absoluteString ?? "" != "" {
+            do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
             self.player.playFromCurrentTime()
-            self.playButton.isHidden = true
+//            self.delegate?.didStartPlaying(for: self)
         }
     }
     
@@ -439,19 +424,16 @@ class FeedPostCell: UICollectionViewCell {
     }
     
     @objc private func handleComment() {
-        playButton.isHidden = false
         guard let groupPost = groupPost else { return }
         delegate?.didTapComment(groupPost: groupPost)
     }
     
     @objc private func handleDidTapCommentUser() {
-        playButton.isHidden = false
         guard let commentUser = commentUser else { return }
         delegate?.didTapUser(user: commentUser)
     }
     
     @objc private func handleDidTapPostGroup() {
-        playButton.isHidden = false
         guard let groupPost = groupPost else { return }
         delegate?.didTapGroup(group: groupPost.group)
     }

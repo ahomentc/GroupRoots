@@ -11,6 +11,10 @@ import Firebase
 import UPCarouselFlowLayout
 
 class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate {
+    func requestPlay(for cell: FeedPostCell) {
+        
+    }
+    
     // the group posts loaded so far
     // When calling to fetch posts, we pass the last post in this set
     // we compare the date of the last post will all posts and retreive the n posts

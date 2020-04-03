@@ -48,14 +48,14 @@ class MainTabBarController: UITabBarController {
         layout.scrollDirection = UICollectionView.ScrollDirection.vertical
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         layout.spacingMode = UPCarouselFlowLayoutSpacingMode.fixed(spacing: 20)
-        let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_unselected"), selectedImage: #imageLiteral(resourceName: "home_selected_2"), rootViewController: FeedController(collectionViewLayout: layout))
+        let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_unselected"), selectedImage: #imageLiteral(resourceName: "home_unselected"), rootViewController: FeedController(collectionViewLayout: layout))
         
         let searchNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "search_unselected"), selectedImage: #imageLiteral(resourceName: "search_selected"), rootViewController: UserSearchController(collectionViewLayout: UICollectionViewFlowLayout()))
         let plusNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "plus"), selectedImage: #imageLiteral(resourceName: "plus"))
-        let likeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "notification_unselected"), selectedImage: #imageLiteral(resourceName: "notification_selected"), rootViewController: NotificationsController(collectionViewLayout: UICollectionViewFlowLayout()))
+        let likeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "notification_unselected"), selectedImage: #imageLiteral(resourceName: "notification_unselected"), rootViewController: NotificationsController(collectionViewLayout: UICollectionViewFlowLayout()))
 
         let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
-        let userProfileNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "profile_unselected"), selectedImage: #imageLiteral(resourceName: "profile_selected"), rootViewController: userProfileController)
+        let userProfileNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "profile_unselected"), selectedImage: #imageLiteral(resourceName: "profile_unselected"), rootViewController: userProfileController)
         
         Database.database().fetchUser(withUID: uid) { (user) in
             userProfileController.user = user

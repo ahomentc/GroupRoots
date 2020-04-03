@@ -22,6 +22,7 @@ protocol FeedPostCellDelegate {
     func updateNumPicsScrolled(for cell: HomePostCell)
     func didView(groupPost: GroupPost)
     func showViewers(viewers: [User], viewsCount: Int)
+    func requestPlay(for cell: FeedPostCell)
 }
 
 class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, InnerPostCellDelegate, FeedMembersCellDelegate {
@@ -36,6 +37,8 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     var numViewsForPost = [String: Int]()
     var numCommentsForPosts = [String: Int]()
     var syncDone = false
+    var isScrolling = false
+    var isScrollingVertically = false
     
     var groupPosts: [GroupPost]? {
         didSet {
@@ -119,12 +122,6 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         }
     }
     
-    var groupPostsIds2D: [String]? {
-        didSet {
-            reloadGroupData()
-        }
-    }
-    
     var maxDistanceScrolled = CGFloat(0)
     var numPicsScrolled = 1
 
@@ -147,8 +144,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     
     func reloadGroupData(){
         guard totalPostsNum != nil else { return }
-        guard groupPostsIds2D != nil else { return }
-        guard numViewsForPost != nil else { return }
+        guard numViewsForPost.count != 0 else { return }
         if !syncDone { return }
         
         DispatchQueue.main.async{
@@ -177,7 +173,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         
         addSubview(header)
         header.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 5)
-        header.delegate = self
+        header.delegate = self        
     }
     
     func configureHeader() {
@@ -197,6 +193,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        print(indexPath.row)
         if indexPath.item == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MembersCell.cellId, for: indexPath) as! MembersCell
             cell.group = groupPosts?[0].group
@@ -217,7 +214,15 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
                 if numViewsForPost[groupPosts?[indexPath.item-1].id ?? ""] != nil {
                     cell.numViewsForPost = numViewsForPost[groupPosts?[indexPath.item-1].id ?? ""]
                 }
+                cell.isScrollingVertically = isScrollingVertically
+                cell.isScrolling = isScrolling
                 cell.delegate = self
+                
+                // when load the cell start playing if not scrolling
+//                if !isScrolling && !isScrollingVertically{
+//                    print("2")
+//                    cell.player.playFromBeginning()
+//                }
                 return cell
             }
             else {
@@ -229,13 +234,27 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     
     func pauseVisibleVideo() {
         collectionView.visibleCells.forEach { cell in
-            // TODO: write logic to stop the video before it begins scrolling
-            (cell as! FeedPostCell).player.pause()
+            if cell.isKind(of: FeedPostCell.self){
+                (cell as! FeedPostCell).player.muted = true
+                (cell as! FeedPostCell).player.pause()
+            }
+        }
+    }
+    
+    func playVisibleVideo() {
+        collectionView.visibleCells.forEach { cell in
+            if cell.isKind(of: FeedPostCell.self){
+                if (cell as! FeedPostCell).player.url?.absoluteString ?? "" != "" {
+                    (cell as! FeedPostCell).player.muted = false
+                    (cell as! FeedPostCell).player.playFromCurrentTime()
+                }
+            }
         }
     }
     
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         self.pauseVisibleVideo()
+        isScrolling = true
     }
 
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
@@ -248,10 +267,6 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         if !decelerate {
             self.stoppedScrolling(endPos: endPos)
         }
-//        collectionView.visibleCells.forEach { cell in
-//           //  TODO: write logic to start the video after it ends scrolling
-//            (cell as! FeedPostCell).player.playFromCurrentTime()
-//        }
     }
 
     func stoppedScrolling(endPos: CGFloat) {
@@ -264,9 +279,17 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
                 didReachScrollEnd()
             }
         }
+        isScrolling = false
+//        self.playVisibleVideo()
     }
     
     //MARK: - InnerPostCellDelegate
+    
+    func requestPlay(for cell: FeedPostCell) {
+        if !isScrolling {
+            delegate?.requestPlay(for: cell)
+        }
+    }
     
     func didTapComment(groupPost: GroupPost) {
         delegate?.didTapComment(groupPost: groupPost)
@@ -345,9 +368,6 @@ extension MyCell: UICollectionViewDelegateFlowLayout {
 extension MyCell: FeedPostCellHeaderDelegate {
     
     func didTapGroup() {
-        collectionView.visibleCells.forEach { cell in
-            (cell as! FeedPostCell).playButton.isHidden = false
-        }
         guard let group = groupPosts?[0].group else { return }
         delegate?.didTapGroup(group: group)
     }

@@ -124,7 +124,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     
     private func resetInputFields() {
         groupnameTextField.text = ""
-        bioTextField.text = ""
+//        bioTextField.text = ""
         
         groupnameTextField.isUserInteractionEnabled = true
         bioTextField.isUserInteractionEnabled = true
@@ -169,11 +169,25 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         
         createGroupButton.isEnabled = false
         createGroupButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+        
+        if groupname.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
+            let alert = UIAlertController(title: "Username invalid", message: "Please enter a groupname with no symbols or spaces (underscore is okay)", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+            self.present(alert, animated: true)
+            self.resetInputFields()
+            return
+        }
 
         Database.database().createGroup(groupname: groupname, bio: bio ?? "", image: profileImage, isPrivate: isPrivate) { (err) in
             if err != nil {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
-//                self.textView.isUserInteractionEnabled = true
+                guard let error = err else { self.resetInputFields(); return }
+                if error.localizedDescription == "Groupname Taken" {
+                    let alert = UIAlertController(title: "Group name Taken", message: "Please select a different group name", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                    self.present(alert, animated: true)
+                }
+                self.resetInputFields()
                 return
             }
             self.dismiss(animated: true, completion: nil)

@@ -14,7 +14,8 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     var groupsVisibleCount = 2
     var maxDistanceScrolledEach = [CGFloat]()
     var numPicsScrolledEach = [Int]()
-    
+    var isScrolling = false
+        
     private let loadingScreenView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
@@ -53,6 +54,11 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
 //        handleRefresh()
         self.configureNavBar()
+                
+        // play the video for the visible cell
+        collectionView.visibleCells.forEach { cell in
+            (cell as! MyCell).playVisibleVideo()
+        }
     }
     
     func configureNavBar(){
@@ -118,7 +124,6 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
 
     private func fetchBaseGroupPosts() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-        
         collectionView?.refreshControl?.beginRefreshing()
         
         var group_ids = Set<String>()
@@ -127,7 +132,6 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         // get all the userIds of the people user is following
         let sync = DispatchGroup()
         sync.enter()
-        
         // fetch the group ids of the user
         Database.database().fetchAllGroupIds(withUID: currentLoggedInUserId, completion: { (groupIds) in
             groupIds.forEach({ (groupId) in
@@ -260,6 +264,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         myCell.feedController = self
         myCell.delegate = self
         myCell.tag = indexPath.row
+        myCell.isScrollingVertically = isScrolling
         myCell.maxDistanceScrolled = CGFloat(0)
         myCell.numPicsScrolled = 1
         return myCell
@@ -270,6 +275,13 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
 //    }
 
     @objc private func handleRefresh() {
+        // stop video of visible cell
+        collectionView.visibleCells.forEach { cell in
+            // TODO: write logic to stop the video before it begins scrolling
+            (cell as! MyCell).pauseVisibleVideo()
+            (cell as! MyCell).isScrollingVertically = isScrolling
+        }
+        
         showEmptyStateViewIfNeeded()
         fetchBaseGroupPosts()
     }
@@ -278,7 +290,9 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         collectionView.visibleCells.forEach { cell in
             // TODO: write logic to stop the video before it begins scrolling
             (cell as! MyCell).pauseVisibleVideo()
+            (cell as! MyCell).isScrollingVertically = isScrolling
         }
+        isScrolling = true
     }
     
     override func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
@@ -296,6 +310,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     private var maxDistanceScrolled = CGFloat(0)
     private var numGroupsScrolled = 1
     func stoppedScrolling(endPos: CGFloat) {
+        
         if maxDistanceScrolled < endPos {
             maxDistanceScrolled = endPos
             numGroupsScrolled += 1
@@ -308,6 +323,13 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
                 self.collectionView?.refreshControl?.endRefreshing()
             }
         }
+        isScrolling = false
+        collectionView.visibleCells.forEach { cell in
+            (cell as! MyCell).isScrollingVertically = isScrolling
+        }
+//        collectionView.visibleCells.forEach { cell in
+//            (cell as! MyCell).playVisibleVideo()
+//        }
     }
 
     //MARK: - FeedPostCellDelegate
@@ -432,6 +454,12 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         membersController.group = group
         membersController.isInGroup = false
         self.navigationController?.pushViewController(membersController, animated: true)
+    }
+    
+    func requestPlay(for cell: FeedPostCell) {
+        if !isScrolling {
+            cell.player.playFromCurrentTime()
+        }
     }
 }
 

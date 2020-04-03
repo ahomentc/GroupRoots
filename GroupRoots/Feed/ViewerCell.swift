@@ -74,6 +74,7 @@ class NumHiddenCell: UICollectionViewCell {
     private let hiddenIcon: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(#imageLiteral(resourceName: "hide_eye").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.isHidden = true
         return button
     }()
         
@@ -108,9 +109,11 @@ class NumHiddenCell: UICollectionViewCell {
         guard let num_visible = num_visible else { return }
         let num_hidden = num_total - num_visible
         if num_hidden == 1 {
+            hiddenIcon.isHidden = false
             numHiddenLabel.text = String(num_hidden) + " Hidden Viewer"
         }
         else if num_hidden > 1 {
+            hiddenIcon.isHidden = false
             numHiddenLabel.text = String(num_hidden) + " Hidden Viewers"
         }
     }
