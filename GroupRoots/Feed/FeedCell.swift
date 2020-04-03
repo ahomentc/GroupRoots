@@ -15,7 +15,6 @@ protocol FeedPostCellDelegate {
     func didTapGroup(group: Group)
     func didTapUser(user: User)
     func didTapOptions(groupPost: GroupPost)
-    func didReachScrollEnd(for cell: MyCell)
     func didSelectUser(selectedUser: User)
     func showMoreMembers(group: Group)
     func updateMaxDistance(for cell: HomePostCell)
@@ -65,7 +64,6 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
                                 Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
                                     sync.leave()
                                     self.numViewsForPost[groupPost.id] = views_count
-                                    self.reloadGroupData()
                                     if viewer_ids.count > 0 {
                                         var viewers = [User]()
                                         let viewersSync = DispatchGroup()
@@ -116,12 +114,6 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         }
     }
     
-    var totalPostsNum: Int? {
-        didSet {
-            reloadGroupData()
-        }
-    }
-    
     var maxDistanceScrolled = CGFloat(0)
     var numPicsScrolled = 1
 
@@ -143,9 +135,9 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     }
     
     func reloadGroupData(){
-        guard totalPostsNum != nil else { return }
         guard numViewsForPost.count != 0 else { return }
         if !syncDone { return }
+        print("reloading")
         
         DispatchQueue.main.async{
             self.collectionView.reloadData()
@@ -189,7 +181,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return (totalPostsNum ?? groupPosts?.count ?? -1) + 1
+        return groupPosts?.count ?? -1
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -218,11 +210,6 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
                 cell.isScrolling = isScrolling
                 cell.delegate = self
                 
-                // when load the cell start playing if not scrolling
-//                if !isScrolling && !isScrollingVertically{
-//                    print("2")
-//                    cell.player.playFromBeginning()
-//                }
                 return cell
             }
             else {
@@ -270,15 +257,6 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     }
 
     func stoppedScrolling(endPos: CGFloat) {
-        if maxDistanceScrolled < endPos {
-            maxDistanceScrolled = endPos
-            numPicsScrolled += 1
-            
-            // if viewed more than two pictures, load 3 more
-            if numPicsScrolled % 2 == 0 {
-                didReachScrollEnd()
-            }
-        }
         isScrolling = false
 //        self.playVisibleVideo()
     }
@@ -317,10 +295,6 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         delegate?.showViewers(viewers: viewers, viewsCount: numViews)
     }
     
-    @objc private func didReachScrollEnd() {
-        delegate?.didReachScrollEnd(for: self)
-    }
-    
     func goToImage(for cell: FeedPostCell, isRight: Bool) {
         let old_indexPath_row = collectionView.indexPath(for: cell)?.row
         if old_indexPath_row == nil { return }
@@ -329,12 +303,6 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
                 return
             }
             collectionView.scrollToItem(at: IndexPath(item: old_indexPath_row! + 1, section: 0), at: .centeredHorizontally, animated: true)
-            
-            // THIS KEEPS ADDING IMAGES, EVEN IF GOING BACKWARDS THEN FORWARDS. NEEDS TO BE CHANGED BUT WORKS FOR NOW.
-            numPicsScrolled += 1
-            if numPicsScrolled % 2 == 0 {
-                didReachScrollEnd()
-            }
         }
         else {
             if old_indexPath_row! - 1 == -1 {

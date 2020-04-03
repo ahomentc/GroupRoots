@@ -196,71 +196,22 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
                     return p1[0].creationDate.compare(p2[0].creationDate) == .orderedDescending
                 })
                 self.loadingScreenView.isHidden = true
-                self.fetchMoreGroups()
                 self.collectionView?.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
                 self.collectionView?.reloadData()
                 self.collectionView?.refreshControl?.endRefreshing()
             }
         }
     }
-
-    private func fetchMoreGroupPosts(row: Int) {
-        collectionView?.refreshControl?.beginRefreshing()
-        if row >= self.groupPosts2D.count || self.groupPosts2D[row].count-1 >= self.groupPosts2D[row].count {
-            print("groupId cannot be found")
-            self.collectionView?.refreshControl?.endRefreshing()
-            return
-        }
-        let groupId = self.groupPosts2D[row][self.groupPosts2D[row].count-1].group.groupId
-        if self.groupPostsVisible[groupId]! == 0 {
-            self.groupsVisibleCount += 1
-        }
-        self.groupPostsVisible[groupId]! += 3
-        self.collectionView?.reloadData()
-        self.collectionView?.refreshControl?.endRefreshing()
-    }
     
-    private func fetchMoreGroups() {
-        if self.groupPosts2D.count > 0{
-            for i in 0...self.groupPosts2D.count-1 {
-                // find first entree with count 0, and load 3 from there
-                let groupId = self.groupPosts2D[i][0].group.groupId
-                var self_destruct = 2
-                if self.groupPostsVisible[groupId] == 0 {
-                    self.groupPostsVisible[groupId] = 3
-                    self_destruct -= 1
-                }
-                if self_destruct < 1 {
-                    return
-                }
-            }
-        }
-    }
-
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if groupsVisibleCount > groupPosts2D.count{
-            return groupPosts2D.count
-        }
-        return groupsVisibleCount
+        return groupPosts2D.count
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let myCell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! MyCell
-        if indexPath.row < groupPosts2D.count{
-            let groupId = groupPosts2D[indexPath.row][0].group.groupId
-            var numPostsToShow = groupPostsVisible[groupId] ?? 0
-            if numPostsToShow > 0 {
-                if numPostsToShow > groupPosts2D[indexPath.row].count {
-                    numPostsToShow = groupPosts2D[indexPath.row].count
-                }
-                myCell.groupPosts = Array(groupPosts2D[indexPath.row].prefix(numPostsToShow))
-                myCell.groupPostMembers = groupPostMembers[groupId]
-                if groupPosts2D[indexPath.row].count > 0 {
-                    let groupId = groupPosts2D[indexPath.row][0].group.groupId
-                    myCell.totalPostsNum = groupPostsCount[groupId]
-                }
-            }
-        }
+        let groupId = groupPosts2D[indexPath.row][0].group.groupId
+        myCell.groupPosts = groupPosts2D[indexPath.row]
+        myCell.groupPostMembers = groupPostMembers[groupId]
         myCell.feedController = self
         myCell.delegate = self
         myCell.tag = indexPath.row
@@ -269,10 +220,6 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         myCell.numPicsScrolled = 1
         return myCell
     }
-    
-//    func collectionView(collectionView: UICollectionView, willDisplayCell cell: UICollectionViewCell, cellForItemAt indexPath: IndexPath) {
-//        print("Hi")
-//    }
 
     @objc private func handleRefresh() {
         // stop video of visible cell
@@ -310,19 +257,6 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     private var maxDistanceScrolled = CGFloat(0)
     private var numGroupsScrolled = 1
     func stoppedScrolling(endPos: CGFloat) {
-        
-        if maxDistanceScrolled < endPos {
-            maxDistanceScrolled = endPos
-            numGroupsScrolled += 1
-            
-            // if viewed more than 2 groups, load 2 more
-            if numGroupsScrolled % 2 == 0 {
-                groupsVisibleCount += 2
-                collectionView?.refreshControl?.beginRefreshing()
-                self.collectionView?.reloadData()
-                self.collectionView?.refreshControl?.endRefreshing()
-            }
-        }
         isScrolling = false
         collectionView.visibleCells.forEach { cell in
             (cell as! MyCell).isScrollingVertically = isScrolling
@@ -333,9 +267,6 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     }
 
     //MARK: - FeedPostCellDelegate
-    func didReachScrollEnd(for cell: MyCell) {
-        fetchMoreGroupPosts(row: cell.tag)
-    }
 
     func didTapComment(groupPost: GroupPost) {
         let commentsController = CommentsController(collectionViewLayout: UICollectionViewFlowLayout())
