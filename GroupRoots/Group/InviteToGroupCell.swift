@@ -50,7 +50,7 @@ class InviteToGroupCell: UICollectionViewCell {
         button.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
         button.layer.cornerRadius = 5
         button.layer.borderWidth = 1.2
-        button.contentEdgeInsets = UIEdgeInsets(top: 5, left: 15, bottom: 5, right: 10)
+        button.contentEdgeInsets = UIEdgeInsets(top: 5, left: 12, bottom: 5, right: 12)
         button.isUserInteractionEnabled = true
         button.addTarget(self, action: #selector(handleInviteTap), for: UIControl.Event.touchUpInside)
         return button

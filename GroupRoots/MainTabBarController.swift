@@ -35,6 +35,7 @@ class MainTabBarController: UITabBarController {
         
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarClear), name: NSNotification.Name(rawValue: "tabBarClear"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarColor), name: NSNotification.Name(rawValue: "tabBarColor"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(makeNotificationIconRead), name: NSNotification.Name(rawValue: "notification_icon_read"), object: nil)
     }
     
     func setupViewControllers() {
@@ -48,20 +49,35 @@ class MainTabBarController: UITabBarController {
         layout.scrollDirection = UICollectionView.ScrollDirection.vertical
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         layout.spacingMode = UPCarouselFlowLayoutSpacingMode.fixed(spacing: 20)
-        let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_unselected"), selectedImage: #imageLiteral(resourceName: "home_unselected"), rootViewController: FeedController(collectionViewLayout: layout))
+        let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_5"), selectedImage: #imageLiteral(resourceName: "home_5"), rootViewController: FeedController(collectionViewLayout: layout))
         
-        let searchNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "search_unselected"), selectedImage: #imageLiteral(resourceName: "search_selected"), rootViewController: UserSearchController(collectionViewLayout: UICollectionViewFlowLayout()))
+        let searchNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "search_2"), selectedImage: #imageLiteral(resourceName: "search_2"), rootViewController: UserSearchController(collectionViewLayout: UICollectionViewFlowLayout()))
         let plusNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "plus"), selectedImage: #imageLiteral(resourceName: "plus"))
-        let likeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "notification_unselected"), selectedImage: #imageLiteral(resourceName: "notification_unselected"), rootViewController: NotificationsController(collectionViewLayout: UICollectionViewFlowLayout()))
-
-        let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
-        let userProfileNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "profile_unselected"), selectedImage: #imageLiteral(resourceName: "profile_unselected"), rootViewController: userProfileController)
         
+        var likeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "bell_2"), selectedImage: #imageLiteral(resourceName: "bell_2"), rootViewController: NotificationsController(collectionViewLayout: UICollectionViewFlowLayout()))
+        
+        let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+        let userProfileNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "group"), selectedImage: #imageLiteral(resourceName: "group"), rootViewController: userProfileController)
+        
+        let sync = DispatchGroup()
+        sync.enter()
+        Database.database().hasLatestNotificationBeenSeen(completion: { (seen) in
+            if !seen {
+                likeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "bell_2_unread"), selectedImage: #imageLiteral(resourceName: "bell_2"), rootViewController: NotificationsController(collectionViewLayout: UICollectionViewFlowLayout()))
+                
+            }
+            sync.leave()
+        })
+        
+        sync.enter()
         Database.database().fetchUser(withUID: uid) { (user) in
             userProfileController.user = user
+            sync.leave()
         }
         
-        viewControllers = [homeNavController, searchNavController, plusNavController, likeNavController, userProfileNavController]
+        sync.notify(queue: .main){
+            self.viewControllers = [homeNavController, searchNavController, plusNavController, likeNavController, userProfileNavController]
+        }
     }
     
     private func presentLoginController() {
@@ -91,6 +107,10 @@ class MainTabBarController: UITabBarController {
         tabBar.backgroundColor = UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1)
         tabBar.unselectedItemTintColor = UIColor.gray
     }
+    
+    @objc private func makeNotificationIconRead(){
+//        self.setupViewControllers()
+    }
 }
 
 //MARK: - UITabBarControllerDelegate
@@ -98,11 +118,18 @@ class MainTabBarController: UITabBarController {
 extension MainTabBarController: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
         let index = viewControllers?.index(of: viewController)
-        if index != 0 {
+        if index == 3 {
+            tabBar.items![3].image = #imageLiteral(resourceName: "bell_2")
+            tabBar.backgroundColor = UIColor.clear
+            tabBar.unselectedItemTintColor = UIColor.gray
+        }
+        else if index != 0 {
+            tabBar.selectionIndicatorImage = UIImage()
             tabBar.backgroundColor = UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1)
             tabBar.unselectedItemTintColor = UIColor.gray
         }
         else{
+            tabBar.selectionIndicatorImage = UIImage()
             tabBar.backgroundColor = UIColor(red: 0/255, green: 0/255, blue: 0/255, alpha: 0.1)
             tabBar.unselectedItemTintColor = UIColor.white
         }

@@ -3,19 +3,7 @@ import Firebase
 
 class LoginController: UIViewController {
     
-//    private let logoContainerView: UIView = {
-//        let container = UIView()
-//        container.backgroundColor = UIColor.rgb(red: 0, green: 120, blue: 175)
-//        let logoImageView = UIImageView(image: #imageLiteral(resourceName: "Instagram_logo_white"))
-//        logoImageView.contentMode = .scaleAspectFill
-//        container.addSubview(logoImageView)
-//        logoImageView.anchor(width: 200, height: 50)
-//        logoImageView.centerXAnchor.constraint(equalTo: container.centerXAnchor).isActive = true
-//        logoImageView.centerYAnchor.constraint(equalTo: container.centerYAnchor).isActive = true
-//        return container
-//    }()
-    
-    // the root between your groups
+    override var prefersStatusBarHidden: Bool { return true }
     
     let logoContainerView: UILabel = {
         let label = UILabel()
@@ -54,7 +42,7 @@ class LoginController: UIViewController {
     private let loginButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Login", for: .normal)
-        button.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+        button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         button.layer.cornerRadius = 5
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.setTitleColor(.white, for: .normal)
@@ -66,7 +54,7 @@ class LoginController: UIViewController {
     private let dontHaveAccountButton: UIButton = {
         let button = UIButton(type: .system)
         let attributedTitle = NSMutableAttributedString(string: "Don't have an account?  ", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.lightGray])
-        attributedTitle.append(NSAttributedString(string: "Sign Up", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.mainBlue
+        attributedTitle.append(NSAttributedString(string: "Sign Up", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
             ]))
         button.setAttributedTitle(attributedTitle, for: .normal)
         button.addTarget(self, action: #selector(handleShowSignUp), for: .touchUpInside)
@@ -85,10 +73,16 @@ class LoginController: UIViewController {
         view.backgroundColor = .white
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTapOnView)))
         
+//        let logoImageView = UIImageView(image: #imageLiteral(resourceName: "icon_login_2"))
+//        view.addSubview(logoImageView)
+//        logoImageView.frame = CGRect(x: view.frame.width/2 - 65, y: 0, width: 130, height: 130)
+        
+        let logoImageView = UIImageView(image: #imageLiteral(resourceName: "icon_login_3"))
+        view.addSubview(logoImageView)
+        logoImageView.frame = CGRect(x: view.frame.width/2 - 115, y: 50, width: 230, height: 230)
+
 //        view.addSubview(logoContainerView)
-//        logoContainerView.anchor(top: view.topAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 130 + UIApplication.shared.statusBarFrame.height)
-        view.addSubview(logoContainerView)
-        logoContainerView.anchor(top: view.topAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 130 + UIApplication.shared.statusBarFrame.height)
+//        logoContainerView.anchor(top: view.topAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 100)
         
         view.addSubview(dontHaveAccountButton)
         dontHaveAccountButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 50)
@@ -102,7 +96,7 @@ class LoginController: UIViewController {
         stackView.spacing = 10
         stackView.distribution = .fillEqually
         view.addSubview(stackView)
-        stackView.anchor(top: logoContainerView.bottomAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 40, paddingLeft: 40, paddingRight: 40, height: 140)
+        stackView.anchor(top: view.topAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 250, paddingLeft: 40, paddingRight: 40, height: 140)
     }
     
     private func resetInputFields() {

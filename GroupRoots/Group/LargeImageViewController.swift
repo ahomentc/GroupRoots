@@ -11,9 +11,6 @@ import Firebase
 import UPCarouselFlowLayout
 
 class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate {
-    func requestPlay(for cell: FeedPostCell) {
-        
-    }
     
     // the group posts loaded so far
     // When calling to fetch posts, we pass the last post in this set
@@ -29,15 +26,13 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     var indexPath: IndexPath!
     
     var postToScrollToId: String!
-    
-    var maxDistanceScrolled = CGFloat(0)
-    var numPicsScrolled = 1
-                
+                    
     var groupPosts = [GroupPost]()
     var groupPostMembers = [User]()
     var firstCommentForPosts = [String: Comment]()
     var viewersForPosts = [String: [User]]()
     var numCommentsForPosts = [String: Int]()
+    var isScrolling = false
     
     let header = LargeImageViewHeader()
     
@@ -65,6 +60,14 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         super.viewWillAppear(animated)
         NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
         self.configureNavigationBar()
+        
+        // not actually scrolling but enables video play
+        self.isScrolling = false
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.isScrolling = true
     }
     
     private func configureNavigationBar() {
@@ -111,7 +114,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                         sync.leave()
                         if inGroup {
                             sync.enter()
-                            Database.database().fetchPostViewers(postId: groupPost.id, completion: { (viewer_ids) in
+                            Database.database().fetchPostVisibleViewers(postId: groupPost.id, completion: { (viewer_ids) in
                                 sync.leave()
                                 if viewer_ids.count > 0 {
                                     var viewers = [User]()
@@ -214,6 +217,9 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.item < groupPosts.count {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedPostCell.cellId, for: indexPath) as! FeedPostCell
+            cell.isScrolling = isScrolling
+            cell.delegate = self
+            cell.emptyComment = true
             cell.groupPost = groupPosts[indexPath.item]
             if firstCommentForPosts[groupPosts[indexPath.item].id] != nil {
                 cell.firstComment = firstCommentForPosts[groupPosts[indexPath.item].id ]
@@ -224,7 +230,6 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
 //            if viewersForPosts[groupPosts[indexPath.item].id] != nil {
 //                cell.viewersForPost = viewersForPosts[groupPosts[indexPath.item].id ]
 //            }
-            cell.delegate = self
             return cell
         }
         else {
@@ -238,6 +243,29 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         if groupPostMembers.count == 0 { return }
         header.group = group
         header.groupPostMembers = groupPostMembers
+    }
+    
+    func pauseVisibleVideo() {
+        collectionView.visibleCells.forEach { cell in
+            if cell.isKind(of: FeedPostCell.self){
+                (cell as! FeedPostCell).player.pause()
+            }
+        }
+    }
+    
+    func playVisibleVideo() {
+        collectionView.visibleCells.forEach { cell in
+            if cell.isKind(of: FeedPostCell.self){
+                if (cell as! FeedPostCell).player.url?.absoluteString ?? "" != "" {
+                    (cell as! FeedPostCell).player.playFromCurrentTime()
+                }
+            }
+        }
+    }
+    
+    override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        self.pauseVisibleVideo()
+        isScrolling = true
     }
 
     override func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
@@ -253,13 +281,16 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     }
 
     func stoppedScrolling(endPos: CGFloat) {
-        if maxDistanceScrolled < endPos {
-            maxDistanceScrolled = endPos
-            numPicsScrolled += 1
-            
-            // if viewed more than two pictures, load 3 more
-            if numPicsScrolled % 2 == 0 {
-                didReachScrollEnd()
+        isScrolling = false
+    }
+    
+    func requestPlay(for cell: FeedPostCell) {
+        if !isScrolling {
+            // check to see if visible too
+            collectionView.visibleCells.forEach { cell_visible in  // check if cell is still visible
+                if cell_visible == cell {
+                    cell.player.playFromCurrentTime()
+                }
             }
         }
     }
@@ -297,11 +328,6 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
             }
             collectionView.scrollToItem(at: IndexPath(item: old_indexPath_row! + 1, section: 0), at: .centeredHorizontally, animated: true)
             
-            // THIS KEEPS ADDING IMAGES, EVEN IF GOING BACKWARDS THEN FORWARDS. NEEDS TO BE CHANGED BUT WORKS FOR NOW.
-            numPicsScrolled += 1
-            if numPicsScrolled % 2 == 0 {
-                didReachScrollEnd()
-            }
         }
         else {
             if old_indexPath_row! - 1 == -1 {

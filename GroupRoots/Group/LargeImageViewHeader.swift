@@ -107,13 +107,17 @@ class LargeImageViewHeader: UIView {
     
     private func sharedInit() {
 
-//        addSubview(userProfileImageView)
-//        userProfileImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: padding, paddingLeft: padding, paddingBottom: padding, width: 40, height: 40)
-//        userProfileImageView.layer.cornerRadius = 40 / 2
-//        userProfileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
+        addSubview(userProfileImageView)
+        userProfileImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding + 20, paddingBottom: padding, width: 50 , height: 50)
+        userProfileImageView.layer.cornerRadius = 20
+        userProfileImageView.layer.borderWidth = 2
+        userProfileImageView.layer.borderColor = UIColor.white.cgColor
+        userProfileImageView.isUserInteractionEnabled = true
+        userProfileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
+        userProfileImageView.image = #imageLiteral(resourceName: "user")
         
         addSubview(firstMemberImageView)
-        firstMemberImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding + 20, paddingBottom: padding, width: 50 , height: 50)
+        firstMemberImageView.anchor(top: topAnchor, left: userProfileImageView.rightAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding, paddingBottom: padding, width: 50 , height: 50)
         firstMemberImageView.layer.cornerRadius = 20
         firstMemberImageView.isUserInteractionEnabled = true
         firstMemberImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
@@ -126,12 +130,12 @@ class LargeImageViewHeader: UIView {
         secondMemberImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
         secondMemberImageView.image = UIImage()
         
-        addSubview(thirdMemberImageView)
-        thirdMemberImageView.anchor(top: topAnchor, left: secondMemberImageView.rightAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding, paddingBottom: padding, width: 50, height: 50)
-        thirdMemberImageView.layer.cornerRadius = 20
-        thirdMemberImageView.isUserInteractionEnabled = true
-        thirdMemberImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
-        thirdMemberImageView.image = UIImage()
+//        addSubview(thirdMemberImageView)
+//        thirdMemberImageView.anchor(top: topAnchor, left: secondMemberImageView.rightAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding, paddingBottom: padding, width: 50, height: 50)
+//        thirdMemberImageView.layer.cornerRadius = 20
+//        thirdMemberImageView.isUserInteractionEnabled = true
+//        thirdMemberImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
+//        thirdMemberImageView.image = UIImage()
          
         addSubview(usernameButton)
         usernameButton.anchor(top: firstMemberImageView.bottomAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: padding + 20)

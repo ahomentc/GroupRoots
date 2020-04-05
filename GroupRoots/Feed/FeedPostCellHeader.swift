@@ -22,7 +22,7 @@ class FeedPostCellHeader: UIView {
         }
     }
     
-    var groupPostMembers: [User]? {
+    var groupMembers: [User]? {
         didSet {
             configureMemberImages()
         }
@@ -106,11 +106,6 @@ class FeedPostCellHeader: UIView {
     }
     
     private func sharedInit() {
-
-//        addSubview(userProfileImageView)
-//        userProfileImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: padding, paddingLeft: padding, paddingBottom: padding, width: 40, height: 40)
-//        userProfileImageView.layer.cornerRadius = 40 / 2
-//        userProfileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
         
         addSubview(userProfileImageView)
         userProfileImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding + 20, paddingBottom: padding, width: 50 , height: 50)
@@ -167,7 +162,7 @@ class FeedPostCellHeader: UIView {
         secondMemberImageView.image = UIImage()
         thirdMemberImageView.image = UIImage()
         var count = 0
-        for user in groupPostMembers ?? []{
+        for user in groupMembers ?? []{
             if count < 3 {
                 if count == 0 {
                     if let profileImageUrl = user.profileImageUrl {

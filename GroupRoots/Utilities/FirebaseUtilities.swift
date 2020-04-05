@@ -298,40 +298,40 @@ extension Database {
         }
     }
     
-    func fetchAllUsers(includeCurrentUser: Bool = true, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
-        let ref = Database.database().reference().child("users")
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion([])
-                return
-            }
-            
-            var users = [User]()
-            
-            dictionaries.forEach({ (key, value) in
-                if !includeCurrentUser, key == Auth.auth().currentUser?.uid {
-                    completion([])
-                    return
-                }
-                self.userExists(withUID: key, completion: { (exists) in
-                    if exists{
-                        guard let userDictionary = value as? [String: Any] else { return }
-                        let user = User(uid: key, dictionary: userDictionary)
-                        users.append(user)
-                    }
-                })
-            })
-            
-            users.sort(by: { (user1, user2) -> Bool in
-                return user1.username.compare(user2.username) == .orderedAscending
-            })
-            completion(users)
-            
-        }) { (err) in
-            print("Failed to fetch all users from database:", (err))
-            cancel?(err)
-        }
-    }
+//    func fetchAllUsers(includeCurrentUser: Bool = true, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
+//        let ref = Database.database().reference().child("users")
+//        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+//            guard let dictionaries = snapshot.value as? [String: Any] else {
+//                completion([])
+//                return
+//            }
+//
+//            var users = [User]()
+//
+//            dictionaries.forEach({ (key, value) in
+//                if !includeCurrentUser, key == Auth.auth().currentUser?.uid {
+//                    completion([])
+//                    return
+//                }
+//                self.userExists(withUID: key, completion: { (exists) in
+//                    if exists{
+//                        guard let userDictionary = value as? [String: Any] else { return }
+//                        let user = User(uid: key, dictionary: userDictionary)
+//                        users.append(user)
+//                    }
+//                })
+//            })
+// // need to use dispatch group for this
+//            users.sort(by: { (user1, user2) -> Bool in
+//                return user1.username.compare(user2.username) == .orderedAscending
+//            })
+//            completion(users)
+//
+//        }) { (err) in
+//            print("Failed to fetch all users from database:", (err))
+//            cancel?(err)
+//        }
+//    }
     
     func searchForUser(username: String, completion: @escaping (User) -> ()) {
         // have dictionary in dict that is... username: uid
@@ -448,9 +448,16 @@ extension Database {
             dictionaries.forEach({ (arg) in
                 sync.enter()
                 let (groupId, _) = arg
-                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                    groups.append(group)
-                    sync.leave()
+                self.groupExists(groupId: groupId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                            groups.append(group)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
                 })
             })
             sync.notify(queue: .main) {
@@ -679,6 +686,19 @@ extension Database {
 //--------------------------------------------------------
     
     //MARK: GroupFetch
+    
+    func groupExists(groupId: String, completion: @escaping (Bool) -> ()) {
+        Database.database().reference().child("groups").child(groupId).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard (snapshot.value as? [String: Any]) != nil else {
+                completion(false)
+                return
+            }
+            completion(true)
+        }) { (err) in
+            print("Failed to fetch group from database:", err)
+        }
+    }
+    
     func fetchGroup(groupId: String, completion: @escaping (Group) -> (), withCancel cancel: ((Error) -> ())? = nil) {
         let ref = Database.database().reference().child("groups").child(groupId)
         
@@ -736,15 +756,24 @@ extension Database {
             
             var groups = [Group]()
 
+            let sync = DispatchGroup()
             dictionaries.forEach({ (groupId, value) in
-                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                    groups.append(group)
-
-                    if groups.count == dictionaries.count {
-                        completion(groups)
+                sync.enter()
+                self.groupExists(groupId: groupId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                            groups.append(group)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
                     }
                 })
             })
+            sync.notify(queue: .main) {
+                completion(groups)
+            }
         }) { (err) in
             print("Failed to fetch posts:", err)
             cancel?(err)
@@ -765,16 +794,24 @@ extension Database {
             }
             
             var groups = [Group]()
-
+            let sync = DispatchGroup()
             dictionaries.forEach({ (groupId, value) in
-                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                    groups.append(group)
-
-                    if groups.count == dictionaries.count {
-                        completion(groups)
+                sync.enter()
+                self.groupExists(groupId: groupId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                            groups.append(group)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
                     }
                 })
             })
+            sync.notify(queue: .main) {
+                completion(groups)
+            }
         }) { (err) in
             print("Failed to fetch posts:", err)
             cancel?(err)
@@ -886,23 +923,31 @@ extension Database {
     }
     
     func canViewGroupPosts(groupId: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
-        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-            let isPrivate = group.isPrivate
-            Database.database().isFollowingGroup(groupId: groupId, completion: { (following) in
-                Database.database().isInGroup(groupId: groupId, completion: { (inGroup) in
-                    if isPrivate! && !following && !inGroup {
-                        completion(false)
-                        return
+        self.groupExists(groupId: groupId, completion: { (exists) in
+            if exists {
+                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                    let isPrivate = group.isPrivate
+                    Database.database().isFollowingGroup(groupId: groupId, completion: { (following) in
+                        Database.database().isInGroup(groupId: groupId, completion: { (inGroup) in
+                            if isPrivate! && !following && !inGroup {
+                                completion(false)
+                                return
+                            }
+                            else {
+                                completion(true)
+                                return
+                            }
+                        }) { (err) in
+                            return
+                        }
+                    }) { (err) in
+                        cancel?(err)
                     }
-                    else {
-                        completion(true)
-                        return
-                    }
-                }) { (err) in
-                    return
-                }
-            }) { (err) in
-                cancel?(err)
+                })
+            }
+            else {
+                completion(false)
+                return
             }
         })
     }
@@ -1475,23 +1520,64 @@ extension Database {
     func subscribeToGroup(groupId: String, completion: @escaping (Error?) -> ()) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
-        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-            let isPrivate = group.isPrivate
-            if isPrivate == nil { return }
-            Database.database().isFollowingGroup(groupId: groupId, completion: { (following) in
-                if !following {
-                    Database.database().isInGroupRemovedUsers(groupId: groupId, withUID: currentLoggedInUserId, completion: { (inGroupRemoved) in
-                        if !inGroupRemoved {
-                            Database.database().removeGroupFromUserRemovedGroups(withUID: currentLoggedInUserId, groupId: groupId) { (err) in
-                                if err != nil {
-                                    completion(err);return
-                                }
-                                if isPrivate!{
-                                    // private group
-                                    Database.database().isInGroup(groupId: groupId, completion: { (inGroup) in
-                                        print("in group")
-                                        // check if user is a member of the group, if so then auto accept follow
-                                        if inGroup {
+        self.groupExists(groupId: groupId, completion: { (exists) in
+            if exists {
+                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                    let isPrivate = group.isPrivate
+                    if isPrivate == nil { return }
+                    Database.database().isFollowingGroup(groupId: groupId, completion: { (following) in
+                        if !following {
+                            Database.database().isInGroupRemovedUsers(groupId: groupId, withUID: currentLoggedInUserId, completion: { (inGroupRemoved) in
+                                if !inGroupRemoved {
+                                    Database.database().removeGroupFromUserRemovedGroups(withUID: currentLoggedInUserId, groupId: groupId) { (err) in
+                                        if err != nil {
+                                            completion(err);return
+                                        }
+                                        if isPrivate!{
+                                            // private group
+                                            Database.database().isInGroup(groupId: groupId, completion: { (inGroup) in
+                                                print("in group")
+                                                // check if user is a member of the group, if so then auto accept follow
+                                                if inGroup {
+                                                    Database.database().addToGroupFollowers(groupId: groupId, withUID: currentLoggedInUserId) { (err) in
+                                                        if err != nil {
+                                                            completion(err);return
+                                                        }
+                                                        Database.database().addToGroupsFollowing(groupId: groupId, withUID: currentLoggedInUserId) { (err) in
+                                                            if err != nil {
+                                                                completion(err);return
+                                                            }
+                                                            Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: currentLoggedInUserId, completion: { (err) in
+                                                                if err != nil {
+                                                                    completion(err);return
+                                                                }
+                                                                completion(nil)
+                                                            })
+                                                        }
+                                                    }
+                                                }
+                                                else {
+                                                    print("not in group")
+                                                    Database.database().isInGroupFollowPending(groupId: groupId, withUID: currentLoggedInUserId, completion: { (inGroupPending) in
+                                                        if !inGroupPending {
+                                                            Database.database().addToGroupFollowPending(groupId: groupId, withUID: currentLoggedInUserId) { (err) in
+                                                                if err != nil {
+                                                                    completion(err);return
+                                                                }
+                                                                completion(nil)
+                                                                print("pending sent")
+                                                            }
+                                                        }
+                                                    }) { (err) in
+                                                        completion(err);return
+                                                    }
+                                                }
+                                            }) { (err) in
+                                                return
+                                            }
+                                        }
+                                        else {
+                                            // public group
                                             Database.database().addToGroupFollowers(groupId: groupId, withUID: currentLoggedInUserId) { (err) in
                                                 if err != nil {
                                                     completion(err);return
@@ -1509,45 +1595,13 @@ extension Database {
                                                 }
                                             }
                                         }
-                                        else {
-                                            print("not in group")
-                                            Database.database().isInGroupFollowPending(groupId: groupId, withUID: currentLoggedInUserId, completion: { (inGroupPending) in
-                                                if !inGroupPending {
-                                                    Database.database().addToGroupFollowPending(groupId: groupId, withUID: currentLoggedInUserId) { (err) in
-                                                        if err != nil {
-                                                            completion(err);return
-                                                        }
-                                                        completion(nil)
-                                                        print("pending sent")
-                                                    }
-                                                }
-                                            }) { (err) in
-                                                completion(err);return
-                                            }
-                                        }
-                                    }) { (err) in
-                                        return
                                     }
                                 }
                                 else {
-                                    // public group
-                                    Database.database().addToGroupFollowers(groupId: groupId, withUID: currentLoggedInUserId) { (err) in
-                                        if err != nil {
-                                            completion(err);return
-                                        }
-                                        Database.database().addToGroupsFollowing(groupId: groupId, withUID: currentLoggedInUserId) { (err) in
-                                            if err != nil {
-                                                completion(err);return
-                                            }
-                                            Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: currentLoggedInUserId, completion: { (err) in
-                                                if err != nil {
-                                                    completion(err);return
-                                                }
-                                                completion(nil)
-                                            })
-                                        }
-                                    }
+                                    completion(nil)
                                 }
+                            }) { (err) in
+                                completion(err);return
                             }
                         }
                         else {
@@ -1556,15 +1610,12 @@ extension Database {
                     }) { (err) in
                         completion(err);return
                     }
-                }
-                else {
-                    completion(nil)
-                }
-            }) { (err) in
-                completion(err);return
+                })
+            }
+            else {
+                return
             }
         })
-        
     }
     
     func addToGroupFollowPending(groupId: String, withUID uid: String, completion: @escaping (Error?) -> ()) {
@@ -1905,28 +1956,43 @@ extension Database {
         let ref = Database.database().reference().child("posts").child(groupId).child(postId)
         ref.observeSingleEvent(of: .value, with: { (snapshot) in
             guard let postDictionary = snapshot.value as? [String: Any] else { return }
-            Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                let user_id = postDictionary["userUploaded"] as? String ?? ""
-                if user_id == ""{
-                    var post = GroupPost(group: group, user: nil, dictionary: postDictionary)
-                    post.id = postId
-                    completion(post)
-                }
-                else {
-                    self.userExists(withUID: user_id, completion: { (exists) in
-                        if exists{
-                            Database.database().fetchUser(withUID: user_id) { (user) in
-                                var post = GroupPost(group: group, user: user, dictionary: postDictionary)
-                                post.id = postId
-                                completion(post)
-                            }
+            self.groupExists(groupId: groupId, completion: { (exists) in
+                if exists {
+                    Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                        let user_id = postDictionary["userUploaded"] as? String ?? ""
+                        if user_id == ""{
+                            var post = GroupPost(group: group, user: nil, dictionary: postDictionary)
+                            post.id = postId
+                            completion(post)
+                        }
+                        else {
+                            self.userExists(withUID: user_id, completion: { (exists) in
+                                if exists{
+                                    Database.database().fetchUser(withUID: user_id) { (user) in
+                                        var post = GroupPost(group: group, user: user, dictionary: postDictionary)
+                                        post.id = postId
+                                        completion(post)
+                                    }
+                                }
+                                else {
+                                    let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "USER NOT FOUND"])
+                                    print("Failed to fetch user", err)
+                                    cancel?(err)
+                                }
+                            })
                         }
                     })
+                }
+                else {
+                    let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "GROUP NOT FOUND"])
+                    print("Failed to fetch user", err)
+                    cancel?(err)
                 }
             })
         })
     }
     
+    // DO NOT USE THIS. USE fetchAllGroupPosts
     func fetchAllPosts(withUID uid: String, completion: @escaping ([Post]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("posts").child(uid)
         
@@ -1973,7 +2039,7 @@ extension Database {
             dictionaries.forEach({ (postId, value) in
                 sync.enter()
                 self.groupPostExists(groupId: groupId, postId: postId, completion: { (exists) in
-                    if exists{
+                    if exists {
                         Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
                             posts.append(post)
                             sync.leave()
@@ -2286,7 +2352,7 @@ extension Database {
         }
     }
     
-    func fetchPostViewers(postId: String, completion: @escaping ([String]) -> (), withCancel cancel: ((Error) -> ())?) {
+    func fetchPostVisibleViewers(postId: String, completion: @escaping ([String]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("postViews").child(postId)
         ref.observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
@@ -2558,74 +2624,116 @@ extension Database {
                                 completion(notification)
                             case "groupJoinRequest":
                                 // need from, group
-                                Database.database().fetchGroup(groupId: group_id, completion: { (group) in
-                                    var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.groupJoinRequest, dictionary: notificationDictionary)
-                                    notification.id = notificationId
-                                    completion(notification)
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.groupJoinRequest, dictionary: notificationDictionary)
+                                            notification.id = notificationId
+                                            completion(notification)
+                                        })
+                                    }
+                                    else {
+                                        return
+                                    }
                                 })
                             case "newGroupJoin":
                                 // need from, group
-                                Database.database().fetchGroup(groupId: group_id, completion: { (group) in
-                                    var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.newGroupJoin, dictionary: notificationDictionary)
-                                    notification.id = notificationId
-                                    completion(notification)
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.newGroupJoin, dictionary: notificationDictionary)
+                                            notification.id = notificationId
+                                            completion(notification)
+                                        })
+                                    }
+                                    else {
+                                        return
+                                    }
                                 })
                             case "groupPostComment":
                                 // need from, group, post
-                                Database.database().fetchGroup(groupId: group_id, completion: { (group) in
-                                    self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
-                                        if post_exists{
-                                            Database.database().fetchGroupPost(groupId: group_id, postId: group_post_id, completion: { (post) in
-                                                var notification = Notification(group: group, groupPost: post, from: fromUser, to: toUser, type: NotificationType.groupPostComment, dictionary: notificationDictionary)
-                                                notification.id = notificationId
-                                                completion(notification)
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
+                                                if post_exists{
+                                                    Database.database().fetchGroupPost(groupId: group_id, postId: group_post_id, completion: { (post) in
+                                                        var notification = Notification(group: group, groupPost: post, from: fromUser, to: toUser, type: NotificationType.groupPostComment, dictionary: notificationDictionary)
+                                                        notification.id = notificationId
+                                                        completion(notification)
+                                                    })
+                                                }
+                                                else{
+                                                    return
+                                                }
                                             })
-                                        }
-                                        else{
-                                            return
-                                        }
-                                    })
+                                        })
+                                    }
+                                    else {
+                                        return
+                                    }
                                 })
                             case "groupPostLiked":
                                 // need from, group, post
-                                Database.database().fetchGroup(groupId: group_id, completion: { (group) in
-                                    self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
-                                        if post_exists{
-                                            Database.database().fetchGroupPost(groupId: group_id, postId: group_post_id, completion: { (post) in
-                                                var notification = Notification(group: group, groupPost: post, from: fromUser, to: toUser, type: NotificationType.groupPostLiked, dictionary: notificationDictionary)
-                                                notification.id = notificationId
-                                                completion(notification)
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
+                                                if post_exists{
+                                                    Database.database().fetchGroupPost(groupId: group_id, postId: group_post_id, completion: { (post) in
+                                                        var notification = Notification(group: group, groupPost: post, from: fromUser, to: toUser, type: NotificationType.groupPostLiked, dictionary: notificationDictionary)
+                                                        notification.id = notificationId
+                                                        completion(notification)
+                                                    })
+                                                }
+                                                else{
+                                                    return
+                                                }
                                             })
-                                        }
-                                        else{
-                                            return
-                                        }
-                                    })
+                                        })
+                                    }
+                                    else {
+                                        return
+                                    }
                                 })
                             case "newGroupPost":
                                 // need from, group, post
-                                Database.database().fetchGroup(groupId: group_id, completion: { (group) in
-                                    self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
-                                        if post_exists{
-                                            Database.database().fetchGroupPost(groupId: group_id, postId: group_post_id, completion: { (post) in
-                                                var notification = Notification(group: group, groupPost: post, from: fromUser, to: toUser, type: NotificationType.newGroupPost, dictionary: notificationDictionary)
-                                                notification.id = notificationId
-                                                completion(notification)
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
+                                                if post_exists{
+                                                    Database.database().fetchGroupPost(groupId: group_id, postId: group_post_id, completion: { (post) in
+                                                        var notification = Notification(group: group, groupPost: post, from: fromUser, to: toUser, type: NotificationType.newGroupPost, dictionary: notificationDictionary)
+                                                        notification.id = notificationId
+                                                        completion(notification)
 
+                                                    })
+                                                }
+                                                else{
+                                                    return
+                                                }
                                             })
-                                        }
-                                        else{
-                                            return
-                                        }
-                                    })
+                                        })
+                                    }
+                                    else {
+                                        return
+                                    }
                                 })
                             case "groupJoinInvitation":
-                            // need from, group
-                            Database.database().fetchGroup(groupId: group_id, completion: { (group) in
-                                var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.groupJoinInvitation, dictionary: notificationDictionary)
-                                notification.id = notificationId
-                                completion(notification)
-                            })
+                                // need from, group
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.groupJoinInvitation, dictionary: notificationDictionary)
+                                            notification.id = notificationId
+                                            completion(notification)
+                                        })
+                                    }
+                                    else {
+                                        return
+                                    }
+                                })
                             default:
                                 return
                             }
@@ -2681,6 +2789,36 @@ extension Database {
         }
     }
     
+    func interactWithNotification(notificationId: String, completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let notificationRef = Database.database().reference().child("notifications").child(currentLoggedInUserId).child(notificationId)
+        let values = ["interacted": 1] as [String : Any]
+        notificationRef.updateChildValues(values) { (err, ref) in
+            if let err = err {
+                print("Failed to save post to database", err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
+    func hasNotificationBeenInteractedWith(notificationId: String, completion: @escaping (Bool) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let notificationRef = Database.database().reference().child("notifications").child(currentLoggedInUserId).child(notificationId)
+        notificationRef.observeSingleEvent(of: .value, with: { (snapshot) in
+            guard let notificationDictionary = snapshot.value as? [String: Any] else { return }
+            let interacted = notificationDictionary["interacted"] as? Int ?? 0
+            if interacted == 1 {
+                completion(true)
+            }
+            else{
+                completion(false)
+            }
+        }) { (err) in
+            print("Failed to fetch user from database:", err)
+        }
+    }
+    
     func viewNotification(notificationId: String, completion: @escaping (Error?) -> ()) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         let notificationRef = Database.database().reference().child("notifications").child(currentLoggedInUserId).child(notificationId)
@@ -2694,22 +2832,46 @@ extension Database {
         }
     }
     
-    func hasNotificationBeenSeen(notificationId: String, completion: @escaping (Bool) -> ()) {
+    func hasLatestNotificationBeenSeen(completion: @escaping (Bool) -> ()) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-        let notificationRef = Database.database().reference().child("notifications").child(currentLoggedInUserId).child(notificationId)
-        notificationRef.observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let notificationDictionary = snapshot.value as? [String: Any] else { return }
-            let seen = notificationDictionary["seen"] as? Int ?? 0
-            if seen == 1 {
-                completion(true)
-            }
-            else{
+        let notificationsRef = Database.database().reference().child("notifications").child(currentLoggedInUserId)
+        notificationsRef.queryOrderedByKey().queryLimited(toLast: 1).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion(false)
+                return
             }
+            dictionaries.forEach({ (arg) in
+                let (_, value) = arg
+                guard let dict_values = value as? [String: Any] else { return }
+                let seen = dict_values["seen"] as? Int ?? 0
+                if seen == 1 {
+                    completion(true)
+                }
+                else{
+                    completion(false)
+                }
+            })
         }) { (err) in
-            print("Failed to fetch user from database:", err)
+            print("Failed to fetch notification from database:", err)
         }
     }
+    
+//    func hasNotificationBeenSeen(notificationId: String, completion: @escaping (Bool) -> ()) {
+//        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+//        let notificationRef = Database.database().reference().child("notifications").child(currentLoggedInUserId).child(notificationId)
+//        notificationRef.observeSingleEvent(of: .value, with: { (snapshot) in
+//            guard let notificationDictionary = snapshot.value as? [String: Any] else { return }
+//            let seen = notificationDictionary["seen"] as? Int ?? 0
+//            if seen == 1 {
+//                completion(true)
+//            }
+//            else{
+//                completion(false)
+//            }
+//        }) { (err) in
+//            print("Failed to fetch user from database:", err)
+//        }
+//    }
     
     //MARK: Utilities
     

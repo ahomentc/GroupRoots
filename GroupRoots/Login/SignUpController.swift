@@ -77,7 +77,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     private let signUpButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Sign Up", for: .normal)
-        button.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+        button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         button.layer.cornerRadius = 5
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.setTitleColor(.white, for: .normal)
@@ -89,7 +89,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     private let alreadyHaveAccountButton: UIButton = {
         let button = UIButton(type: .system)
         let attributedTitle = NSMutableAttributedString(string: "Already have an account?  ", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.lightGray])
-        attributedTitle.append(NSAttributedString(string: "Sign In", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.mainBlue
+        attributedTitle.append(NSAttributedString(string: "Sign In", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
             ]))
         button.setAttributedTitle(attributedTitle, for: .normal)
         button.addTarget(self, action: #selector(handleAlreadyHaveAccount), for: .touchUpInside)
@@ -226,16 +226,23 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
                             return
                         }
                         // send the notification each each user in the group
-                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                            Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
-                                users.forEach({ (user) in
-                                    Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinRequest, group: group) { (err) in
-                                        if err != nil {
-                                            return
-                                        }
-                                    }
+                        Database.database().groupExists(groupId: groupId, completion: { (exists) in
+                            if exists {
+                                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                                    Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
+                                        users.forEach({ (user) in
+                                            Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinRequest, group: group) { (err) in
+                                                if err != nil {
+                                                    return
+                                                }
+                                            }
+                                        })
+                                    }) { (_) in}
                                 })
-                            }) { (_) in}
+                            }
+                            else {
+                                return
+                            }
                         })
                         
                         Database.database().subscribeToGroup(groupId: groupId) { (err) in

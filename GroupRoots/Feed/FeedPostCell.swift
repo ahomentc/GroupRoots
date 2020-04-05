@@ -44,6 +44,14 @@ class FeedPostCell: UICollectionViewCell {
         }
     }
     
+    var emptyComment: Bool? {
+        didSet {
+            if emptyComment! {
+                self.commentsLabel.text = ""
+            }
+        }
+    }
+    
     var numViewsForPost: Int? {
         didSet {
             setupViewsButton(viewsCount: numViewsForPost!)
@@ -246,6 +254,7 @@ class FeedPostCell: UICollectionViewCell {
         
         addSubview(commentsLabel)
         commentsLabel.anchor(left: leftAnchor, bottom:postedByLabel.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding - 5, paddingRight: padding)
+        commentsLabel.isHidden = true
          
         addSubview(captionLabel)
         captionLabel.anchor(left: leftAnchor, bottom: commentsLabel.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding - 5, paddingRight: padding - 8)
@@ -269,14 +278,14 @@ class FeedPostCell: UICollectionViewCell {
         
         insertSubview(player.view, at: 0)
         player.view.isHidden = true
-                        
+        player.autoplay = false
+        player.playbackResumesWhenBecameActive = false
+        player.playbackResumesWhenEnteringForeground = false
     }
     
     private func configurePost() {
         guard let groupPost = groupPost else { return }
-        guard let isScrollingVertically = isScrollingVertically else { return }
-        guard let isScrolling = isScrolling else { return }
-        
+
         setupAttributedCaption(groupPost: groupPost)
         setupGroupPoster(groupPost: groupPost)
         setupTimeLabel(groupPost: groupPost)
@@ -308,12 +317,11 @@ class FeedPostCell: UICollectionViewCell {
             self.player.playerView.playerBackgroundColor = .clear
             do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
             
-//            print(self.player.url)
-//            if !isScrollingVertically && !isScrolling && (self.player.playbackState == .stopped || self.player.playbackState == .paused) {
-//                print(self.player.url)
-//                self.player.playFromCurrentTime()
-//            }
-            self.delegate?.requestPlay(for: self)
+            let seconds = 1.0
+            DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+                self.delegate?.requestPlay(for: self)
+            }
+//            self.player.playFromCurrentTime()
         }
     }
 
@@ -338,17 +346,21 @@ class FeedPostCell: UICollectionViewCell {
         }
     }
     
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if touches.first != nil {
-            self.player.pause()
-        }
-    }
+//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+//        if touches.first != nil {
+//            self.player.pause()
+//        }
+//    }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         if touches.first != nil && self.player.url?.absoluteString ?? "" != "" {
             do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
-            self.player.playFromCurrentTime()
-//            self.delegate?.didStartPlaying(for: self)
+            if self.player.playbackState == .playing {
+                self.player.pause()
+            }
+            else if self.player.playbackState == .paused {
+                self.player.playFromCurrentTime()
+            }
         }
     }
     
@@ -381,6 +393,7 @@ class FeedPostCell: UICollectionViewCell {
         attributedText.append(NSAttributedString(string: " " + comment.text, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)]))
         attributedText.append(NSAttributedString(string: "", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 4)]))
         commentsLabel.attributedText = attributedText
+        commentsLabel.isHidden = false
     }
     
     private func setupViewsButton(viewsCount: Int) {

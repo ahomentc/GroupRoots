@@ -206,22 +206,28 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                 self.dismiss(animated: true, completion: nil)
                 return
             }
-            
-            Database.database().fetchGroup(groupId: self.selectedGroupId, completion: { (group) in
-                Database.database().fetchGroupPost(groupId: group.groupId, postId: postId, completion: { (post) in
-                    // send the notification each each user in the group
-                    Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
-                        members.forEach({ (member) in
-                            if member.uid != currentLoggedInUserId{
-                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: group, groupPost: post) { (err) in
-                                    if err != nil {
-                                        return
+            Database.database().groupExists(groupId: self.selectedGroupId, completion: { (exists) in
+                if exists {
+                    Database.database().fetchGroup(groupId: self.selectedGroupId, completion: { (group) in
+                        Database.database().fetchGroupPost(groupId: group.groupId, postId: postId, completion: { (post) in
+                            // send the notification each each user in the group
+                            Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
+                                members.forEach({ (member) in
+                                    if member.uid != currentLoggedInUserId{
+                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: group, groupPost: post) { (err) in
+                                            if err != nil {
+                                                return
+                                            }
+                                        }
                                     }
-                                }
-                            }
+                                })
+                            }) { (_) in}
                         })
-                    }) { (_) in}
-                })
+                    })
+                }
+                else {
+                    return
+                }
             })
             
             NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)

@@ -293,18 +293,25 @@ class GroupProfileHeader: UICollectionViewCell {
                             
                             // notification that member is now in group
                             Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
-                                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                                    Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
-                                        members.forEach({ (member) in
-                                            if user.uid != member.uid {
-                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
-                                                    if err != nil {
-                                                        return
+                                Database.database().groupExists(groupId: groupId, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                                            Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                                members.forEach({ (member) in
+                                                    if user.uid != member.uid {
+                                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
+                                                            if err != nil {
+                                                                return
+                                                            }
+                                                        }
                                                     }
-                                                }
-                                            }
+                                                })
+                                            }) { (_) in}
                                         })
-                                    }) { (_) in}
+                                    }
+                                    else {
+                                        return
+                                    }
                                 })
                             })
                         }

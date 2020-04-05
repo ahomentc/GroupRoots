@@ -4,16 +4,16 @@ import Firebase
 class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollectionViewDelegateFlowLayout {
     
 //    override var prefersStatusBarHidden: Bool { return true }
-      
+    override var prefersStatusBarHidden: Bool { return false }
+    
     // 2d representation of the dict, same as dict but with no values
     // later, just use the dict but convert it to this after all data is loaded in
     var groupPosts2D = [[GroupPost]]()
-    var groupPostsCount = [String: Int]()
-    var groupPostsVisible = [String: Int]()
-    var groupPostMembers = [String: [User]]()
-    var groupsVisibleCount = 2
-    var maxDistanceScrolledEach = [CGFloat]()
-    var numPicsScrolledEach = [Int]()
+    var groupMembers = [String: [User]]()
+    var groupPostsTotalViewersDict = [String: [String: Int]]()          // Dict inside dict. First key is the groupId. Within the value is another key with postId
+    var groupPostsVisibleViewersDict = [String: [String: [User]]]()     //    same   ^
+    var groupPostsFirstCommentDict = [String: [String: Comment]]()      //    same   |
+    var groupPostsNumCommentsDict = [String: [String: Int]]()           // -- same --|
     var isScrolling = false
         
     private let loadingScreenView: CustomImageView = {
@@ -51,14 +51,19 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
         NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
 //        handleRefresh()
         self.configureNavBar()
+        
+        collectionView.visibleCells.forEach { cell in
+            (cell as! MyCell).pauseVisibleVideo()
+        }
                 
         // play the video for the visible cell
-        collectionView.visibleCells.forEach { cell in
-            (cell as! MyCell).playVisibleVideo()
-        }
+//        collectionView.visibleCells.forEach { cell in
+//            (cell as! MyCell).playVisibleVideo()
+//        }
     }
     
     func configureNavBar(){
@@ -75,7 +80,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         if #available(iOS 13.0, *) {
             overrideUserInterfaceStyle = .light
         }
-        
+            
         loadingScreenView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
         loadingScreenView.layer.cornerRadius = 0
         loadingScreenView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
@@ -112,7 +117,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
 
     private func fetchAllPosts() {
         showEmptyStateViewIfNeeded()
-        fetchBaseGroupPosts()
+        fetchGroupPosts()
     }
         
     // For now, only public groups
@@ -122,13 +127,11 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     //  the highest score. Score will be determined by how many of the people you're following
     //  are in the group, and how many people you're in a group with are in the group.
 
-    private func fetchBaseGroupPosts() {
+    private func fetchGroupPosts() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         collectionView?.refreshControl?.beginRefreshing()
-        
         var group_ids = Set<String>()
         self.groupPosts2D = [[GroupPost]]()
-        
         // get all the userIds of the people user is following
         let sync = DispatchGroup()
         sync.enter()
@@ -145,7 +148,6 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
             self.loadingScreenView.isHidden = true
             self.collectionView?.refreshControl?.endRefreshing()
         })
-               
         sync.enter()
         Database.database().fetchGroupsFollowing(withUID: currentLoggedInUserId, completion: { (groups) in
             groups.forEach({ (group) in
@@ -159,33 +161,112 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
             self.loadingScreenView.isHidden = true
             self.collectionView?.refreshControl?.endRefreshing()
         })
-        
         // run below when all the group ids have been collected
         sync.notify(queue: .main) {
             let lower_sync = DispatchGroup()
             group_ids.forEach({ (groupId) in
                 lower_sync.enter()
+                // could change this function to have only posts but maybe this could be useful in the future
                 Database.database().fetchAllGroupPosts(groupId: groupId, completion: { (countAndPosts) in
+                    // this section has gotten all the groupPosts within each group
                     if countAndPosts.count > 0 {
                         let posts = countAndPosts[1] as! [GroupPost]
-                        let count = countAndPosts[0] as! Int
+//                        let count = countAndPosts[0] as! Int
                         let sortedPosts = posts.sorted(by: { (p1, p2) -> Bool in
                             return p1.creationDate.compare(p2.creationDate) == .orderedDescending
                         })
-                        if sortedPosts.count > 0 {
+                        if sortedPosts.count > 0 {      // don't complete if no posts (don't add it to feed)
                             let groupId = sortedPosts[0].group.groupId
                             self.groupPosts2D.append(sortedPosts)
-                            // dictionary with group and how many total posts are for that group
-                            self.groupPostsCount[groupId] = count
-                            self.groupPostsVisible[groupId] = 0
+                            
+                            // set the members of the group
                             lower_sync.enter()
                             Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
                                 lower_sync.leave()
-                                self.groupPostMembers[groupId] =  users
+                                self.groupMembers[groupId] =  users
                             }) { (_) in }
+                            
+                            // go through each post
+                            posts.forEach({ (groupPost) in
+                                // note that all these fetches are async of each other and are concurent so any of them could occur first
+                                
+                                // get the first comment of the post and set the number of comments
+                                lower_sync.enter()
+                                Database.database().fetchFirstCommentForPost(withId: groupPost.id, completion: { (comments) in
+                                    if comments.count > 0 {
+                                        let existingPostsForFirstCommentInGroup = self.groupPostsFirstCommentDict[groupId]
+                                        if existingPostsForFirstCommentInGroup == nil {
+                                            self.groupPostsFirstCommentDict[groupId] = [groupPost.id: comments[0]]
+                                        }
+                                        else {
+                                            self.groupPostsFirstCommentDict[groupId]![groupPost.id] = comments[0] // it is def not nil so safe to unwrap
+                                        }
+                                    }
+                                    let existingPostsForNumCommentInGroup = self.groupPostsNumCommentsDict[groupId]
+                                    if existingPostsForNumCommentInGroup == nil {
+                                        self.groupPostsNumCommentsDict[groupId] = [groupPost.id: comments.count]
+                                    }
+                                    else {
+                                        self.groupPostsNumCommentsDict[groupId]![groupPost.id] = comments.count // it is def not nil so safe to unwrap
+                                    }
+                                    lower_sync.leave()
+                                }) { (err) in }
+                                
+                                // the following is only if the user is in a gorup
+                                lower_sync.enter()
+                                Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
+                                    if inGroup {
+                                        // get the viewers
+                                        lower_sync.enter()
+                                        Database.database().fetchPostVisibleViewers(postId: groupPost.id, completion: { (viewer_ids) in
+                                            if viewer_ids.count > 0 {
+                                                var viewers = [User]()
+                                                let viewersSync = DispatchGroup()
+                                                viewer_ids.forEach({ (viewer_id) in
+                                                    viewersSync.enter()
+                                                    Database.database().userExists(withUID: viewer_id, completion: { (exists) in
+                                                        if exists{
+                                                            Database.database().fetchUser(withUID: viewer_id, completion: { (user) in
+                                                                viewers.append(user)
+                                                                viewersSync.leave()
+                                                            })
+                                                        }
+                                                        else {
+                                                            viewersSync.leave()
+                                                        }
+                                                    })
+                                                })
+                                                viewersSync.notify(queue: .main) {
+                                                    let existingPostsForVisibleViewersInGroup = self.groupPostsVisibleViewersDict[groupId]
+                                                    if existingPostsForVisibleViewersInGroup == nil {
+                                                        self.groupPostsVisibleViewersDict[groupId] = [groupPost.id: viewers]
+                                                    }
+                                                    lower_sync.leave()
+                                                }
+                                            }
+                                            else {
+                                                lower_sync.leave()
+                                            }
+                                        }) { (err) in return}
+                                        
+                                        // get the post total viewers
+                                        Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
+                                            let existingPostsForTotalViewersInGroup = self.groupPostsTotalViewersDict[groupId]
+                                            if existingPostsForTotalViewersInGroup == nil {
+                                                self.groupPostsTotalViewersDict[groupId] = [groupPost.id: views_count]
+                                            }
+                                            lower_sync.leave()
+                                            
+                                        }) { (err) in return }
+                                    }
+                                    else{
+                                        lower_sync.leave()
+                                    }
+                                }) { (err) in return }
+                            })
                         }
                     }
-                    lower_sync.leave()
+                    lower_sync.leave() // this might be the problem this. it should be inside? maybe not actually
                 }, withCancel: { (err) in
                     self.loadingScreenView.isHidden = true
                     self.collectionView?.refreshControl?.endRefreshing()
@@ -209,15 +290,21 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let myCell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! MyCell
-        let groupId = groupPosts2D[indexPath.row][0].group.groupId
-        myCell.groupPosts = groupPosts2D[indexPath.row]
-        myCell.groupPostMembers = groupPostMembers[groupId]
-        myCell.feedController = self
-        myCell.delegate = self
-        myCell.tag = indexPath.row
-        myCell.isScrollingVertically = isScrolling
-        myCell.maxDistanceScrolled = CGFloat(0)
-        myCell.numPicsScrolled = 1
+        if indexPath.row < groupPosts2D.count{
+            let groupId = groupPosts2D[indexPath.row][0].group.groupId
+            myCell.groupPosts = groupPosts2D[indexPath.row]
+            myCell.groupMembers = groupMembers[groupId]
+            myCell.groupPostsTotalViewers = groupPostsTotalViewersDict[groupId]
+            myCell.groupPostsViewers = groupPostsVisibleViewersDict[groupId]
+            myCell.groupPostsFirstComment = groupPostsFirstCommentDict[groupId]
+            myCell.groupPostsNumComments = groupPostsNumCommentsDict[groupId]
+            myCell.feedController = self
+            myCell.delegate = self
+            myCell.tag = indexPath.row
+            myCell.isScrollingVertically = isScrolling
+            myCell.maxDistanceScrolled = CGFloat(0)
+            myCell.numPicsScrolled = 1
+        }
         return myCell
     }
 
@@ -230,7 +317,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         }
         
         showEmptyStateViewIfNeeded()
-        fetchBaseGroupPosts()
+        fetchGroupPosts()
     }
     
     override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -365,14 +452,6 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         })
         return action
     }
-
-    func updateMaxDistance(for cell: HomePostCell) {
-        self.maxDistanceScrolledEach[cell.tag] = CGFloat(self.numPicsScrolledEach[cell.tag])
-    }
-    
-    func updateNumPicsScrolled(for cell: HomePostCell) {
-        self.numPicsScrolledEach[cell.tag] += 1
-    }
     
     func didSelectUser(selectedUser: User) {
         let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
@@ -387,9 +466,14 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         self.navigationController?.pushViewController(membersController, animated: true)
     }
     
-    func requestPlay(for cell: FeedPostCell) {
+    func requestPlay(for_lower cell1: FeedPostCell, for_upper cell2: MyCell) {
         if !isScrolling {
-            cell.player.playFromCurrentTime()
+            // check to see if visible too
+            collectionView.visibleCells.forEach { cell_visible in  // check if cell is still visible
+                if cell_visible == cell2 {
+                    cell1.player.playFromCurrentTime()
+                }
+            }
         }
     }
 }

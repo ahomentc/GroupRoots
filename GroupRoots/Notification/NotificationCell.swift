@@ -97,7 +97,7 @@ class NotificationCell: UICollectionViewCell {
         addSubview(profileImageView)
         profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 45, height: 45)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 5
+        profileImageView.layer.cornerRadius = 18
         
         addSubview(postImageView)
         postImageView.anchor(right: rightAnchor, paddingRight: 8, width: 50, height: 50)
@@ -120,7 +120,13 @@ class NotificationCell: UICollectionViewCell {
     private func configureCell() {
         guard let notification = notification else { return }
         
-        usernameLabel.text = (notification.from.username ?? "GroupRoots")
+        Database.database().viewNotification(notificationId: notification.id) { (err) in
+            if err != nil {
+                return
+            }
+        }
+        
+        usernameLabel.text = notification.from.username
         if notification.type == NotificationType.newFollow {
             notificationsLabel.text = "followed you"
         }
@@ -163,7 +169,7 @@ class NotificationCell: UICollectionViewCell {
         postImageView.layer.borderWidth = 0
         actionButton.setTitle("", for: .normal)
             
-        Database.database().hasNotificationBeenSeen(notificationId: notification.id, completion: { (seen) in
+        Database.database().hasNotificationBeenInteractedWith(notificationId: notification.id, completion: { (seen) in
             if seen {
                 self.backgroundColor = .white
             } else {
@@ -224,7 +230,7 @@ class NotificationCell: UICollectionViewCell {
     
     @objc private func handleTap() {
         guard let notification = notification else { return }
-        Database.database().viewNotification(notificationId: notification.id) { (err) in
+        Database.database().interactWithNotification(notificationId: notification.id) { (err) in
             if err != nil {
                 return
             }
@@ -276,21 +282,29 @@ class NotificationCell: UICollectionViewCell {
                             }
                             // notification that member is now in group
                             Database.database().fetchUser(withUID: currentLoggedInUser, completion: { (user) in
-                                Database.database().fetchGroup(groupId: (self.notification?.group!.groupId)!, completion: { (group) in
-                                    Database.database().fetchGroupMembers(groupId: (self.notification?.group!.groupId)!, completion: { (members) in
-                                        members.forEach({ (member) in
-                                            if user.uid != member.uid {
-                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
-                                                    if err != nil {
-                                                        return
+                                let groupId = (self.notification?.group!.groupId)!
+                                Database.database().groupExists(groupId: groupId, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                                            Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                                members.forEach({ (member) in
+                                                    if user.uid != member.uid {
+                                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
+                                                            if err != nil {
+                                                                return
+                                                            }
+                                                            self.reloadActionButton()
+                                                            self.delegate?.groupJoinAlert(group: group)
+                                                            self.delegate?.handleShowGroup(group: group)
+                                                        }
                                                     }
-                                                    self.reloadActionButton()
-                                                    self.delegate?.groupJoinAlert(group: group)
-                                                    self.delegate?.handleShowGroup(group: group)
-                                                }
-                                            }
+                                                })
+                                            }) { (_) in}
                                         })
-                                    }) { (_) in}
+                                    }
+                                    else {
+                                        return
+                                    }
                                 })
                             })
 
@@ -311,7 +325,7 @@ class NotificationCell: UICollectionViewCell {
     
     @objc private func handleShowGroup() {
         guard let notification = notification else { return }
-        Database.database().viewNotification(notificationId: notification.id) { (err) in
+        Database.database().interactWithNotification(notificationId: notification.id) { (err) in
             if err != nil {
                 return
             }
@@ -324,7 +338,7 @@ class NotificationCell: UICollectionViewCell {
     
     @objc private func handleDidTapFromUser() {
         guard let notification = notification else { return }
-        Database.database().viewNotification(notificationId: notification.id) { (err) in
+        Database.database().interactWithNotification(notificationId: notification.id) { (err) in
             if err != nil {
                 return
             }
@@ -338,7 +352,7 @@ class NotificationCell: UICollectionViewCell {
         guard let notification = notification else { return }
         guard let group = notification.group else { return }
         guard let post = notification.groupPost else { return }
-        Database.database().viewNotification(notificationId: notification.id) { (err) in
+        Database.database().interactWithNotification(notificationId: notification.id) { (err) in
             if err != nil {
                 return
             }

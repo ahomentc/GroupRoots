@@ -24,7 +24,12 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         navigationItem.title = "Notifications"
         let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 22)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
-        self.navigationController?.navigationBar.shadowImage = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).as1ptImage()
+//        self.navigationController?.navigationBar.shadowImage = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).as1ptImage()
+        self.navigationController?.navigationBar.shadowImage = UIColor.white.as1ptImage()
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = false
+        self.navigationController?.navigationBar.backgroundColor = UIColor.white
         
         collectionView?.backgroundColor = .white
         collectionView?.alwaysBounceVertical = true
@@ -33,14 +38,19 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         collectionView?.refreshControl = refreshControl
-        
+                
         fetchAllNotifications()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
-        self.navigationController?.navigationBar.shadowImage = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).as1ptImage()
+//        self.navigationController?.navigationBar.shadowImage = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).as1ptImage()
+        self.navigationController?.navigationBar.shadowImage = UIColor.white.as1ptImage()
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = false
+        self.navigationController?.navigationBar.backgroundColor = UIColor.white
     }
     
     override func viewWillDisappear(_ animated: Bool) {

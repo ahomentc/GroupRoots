@@ -17,11 +17,9 @@ protocol FeedPostCellDelegate {
     func didTapOptions(groupPost: GroupPost)
     func didSelectUser(selectedUser: User)
     func showMoreMembers(group: Group)
-    func updateMaxDistance(for cell: HomePostCell)
-    func updateNumPicsScrolled(for cell: HomePostCell)
     func didView(groupPost: GroupPost)
     func showViewers(viewers: [User], viewsCount: Int)
-    func requestPlay(for cell: FeedPostCell)
+    func requestPlay(for_lower cell1: FeedPostCell, for_upper cell2: MyCell)
 }
 
 class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, InnerPostCellDelegate, FeedMembersCellDelegate {
@@ -35,85 +33,50 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     var viewersForPosts = [String: [User]]()
     var numViewsForPost = [String: Int]()
     var numCommentsForPosts = [String: Int]()
-    var syncDone = false
     var isScrolling = false
     var isScrollingVertically = false
     
     var groupPosts: [GroupPost]? {
         didSet {
-            // maybe move the configure header part to FeedController
             configureHeader()
-            if numPicsScrolled == 1 {
-                collectionView.scrollToItem(at: IndexPath(item: 1, section: 0), at: .centeredHorizontally, animated: false)
-            }
-            
-            let sync = DispatchGroup()
-            groupPosts!.forEach({ (groupPost) in
-                sync.enter()
-                Database.database().fetchFirstCommentForPost(withId: groupPost.id, completion: { (comments) in
-                    self.numCommentsForPosts[groupPost.id] = comments.count
-                    if comments.count > 0 {
-                        self.firstCommentForPosts[groupPost.id] = comments[0]
-                    }
-                    Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
-                        sync.leave()
-                        if inGroup {
-                            sync.enter()
-                            // fetchPostViewers only gets non-anonymous views so need to use fetchNumPostViewers to get full number
-                            Database.database().fetchPostViewers(postId: groupPost.id, completion: { (viewer_ids) in
-                                Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
-                                    sync.leave()
-                                    self.numViewsForPost[groupPost.id] = views_count
-                                    if viewer_ids.count > 0 {
-                                        var viewers = [User]()
-                                        let viewersSync = DispatchGroup()
-                                        sync.enter()
-                                        viewer_ids.forEach({ (viewer_id) in
-                                            viewersSync.enter()
-                                            Database.database().userExists(withUID: viewer_id, completion: { (exists) in
-                                                if exists{
-                                                    Database.database().fetchUser(withUID: viewer_id, completion: { (user) in
-                                                        viewers.append(user)
-                                                        viewersSync.leave()
-                                                    })
-                                                }
-                                                else {
-                                                    viewersSync.leave()
-                                                }
-                                            })
-                                        })
-                                        viewersSync.notify(queue: .main) {
-                                            self.viewersForPosts[groupPost.id] = viewers
-                                            sync.leave()
-                                        }
-                                    }
-                                }) { (err) in }
-                            }) { (err) in
-                            }
-                        }
-//                        else{
-//                            sync.leave()
-//                        }
-                    }) { (err) in
-                        return
-                    }
-                    
-                }) { (err) in
-                }
-            })
-            sync.notify(queue: .main) {
-                self.syncDone = true
-                self.reloadGroupData()
-            }
+            collectionView.scrollToItem(at: IndexPath(item: 1, section: 0), at: .centeredHorizontally, animated: false)
+            self.reloadGroupData()
         }
     }
     
-    var groupPostMembers: [User]? {
+    var groupMembers: [User]? {
         didSet {
             configureHeader()
         }
     }
     
+    // this might be bad but to clarify. FeedController sets groupPostsViewers for this cell. That in turn sets viewersForPosts
+    var groupPostsViewers: [String: [User]]? { // key is the postId
+        didSet{
+            viewersForPosts = groupPostsViewers!
+        }
+    }
+    
+    var groupPostsTotalViewers: [String: Int]? { // key is the postId
+        didSet {
+            numViewsForPost = groupPostsTotalViewers!
+            self.reloadGroupData()
+        }
+    }
+    
+    var checkedIfCommentExists = false
+    var groupPostsFirstComment: [String: Comment]? { // key is the postId
+        didSet {
+            self.reloadGroupData()
+        }
+    }
+    
+    var groupPostsNumComments: [String: Int]? { // key is the postId
+        didSet {
+            self.reloadGroupData()
+        }
+    }
+        
     var maxDistanceScrolled = CGFloat(0)
     var numPicsScrolled = 1
 
@@ -135,12 +98,26 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     }
     
     func reloadGroupData(){
-        guard numViewsForPost.count != 0 else { return }
-        if !syncDone { return }
-        print("reloading")
+        guard let groupPosts = groupPosts else { return }
+        guard groupPostsNumComments != nil else { return }
+        if !checkedIfCommentExists { return } // this is needed because groupPostsFirstComment might be nil even if check
         
-        DispatchQueue.main.async{
-            self.collectionView.reloadData()
+        
+        // need to check if in group, else viewers will be nil and always return
+        if groupPosts.count > 0 {
+            Database.database().isInGroup(groupId: groupPosts[0].group.groupId, completion: { (inGroup) in
+                if inGroup{
+                    guard self.groupPostsTotalViewers != nil else { return }
+                    guard self.groupPostsViewers != nil else { return }
+                    DispatchQueue.main.async{ self.collectionView.reloadData() }
+                }
+                else {
+                    DispatchQueue.main.async{ self.collectionView.reloadData()}
+                }
+            }) { (err) in return }
+        }
+        else {
+            DispatchQueue.main.async{ self.collectionView.reloadData() }
         }
     }
     
@@ -172,8 +149,8 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         if groupPosts?.count == 0 { return }
         guard let groupPost = groupPosts?[0] else { return }
         header.group = groupPost.group
-        guard let groupPostMembers = groupPostMembers else { return }
-        header.groupPostMembers = groupPostMembers
+        guard let groupMembers = groupMembers else { return }
+        header.groupMembers = groupMembers
     }
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
@@ -185,7 +162,6 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        print(indexPath.row)
         if indexPath.item == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MembersCell.cellId, for: indexPath) as! MembersCell
             cell.group = groupPosts?[0].group
@@ -195,21 +171,35 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         else {
             if indexPath.item-1 < groupPosts?.count ?? 0{
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedPostCell.cellId, for: indexPath) as! FeedPostCell
-                cell.groupPost = groupPosts?[indexPath.item-1]
-
-                if firstCommentForPosts[groupPosts?[indexPath.item-1].id ?? ""] != nil {
-                    cell.firstComment = firstCommentForPosts[groupPosts?[indexPath.item-1].id ?? ""]
-                }
-                if numCommentsForPosts[groupPosts?[indexPath.item-1].id ?? ""] != nil {
-                    cell.numComments = numCommentsForPosts[groupPosts?[indexPath.item-1].id ?? ""]
-                }
-                if numViewsForPost[groupPosts?[indexPath.item-1].id ?? ""] != nil {
-                    cell.numViewsForPost = numViewsForPost[groupPosts?[indexPath.item-1].id ?? ""]
-                }
                 cell.isScrollingVertically = isScrollingVertically
                 cell.isScrolling = isScrolling
                 cell.delegate = self
+                cell.emptyComment = true
+
+                guard let groupPosts = groupPosts else { return cell }
+                cell.groupPost = groupPosts[indexPath.item-1]
                 
+                guard let groupPostsNumComments = groupPostsNumComments else { return cell }
+                let postId = groupPosts[indexPath.item-1].id
+                if groupPostsNumComments[postId] != nil {
+                    cell.numComments = groupPostsNumComments[postId]
+                    
+                    self.checkedIfCommentExists = true
+                    if groupPostsNumComments[postId] ?? 0 > 0 {
+                        guard let groupPostsFirstComment = groupPostsFirstComment else { return cell }
+    
+                        if groupPostsFirstComment[postId] != nil {
+                            cell.firstComment = groupPostsFirstComment[postId]
+                        }
+                    }
+                }
+                
+                // this is actually fine even if it is nul because the cell is filled out anyways so ok to return it
+                guard let groupPostsTotalViewers = self.groupPostsTotalViewers else { return cell }
+                if groupPostsTotalViewers[postId] != nil {
+                    cell.numViewsForPost = groupPostsTotalViewers[postId]
+                }
+                                
                 return cell
             }
             else {
@@ -222,7 +212,6 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     func pauseVisibleVideo() {
         collectionView.visibleCells.forEach { cell in
             if cell.isKind(of: FeedPostCell.self){
-                (cell as! FeedPostCell).player.muted = true
                 (cell as! FeedPostCell).player.pause()
             }
         }
@@ -232,7 +221,6 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         collectionView.visibleCells.forEach { cell in
             if cell.isKind(of: FeedPostCell.self){
                 if (cell as! FeedPostCell).player.url?.absoluteString ?? "" != "" {
-                    (cell as! FeedPostCell).player.muted = false
                     (cell as! FeedPostCell).player.playFromCurrentTime()
                 }
             }
@@ -258,14 +246,17 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
 
     func stoppedScrolling(endPos: CGFloat) {
         isScrolling = false
-//        self.playVisibleVideo()
     }
     
     //MARK: - InnerPostCellDelegate
     
     func requestPlay(for cell: FeedPostCell) {
         if !isScrolling {
-            delegate?.requestPlay(for: cell)
+            collectionView.visibleCells.forEach { cell2 in  // check if cell is still visible
+                if cell2 == cell {
+                    delegate?.requestPlay(for_lower: cell, for_upper: self)
+                }
+            }
         }
     }
     
