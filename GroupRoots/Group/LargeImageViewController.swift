@@ -31,6 +31,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     var groupPostMembers = [User]()
     var firstCommentForPosts = [String: Comment]()
     var viewersForPosts = [String: [User]]()
+    var numViewsForPost = [String: Int]()
     var numCommentsForPosts = [String: Int]()
     var isScrolling = false
     
@@ -115,30 +116,34 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                         if inGroup {
                             sync.enter()
                             Database.database().fetchPostVisibleViewers(postId: groupPost.id, completion: { (viewer_ids) in
-                                sync.leave()
-                                if viewer_ids.count > 0 {
-                                    var viewers = [User]()
-                                    let viewersSync = DispatchGroup()
-                                    sync.enter()
-                                    viewer_ids.forEach({ (viewer_id) in
-                                        viewersSync.enter()
-                                        Database.database().userExists(withUID: viewer_id, completion: { (exists) in
-                                            if exists{
-                                                Database.database().fetchUser(withUID: viewer_id, completion: { (user) in
-                                                    viewers.append(user)
+                                Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
+                                    sync.leave()
+                                    self.numViewsForPost[groupPost.id] = views_count
+//                                    self.reloadGroupData()
+                                    if viewer_ids.count > 0 {
+                                        var viewers = [User]()
+                                        let viewersSync = DispatchGroup()
+                                        sync.enter()
+                                        viewer_ids.forEach({ (viewer_id) in
+                                            viewersSync.enter()
+                                            Database.database().userExists(withUID: viewer_id, completion: { (exists) in
+                                                if exists{
+                                                    Database.database().fetchUser(withUID: viewer_id, completion: { (user) in
+                                                        viewers.append(user)
+                                                        viewersSync.leave()
+                                                    })
+                                                }
+                                                else {
                                                     viewersSync.leave()
-                                                })
-                                            }
-                                            else {
-                                                viewersSync.leave()
-                                            }
+                                                }
+                                            })
                                         })
-                                    })
-                                    viewersSync.notify(queue: .main) {
-                                        self.viewersForPosts[groupPost.id] = viewers
-                                        sync.leave()
+                                        viewersSync.notify(queue: .main) {
+                                            self.viewersForPosts[groupPost.id] = viewers
+                                            sync.leave()
+                                        }
                                     }
-                                }
+                                }) { (err) in }
                             }) { (err) in
                             }
                         }
@@ -221,15 +226,16 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
             cell.delegate = self
             cell.emptyComment = true
             cell.groupPost = groupPosts[indexPath.item]
-            if firstCommentForPosts[groupPosts[indexPath.item].id] != nil {
-                cell.firstComment = firstCommentForPosts[groupPosts[indexPath.item].id ]
+            let post_id = groupPosts[indexPath.item].id
+            if firstCommentForPosts[post_id] != nil {
+                cell.firstComment = firstCommentForPosts[post_id]
             }
-            if numCommentsForPosts[groupPosts[indexPath.item].id] != nil {
-                cell.numComments = numCommentsForPosts[groupPosts[indexPath.item].id ]
+            if numCommentsForPosts[post_id] != nil {
+                cell.numComments = numCommentsForPosts[post_id]
             }
-//            if viewersForPosts[groupPosts[indexPath.item].id] != nil {
-//                cell.viewersForPost = viewersForPosts[groupPosts[indexPath.item].id ]
-//            }
+            if numViewsForPost[post_id] != nil {
+                cell.numViewsForPost = numViewsForPost[post_id]
+            }
             return cell
         }
         else {
@@ -361,8 +367,10 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     
     func didTapViewers(groupPost: GroupPost) {
         guard let viewers = viewersForPosts[groupPost.id] else { return }
+        guard let numViews = numViewsForPost[groupPost.id] else { return }
         let viewersController = ViewersController()
         viewersController.viewers = viewers
+        viewersController.viewsCount = numViews
         let navController = UINavigationController(rootViewController: viewersController)
         self.present(navController, animated: true, completion: nil)
     }

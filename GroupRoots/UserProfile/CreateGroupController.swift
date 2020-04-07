@@ -171,7 +171,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         createGroupButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
         
         if groupname.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
-            let alert = UIAlertController(title: "Username invalid", message: "Please enter a groupname with no symbols or spaces (underscore is okay)", preferredStyle: .alert)
+            let alert = UIAlertController(title: "Group name invalid", message: "Please enter a Group name with no symbols or spaces (underscore is okay)", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
             self.present(alert, animated: true)
             self.resetInputFields()
@@ -183,7 +183,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
                 guard let error = err else { self.resetInputFields(); return }
                 if error.localizedDescription == "Groupname Taken" {
-                    let alert = UIAlertController(title: "Group name Taken", message: "Please select a different group name", preferredStyle: .alert)
+                    let alert = UIAlertController(title: "Group name Taken", message: "Please select a different Group name", preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                     self.present(alert, animated: true)
                 }

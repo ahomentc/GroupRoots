@@ -49,6 +49,19 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         return tf
     }()
     
+    private lazy var nameTextField: UITextField = {
+        let tf = UITextField()
+        tf.placeholder = "Full Name"
+        tf.autocorrectionType = .no
+        tf.autocapitalizationType = .none
+        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.borderStyle = .roundedRect
+        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.delegate = self
+        tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
+        return tf
+    }()
+    
     private lazy var passwordTextField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "Password"
@@ -119,32 +132,35 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     }
     
     private func setupInputFields() {
-        let stackView = UIStackView(arrangedSubviews: [emailTextField, usernameTextField, passwordTextField, invitationTextField, signUpButton])
+        let stackView = UIStackView(arrangedSubviews: [emailTextField, usernameTextField, nameTextField, passwordTextField, invitationTextField, signUpButton])
         stackView.distribution = .fillEqually
         stackView.axis = .vertical
         stackView.spacing = 10
         
         view.addSubview(stackView)
-        stackView.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 20, paddingLeft: 40, paddingRight: 40, height: 250)
+        stackView.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 20, paddingLeft: 40, paddingRight: 40, height: 312)
     }
     
     private func resetInputFields() {
         emailTextField.text = ""
         usernameTextField.text = ""
+        nameTextField.text = ""
         passwordTextField.text = ""
         invitationTextField.text = ""
         
         emailTextField.isUserInteractionEnabled = true
         usernameTextField.isUserInteractionEnabled = true
+        nameTextField.isUserInteractionEnabled = true
         passwordTextField.isUserInteractionEnabled = true
         invitationTextField.isUserInteractionEnabled = true
         
         signUpButton.isEnabled = false
-        signUpButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+        signUpButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
     }
     
     @objc private func handleTapOnView(_ sender: UITextField) {
         usernameTextField.resignFirstResponder()
+        nameTextField.resignFirstResponder()
         emailTextField.resignFirstResponder()
         passwordTextField.resignFirstResponder()
         invitationTextField.resignFirstResponder()
@@ -158,13 +174,13 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     }
     
     @objc private func handleTextInputChange() {
-        let isFormValid = emailTextField.text?.isEmpty == false && usernameTextField.text?.isEmpty == false && passwordTextField.text?.isEmpty == false && invitationTextField.text?.isEmpty == false
+        let isFormValid = emailTextField.text?.isEmpty == false && usernameTextField.text?.isEmpty == false && nameTextField.text?.isEmpty == false && passwordTextField.text?.isEmpty == false && invitationTextField.text?.isEmpty == false
         if isFormValid {
             signUpButton.isEnabled = true
-            signUpButton.backgroundColor = UIColor.mainBlue
+            signUpButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         } else {
             signUpButton.isEnabled = false
-            signUpButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+            signUpButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
         }
     }
     
@@ -175,16 +191,18 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     @objc private func handleSignUp() {
         guard let email = emailTextField.text else { return }
         guard let username = usernameTextField.text else { return }
+        guard let name = nameTextField.text else { return }
         guard let password = passwordTextField.text else { return }
         guard let code = invitationTextField.text else { return }
         
         emailTextField.isUserInteractionEnabled = false
         usernameTextField.isUserInteractionEnabled = false
+        nameTextField.isUserInteractionEnabled = false
         passwordTextField.isUserInteractionEnabled = false
         invitationTextField.isUserInteractionEnabled = false
         
         signUpButton.isEnabled = false
-        signUpButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+        signUpButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
         
 //     username regex:   ^[a-zA-Z0-9_-]*$   must match
         if username.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
@@ -197,7 +215,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         
         Database.database().fetchInviteCodeGroupId(code: code, completion: { (groupId) in
             if groupId != "" || code == "qwerty123" {
-                Auth.auth().createUser(withEmail: email, username: username, password: password, image: self.profileImage) { (err) in
+                Auth.auth().createUser(withEmail: email, username: username, name: name, password: password, image: self.profileImage) { (err) in
                     if err != nil {
                         guard let error = err else { self.resetInputFields(); return }
                         if error.localizedDescription == "Username Taken" {

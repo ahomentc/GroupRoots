@@ -53,13 +53,15 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     // this might be bad but to clarify. FeedController sets groupPostsViewers for this cell. That in turn sets viewersForPosts
     var groupPostsViewers: [String: [User]]? { // key is the postId
         didSet{
-            viewersForPosts = groupPostsViewers!
+            guard let groupPostsViewers = groupPostsViewers else { return }
+            viewersForPosts = groupPostsViewers
         }
     }
     
     var groupPostsTotalViewers: [String: Int]? { // key is the postId
         didSet {
-            numViewsForPost = groupPostsTotalViewers!
+            guard let groupPostsTotalViewers = groupPostsTotalViewers else { return }
+            numViewsForPost = groupPostsTotalViewers
             self.reloadGroupData()
         }
     }
@@ -139,7 +141,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
         self.addSubview(collectionView)
-        
+
         addSubview(header)
         header.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 5)
         header.delegate = self        
@@ -169,7 +171,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
             return cell
         }
         else {
-            if indexPath.item-1 < groupPosts?.count ?? 0{
+            if indexPath.item-1 < groupPosts?.count ?? 0{                
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedPostCell.cellId, for: indexPath) as! FeedPostCell
                 cell.isScrollingVertically = isScrollingVertically
                 cell.isScrolling = isScrolling

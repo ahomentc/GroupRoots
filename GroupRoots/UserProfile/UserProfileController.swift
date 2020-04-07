@@ -52,6 +52,7 @@ class UserProfileController: HomePostCellViewController {
         collectionView?.refreshControl = refreshControl
 
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name(rawValue: "createdGroup"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(reloadUser), name: NSNotification.Name(rawValue: "updatedUser"), object: nil)
 
         configureAlertController()
         fetchAllGroups()
@@ -74,6 +75,8 @@ class UserProfileController: HomePostCellViewController {
     }
     
     private func configureAlertController() {
+        guard let user = user else { return }
+        
         alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
@@ -88,6 +91,16 @@ class UserProfileController: HomePostCellViewController {
                 self.present(navController, animated: true, completion: nil)
             } catch let err {
                 print("Failed to sign out:", err)
+            }
+        }
+        
+        let edit_profile = UIAlertAction(title: "Edit Profile", style: .default) { (_) in
+            do {
+                let editProfileController = EditProfileController()
+                editProfileController.user = user
+                let navController = UINavigationController(rootViewController: editProfileController)
+                navController.modalPresentationStyle = .fullScreen
+                self.present(navController, animated: true, completion: nil)
             }
         }
         
@@ -106,6 +119,7 @@ class UserProfileController: HomePostCellViewController {
                         }
                     }
                 }
+                self.alertController.addAction(edit_profile)
                 self.alertController.addAction(toggleIncognitoAction)
                 self.alertController.addAction(logOutAction)
                 self.alertController.addAction(deleteAccountAction)
@@ -120,6 +134,7 @@ class UserProfileController: HomePostCellViewController {
                         }
                     }
                 }
+                self.alertController.addAction(edit_profile) 
                 self.alertController.addAction(toggleIncognitoAction)
                 self.alertController.addAction(logOutAction)
                 self.alertController.addAction(deleteAccountAction)
@@ -140,15 +155,19 @@ class UserProfileController: HomePostCellViewController {
         }
     }
     
+    @objc private func reloadUser(){
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+            self.user = user
+            self.handleRefresh()
+        })
+    }
+    
     private func configureUser() {
         guard let user = user else { return }
         
         if user.uid == Auth.auth().currentUser?.uid {
             navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "gear").withRenderingMode(.alwaysOriginal), style: .plain, target: self, action: #selector(handleSettings))
-        } else {
-            let optionsButton = UIBarButtonItem(title: "•••", style: .plain, target: nil, action: nil)
-            optionsButton.tintColor = .black
-            navigationItem.rightBarButtonItem = optionsButton
         }
         
         navigationItem.title = user.username
@@ -162,6 +181,8 @@ class UserProfileController: HomePostCellViewController {
     @objc private func handleRefresh() {
 //        groupPosts.removeAll()
         fetchAllGroups()
+        configureUser()
+        configureAlertController()
     }
     
     // when an item is selected, go to that view controller

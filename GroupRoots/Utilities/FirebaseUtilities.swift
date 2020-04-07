@@ -10,7 +10,7 @@ import Foundation
 import Firebase
 
 extension Auth {
-    func createUser(withEmail email: String, username: String, password: String, image: UIImage?, completion: @escaping (Error?) -> ()) {
+    func createUser(withEmail email: String, username: String, name: String, password: String, image: UIImage?, completion: @escaping (Error?) -> ()) {
         Database.database().usernameExists(username: username, completion: { (exists) in
             if !exists{
                 Auth.auth().createUser(withEmail: email, password: password, completion: { (user, err) in
@@ -22,13 +22,12 @@ extension Auth {
                     guard let uid = user?.user.uid else { return }
                     if let image = image {
                         Storage.storage().uploadUserProfileImage(image: image, completion: { (profileImageUrl) in
-                            self.uploadUser(withUID: uid, username: username, profileImageUrl: profileImageUrl) {
+                            self.uploadUser(withUID: uid, username: username, name: name, profileImageUrl: profileImageUrl) {
                                 completion(nil)
                             }
                         })
                     } else {
-                        self.uploadUser(withUID: uid, username: username) {
-                            print("7")
+                        self.uploadUser(withUID: uid, username: username, name: name) {
                             completion(nil)
                         }
                     }
@@ -42,8 +41,8 @@ extension Auth {
         })
     }
     
-    private func uploadUser(withUID uid: String, username: String, profileImageUrl: String? = nil, completion: @escaping (() -> ())) {
-        var dictionaryValues = ["username": username]
+    private func uploadUser(withUID uid: String, username: String, name: String, profileImageUrl: String? = nil, completion: @escaping (() -> ())) {
+        var dictionaryValues = ["username": username, "name": name]
         if profileImageUrl != nil {
             dictionaryValues["profileImageUrl"] = profileImageUrl
         }
@@ -199,6 +198,107 @@ extension Database {
             completion(user)
         }) { (err) in
             print("Failed to fetch user from database:", err)
+        }
+    }
+    
+    
+    // make sure to do Username exists
+    func updateUser(withUID uid: String, username: String? = nil, name: String? = nil, image: UIImage? = nil, completion: @escaping (Error?) -> ()){
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        var profileImageUrl = ""
+        
+        // set the profile image url to the dictionary if there is an image
+        let sync = DispatchGroup()
+        sync.enter()
+        if image != nil {
+            Storage.storage().uploadUserProfileImage(image: image!, completion: { (userProfileImageUrl) in
+                profileImageUrl = userProfileImageUrl
+                sync.leave()
+            })
+        }
+        else{
+            sync.leave()
+        }
+        sync.notify(queue: .main){
+            // get original username
+            var old_username = ""
+            Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
+                old_username = user.username
+                
+                // update the user with the new values
+                // can't do: Database.database().reference().child("users").updateChildValues(values)
+                // because it will replace everything under user so need to do each one individually
+                
+                let updates_sync = DispatchGroup()
+                
+                // update the username if not nil
+                if username != nil && username != "" {
+                    updates_sync.enter()
+                    Database.database().usernameExists(username: username!, completion: { (exists) in
+                        if !exists || username! == old_username {
+                            Database.database().reference().child("users").child(currentLoggedInUserId).updateChildValues(["username": username!], withCompletionBlock: { (err, ref) in
+                                if let err = err {
+                                    print("Failed to update username in database:", err)
+                                    return
+                                }
+                                // replace the username if there is a username and remove old one
+                                if username != nil {
+                                    let values_inverted = [username: uid]
+                                    Database.database().reference().child("usernames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
+                                        if let err = err {
+                                            print("Failed to upload user to database:", err)
+                                            return
+                                        }
+                                        
+                                        // delete the old username
+                                        Database.database().reference().child("usernames").child(old_username).removeValue(completionBlock: { (err, _) in
+                                            if let err = err {
+                                                print("Failed to remove username:", err)
+                                                return
+                                            }
+                                            updates_sync.leave()
+                                        })
+                                    })
+                                }
+                                else {
+                                    updates_sync.leave()
+                                }
+                            })
+                        }
+                        else {
+                            updates_sync.leave()
+                            let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Username Taken"])
+                            completion(error)
+                            return
+                        }
+                    })
+                }
+                
+                if name != nil && name != "" {
+                    updates_sync.enter()
+                    Database.database().reference().child("users").child(currentLoggedInUserId).updateChildValues(["name": name!], withCompletionBlock: { (err, ref) in
+                        if let err = err {
+                            print("Failed to update name in database:", err)
+                            return
+                        }
+                        updates_sync.leave()
+                    })
+                }
+                
+                if profileImageUrl != "" {
+                    updates_sync.enter()
+                    Database.database().reference().child("users").child(currentLoggedInUserId).updateChildValues(["profileImageUrl": profileImageUrl], withCompletionBlock: { (err, ref) in
+                        if let err = err {
+                            print("Failed to update name in database:", err)
+                            return
+                        }
+                        updates_sync.leave()
+                    })
+                }
+                updates_sync.notify(queue: .main){
+                    completion(nil)
+                }
+            }
         }
     }
     
@@ -697,6 +797,149 @@ extension Database {
         }) { (err) in
             print("Failed to fetch group from database:", err)
         }
+    }
+    
+    func updateGroup(groupId: String, changedPrivacy: Bool, groupname: String? = nil, isPrivate: Bool? = nil, image: UIImage? = nil, completion: @escaping (Error?) -> ()){
+        var profileImageUrl = ""
+        // set the profile image url to the dictionary if there is an image
+        let sync = DispatchGroup()
+        sync.enter()
+        if image != nil {
+            Storage.storage().uploadGroupProfileImage(image: image!, completion: { (groupProfileImageUrl) in
+                profileImageUrl = groupProfileImageUrl
+                sync.leave()
+            })
+        }
+        else{
+            sync.leave()
+        }
+        sync.notify(queue: .main){
+            // get original username
+            var old_groupname = ""
+            Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                old_groupname = group.groupname
+                
+                // update the user with the new values
+                // can't do: Database.database().reference().child("users").updateChildValues(values)
+                // because it will replace everything under user so need to do each one individually
+                
+                let updates_sync = DispatchGroup()
+                
+                // update the username if not nil
+                if groupname != nil && groupname != "" {
+                    updates_sync.enter()
+                    Database.database().groupnameExists(groupname: groupname!, completion: { (exists) in
+                        if !exists || groupname! == old_groupname {
+                            Database.database().reference().child("groups").child(groupId).updateChildValues(["groupname": groupname!], withCompletionBlock: { (err, ref) in
+                                if let err = err {
+                                    print("Failed to update username in database:", err)
+                                    return
+                                }
+                                // replace the username if there is a username and remove old one
+                                let values_inverted = [groupname: groupId]
+                                Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
+                                    if let err = err {
+                                        print("Failed to upload user to database:", err)
+                                        return
+                                    }
+                                    
+                                    // delete the old groupname
+                                    Database.database().reference().child("groupnames").child(old_groupname).removeValue(completionBlock: { (err, _) in
+                                        if let err = err {
+                                            print("Failed to remove username:", err)
+                                            return
+                                        }
+                                        updates_sync.leave()
+                                    })
+                                })
+                            })
+                        }
+                        else {
+                            updates_sync.leave()
+                            let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Groupname Taken"])
+                            completion(error)
+                            return
+                        }
+                    })
+                }
+                
+                // update isPrivate
+                if changedPrivacy {
+                    updates_sync.enter()
+                    guard let isPrivate = isPrivate else { return }
+                    if isPrivate {
+                        self.convertGroupToPrivate(groupId: groupId) { (err) in
+                            updates_sync.leave()
+                        }
+                    }
+                    else {
+                        self.convertGroupToPublic(groupId: groupId) { (err) in
+                            updates_sync.leave()
+                        }
+                    }
+                }
+                
+                if profileImageUrl != "" {
+                    updates_sync.enter()
+                    Database.database().reference().child("groups").child(groupId).updateChildValues(["imageUrl": profileImageUrl], withCompletionBlock: { (err, ref) in
+                        if let err = err {
+                            print("Failed to update name in database:", err)
+                            return
+                        }
+                        updates_sync.leave()
+                    })
+                }
+                updates_sync.notify(queue: .main){
+                    completion(nil)
+                }
+            })
+        }
+    }
+    
+    func convertGroupToPrivate(groupId: String, completion: @escaping (Error?) -> ()){
+        // to change a group to private just need to change the isPrivate bool string in firebase
+        Database.database().reference().child("groups").child(groupId).updateChildValues(["private": "true"], withCompletionBlock: { (err, ref) in
+            if let err = err {
+                print("Failed to update username in database:", err)
+                return
+            }
+            completion(nil)
+        })
+    }
+
+    func convertGroupToPublic(groupId: String, completion: @escaping (Error?) -> ()){
+        Database.database().reference().child("groups").child(groupId).updateChildValues(["private": "false"], withCompletionBlock: { (err, ref) in
+            if let err = err {
+                print("Failed to update username in database:", err)
+                return
+            }
+            // get each user from followersPending and add them as a follower of the group
+            Database.database().fetchGroupFollowersPending(groupId: groupId, completion: { (group_followers_pending) in
+                if group_followers_pending.count > 0 {
+                    group_followers_pending.forEach({ new_follower in
+                        Database.database().addToGroupFollowers(groupId: groupId, withUID: new_follower.uid) { (err) in
+                            if err != nil {
+                                completion(err);return
+                            }
+                            Database.database().addToGroupsFollowing(groupId: groupId, withUID: new_follower.uid) { (err) in
+                                if err != nil {
+                                    completion(err);return
+                                }
+                                Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: new_follower.uid, completion: { (err) in
+                                    if err != nil {
+                                        completion(err);return
+                                    }
+                                    completion(nil)
+                                })
+                            }
+                        }
+                    })
+                }
+                else {
+                    completion(nil)
+                }
+            }) { (_) in }
+        })
     }
     
     func fetchGroup(groupId: String, completion: @escaping (Group) -> (), withCancel cancel: ((Error) -> ())? = nil) {
@@ -2837,7 +3080,7 @@ extension Database {
         let notificationsRef = Database.database().reference().child("notifications").child(currentLoggedInUserId)
         notificationsRef.queryOrderedByKey().queryLimited(toLast: 1).observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion(false)
+                completion(true)
                 return
             }
             dictionaries.forEach({ (arg) in

@@ -89,6 +89,7 @@ class GroupProfileController: HomePostCellViewController {
         collectionView?.refreshControl = refreshControl
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name(rawValue: "updateMembers"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateGroup), name: NSNotification.Name(rawValue: "updatedGroup"), object: nil)
         
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
     
@@ -113,29 +114,38 @@ class GroupProfileController: HomePostCellViewController {
     private func configureAlertController() {
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         alertController.addAction(cancelAction)
-
-        let logOutAction = UIAlertAction(title: "Log Out", style: .default) { (_) in
+        
+        let edit_profile = UIAlertAction(title: "Edit Group", style: .default) { (_) in
             do {
-                try Auth.auth().signOut()
-                let loginController = LoginController()
-                let navController = UINavigationController(rootViewController: loginController)
+                let editGroupController = EditGroupController()
+                editGroupController.group = self.group
+                let navController = UINavigationController(rootViewController: editGroupController)
+                navController.modalPresentationStyle = .fullScreen
                 self.present(navController, animated: true, completion: nil)
-            } catch let err {
-                print("Failed to sign out:", err)
             }
         }
-        alertController.addAction(logOutAction)
-
-        let deleteAccountAction = UIAlertAction(title: "Delete Account", style: .destructive, handler: nil)
-        alertController.addAction(deleteAccountAction)
+        alertController.addAction(edit_profile)
+    }
+    
+    @objc private func updateGroup(){
+        guard let group = group else { return }
+        Database.database().fetchGroup(groupId: group.groupId, completion: { (group) in
+            self.group = group
+            self.configureGroup()
+        })
     }
 
     private func configureGroup() {
         guard let group = group else { return }
-
+        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+            if inGroup {
+                self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "gear").withRenderingMode(.alwaysOriginal), style: .plain, target: self, action: #selector(self.handleSettings))
+            }
+        }) { (err) in
+            return
+        }
         navigationItem.title = group.groupname
         header?.group = group
-
         handleRefresh()
     }
 

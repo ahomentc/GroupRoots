@@ -215,6 +215,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
                                 // the following is only if the user is in a gorup
                                 lower_sync.enter()
                                 Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
+                                    lower_sync.leave()
                                     if inGroup {
                                         // get the viewers
                                         lower_sync.enter()
@@ -241,6 +242,9 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
                                                     if existingPostsForVisibleViewersInGroup == nil {
                                                         self.groupPostsVisibleViewersDict[groupId] = [groupPost.id: viewers]
                                                     }
+                                                    else {
+                                                        self.groupPostsVisibleViewersDict[groupId]![groupPost.id] = viewers
+                                                    }
                                                     lower_sync.leave()
                                                 }
                                             }
@@ -250,17 +254,18 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
                                         }) { (err) in return}
                                         
                                         // get the post total viewers
+                                        lower_sync.enter()
                                         Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
                                             let existingPostsForTotalViewersInGroup = self.groupPostsTotalViewersDict[groupId]
                                             if existingPostsForTotalViewersInGroup == nil {
                                                 self.groupPostsTotalViewersDict[groupId] = [groupPost.id: views_count]
                                             }
+                                            else {
+                                                self.groupPostsTotalViewersDict[groupId]![groupPost.id] = views_count
+                                            }
                                             lower_sync.leave()
                                             
                                         }) { (err) in return }
-                                    }
-                                    else{
-                                        lower_sync.leave()
                                     }
                                 }) { (err) in return }
                             })

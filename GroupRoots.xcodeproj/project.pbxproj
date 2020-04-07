@@ -15,8 +15,10 @@
 		754295C223DFFB6E00893EFD /* NotificationCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754295C123DFFB6E00893EFD /* NotificationCell.swift */; };
 		754295C423E162F600893EFD /* InviteSelectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754295C323E162F600893EFD /* InviteSelectionController.swift */; };
 		754295C623E3E3AE00893EFD /* check.png in Resources */ = {isa = PBXBuildFile; fileRef = 754295C523E3E3AD00893EFD /* check.png */; };
+		755D9EE8243AB0C500915999 /* EditGroupController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755D9EE7243AB0C500915999 /* EditGroupController.swift */; };
 		756D72C9242B2D2D008B6F42 /* InviteToGroupController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 756D72C8242B2D2D008B6F42 /* InviteToGroupController.swift */; };
 		756D72CB242B3247008B6F42 /* InviteToGroupCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 756D72CA242B3247008B6F42 /* InviteToGroupCell.swift */; };
+		756E3D17243980BD00E167BA /* EditProfileController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 756E3D16243980BB00E167BA /* EditProfileController.swift */; };
 		756EE0FE241DD17400FFF23B /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 756EE0FD241DD17300FFF23B /* GoogleService-Info.plist */; };
 		7576D91F23D8382E0073E905 /* Logo3.png in Resources */ = {isa = PBXBuildFile; fileRef = 7576D91E23D8382E0073E905 /* Logo3.png */; };
 		7578BB0A23D1B1C000AF9BFB /* Group.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7578BB0923D1B1C000AF9BFB /* Group.swift */; };
@@ -99,8 +101,10 @@
 		754295C123DFFB6E00893EFD /* NotificationCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCell.swift; sourceTree = "<group>"; };
 		754295C323E162F600893EFD /* InviteSelectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteSelectionController.swift; sourceTree = "<group>"; };
 		754295C523E3E3AD00893EFD /* check.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = check.png; path = Assets.xcassets/check.png; sourceTree = "<group>"; };
+		755D9EE7243AB0C500915999 /* EditGroupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditGroupController.swift; sourceTree = "<group>"; };
 		756D72C8242B2D2D008B6F42 /* InviteToGroupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteToGroupController.swift; sourceTree = "<group>"; };
 		756D72CA242B3247008B6F42 /* InviteToGroupCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteToGroupCell.swift; sourceTree = "<group>"; };
+		756E3D16243980BB00E167BA /* EditProfileController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileController.swift; sourceTree = "<group>"; };
 		756EE0FD241DD17300FFF23B /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "GroupRoots/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		7576D91E23D8382E0073E905 /* Logo3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Logo3.png; path = Assets.xcassets/Logo3.png; sourceTree = "<group>"; };
 		7578BB0923D1B1C000AF9BFB /* Group.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Group.swift; sourceTree = "<group>"; };
@@ -233,6 +237,7 @@
 				75B65DE8240A51A4006CBA0B /* GroupFollowerCell.swift */,
 				756D72C8242B2D2D008B6F42 /* InviteToGroupController.swift */,
 				756D72CA242B3247008B6F42 /* InviteToGroupCell.swift */,
+				755D9EE7243AB0C500915999 /* EditGroupController.swift */,
 			);
 			path = Group;
 			sourceTree = "<group>";
@@ -367,6 +372,7 @@
 				75ACAFC823F7DE8700DAE747 /* FollowPageCell.swift */,
 				75B65DEE24144284006CBA0B /* SubscriptionsController.swift */,
 				75B65DF0241442FF006CBA0B /* SubscriptionCell.swift */,
+				756E3D16243980BB00E167BA /* EditProfileController.swift */,
 			);
 			path = UserProfile;
 			sourceTree = "<group>";
@@ -613,6 +619,7 @@
 				75BB488E23DAB1CD00CF008F /* FeedController.swift in Sources */,
 				75ACAFC923F7DE8700DAE747 /* FollowPageCell.swift in Sources */,
 				754295C423E162F600893EFD /* InviteSelectionController.swift in Sources */,
+				756E3D17243980BD00E167BA /* EditProfileController.swift in Sources */,
 				75BB489523DB00E800CF008F /* MembersCell.swift in Sources */,
 				AD2CC6D6211FA0C40091E7D9 /* UserProfileEmptyStateCell.swift in Sources */,
 				75B65DEF24144284006CBA0B /* SubscriptionsController.swift in Sources */,
@@ -638,6 +645,7 @@
 				75ACAFC523F6768A00DAE747 /* FollowPageController.swift in Sources */,
 				AD32EF752114D05000BB7B56 /* PreviewPhotoContainerView.swift in Sources */,
 				AD3164D621167401001F5DA7 /* CommentInputAccessoryView.swift in Sources */,
+				755D9EE8243AB0C500915999 /* EditGroupController.swift in Sources */,
 				AD4D8CF42060A70E00A49BA4 /* LoginController.swift in Sources */,
 				7582758F23DD65BC00D64D4C /* Notification.swift in Sources */,
 				75B65DED241364CC006CBA0B /* LargeImageViewHeader.swift in Sources */,

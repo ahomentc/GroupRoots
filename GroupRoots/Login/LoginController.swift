@@ -73,16 +73,9 @@ class LoginController: UIViewController {
         view.backgroundColor = .white
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTapOnView)))
         
-//        let logoImageView = UIImageView(image: #imageLiteral(resourceName: "icon_login_2"))
-//        view.addSubview(logoImageView)
-//        logoImageView.frame = CGRect(x: view.frame.width/2 - 65, y: 0, width: 130, height: 130)
-        
-        let logoImageView = UIImageView(image: #imageLiteral(resourceName: "icon_login_3"))
+        let logoImageView = UIImageView(image: #imageLiteral(resourceName: "icon_login_4"))
         view.addSubview(logoImageView)
         logoImageView.frame = CGRect(x: view.frame.width/2 - 115, y: 50, width: 230, height: 230)
-
-//        view.addSubview(logoContainerView)
-//        logoContainerView.anchor(top: view.topAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 100)
         
         view.addSubview(dontHaveAccountButton)
         dontHaveAccountButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 50)
@@ -106,7 +99,7 @@ class LoginController: UIViewController {
         passwordTextField.isUserInteractionEnabled = true
         
         loginButton.isEnabled = false
-        loginButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+        loginButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
     }
     
     @objc private func handleLogin() {
@@ -116,7 +109,7 @@ class LoginController: UIViewController {
         passwordTextField.isUserInteractionEnabled = false
         
         loginButton.isEnabled = false
-        loginButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+        loginButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
         
         Auth.auth().signIn(withEmail: email, password: password, completion: { (user, err) in
             if let err = err {
@@ -142,10 +135,10 @@ class LoginController: UIViewController {
         let isFormValid = emailTextField.text?.isEmpty == false && passwordTextField.text?.isEmpty == false
         if isFormValid {
             loginButton.isEnabled = true
-            loginButton.backgroundColor = UIColor.mainBlue
+            loginButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         } else {
             loginButton.isEnabled = false
-            loginButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+            loginButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
         }
     }
     
