@@ -76,7 +76,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     
     private let invitationTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "Invitation Code"
+        tf.placeholder = "Group Invite Code"
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
         tf.backgroundColor = UIColor(white: 0, alpha: 0.03)

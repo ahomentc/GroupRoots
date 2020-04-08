@@ -69,15 +69,6 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
             self.collectionView?.refreshControl?.endRefreshing()
         }
     }
-    
-    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-//        Database.database().viewNotification(notificationId: notifications[indexPath.item].id) { (err) in
-//            if err != nil {
-//                return
-//            }
-//            self.handleRefresh()
-//        }
-    }
 
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return notifications.count

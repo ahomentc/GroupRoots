@@ -131,31 +131,55 @@ class NotificationCell: UICollectionViewCell {
             notificationsLabel.text = "followed you"
         }
         else if notification.type == NotificationType.groupJoinInvitation {
-            notificationsLabel.text = "invited you to join " + (notification.group!.groupname)
+            var groupname = "a group"
+            if notification.group?.groupname ?? "" != "" {
+                groupname = notification.group?.groupname ?? ""
+            }
+            notificationsLabel.text = "invited you to join " + groupname
             notificationsLabel.isUserInteractionEnabled = true
             let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
             notificationsLabel.addGestureRecognizer(gestureRecognizer)
         }
         else if notification.type == NotificationType.newGroupJoin {
-            notificationsLabel.text = "joined " + (notification.group!.groupname)
+            var groupname = "your group"
+            if notification.group?.groupname ?? "" != "" {
+                groupname = notification.group?.groupname ?? ""
+            }
+            notificationsLabel.text = "joined " + groupname
             notificationsLabel.isUserInteractionEnabled = true
             let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
             notificationsLabel.addGestureRecognizer(gestureRecognizer)
         }
         else if notification.type == NotificationType.groupJoinRequest {
-            notificationsLabel.text = "requested to join " + (notification.group!.groupname)
+            var groupname = "your group"
+            if notification.group?.groupname ?? "" != "" {
+                groupname = notification.group?.groupname ?? ""
+            }
+            notificationsLabel.text = "requested to join " + groupname
             notificationsLabel.isUserInteractionEnabled = true
             let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
             notificationsLabel.addGestureRecognizer(gestureRecognizer)
         }
         else if notification.type == NotificationType.groupPostComment {
-            notificationsLabel.text = "commented on " + (notification.group!.groupname) + "'s post "
+            var groupname = "your group"
+            if notification.group?.groupname ?? "" != "" {
+                groupname = notification.group?.groupname ?? ""
+            }
+            notificationsLabel.text = "commented on " + groupname + "'s post "
         }
         else if notification.type == NotificationType.groupPostLiked {
-            notificationsLabel.text = "liked " + (notification.group!.groupname) + "'s post "
+            var groupname = "your group"
+            if notification.group?.groupname ?? "" != "" {
+                groupname = notification.group?.groupname ?? ""
+            }
+            notificationsLabel.text = "liked " + groupname + "'s post "
         }
         else if notification.type == NotificationType.newGroupPost {
-            notificationsLabel.text = "posted in " + (notification.group!.groupname)
+            var groupname = "your group"
+            if notification.group?.groupname ?? "" != "" {
+                groupname = notification.group?.groupname ?? ""
+            }
+            notificationsLabel.text = "posted in " + groupname
             notificationsLabel.isUserInteractionEnabled = true
             let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
             notificationsLabel.addGestureRecognizer(gestureRecognizer)
@@ -483,6 +507,9 @@ private class ActionButton: UIButton {
     private func setupGroupStyle() {
         if self.group?.groupname != ""{
             setTitle(String(self.group?.groupname.first?.description ?? ""), for: .normal)
+        }
+        else {
+            setTitle("", for: .normal)
         }
         titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         setTitleColor(.black, for: .normal)

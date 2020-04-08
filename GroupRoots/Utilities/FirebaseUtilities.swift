@@ -952,9 +952,41 @@ extension Database {
         })
     }
     
+    func fetchFirstTwoGroupMembers(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
+        let ref = Database.database().reference().child("groups").child(groupId).child("members")
+        ref.queryOrderedByKey().queryLimited(toFirst: 2).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard let dictionaries = snapshot.value as? [String: Any] else {
+                completion([])
+                return
+            }
+                        
+            var users = [User]()
+            
+            dictionaries.forEach({ (arg) in
+                
+                let (userId, _) = arg
+                self.userExists(withUID: userId, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchUser(withUID: userId, completion: { (user) in
+                            users.append(user)
+
+                            if users.count == dictionaries.count {
+                                completion(users)
+                            }
+                        })
+                    }
+                })
+            })
+            
+        }) { (err) in
+            print("Failed to fetch all users from database:", (err))
+            cancel?(err)
+        }
+    }
+    
     func fetchGroupMembers(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groups").child(groupId).child("members")
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion([])
                 return
@@ -991,7 +1023,7 @@ extension Database {
         }
         let ref = Database.database().reference().child("users").child(groupUser).child("groups")
         
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion([])
                 return
@@ -1030,7 +1062,7 @@ extension Database {
         }
         let ref = Database.database().reference().child("groupsFollowing").child(groupUser)
         
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion([])
                 return
@@ -1068,7 +1100,7 @@ extension Database {
          }
          let ref = Database.database().reference().child("users").child(groupUser).child("groups")
          
-         ref.observeSingleEvent(of: .value, with: { (snapshot) in
+         ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
              guard let dictionaries = snapshot.value as? [String: Any] else {
                  completion([])
                  return
@@ -1091,7 +1123,7 @@ extension Database {
     
     func fetchGroupRequestUsers(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groups").child(groupId).child("requestedMembers")
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion([])
                 return
@@ -1195,112 +1227,222 @@ extension Database {
         })
     }
     
-    func createGroup(groupname: String, bio: String, image: UIImage?, isPrivate: Bool, completion: @escaping (Error?) -> ()) {
+    func createGroup(groupname: String?, bio: String?, image: UIImage?, isPrivate: Bool, completion: @escaping (Error?) -> ()) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let userGroupRef = Database.database().reference().child("groups").childByAutoId()
         guard let groupId = userGroupRef.key else { return }
         let isPrivateString = isPrivate ? "true" : "false"
-        // check if the image is nul or not
-        Database.database().groupnameExists(groupname: groupname, completion: { (exists) in
-            let sync = DispatchGroup()
+        
+        var values = ["id": groupId, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
+        let sync = DispatchGroup()
+        // set the groupname if it exists
+        if groupname != nil && groupname != "" {
             sync.enter()
-            if !exists{
-                if let image = image {
-                    Storage.storage().uploadGroupProfileImage(image: image, completion: { (groupProfileImageUrl) in
-                        let values = ["id": groupId, "groupname": groupname, "bio": bio,"imageUrl": groupProfileImageUrl, "imageWidth": image.size.width, "imageHeight": image.size.height, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
-                        userGroupRef.updateChildValues(values) { (err, ref) in
-                            if let err = err {
-                                print("Failed to save post to database", err)
-                                completion(err)
-                                return
-                            }
-                            let values_inverted = [groupname: groupId]
-                            Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
-                                if let err = err {
-                                    print("Failed to upload user to database:", err)
-                                    return
-                                }
-                                sync.leave()
-                            })
+            Database.database().groupnameExists(groupname: groupname!, completion: { (exists) in
+                if !exists{
+                    values["groupname"] = groupname!
+                    
+                    // create the entree in database for groupnames
+                    let groupname_value = [groupname: groupId]
+                    Database.database().reference().child("groupnames").updateChildValues(groupname_value, withCompletionBlock: { (err, ref) in
+                        if let err = err {
+                            print("Failed to upload user to database:", err)
+                            return
                         }
+                        sync.leave()
                     })
                 }
-                else{
-                    let values = ["id": groupId, "groupname": groupname, "bio": bio, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
-                    userGroupRef.updateChildValues(values) { (err, ref) in
-                        if let err = err {
-                            print("Failed to save post to database", err)
-                            completion(err)
-                            return
-                        }
-                        let values_inverted = [groupname: groupId]
-                        Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
-                            if let err = err {
-                                print("Failed to upload user to database:", err)
-                                return
-                            }
-                            sync.leave()
-                        })
-                    }
+                else {
+                    let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Groupname Taken"])
+                    completion(error)
+                    sync.leave()
+                    return
                 }
+            })
+        }
             
-                sync.notify(queue: .main) {
-                    // connect user to group as a member
-                    // add uid to group
-                    let values = [uid: 1]
-                    Database.database().reference().child("groups").child(groupId).child("members").updateChildValues(values) { (err, ref) in
+        if bio != nil && bio != "" {
+            values["bio"] = bio!
+        }
+            
+        sync.enter()
+        if image != nil && image != UIImage() {
+            Storage.storage().uploadGroupProfileImage(image: image!, completion: { (groupProfileImageUrl) in
+                values["groupProfileImageUrl"] = groupProfileImageUrl
+                values["imageWidth"] = image!.size.width
+                values["imageHeight"] = image!.size.height
+                sync.leave()
+            })
+        }
+        else {
+            sync.leave()
+        }
+                
+        sync.notify(queue: .main) {
+            print("6")
+            userGroupRef.updateChildValues(values) { (err, ref) in
+                if let err = err {
+                    print("Failed to save post to database", err)
+                    completion(err)
+                    return
+                }
+                // connect user to group as a member
+                // add uid to group
+                let values = [uid: 1]
+                Database.database().reference().child("groups").child(groupId).child("members").updateChildValues(values) { (err, ref) in
+                    if let err = err {
+                        completion(err)
+                        return
+                    }
+                    // add groupId to user
+                    let values = [groupId: 1]
+                    Database.database().reference().child("users").child(uid).child("groups").updateChildValues(values) { (err, ref) in
                         if let err = err {
                             completion(err)
                             return
                         }
-                        // add groupId to user
+                        // add invitation code with groupId as value
+                        // increment value under groupId when user signs up with it until gets to 100 users
+                        // ^^ but do this later
                         let values = [groupId: 1]
-                        Database.database().reference().child("users").child(uid).child("groups").updateChildValues(values) { (err, ref) in
+                        let code = String(groupId.suffix(6))
+                        let invitationRef = Database.database().reference().child("inviteCodes").child(code)
+                        invitationRef.updateChildValues(values) { (err, ref) in
                             if let err = err {
                                 completion(err)
                                 return
                             }
-                            // add invitation code with groupId as value
-                            // increment value under groupId when user signs up with it until gets to 100 users
-                            // ^^ but do this later
-                            let values = [groupId: 1]
-                            let code = String(groupId.suffix(6))
-                            let invitationRef = Database.database().reference().child("inviteCodes").child(code)
-                            invitationRef.updateChildValues(values) { (err, ref) in
-                                if let err = err {
-                                    completion(err)
-                                    return
+                            
+                            // auto subscribe user to group
+                            Database.database().addToGroupFollowers(groupId: groupId, withUID: uid) { (err) in
+                                if err != nil {
+                                    completion(err);return
                                 }
-                                
-                                // auto subscribe user to group
-                                Database.database().addToGroupFollowers(groupId: groupId, withUID: uid) { (err) in
+                                Database.database().addToGroupsFollowing(groupId: groupId, withUID: uid) { (err) in
                                     if err != nil {
                                         completion(err);return
                                     }
-                                    Database.database().addToGroupsFollowing(groupId: groupId, withUID: uid) { (err) in
+                                    Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: uid, completion: { (err) in
                                         if err != nil {
                                             completion(err);return
                                         }
-                                        Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: uid, completion: { (err) in
-                                            if err != nil {
-                                                completion(err);return
-                                            }
-                                            completion(nil)
-                                        })
-                                    }
+                                        completion(nil)
+                                    })
                                 }
                             }
                         }
                     }
                 }
             }
-            else {
-                let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Groupname Taken"])
-                completion(error)
-                return
-            }
-        })
+        }
     }
+    
+//    func createGroup(groupname: String?, bio: String?, image: UIImage?, isPrivate: Bool, completion: @escaping (Error?) -> ()) {
+//        guard let uid = Auth.auth().currentUser?.uid else { return }
+//        let userGroupRef = Database.database().reference().child("groups").childByAutoId()
+//        guard let groupId = userGroupRef.key else { return }
+//        let isPrivateString = isPrivate ? "true" : "false"
+//        // check if the image is nul or not
+//        Database.database().groupnameExists(groupname: groupname, completion: { (exists) in
+//            let sync = DispatchGroup()
+//            sync.enter()
+//            if !exists{
+//                if let image = image {
+//                    Storage.storage().uploadGroupProfileImage(image: image, completion: { (groupProfileImageUrl) in
+//                        let values = ["id": groupId, "groupname": groupname, "bio": bio,"imageUrl": groupProfileImageUrl, "imageWidth": image.size.width, "imageHeight": image.size.height, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
+//                        userGroupRef.updateChildValues(values) { (err, ref) in
+//                            if let err = err {
+//                                print("Failed to save post to database", err)
+//                                completion(err)
+//                                return
+//                            }
+//                            let values_inverted = [groupname: groupId]
+//                            Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
+//                                if let err = err {
+//                                    print("Failed to upload user to database:", err)
+//                                    return
+//                                }
+//                                sync.leave()
+//                            })
+//                        }
+//                    })
+//                }
+//                else{
+//                    let values = ["id": groupId, "groupname": groupname, "bio": bio, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
+//                    userGroupRef.updateChildValues(values) { (err, ref) in
+//                        if let err = err {
+//                            print("Failed to save post to database", err)
+//                            completion(err)
+//                            return
+//                        }
+//                        let values_inverted = [groupname: groupId]
+//                        Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
+//                            if let err = err {
+//                                print("Failed to upload user to database:", err)
+//                                return
+//                            }
+//                            sync.leave()
+//                        })
+//                    }
+//                }
+//
+//                sync.notify(queue: .main) {
+//                    // connect user to group as a member
+//                    // add uid to group
+//                    let values = [uid: 1]
+//                    Database.database().reference().child("groups").child(groupId).child("members").updateChildValues(values) { (err, ref) in
+//                        if let err = err {
+//                            completion(err)
+//                            return
+//                        }
+//                        // add groupId to user
+//                        let values = [groupId: 1]
+//                        Database.database().reference().child("users").child(uid).child("groups").updateChildValues(values) { (err, ref) in
+//                            if let err = err {
+//                                completion(err)
+//                                return
+//                            }
+//                            // add invitation code with groupId as value
+//                            // increment value under groupId when user signs up with it until gets to 100 users
+//                            // ^^ but do this later
+//                            let values = [groupId: 1]
+//                            let code = String(groupId.suffix(6))
+//                            let invitationRef = Database.database().reference().child("inviteCodes").child(code)
+//                            invitationRef.updateChildValues(values) { (err, ref) in
+//                                if let err = err {
+//                                    completion(err)
+//                                    return
+//                                }
+//
+//                                // auto subscribe user to group
+//                                Database.database().addToGroupFollowers(groupId: groupId, withUID: uid) { (err) in
+//                                    if err != nil {
+//                                        completion(err);return
+//                                    }
+//                                    Database.database().addToGroupsFollowing(groupId: groupId, withUID: uid) { (err) in
+//                                        if err != nil {
+//                                            completion(err);return
+//                                        }
+//                                        Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: uid, completion: { (err) in
+//                                            if err != nil {
+//                                                completion(err);return
+//                                            }
+//                                            completion(nil)
+//                                        })
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            else {
+//                let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Groupname Taken"])
+//                completion(error)
+//                return
+//            }
+//        })
+//    }
     
     func joinGroup(groupId: String, completion: @escaping (Error?) -> ()) {
         // added to requested of the group
@@ -1929,7 +2071,7 @@ extension Database {
     
     func fetchGroupFollowers(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groupFollowers").child(groupId)
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion([])
                 return
@@ -1965,7 +2107,7 @@ extension Database {
     
     func fetchGroupFollowersPending(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groupFollowPending").child(groupId)
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion([])
                 return
@@ -2597,7 +2739,7 @@ extension Database {
     
     func fetchPostVisibleViewers(postId: String, completion: @escaping ([String]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("postViews").child(postId)
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion([])
                 return
@@ -2826,14 +2968,80 @@ extension Database {
         ref.observeSingleEvent(of: .value, with: { (snapshot) in
             guard let notificationDictionary = snapshot.value as? [String: Any] else { return }
             let from_id = notificationDictionary["from_id"] as? String ?? ""
-//            let type_string = notificationDictionary["type"] as? String ?? ""
-//            let group_id = notificationDictionary["group_id"] as? String ?? ""
-//            let group_post_id = notificationDictionary["group_post_id"] as? String ?? ""
+            let type_string = notificationDictionary["type"] as? String ?? ""
+            let group_id = notificationDictionary["group_id"] as? String ?? ""
+            let group_post_id = notificationDictionary["group_post_id"] as? String ?? ""
             
             // Will need to check that all the above still exist, not just user
             self.userExists(withUID: from_id, completion: { (exists) in
-                completion(exists)
-                return
+                if !exists{
+                    completion(false)
+                    return
+                }
+                else{
+                    switch type_string{
+                        case "newFollow":
+                            completion(true)
+                            return
+                        case "groupJoinRequest":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                completion(exists)
+                                return
+                            })
+                        case "newGroupJoin":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                completion(exists)
+                                return
+                            })
+                        case "groupPostComment":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                if exists {
+                                    self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
+                                        completion(post_exists)
+                                        return
+                                    })
+                                }
+                                else{
+                                    completion(false)
+                                    return
+                                }
+                            })
+                        case "groupPostLiked":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                if exists {
+                                    self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
+                                        completion(post_exists)
+                                        return
+                                    })
+                                }
+                                else{
+                                    completion(false)
+                                    return
+                                }
+                            })
+                        case "newGroupPost":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                if exists {
+                                    self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
+                                        completion(post_exists)
+                                        return
+                                    })
+                                }
+                                else{
+                                    completion(false)
+                                    return
+                                }
+                            })
+                        case "groupJoinInvitation":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                completion(exists)
+                                return
+                            })
+                        default:
+                            completion(false)
+                            return
+                    }
+                }
             })
         })
     }
@@ -2876,6 +3084,8 @@ extension Database {
                                         })
                                     }
                                     else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
                                         return
                                     }
                                 })
@@ -2890,6 +3100,8 @@ extension Database {
                                         })
                                     }
                                     else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
                                         return
                                     }
                                 })
@@ -2907,12 +3119,16 @@ extension Database {
                                                     })
                                                 }
                                                 else{
+                                                    let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "groupPost existance"])
+                                                    cancel?(err)
                                                     return
                                                 }
                                             })
                                         })
                                     }
                                     else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
                                         return
                                     }
                                 })
@@ -2930,12 +3146,16 @@ extension Database {
                                                     })
                                                 }
                                                 else{
+                                                    let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "groupPost existance"])
+                                                    cancel?(err)
                                                     return
                                                 }
                                             })
                                         })
                                     }
                                     else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
                                         return
                                     }
                                 })
@@ -2954,12 +3174,16 @@ extension Database {
                                                     })
                                                 }
                                                 else{
+                                                    let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "groupPost existance"])
+                                                    cancel?(err)
                                                     return
                                                 }
                                             })
                                         })
                                     }
                                     else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
                                         return
                                     }
                                 })
@@ -2974,6 +3198,8 @@ extension Database {
                                         })
                                     }
                                     else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "groupPost existance"])
+                                        cancel?(err)
                                         return
                                     }
                                 })
@@ -2983,6 +3209,8 @@ extension Database {
                         }
                     }
                     else {
+                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "user existance"])
+                        cancel?(err)
                         return
                     }
                 })
@@ -2996,7 +3224,7 @@ extension Database {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         let ref = Database.database().reference().child("notifications").child(currentLoggedInUserId)
 
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion([])
                 return
@@ -3011,18 +3239,18 @@ extension Database {
                     if valid{
                         Database.database().fetchNotification(notificationId: notificationId, completion: { (notification) in
                             notifications.append(notification)
-                            notifications.sort(by: { (not1, not2) -> Bool in
-                                return not1.creationDate.compare(not2.creationDate) == .orderedDescending
-                            })
                             sync.leave()
                         })
                     }
-                    else{
+                    else {
                         sync.leave()
                     }
                 })
             })
             sync.notify(queue: .main) {
+                notifications.sort(by: { (not1, not2) -> Bool in
+                    return not1.creationDate.compare(not2.creationDate) == .orderedDescending
+                })
                 completion(notifications)
                 return
             }

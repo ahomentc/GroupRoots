@@ -18,14 +18,17 @@ protocol GroupProfileHeaderDelegate {
     func handleShowFollowers()
     func showInviteCopyAlert()
     func handleDidJoinGroupFromInvite()
+    func handleShowEditGroup()
+    func didTapUser(user: User)
 }
 
 //MARK: - GroupProfileHeader
 
-class GroupProfileHeader: UICollectionViewCell {
+class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate {
 
     var delegate: GroupProfileHeaderDelegate?
 
+    private var users = [User]()
     var group: Group? {
         didSet {
             reloadGroupData()
@@ -34,34 +37,32 @@ class GroupProfileHeader: UICollectionViewCell {
     
     var numberOfPosts: Int? {
         didSet {
-//            reloadData()
         }
     }
     
     var members: Int? {
         didSet {
-//            reloadData()
         }
     }
     
     var memberRequestors: Int? {
         didSet {
-//            reloadData()
         }
     }
     
     var followers: Int? {
         didSet {
-//            reloadData()
         }
     }
     
     var pendingFollowers: Int? {
         didSet {
-//            reloadData()
         }
     }
 
+    // this collection view holds the members
+    var collectionView: UICollectionView!
+    
     private let profileImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.clipsToBounds = true
@@ -115,12 +116,30 @@ class GroupProfileHeader: UICollectionViewCell {
         return button
     }()
     
+    private let editProfileButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Edit Group", for: .normal)
+        button.backgroundColor = UIColor.white
+        button.isHidden = true
+        button.layer.cornerRadius = 5
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
+        button.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
+        button.layer.borderWidth = 1
+        button.addTarget(self, action: #selector(handleShowEditGroup), for: .touchUpInside)
+        return button
+    }()
+    
     private lazy var inviteCodeButton: UIButton = {
         let button = UIButton(type: .system)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.setTitle("", for: .normal)
         button.isHidden = true
         button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.numberOfLines = 0
+        button.titleLabel?.lineBreakMode = .byWordWrapping
+        button.titleLabel?.textAlignment = .center
+        button.titleLabel?.textColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         button.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
         button.layer.borderWidth = 0
         button.layer.cornerRadius = 5
@@ -129,6 +148,13 @@ class GroupProfileHeader: UICollectionViewCell {
         button.isUserInteractionEnabled = true
         button.addTarget(self, action: #selector(handleInviteTap), for: .touchUpInside)
         return button
+    }()
+    
+    private var bioLabel: UILabel = {
+        let label = UILabel()
+        label.text = ""
+        label.isHidden = true
+        return label
     }()
 
     private let padding: CGFloat = 12
@@ -146,23 +172,74 @@ class GroupProfileHeader: UICollectionViewCell {
     }
 
     private func sharedInit() {
-        addSubview(profileImageView)
-        profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: padding, width: 80, height: 80)
-        profileImageView.layer.cornerRadius = 32
+
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 10, width: UIScreen.main.bounds.width, height: 100), collectionViewLayout: layout)
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.backgroundColor = .black
+        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        collectionView?.register(MemberHeaderCell.self, forCellWithReuseIdentifier: MemberHeaderCell.cellId)
+        collectionView?.register(GroupProfileHeaderCell.self, forCellWithReuseIdentifier: GroupProfileHeaderCell.cellId)
+        collectionView.backgroundColor = UIColor.clear
+        collectionView.showsHorizontalScrollIndicator = false
+        self.addSubview(collectionView)
         
-        let stackView = UIStackView(arrangedSubviews: [postsLabel, totalFollowersLabel, membersLabel])
-        stackView.distribution = .fillEqually
-        addSubview(stackView)
-        stackView.anchor(top: topAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding, paddingRight: padding, height: 50)
-        
-        addSubview(joinButton)
-        joinButton.anchor(top: stackView.bottomAnchor, right: rightAnchor, paddingTop: 5, paddingLeft: padding, paddingRight: padding + 10, height: 34)
-        
-        addSubview(subscribeButton)
-        subscribeButton.anchor(top: stackView.bottomAnchor, right: joinButton.leftAnchor, paddingTop: 5, paddingLeft: padding, paddingRight: padding, height: 34)
-        
-        addSubview(inviteCodeButton)
-        inviteCodeButton.anchor(top: subscribeButton.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 5, paddingLeft: CGFloat(2), paddingRight: CGFloat(2), height: 34)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
+            return users.count + 1
+        }
+        else{
+            return users.count
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        // if there is a group profile image
+        if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
+            if indexPath.item == 0 {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
+                cell.profileImageUrl = group?.groupProfileImageUrl
+                return cell
+            }
+            else {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MemberHeaderCell.cellId, for: indexPath) as! MemberHeaderCell
+                cell.user = users[indexPath.item-1]
+                cell.group_has_profile_image = true
+                return cell
+            }
+        }
+        else {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MemberHeaderCell.cellId, for: indexPath) as! MemberHeaderCell
+            cell.user = users[indexPath.item]
+            cell.group_has_profile_image = false
+            return cell
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
+            if indexPath.item > 0 {
+                let user = users[indexPath.item-1]
+                delegate?.didTapUser(user: user)
+            }
+        }
+        else {
+            let user = users[indexPath.item]
+            delegate?.didTapUser(user: user)
+        }
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
+            return 20
+        }
+        else {
+            return 10
+        }
     }
 
     func reloadGroupData() {
@@ -171,8 +248,58 @@ class GroupProfileHeader: UICollectionViewCell {
         reloadGroupStats()
         reloadSubscribeButton()
         reloadInviteCode()
+        
         if let profileImageUrl = group.groupProfileImageUrl {
             profileImageView.loadImage(urlString: profileImageUrl)
+        }
+        
+        let bio = group.bio
+        bioLabel.text = bio
+        bioLabel.isHidden = false
+        
+        if bio != "" {
+            addSubview(bioLabel)
+            bioLabel.anchor(top: collectionView.bottomAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: 15, height: 34)
+            
+            addSubview(joinButton)
+            joinButton.anchor(top: bioLabel.bottomAnchor, left: leftAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
+            
+            addSubview(subscribeButton)
+            subscribeButton.anchor(top: bioLabel.bottomAnchor, left: joinButton.rightAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
+
+            addSubview(editProfileButton)
+            editProfileButton.anchor(top: bioLabel.bottomAnchor, right: rightAnchor, paddingTop: 15, paddingRight: 15,  width: 100, height: 34)
+            
+            let stackView = UIStackView(arrangedSubviews: [membersLabel, totalFollowersLabel, inviteCodeButton])
+            stackView.distribution = .fillEqually
+            stackView.spacing = 15
+            addSubview(stackView)
+            stackView.anchor(top: joinButton.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 30, paddingRight: 30)
+        }
+        else {
+            addSubview(joinButton)
+            joinButton.anchor(top: collectionView.bottomAnchor, left: leftAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
+            
+            addSubview(subscribeButton)
+            subscribeButton.anchor(top: collectionView.bottomAnchor, left: joinButton.rightAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
+
+            addSubview(editProfileButton)
+            editProfileButton.anchor(top: collectionView.bottomAnchor, right: rightAnchor, paddingTop: 15, paddingRight: 15,  width: 100, height: 34)
+            
+            let stackView = UIStackView(arrangedSubviews: [membersLabel, totalFollowersLabel, inviteCodeButton])
+            stackView.distribution = .fillEqually
+            stackView.spacing = 15
+            addSubview(stackView)
+            stackView.anchor(top: joinButton.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 30, paddingRight: 30)
+        }
+        
+        
+        Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (users) in
+            self.users = users
+            self.collectionView?.reloadData()
+            self.collectionView?.refreshControl?.endRefreshing()
+        }) { (_) in
+            self.collectionView?.refreshControl?.endRefreshing()
         }
     }
     
@@ -252,8 +379,13 @@ class GroupProfileHeader: UICollectionViewCell {
         Database.database().isInGroup(groupId: groupId, completion: { (inGroup) in
             if inGroup {
                 self.inviteCodeButton.isHidden = false
+                self.editProfileButton.isHidden = false // also just update the edit profile button here out of laziness
+                
                 let code = String(groupId.suffix(6))
-                self.inviteCodeButton.setTitle("Invite Code: " + code, for: .normal)
+//                self.inviteCodeButton.setTitle("Invite Code: " + code, for: .normal)
+                let attributedText = NSMutableAttributedString(string: "\(code)\n", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 16)])
+                attributedText.append(NSAttributedString(string: "Invite", attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 16)]))
+                self.inviteCodeButton.setAttributedTitle(attributedText, for: .normal)
                 return
             }
             else {
@@ -362,7 +494,6 @@ class GroupProfileHeader: UICollectionViewCell {
                     self.joinButton.type = previousButtonType
                     return
                 }
-                print("hi")
                 self.reloadJoinButton()
                 self.reloadGroupStats()
                 self.reloadSubscribeButton()
@@ -435,6 +566,10 @@ class GroupProfileHeader: UICollectionViewCell {
         delegate?.handleShowFollowers()
     }
     
+    @objc private func handleShowEditGroup(){
+        delegate?.handleShowEditGroup()
+    }
+    
     @objc private func handleInviteTap(){
         guard let groupId = group?.groupId else { return }
         let code = String(groupId.suffix(6))
@@ -480,8 +615,12 @@ private class GroupProfileStatsLabel: UILabel {
     }
 
     private func setAttributedText() {
-        let attributedText = NSMutableAttributedString(string: "\(value)\n", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14)])
-        attributedText.append(NSAttributedString(string: title, attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)]))
+        let attributedText = NSMutableAttributedString(string: "\(value)\n", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 16)])
+        var labelTitle = self.title
+        if value == 1 {
+            labelTitle = String(self.title.dropLast())
+        }
+        attributedText.append(NSAttributedString(string: labelTitle, attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 16)]))
         self.attributedText = attributedText
     }
 }
@@ -602,5 +741,30 @@ private class GroupJoinButton: UIButton {
     }
 }
 
+extension GroupProfileHeader: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
+            if indexPath.item == 0 {
+                return CGSize(width: 112, height: 100)
+            }
+            else {
+                return CGSize(width: 80, height: 80)
+            }
+        }
+        else {
+            return CGSize(width: 90, height: 80)
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
 
+        let totalCellWidth = 80 * collectionView.numberOfItems(inSection: 0)
+        let totalSpacingWidth = 10 * (collectionView.numberOfItems(inSection: 0) - 1)
 
+        let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
+        let rightInset = leftInset
+
+        return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
+
+    }
+}

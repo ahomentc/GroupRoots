@@ -25,10 +25,10 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     
     private lazy var groupnameTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "Group Name"
+        tf.placeholder = "Group Name (optional)"
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
         tf.font = UIFont.systemFont(ofSize: 14)
         tf.delegate = self as UITextFieldDelegate
@@ -38,10 +38,10 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     
     private lazy var bioTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "bio"
+        tf.placeholder = "Bio (optional)"
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
         tf.font = UIFont.systemFont(ofSize: 14)
         tf.delegate = self as UITextFieldDelegate
@@ -57,7 +57,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(handleCreateGroup), for: .touchUpInside)
-        button.isEnabled = false
+        button.isEnabled = true
         return button
     }()
     
@@ -95,6 +95,10 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
             overrideUserInterfaceStyle = .light
         }
         
+        navigationItem.title = "Create Group"
+        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 18)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        navigationController?.navigationBar.titleTextAttributes = textAttributes
+        
         view.backgroundColor = .white
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTapOnView)))
         
@@ -129,8 +133,8 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         groupnameTextField.isUserInteractionEnabled = true
         bioTextField.isUserInteractionEnabled = true
         
-        createGroupButton.isEnabled = false
-        createGroupButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+        createGroupButton.isEnabled = true
+//        createGroupButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
     }
     
     @objc private func handleTapOnView(_ sender: UITextField) {
@@ -146,14 +150,14 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     }
     
     @objc private func handleTextInputChange() {
-        let isFormValid = groupnameTextField.text?.isEmpty == false && bioTextField.text?.isEmpty == false
-        if isFormValid {
-            createGroupButton.isEnabled = true
-            createGroupButton.backgroundColor = UIColor.mainBlue
-        } else {
-            createGroupButton.isEnabled = false
-            createGroupButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
-        }
+//        let isFormValid = groupnameTextField.text?.isEmpty == false && bioTextField.text?.isEmpty == false
+//        if isFormValid {
+//            createGroupButton.isEnabled = true
+//            createGroupButton.backgroundColor = UIColor.mainBlue
+//        } else {
+//            createGroupButton.isEnabled = false
+//            createGroupButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+//        }
     }
     
     @objc private func handleAlreadyHaveAccount() {
@@ -161,24 +165,27 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     }
     
     @objc private func handleCreateGroup() {
-        guard let groupname = groupnameTextField.text else { return }
+        let groupname = groupnameTextField.text
         let bio = bioTextField.text
         
         groupnameTextField.isUserInteractionEnabled = false
         bioTextField.isUserInteractionEnabled = false
         
         createGroupButton.isEnabled = false
-        createGroupButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
+//        createGroupButton.backgroundColor = UIColor.rgb(red: 149, green: 204, blue: 244)
         
-        if groupname.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
-            let alert = UIAlertController(title: "Group name invalid", message: "Please enter a Group name with no symbols or spaces (underscore is okay)", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-            self.present(alert, animated: true)
-            self.resetInputFields()
-            return
+        
+        if groupname != nil && groupname != "" {
+            if groupname!.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
+                let alert = UIAlertController(title: "Group name invalid", message: "Please enter a Group name with no symbols or spaces (underscore is okay)", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                self.present(alert, animated: true)
+                self.resetInputFields()
+                return
+            }
         }
 
-        Database.database().createGroup(groupname: groupname, bio: bio ?? "", image: profileImage, isPrivate: isPrivate) { (err) in
+        Database.database().createGroup(groupname: groupname ?? "", bio: bio ?? "", image: profileImage, isPrivate: isPrivate) { (err) in
             if err != nil {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
                 guard let error = err else { self.resetInputFields(); return }

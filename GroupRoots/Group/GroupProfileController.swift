@@ -73,7 +73,7 @@ class GroupProfileController: HomePostCellViewController {
         self.navigationController?.navigationBar.isTranslucent = false
         self.navigationController?.navigationBar.backgroundColor = UIColor.white
         
-        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 22)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 18)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateGroupProfileFeed, object: nil)
@@ -208,12 +208,12 @@ class GroupProfileController: HomePostCellViewController {
         }) { (err) in
             return
         }
-        
         collectionView?.refreshControl?.beginRefreshing()
         groupPosts.removeAll()
         Database.database().canViewGroupPosts(groupId: groupId, completion: { (canView) in
             if canView{
                 self.canView = true
+                self.isInFollowPending = false
                 Database.database().fetchAllGroupPosts(groupId: groupId, completion: { (countAndPosts) in
                     if countAndPosts.count > 0 {
                         self.groupPosts = countAndPosts[1] as! [GroupPost]
@@ -261,9 +261,9 @@ class GroupProfileController: HomePostCellViewController {
     }
 
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-//        if groupPosts.count == 0 {
-//            return 1
-//        }
+        if groupPosts.count == 0 {
+            return 1
+        }
         return groupPosts.count
     }
 
@@ -311,7 +311,7 @@ extension GroupProfileController: UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if groupPosts.count == 0 {
-            let emptyStateCellHeight = (view.safeAreaLayoutGuide.layoutFrame.height - 200)
+            let emptyStateCellHeight = (view.safeAreaLayoutGuide.layoutFrame.height - 300)
             return CGSize(width: view.frame.width, height: emptyStateCellHeight)
         }
 
@@ -336,8 +336,9 @@ extension GroupProfileController: UICollectionViewDelegateFlowLayout {
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: view.frame.width, height: 145)
+        return CGSize(width: view.frame.width, height: 300)
     }
+
 }
 
 //MARK: - GroupProfileHeaderDelegate
@@ -389,7 +390,6 @@ extension GroupProfileController: GroupProfileHeaderDelegate {
     }
     
     @objc internal func handleShowFollowers(){
-        
         Database.database().isInGroup(groupId: group!.groupId, completion: { (inGroup) in
             let groupFollowersController = GroupFollowersController(collectionViewLayout: UICollectionViewFlowLayout())
             groupFollowersController.group = self.group
@@ -401,6 +401,14 @@ extension GroupProfileController: GroupProfileHeaderDelegate {
         }) { (err) in
             return
         }
+    }
+    
+    @objc internal func handleShowEditGroup(){
+        let editGroupController = EditGroupController()
+        editGroupController.group = self.group
+        let navController = UINavigationController(rootViewController: editGroupController)
+        navController.modalPresentationStyle = .fullScreen
+        self.present(navController, animated: true, completion: nil)
     }
     
     @objc internal func showInviteCopyAlert() {
