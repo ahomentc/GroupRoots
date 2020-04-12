@@ -186,6 +186,12 @@ class FeedPostCell: UICollectionViewCell {
     
     var player = Player()
     
+    private let imageBackground: UIView = {
+        let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
+        backgroundView.backgroundColor = .black
+        return backgroundView
+    }()
+    
     private let coverView: UIView = {
         let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 250))
         let gradient = CAGradientLayer()
@@ -193,7 +199,7 @@ class FeedPostCell: UICollectionViewCell {
         let startColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0).cgColor
         let endColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1).cgColor
         gradient.colors = [startColor, endColor]
-        backgroundView.layer.insertSublayer(gradient, at: 0)
+        backgroundView.layer.insertSublayer(gradient, at: 3)
         return backgroundView
     }()
     
@@ -204,7 +210,7 @@ class FeedPostCell: UICollectionViewCell {
         let startColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.7).cgColor
         let endColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0).cgColor
         gradient.colors = [startColor, endColor]
-        backgroundView.layer.insertSublayer(gradient, at: 0)
+        backgroundView.layer.insertSublayer(gradient, at: 3)
         return backgroundView
     }()
     
@@ -262,18 +268,18 @@ class FeedPostCell: UICollectionViewCell {
         coverView.heightAnchor.constraint(equalToConstant: 250).isActive = true
         coverView.layer.cornerRadius = 0
         coverView.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 210, width: UIScreen.main.bounds.width, height: 250)
-        insertSubview(coverView, at: 0)
+        insertSubview(coverView, at: 3)
         
         upperCoverView.heightAnchor.constraint(equalToConstant: 350).isActive = true
         upperCoverView.layer.cornerRadius = 0
         upperCoverView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 350)
-        insertSubview(upperCoverView, at: 0)
+        insertSubview(upperCoverView, at: 3)
         
         photoImageView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
         photoImageView.layer.cornerRadius = 5
         photoImageView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         photoImageView.center = CGPoint(x: UIScreen.main.bounds.width  / 2, y: UIScreen.main.bounds.height / 2)
-        insertSubview(photoImageView, at: 0)
+        insertSubview(photoImageView, at: 2)
         photoImageView.isHidden = false
         
         insertSubview(player.view, at: 0)
@@ -281,6 +287,11 @@ class FeedPostCell: UICollectionViewCell {
         player.autoplay = false
         player.playbackResumesWhenBecameActive = false
         player.playbackResumesWhenEnteringForeground = false
+        
+        insertSubview(imageBackground, at: 1)
+        imageBackground.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
+        imageBackground.layer.cornerRadius = 0
+        imageBackground.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
     }
     
     private func configurePost() {
@@ -296,25 +307,37 @@ class FeedPostCell: UICollectionViewCell {
         
         // need to set dimensions again in case the image is already loaded
         setImageDimensions()
+        photoImageView.isHidden = true
+        imageBackground.isHidden = true
+        player.view.isHidden = true
         delegate?.didView(groupPost: groupPost)
         // is a picture
         if groupPost.videoUrl == "" {
-            photoImageView.isHidden = false
-            self.player.view.isHidden = true
             self.player.url = URL(string: "")
             self.player.pause()
             self.player.muted = true
+            
+            self.photoImageView.isHidden = false
+            self.imageBackground.isHidden = false
+            self.player.view.isHidden = true
+            
             photoImageView.loadImageWithCompletion(urlString: groupPost.imageUrl, completion: { () in
                 self.setImageDimensions()
+                self.photoImageView.getAvgColor(imageUrl: groupPost.imageUrl, completion: { (imgColor) in
+                    self.imageBackground.backgroundColor = imgColor
+                })
             })
         }
         else {
-            photoImageView.isHidden = true
-            self.player.view.isHidden = false
             self.player.url = URL(string: groupPost.videoUrl)
             self.player.playbackLoops = true
             self.player.muted = false
-            self.player.playerView.playerBackgroundColor = .clear
+            self.player.playerView.playerBackgroundColor = .black
+            
+            self.player.view.isHidden = false
+            self.imageBackground.isHidden = true
+            self.photoImageView.isHidden = true
+            
             do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
             
             let seconds = 1.0
@@ -380,7 +403,14 @@ class FeedPostCell: UICollectionViewCell {
     }
     
     private func setupAttributedCaption(groupPost: GroupPost) {
-        let attributedText = NSMutableAttributedString(string: groupPost.group.groupname, attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
+        var groupname = "Group"
+        if groupPost.group.groupname != "" { // if groupname is not empty
+            groupname =  groupPost.group.groupname
+        }
+        else if groupPost.caption == "" { // if groupname is empty and caption empty
+            groupname = ""
+        }
+        let attributedText = NSMutableAttributedString(string: groupname, attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
         attributedText.append(NSAttributedString(string: " \(groupPost.caption)", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)]))
         attributedText.append(NSAttributedString(string: "", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 4)]))
         

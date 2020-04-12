@@ -51,6 +51,7 @@
 		75BB489323DACF2000CF008F /* FeedPostCellHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BB489223DACF2000CF008F /* FeedPostCellHeader.swift */; };
 		75BB489523DB00E800CF008F /* MembersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BB489423DB00E800CF008F /* MembersCell.swift */; };
 		75CAD5FC243C527E006941B2 /* MemberHeaderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */; };
+		75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */; };
 		75EFCCFA23F11D9D00B7580D /* EmtpyFeedCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */; };
 		75F2C2A923DD220C0037C76D /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */; };
 		9D7187601A438FC40FBC4D15 /* Pods_GroupRoots.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F29BE71F40760917CD1E06D5 /* Pods_GroupRoots.framework */; };
@@ -138,6 +139,7 @@
 		75BB489223DACF2000CF008F /* FeedPostCellHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedPostCellHeader.swift; sourceTree = "<group>"; };
 		75BB489423DB00E800CF008F /* MembersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersCell.swift; sourceTree = "<group>"; };
 		75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberHeaderCell.swift; sourceTree = "<group>"; };
+		75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpTwoController.swift; sourceTree = "<group>"; };
 		75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmtpyFeedCell.swift; sourceTree = "<group>"; };
 		75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationManager.swift; sourceTree = "<group>"; };
 		813799D4A56F45A1373EAB69 /* Pods-GroupRoots.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GroupRoots.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GroupRoots/Pods-GroupRoots.debug.xcconfig"; sourceTree = "<group>"; };
@@ -385,6 +387,7 @@
 			children = (
 				AD4D8CF32060A70E00A49BA4 /* LoginController.swift */,
 				AD2A2CB2205C88DE0023D5C8 /* SignUpController.swift */,
+				75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */,
 			);
 			path = Login;
 			sourceTree = "<group>";
@@ -632,6 +635,7 @@
 				AD32EF732114189400BB7B56 /* CameraController.swift in Sources */,
 				75B65DE52408FB32006CBA0B /* ViewerCell.swift in Sources */,
 				75ACAFC723F677BD00DAE747 /* FollowPageHeader.swift in Sources */,
+				75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */,
 				750FA44A23D3055900D33CF8 /* NotificationsController.swift in Sources */,
 				7578BB2223D28F4B00AF9BFB /* GroupPost.swift in Sources */,
 				ADAC0808210FD4C900615E62 /* FirebaseUtilities.swift in Sources */,

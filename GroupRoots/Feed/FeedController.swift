@@ -15,7 +15,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     var groupPostsFirstCommentDict = [String: [String: Comment]]()      //    same   |
     var groupPostsNumCommentsDict = [String: [String: Int]]()           // -- same --|
     var isScrolling = false
-        
+    
     private let loadingScreenView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
@@ -59,11 +59,6 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         collectionView.visibleCells.forEach { cell in
             (cell as! MyCell).pauseVisibleVideo()
         }
-                
-        // play the video for the visible cell
-//        collectionView.visibleCells.forEach { cell in
-//            (cell as! MyCell).playVisibleVideo()
-//        }
     }
     
     func configureNavBar(){

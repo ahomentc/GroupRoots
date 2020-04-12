@@ -78,15 +78,6 @@ class UserProfileHeader: UICollectionViewCell {
         return label
     }()
     
-    private lazy var memberOfLabel: UILabel = {
-        let label = UserProfileStatsLabel(value: 0, title: "Group Memberships")
-        label.text = "Group Memberships"
-        label.font = UIFont.systemFont(ofSize: 16)
-        label.textColor = UIColor.gray
-//        label.isHidden = true
-        return label
-    }()
-    
     private let padding: CGFloat = 12
     
     static var headerId = "userProfileHeaderId"
@@ -124,10 +115,7 @@ class UserProfileHeader: UICollectionViewCell {
         
         addSubview(followButton)
         followButton.anchor(top: stackView.bottomAnchor, left: profileImageView.rightAnchor, right: GroupButton.leftAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
-        
-        addSubview(memberOfLabel)
-        memberOfLabel.anchor(top: followButton.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: padding + 20)
-        
+                
         NotificationCenter.default.addObserver(self, selector: #selector(reloadData), name: NSNotification.Name.updateUserProfile, object: nil)
     }
     

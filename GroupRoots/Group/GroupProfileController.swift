@@ -27,7 +27,7 @@ class GroupProfileController: HomePostCellViewController {
 
     private var header: GroupProfileHeader?
 
-    private let alertController: UIAlertController = {
+    private var alertController: UIAlertController = {
         let ac = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         return ac
     }()
@@ -112,6 +112,10 @@ class GroupProfileController: HomePostCellViewController {
     }
 
     private func configureAlertController() {
+        guard let group = group else { return }
+        
+        alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         alertController.addAction(cancelAction)
         
@@ -125,6 +129,37 @@ class GroupProfileController: HomePostCellViewController {
             }
         }
         alertController.addAction(edit_profile)
+        
+        Database.database().isGroupHiddenOnProfile(groupId: group.groupId, completion: { (isHidden) in
+            if isHidden {
+                let show_group = UIAlertAction(title: "Show group in my profile", style: .default) { (_) in
+                    do {
+                        Database.database().setGroupVisibleOnProfile(groupId: group.groupId){ (err) in
+                            if err != nil {
+                                return
+                            }
+                            self.configureAlertController()
+                        }
+                    }
+                }
+                self.alertController.addAction(show_group)
+            }
+            else {
+                let hide_group = UIAlertAction(title: "Hide group from my profile", style: .default) { (_) in
+                    do {
+                        Database.database().setGroupHiddenOnProfile(groupId: group.groupId){ (err) in
+                            if err != nil {
+                                return
+                            }
+                            self.configureAlertController()
+                        }
+                    }
+                }
+                self.alertController.addAction(hide_group)
+            }
+        }) { (err) in
+            return
+        }
     }
     
     @objc private func updateGroup(){
@@ -144,7 +179,12 @@ class GroupProfileController: HomePostCellViewController {
         }) { (err) in
             return
         }
-        navigationItem.title = group.groupname
+        if group.groupname == "" {
+            navigationItem.title = "Group"
+        }
+        else {
+            navigationItem.title = group.groupname
+        }
         header?.group = group
         handleRefresh()
     }
@@ -245,6 +285,10 @@ class GroupProfileController: HomePostCellViewController {
     }
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if groupPosts.count == 0 {
+            return
+        }
+        
         let layout = UPCarouselFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
@@ -363,7 +407,11 @@ extension GroupProfileController: GroupProfileHeaderDelegate {
         guard let group = group else { return }
         self.acceptInviteButton.isHidden = true
         
-        let alert = UIAlertController(title: "", message: "You are now a member of " + group.groupname, preferredStyle: .alert)
+        var groupname = group.groupname
+        if group.groupname == "" {
+            groupname = " a group"
+        }
+        let alert = UIAlertController(title: "", message: "You are now a member of " + groupname, preferredStyle: .alert)
         self.present(alert, animated: true, completion: nil)
         let when = DispatchTime.now() + 2
         DispatchQueue.main.asyncAfter(deadline: when){

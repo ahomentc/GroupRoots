@@ -17,6 +17,13 @@ class GroupCell: UICollectionViewCell {
         }
     }
     
+    private let hiddenIcon: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(#imageLiteral(resourceName: "hide_eye").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.isHidden = true
+        return button
+    }()
+    
     private let profileImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
@@ -90,8 +97,11 @@ class GroupCell: UICollectionViewCell {
         userTwoImageView.isHidden = true
         userOneImageView.image = UIImage()
         
+        addSubview(hiddenIcon)
+        hiddenIcon.anchor(top: topAnchor, bottom: bottomAnchor, right: rightAnchor, paddingRight: 12)
+        
         addSubview(groupnameLabel)
-        groupnameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 12)
+        groupnameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, paddingLeft: 12)
         
         let separatorView = UIView()
         separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
@@ -103,8 +113,20 @@ class GroupCell: UICollectionViewCell {
     private func configureCell() {
         guard let group = group else { return }
         
+        // then actually hide it, but can't use "isGroupHiddenOnProfile" because current user will be different
+        Database.database().isGroupHiddenOnProfile(groupId: group.groupId, completion: { (isHidden) in
+            // only allow this if is in group
+            if isHidden {
+                self.hiddenIcon.isHidden = false
+            }
+            else {
+               self.hiddenIcon.isHidden = true
+            }
+        }) { (err) in
+            return
+        }
+        
         Database.database().fetchFirstTwoGroupMembers(groupId: group.groupId, completion: { (first_two_users) in
-//            print(group.groupId)
             if group.groupname != "" {
                 self.groupnameLabel.text = group.groupname
             }

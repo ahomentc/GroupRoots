@@ -126,7 +126,7 @@ class EditGroupController: UIViewController, UINavigationControllerDelegate {
     
     private func setupInputFields() {
         guard let group = group else { return }
-        groupnameTextField.placeholder = group.groupname
+        groupnameTextField.text = group.groupname
         
         if group.isPrivate! {
             originalIsPrivate = true
@@ -204,7 +204,7 @@ class EditGroupController: UIViewController, UINavigationControllerDelegate {
         let changedPrivacy = isPrivate != originalIsPrivate
                 
 //     username regex:   ^[a-zA-Z0-9_-]*$   must match
-        if groupname != nil {
+        if groupname != nil && groupname != "" {
             if groupname!.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
                 let alert = UIAlertController(title: "Group Name invalid", message: "Please enter a group name with no symbols (underscore is okay)", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))

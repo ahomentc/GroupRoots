@@ -62,39 +62,14 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         return tf
     }()
     
-    private lazy var passwordTextField: UITextField = {
-        let tf = UITextField()
-        tf.placeholder = "Password"
-        tf.isSecureTextEntry = true
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
-        tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
-        tf.delegate = self
-        tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
-        return tf
-    }()
-    
-    private let invitationTextField: UITextField = {
-        let tf = UITextField()
-        tf.placeholder = "Group Invite Code"
-        tf.autocorrectionType = .no
-        tf.autocapitalizationType = .none
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
-        tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
-//        tf.delegate = self
-        tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
-        return tf
-    }()
-    
-    private let signUpButton: UIButton = {
+    private let nextButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Sign Up", for: .normal)
+        button.setTitle("Next", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         button.layer.cornerRadius = 5
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.setTitleColor(.white, for: .normal)
-        button.addTarget(self, action: #selector(handleSignUp), for: .touchUpInside)
+        button.addTarget(self, action: #selector(handleNext), for: .touchUpInside)
         button.isEnabled = false
         return button
     }()
@@ -124,7 +99,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         alreadyHaveAccountButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 50)
         
         view.addSubview(plusPhotoButton)
-        plusPhotoButton.anchor(top: view.safeAreaLayoutGuide.topAnchor, paddingTop: 40, width: 140, height: 140)
+        plusPhotoButton.anchor(top: view.safeAreaLayoutGuide.topAnchor, paddingTop: 60, width: 140, height: 140)
         plusPhotoButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         plusPhotoButton.layer.cornerRadius = 140 / 2
         
@@ -132,38 +107,33 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     }
     
     private func setupInputFields() {
-        let stackView = UIStackView(arrangedSubviews: [emailTextField, usernameTextField, nameTextField, passwordTextField, invitationTextField, signUpButton])
+//        let stackView = UIStackView(arrangedSubviews: [emailTextField, usernameTextField, nameTextField, passwordTextField, invitationTextField, signUpButton])
+        let stackView = UIStackView(arrangedSubviews: [emailTextField, usernameTextField, nameTextField, nextButton])
         stackView.distribution = .fillEqually
         stackView.axis = .vertical
         stackView.spacing = 10
         
         view.addSubview(stackView)
-        stackView.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 20, paddingLeft: 40, paddingRight: 40, height: 312)
+        stackView.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 40, paddingLeft: 40, paddingRight: 40, height: 210)
     }
     
     private func resetInputFields() {
-        emailTextField.text = ""
-        usernameTextField.text = ""
-        nameTextField.text = ""
-        passwordTextField.text = ""
-        invitationTextField.text = ""
+//        emailTextField.text = ""
+//        usernameTextField.text = ""
+//        nameTextField.text = ""
         
         emailTextField.isUserInteractionEnabled = true
         usernameTextField.isUserInteractionEnabled = true
         nameTextField.isUserInteractionEnabled = true
-        passwordTextField.isUserInteractionEnabled = true
-        invitationTextField.isUserInteractionEnabled = true
         
-        signUpButton.isEnabled = false
-        signUpButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
+        nextButton.isEnabled = false
+        nextButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
     }
     
     @objc private func handleTapOnView(_ sender: UITextField) {
         usernameTextField.resignFirstResponder()
         nameTextField.resignFirstResponder()
         emailTextField.resignFirstResponder()
-        passwordTextField.resignFirstResponder()
-        invitationTextField.resignFirstResponder()
     }
     
     @objc private func handlePlusPhoto() {
@@ -174,13 +144,13 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     }
     
     @objc private func handleTextInputChange() {
-        let isFormValid = emailTextField.text?.isEmpty == false && usernameTextField.text?.isEmpty == false && nameTextField.text?.isEmpty == false && passwordTextField.text?.isEmpty == false && invitationTextField.text?.isEmpty == false
+        let isFormValid = emailTextField.text?.isEmpty == false && usernameTextField.text?.isEmpty == false && nameTextField.text?.isEmpty == false
         if isFormValid {
-            signUpButton.isEnabled = true
-            signUpButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
+            nextButton.isEnabled = true
+            nextButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         } else {
-            signUpButton.isEnabled = false
-            signUpButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
+            nextButton.isEnabled = false
+            nextButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
         }
     }
     
@@ -188,104 +158,54 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         _ = navigationController?.popViewController(animated: true)
     }
     
-    @objc private func handleSignUp() {
+    @objc private func handleNext() {
         guard let email = emailTextField.text else { return }
         guard let username = usernameTextField.text else { return }
         guard let name = nameTextField.text else { return }
-        guard let password = passwordTextField.text else { return }
-        guard let code = invitationTextField.text else { return }
-        
-        emailTextField.isUserInteractionEnabled = false
-        usernameTextField.isUserInteractionEnabled = false
-        nameTextField.isUserInteractionEnabled = false
-        passwordTextField.isUserInteractionEnabled = false
-        invitationTextField.isUserInteractionEnabled = false
-        
-        signUpButton.isEnabled = false
-        signUpButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
         
 //     username regex:   ^[a-zA-Z0-9_-]*$   must match
         if username.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
             let alert = UIAlertController(title: "Username invalid", message: "Please enter a username with no symbols (underscore is okay)", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
             self.present(alert, animated: true)
+            usernameTextField.text = ""
             self.resetInputFields()
             return
         }
         
-        Database.database().fetchInviteCodeGroupId(code: code, completion: { (groupId) in
-            if groupId != "" || code == "qwerty123" {
-                Auth.auth().createUser(withEmail: email, username: username, name: name, password: password, image: self.profileImage) { (err) in
-                    if err != nil {
-                        guard let error = err else { self.resetInputFields(); return }
-                        if error.localizedDescription == "Username Taken" {
-                            let alert = UIAlertController(title: "Username Taken", message: "Please select a different username.", preferredStyle: .alert)
-                            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-                            self.present(alert, animated: true)
-                        }
-                        self.resetInputFields()
-                        return
-                    }
-                    
-                    if code == "qwerty123"{
-                        guard let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController else { return }
-                        mainTabBarController.setupViewControllers()
-                        mainTabBarController.selectedIndex = 0
-                        self.dismiss(animated: true, completion: nil)
-                        return
-                    }
-                    
-                    // get the groupId that the code belongs to
-                    // send a request to join the group
-                    // auto follow/subscribe to the group so it appears in the feed
-                    print(code)
-                    Database.database().joinGroup(groupId: groupId) { (err) in
-                        if err != nil {
-                            return
-                        }
-                        // send the notification each each user in the group
-                        Database.database().groupExists(groupId: groupId, completion: { (exists) in
-                            if exists {
-                                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                                    Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
-                                        users.forEach({ (user) in
-                                            Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinRequest, group: group) { (err) in
-                                                if err != nil {
-                                                    return
-                                                }
-                                            }
-                                        })
-                                    }) { (_) in}
-                                })
-                            }
-                            else {
-                                return
-                            }
-                        })
-                        
-                        Database.database().subscribeToGroup(groupId: groupId) { (err) in
-                            if err != nil {
-                                return
-                            }
-                            print("subscribed")
-                            NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
-                            
-                            guard let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController else { return }
-                            mainTabBarController.setupViewControllers()
-                            mainTabBarController.selectedIndex = 0
-                            self.dismiss(animated: true, completion: nil)
-                        }
-                    }
-                }
-            }
-            else {
-                let alert = UIAlertController(title: "Invalid Invitation", message: "Your invitation code is no longer valid", preferredStyle: .alert)
+        Database.database().usernameExists(username: username, completion: { (exists) in
+            if exists{
+                let alert = UIAlertController(title: "Username Taken", message: "Please select a different username.", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 self.present(alert, animated: true)
+                self.usernameTextField.text = ""
                 self.resetInputFields()
-                print("done")
+                return
             }
-            
+            else {
+                // check if email already exists
+                Auth.auth().fetchSignInMethods(forEmail: email, completion: {
+                    (providers, error) in
+                    if error != nil || providers == nil {
+                        // push SignUpTwoController
+                        let signUpTwoController = SignUpTwoController()
+                        signUpTwoController.email = email
+                        signUpTwoController.username = username
+                        signUpTwoController.name = name
+                        self.navigationController?.pushViewController(signUpTwoController, animated: true)
+                    }
+                    else {
+                        // email already exists, send to login
+                        let alert = UIAlertController(title: "", message: "Email already exists. Please log in", preferredStyle: .alert)
+                        self.present(alert, animated: true, completion: nil)
+                        let when = DispatchTime.now() + 3
+                        DispatchQueue.main.asyncAfter(deadline: when){
+                            alert.dismiss(animated: true, completion: nil)
+                            self.handleAlreadyHaveAccount()
+                        }
+                    }
+                })
+            }
         })
     }
 }

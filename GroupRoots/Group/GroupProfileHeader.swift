@@ -77,7 +77,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
     
     private lazy var membersLabel: GroupProfileStatsLabel = {
         let label = GroupProfileStatsLabel(value: 0, title: "members")
-        label.isUserInteractionEnabled = true
+        label.isUserInteractionEnabled = false
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowRequests))
         label.addGestureRecognizer(gestureRecognizer)
         return label
@@ -85,7 +85,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
     
     private lazy var totalFollowersLabel: GroupProfileStatsLabel = {
         let label = GroupProfileStatsLabel(value: 0, title: "subscribers")
-        label.isUserInteractionEnabled = true
+        label.isUserInteractionEnabled = false
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowFollowers))
         label.addGestureRecognizer(gestureRecognizer)
         return label
@@ -175,7 +175,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
 
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: 10, width: UIScreen.main.bounds.width, height: 100), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 5, width: UIScreen.main.bounds.width, height: 90), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.backgroundColor = .black
@@ -259,38 +259,41 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         
         if bio != "" {
             addSubview(bioLabel)
-            bioLabel.anchor(top: collectionView.bottomAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: 15, height: 34)
+            bioLabel.anchor(top: collectionView.bottomAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: 30, height: 34)
             
-            addSubview(joinButton)
-            joinButton.anchor(top: bioLabel.bottomAnchor, left: leftAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
-            
-            addSubview(subscribeButton)
-            subscribeButton.anchor(top: bioLabel.bottomAnchor, left: joinButton.rightAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
-
-            addSubview(editProfileButton)
-            editProfileButton.anchor(top: bioLabel.bottomAnchor, right: rightAnchor, paddingTop: 15, paddingRight: 15,  width: 100, height: 34)
+            let buttonStackView = UIStackView(arrangedSubviews: [joinButton, subscribeButton, editProfileButton])
+            buttonStackView.distribution = .fillProportionally
+            buttonStackView.spacing = 15
+            addSubview(buttonStackView)
+            buttonStackView.anchor(top: bioLabel.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 30, paddingRight: 30, height: 34)
             
             let stackView = UIStackView(arrangedSubviews: [membersLabel, totalFollowersLabel, inviteCodeButton])
             stackView.distribution = .fillEqually
             stackView.spacing = 15
             addSubview(stackView)
-            stackView.anchor(top: joinButton.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 30, paddingRight: 30)
+            stackView.anchor(top: buttonStackView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 30, paddingRight: 30)
         }
         else {
-            addSubview(joinButton)
-            joinButton.anchor(top: collectionView.bottomAnchor, left: leftAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
+//            addSubview(joinButton)
+//            joinButton.anchor(top: collectionView.bottomAnchor, left: leftAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
+//
+//            addSubview(subscribeButton)
+//            subscribeButton.anchor(top: collectionView.bottomAnchor, left: joinButton.rightAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
+//
+//            addSubview(editProfileButton)
+//            editProfileButton.anchor(top: collectionView.bottomAnchor, right: rightAnchor, paddingTop: 15, paddingRight: 15,  width: 100, height: 34)
             
-            addSubview(subscribeButton)
-            subscribeButton.anchor(top: collectionView.bottomAnchor, left: joinButton.rightAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
-
-            addSubview(editProfileButton)
-            editProfileButton.anchor(top: collectionView.bottomAnchor, right: rightAnchor, paddingTop: 15, paddingRight: 15,  width: 100, height: 34)
+            let buttonStackView = UIStackView(arrangedSubviews: [joinButton, subscribeButton, editProfileButton])
+            buttonStackView.distribution = .fillProportionally
+            buttonStackView.spacing = 15
+            addSubview(buttonStackView)
+            buttonStackView.anchor(top: collectionView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 30, paddingRight: 30, height: 34)
             
             let stackView = UIStackView(arrangedSubviews: [membersLabel, totalFollowersLabel, inviteCodeButton])
             stackView.distribution = .fillEqually
             stackView.spacing = 15
             addSubview(stackView)
-            stackView.anchor(top: joinButton.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 30, paddingRight: 30)
+            stackView.anchor(top: buttonStackView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 30, paddingRight: 30)
         }
         
         
@@ -358,18 +361,20 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
     }
 
     private func reloadGroupStats() {
-        guard let groupId = group?.groupId else { return }
+        guard let group = group else { return }
     
-        Database.database().numberOfPostsForGroup(groupId: groupId) { (count) in
+        Database.database().numberOfPostsForGroup(groupId: group.groupId) { (count) in
             self.postsLabel.setValue(count)
         }
         
-        Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+        Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
             self.membersLabel.setValue(members.count)
+            self.membersLabel.isUserInteractionEnabled = !(group.isPrivate ?? true)
         }) { (_) in}
         
-        Database.database().fetchGroupFollowers(groupId: groupId, completion: { (followers) in
+        Database.database().fetchGroupFollowers(groupId: group.groupId, completion: { (followers) in
             self.totalFollowersLabel.setValue(followers.count)
+            self.totalFollowersLabel.isUserInteractionEnabled = !(group.isPrivate ?? true)
         }) { (_) in}
     }
     
@@ -745,7 +750,8 @@ extension GroupProfileHeader: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
             if indexPath.item == 0 {
-                return CGSize(width: 112, height: 100)
+//                return CGSize(width: 112, height: 100)
+                return CGSize(width: 102, height: 90)
             }
             else {
                 return CGSize(width: 80, height: 80)

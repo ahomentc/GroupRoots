@@ -1,14 +1,7 @@
-//
-//  CustomImageView.swift
-//  InstagramClone
-//
-//  Created by Mac Gallagher on 7/28/18.
-//  Copyright © 2018 Mac Gallagher. All rights reserved.
-//
-
 import UIKit
 
 var imageCache = [String: UIImage]()
+var colorCache = [String: UIColor]()
 
 class CustomImageView: UIImageView {
     
@@ -48,6 +41,7 @@ class CustomImageView: UIImageView {
         
         if let cachedImage = imageCache[urlString] {
             image = cachedImage
+            completion()
             return
         }
         
@@ -69,5 +63,36 @@ class CustomImageView: UIImageView {
                 completion()
             }
         }.resume()
+    }
+}
+
+extension CustomImageView {
+    
+    func getAvgColor(imageUrl: String, completion: @escaping (UIColor) -> ()) {
+        let cacheString = "color_" + imageUrl
+        if let cachedColorVal = colorCache[cacheString] {
+            completion(cachedColorVal)
+            return
+        }
+        
+        let imgColor = self.averageColor
+        colorCache[cacheString] = imgColor
+        completion(imgColor ?? UIColor.black)
+    }
+    
+    var averageColor: UIColor? {
+        
+        guard let image = self.image else { return nil }
+        guard let inputImage = CIImage(image: image) else { return nil }
+        let extentVector = CIVector(x: inputImage.extent.origin.x, y: inputImage.extent.origin.y, z: inputImage.extent.size.width, w: inputImage.extent.size.height)
+
+        guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: inputImage, kCIInputExtentKey: extentVector]) else { return nil }
+        guard let outputImage = filter.outputImage else { return nil }
+
+        var bitmap = [UInt8](repeating: 0, count: 4)
+        let context = CIContext(options: [.workingColorSpace: kCFNull])
+        context.render(outputImage, toBitmap: &bitmap, rowBytes: 4, bounds: CGRect(x: 0, y: 0, width: 1, height: 1), format: .RGBA8, colorSpace: nil)
+
+        return UIColor(red: CGFloat(bitmap[0]) / 255, green: CGFloat(bitmap[1]) / 255, blue: CGFloat(bitmap[2]) / 255, alpha: CGFloat(bitmap[3]) / 255)
     }
 }

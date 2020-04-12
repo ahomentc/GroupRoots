@@ -122,7 +122,11 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
     }
     
     func groupJoinAlert(group: Group) {
-        let alert = UIAlertController(title: "", message: "You are now a member of " + group.groupname, preferredStyle: .alert)
+        var groupname = group.groupname
+        if groupname == "" {
+            groupname = "a group"
+        }
+        let alert = UIAlertController(title: "", message: "You are now a member of " + groupname, preferredStyle: .alert)
         self.present(alert, animated: true, completion: nil)
         let when = DispatchTime.now() + 2
         DispatchQueue.main.asyncAfter(deadline: when){

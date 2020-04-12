@@ -64,6 +64,7 @@ extension Auth {
             })
         })
     }
+    
 }
 
 extension Storage {
@@ -814,6 +815,7 @@ extension Database {
             sync.leave()
         }
         sync.notify(queue: .main){
+            
             // get original username
             var old_groupname = ""
             Database.database().fetchGroup(groupId: groupId, completion: { (group) in
@@ -829,30 +831,40 @@ extension Database {
                 if groupname != nil && groupname != "" {
                     updates_sync.enter()
                     Database.database().groupnameExists(groupname: groupname!, completion: { (exists) in
-                        if !exists || groupname! == old_groupname {
-                            Database.database().reference().child("groups").child(groupId).updateChildValues(["groupname": groupname!], withCompletionBlock: { (err, ref) in
-                                if let err = err {
-                                    print("Failed to update username in database:", err)
-                                    return
-                                }
-                                // replace the username if there is a username and remove old one
-                                let values_inverted = [groupname: groupId]
-                                Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
+                        if !exists {
+                            if groupname! != old_groupname {
+                                Database.database().reference().child("groups").child(groupId).updateChildValues(["groupname": groupname!], withCompletionBlock: { (err, ref) in
                                     if let err = err {
-                                        print("Failed to upload user to database:", err)
+                                        print("Failed to update username in database:", err)
                                         return
                                     }
-                                    
-                                    // delete the old groupname
-                                    Database.database().reference().child("groupnames").child(old_groupname).removeValue(completionBlock: { (err, _) in
+                                    // replace the groupna,e if there is a username and remove old one
+                                    let values_inverted = [groupname: groupId]
+                                    Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
                                         if let err = err {
-                                            print("Failed to remove username:", err)
+                                            print("Failed to upload user to database:", err)
                                             return
                                         }
-                                        updates_sync.leave()
+                                        // delete the old groupname
+                                        if old_groupname != "" {
+                                            Database.database().reference().child("groupnames").child(old_groupname).removeValue(completionBlock: { (err, _) in
+                                                if let err = err {
+                                                    print("Failed to remove groupname:", err)
+                                                    return
+                                                }
+                                                updates_sync.leave()
+                                            })
+                                        }
+                                        else {
+                                            updates_sync.leave()
+                                        }
                                     })
                                 })
-                            })
+                            }
+                            else {
+                                updates_sync.leave()
+                            }
+                            
                         }
                         else {
                             updates_sync.leave()
@@ -861,6 +873,26 @@ extension Database {
                             return
                         }
                     })
+                }
+                else {
+                    // username is empty, check if same as old, if not then change
+                    if old_groupname != "" {
+                        updates_sync.enter()
+                        Database.database().reference().child("groups").child(groupId).updateChildValues(["groupname": ""], withCompletionBlock: { (err, ref) in
+                            if let err = err {
+                                print("Failed to update username in database:", err)
+                                return
+                            }
+                            // remove the old groupname
+                            Database.database().reference().child("groupnames").child(old_groupname).removeValue(completionBlock: { (err, _) in
+                                if let err = err {
+                                    print("Failed to remove username:", err)
+                                    return
+                                }
+                                updates_sync.leave()
+                            })
+                        })
+                    }
                 }
                 
                 // update isPrivate
@@ -1183,18 +1215,77 @@ extension Database {
     //MARK: GroupMembership
     func isInGroup(groupId: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-        
-        Database.database().reference().child("users").child(currentLoggedInUserId).child("groups").child(groupId).observeSingleEvent(of: .value, with: { (snapshot) in
+        let ref = Database.database().reference().child("users").child(currentLoggedInUserId).child("groups").child(groupId)
+        ref.observeSingleEvent(of: .value, with: { (snapshot) in
             if let isIn = snapshot.value as? Int, isIn == 1 {
                 completion(true)
             } else {
-                completion(false)
+                ref.child("hidden").observeSingleEvent(of: .value, with: { (snapshot) in
+                    completion(snapshot.value as? String != nil)
+                }) { (err) in
+                    print("Failed to check if following:", err)
+                    cancel?(err)
+                }
             }
             
         }) { (err) in
             print("Failed to check if following:", err)
             cancel?(err)
         }
+    }
+    
+    func isGroupHiddenForUser(withUID uid: String, groupId: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+        let ref = Database.database().reference().child("users").child(uid).child("groups").child(groupId).child("hidden")
+        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+            if let isHidden = snapshot.value as? String, isHidden == "true" {
+                completion(true)
+            } else {
+                completion(false)
+            }
+        }) { (err) in
+            print("Failed to check if is visible:", err)
+            cancel?(err)
+        }
+    }
+    
+    func isGroupHiddenOnProfile(groupId: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let ref = Database.database().reference().child("users").child(currentLoggedInUserId).child("groups").child(groupId).child("hidden")
+        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+            if let isHidden = snapshot.value as? String, isHidden == "true" {
+                completion(true)
+            } else {
+                completion(false)
+            }
+        }) { (err) in
+            print("Failed to check if is visible:", err)
+            cancel?(err)
+        }
+    }
+    
+    func setGroupVisibleOnProfile(groupId: String, completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        Database.database().reference().child("users").child(currentLoggedInUserId).child("groups").child(groupId).updateChildValues(["hidden": "false"], withCompletionBlock: { (err, ref) in
+            if let err = err {
+                print("Failed to update users group in database:", err)
+                return
+            }
+            completion(nil)
+        })
+    }
+    
+    // value of 0 means group is hidden
+    // this might not be good because so other thing in database is opposite (has 1 as hidden) but I forget which one it was
+    func setGroupHiddenOnProfile(groupId: String, completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        Database.database().reference().child("users").child(currentLoggedInUserId).child("groups").child(groupId).updateChildValues(["hidden":
+            "true"], withCompletionBlock: { (err, ref) in
+            if let err = err {
+                print("Failed to update users group in database:", err)
+                return
+            }
+            completion(nil)
+        })
     }
     
     func canViewGroupPosts(groupId: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
@@ -1336,113 +1427,6 @@ extension Database {
             }
         }
     }
-    
-//    func createGroup(groupname: String?, bio: String?, image: UIImage?, isPrivate: Bool, completion: @escaping (Error?) -> ()) {
-//        guard let uid = Auth.auth().currentUser?.uid else { return }
-//        let userGroupRef = Database.database().reference().child("groups").childByAutoId()
-//        guard let groupId = userGroupRef.key else { return }
-//        let isPrivateString = isPrivate ? "true" : "false"
-//        // check if the image is nul or not
-//        Database.database().groupnameExists(groupname: groupname, completion: { (exists) in
-//            let sync = DispatchGroup()
-//            sync.enter()
-//            if !exists{
-//                if let image = image {
-//                    Storage.storage().uploadGroupProfileImage(image: image, completion: { (groupProfileImageUrl) in
-//                        let values = ["id": groupId, "groupname": groupname, "bio": bio,"imageUrl": groupProfileImageUrl, "imageWidth": image.size.width, "imageHeight": image.size.height, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
-//                        userGroupRef.updateChildValues(values) { (err, ref) in
-//                            if let err = err {
-//                                print("Failed to save post to database", err)
-//                                completion(err)
-//                                return
-//                            }
-//                            let values_inverted = [groupname: groupId]
-//                            Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
-//                                if let err = err {
-//                                    print("Failed to upload user to database:", err)
-//                                    return
-//                                }
-//                                sync.leave()
-//                            })
-//                        }
-//                    })
-//                }
-//                else{
-//                    let values = ["id": groupId, "groupname": groupname, "bio": bio, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
-//                    userGroupRef.updateChildValues(values) { (err, ref) in
-//                        if let err = err {
-//                            print("Failed to save post to database", err)
-//                            completion(err)
-//                            return
-//                        }
-//                        let values_inverted = [groupname: groupId]
-//                        Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
-//                            if let err = err {
-//                                print("Failed to upload user to database:", err)
-//                                return
-//                            }
-//                            sync.leave()
-//                        })
-//                    }
-//                }
-//
-//                sync.notify(queue: .main) {
-//                    // connect user to group as a member
-//                    // add uid to group
-//                    let values = [uid: 1]
-//                    Database.database().reference().child("groups").child(groupId).child("members").updateChildValues(values) { (err, ref) in
-//                        if let err = err {
-//                            completion(err)
-//                            return
-//                        }
-//                        // add groupId to user
-//                        let values = [groupId: 1]
-//                        Database.database().reference().child("users").child(uid).child("groups").updateChildValues(values) { (err, ref) in
-//                            if let err = err {
-//                                completion(err)
-//                                return
-//                            }
-//                            // add invitation code with groupId as value
-//                            // increment value under groupId when user signs up with it until gets to 100 users
-//                            // ^^ but do this later
-//                            let values = [groupId: 1]
-//                            let code = String(groupId.suffix(6))
-//                            let invitationRef = Database.database().reference().child("inviteCodes").child(code)
-//                            invitationRef.updateChildValues(values) { (err, ref) in
-//                                if let err = err {
-//                                    completion(err)
-//                                    return
-//                                }
-//
-//                                // auto subscribe user to group
-//                                Database.database().addToGroupFollowers(groupId: groupId, withUID: uid) { (err) in
-//                                    if err != nil {
-//                                        completion(err);return
-//                                    }
-//                                    Database.database().addToGroupsFollowing(groupId: groupId, withUID: uid) { (err) in
-//                                        if err != nil {
-//                                            completion(err);return
-//                                        }
-//                                        Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: uid, completion: { (err) in
-//                                            if err != nil {
-//                                                completion(err);return
-//                                            }
-//                                            completion(nil)
-//                                        })
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//            else {
-//                let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Groupname Taken"])
-//                completion(error)
-//                return
-//            }
-//        })
-//    }
     
     func joinGroup(groupId: String, completion: @escaping (Error?) -> ()) {
         // added to requested of the group

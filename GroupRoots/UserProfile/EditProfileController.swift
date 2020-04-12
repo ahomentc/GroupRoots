@@ -118,8 +118,8 @@ class EditProfileController: UIViewController, UINavigationControllerDelegate {
     private func setupInputFields() {
         guard let user = user else { return }
         
-        usernameTextField.placeholder = user.username
-        nameTextField.placeholder = user.name
+        usernameTextField.text = user.username
+        nameTextField.text = user.name
         
         let separatorViewTop = UIView()
         separatorViewTop.backgroundColor = UIColor(white: 0, alpha: 0.1)

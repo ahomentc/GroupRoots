@@ -18,13 +18,13 @@ class LargeImageViewHeader: UIView {
     
     var group: Group? {
         didSet {
-            configureUser()
+            configureGroup()
         }
     }
     
-    var groupPostMembers: [User]? {
+    var groupMembers: [User]? {
         didSet {
-            configureMemberImages()
+            configureGroup()
         }
     }
     
@@ -32,7 +32,7 @@ class LargeImageViewHeader: UIView {
     
     private var padding: CGFloat = 8
     
-    private lazy var userProfileImageView: CustomImageView = {
+    private lazy var groupProfileImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
@@ -106,18 +106,18 @@ class LargeImageViewHeader: UIView {
     }
     
     private func sharedInit() {
-
-        addSubview(userProfileImageView)
-        userProfileImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding + 20, paddingBottom: padding, width: 50 , height: 50)
-        userProfileImageView.layer.cornerRadius = 20
-        userProfileImageView.layer.borderWidth = 2
-        userProfileImageView.layer.borderColor = UIColor.white.cgColor
-        userProfileImageView.isUserInteractionEnabled = true
-        userProfileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
-        userProfileImageView.image = #imageLiteral(resourceName: "user")
+        
+        addSubview(groupProfileImageView)
+        groupProfileImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding + 20, paddingBottom: padding, width: 50 , height: 50)
+        groupProfileImageView.layer.cornerRadius = 20
+        groupProfileImageView.layer.borderWidth = 2
+        groupProfileImageView.layer.borderColor = UIColor.white.cgColor
+        groupProfileImageView.isUserInteractionEnabled = true
+        groupProfileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
+        groupProfileImageView.image = #imageLiteral(resourceName: "user")
         
         addSubview(firstMemberImageView)
-        firstMemberImageView.anchor(top: topAnchor, left: userProfileImageView.rightAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding, paddingBottom: padding, width: 50 , height: 50)
+        firstMemberImageView.anchor(top: topAnchor, left: groupProfileImageView.rightAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding, paddingBottom: padding, width: 50 , height: 50)
         firstMemberImageView.layer.cornerRadius = 20
         firstMemberImageView.isUserInteractionEnabled = true
         firstMemberImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
@@ -146,55 +146,122 @@ class LargeImageViewHeader: UIView {
 //        optionsButton.anchor(top: topAnchor, bottom: bottomAnchor, right: rightAnchor, paddingRight: padding, width: 44)
     }
     
-    private func configureUser() {
+    private func configureGroup() {
         guard let group = group else { return }
+        guard groupMembers != nil else { return }
+        
+        // set groupname
         usernameButton.setTitle(group.groupname, for: .normal)
         usernameButton.setTitleColor(.white, for: .normal)
-        if let profileImageUrl = group.groupProfileImageUrl {
-            userProfileImageView.loadImage(urlString: profileImageUrl)
-        } else {
-            userProfileImageView.image = #imageLiteral(resourceName: "user")
-        }
+        
+        // set group and profile images
+        configureMemberImages(group: group)
+        
+        // set up groupname if there is none
+        Database.database().fetchFirstTwoGroupMembers(groupId: group.groupId, completion: { (first_two_users) in
+            if group.groupname == "" {
+                if first_two_users.count == 2 {
+                    var usernames = first_two_users[0].username + " & " + first_two_users[1].username
+                    if usernames.count > 21 {
+                        usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                        usernames = usernames + "..."
+                    }
+                    self.usernameButton.setTitle(usernames, for: .normal)
+                }
+                else if first_two_users.count == 1 {
+                    var usernames = first_two_users[0].username
+                    if usernames.count > 21 {
+                        usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                        usernames = usernames + "..."
+                    }
+                    self.usernameButton.setTitle(usernames, for: .normal)
+                }
+            }
+        }) { (_) in }
     }
     
-    func configureMemberImages(){
+    func configureMemberImages(group: Group){
+        guard let groupMembers = groupMembers else { return }
+        
         firstMemberImageView.image = UIImage()
         secondMemberImageView.image = UIImage()
         thirdMemberImageView.image = UIImage()
-        var count = 0
-        for user in groupPostMembers ?? []{
-            if count < 3 {
-                if count == 0 {
-                    if let profileImageUrl = user.profileImageUrl {
-                        self.firstMemberImageView.loadImage(urlString: profileImageUrl)
-                        self.firstMemberImageView.layer.borderWidth = 0.5
+        var image_count = 0
+        
+        if let profileImageUrl = group.groupProfileImageUrl {
+            self.groupProfileImageView.loadImage(urlString: profileImageUrl)
+            self.groupProfileImageView.layer.borderWidth = 2
+            self.groupProfileImageView.layer.borderColor = UIColor.white.cgColor
+            for user in groupMembers {
+                if image_count < 3 {
+                    if image_count == 0 {
+                        if let profileImageUrl = user.profileImageUrl {
+                            self.firstMemberImageView.loadImage(urlString: profileImageUrl)
+                            self.firstMemberImageView.layer.borderWidth = 0
+                        }
+                        else {
+                            self.firstMemberImageView.image = #imageLiteral(resourceName: "user")
+                        }
                     }
-                    else {
-                        self.firstMemberImageView.image = #imageLiteral(resourceName: "user")
+                    else if image_count == 1 {
+                        if let profileImageUrl = user.profileImageUrl {
+                            self.secondMemberImageView.loadImage(urlString: profileImageUrl)
+                            self.secondMemberImageView.layer.borderWidth = 0
+                        }
+                        else {
+                            self.secondMemberImageView.image = #imageLiteral(resourceName: "user")
+                        }
                     }
+                    else if image_count == 2 {
+                        if let profileImageUrl = user.profileImageUrl {
+                            self.thirdMemberImageView.loadImage(urlString: profileImageUrl)
+                            self.thirdMemberImageView.layer.borderWidth = 0
+                        }
+                        else {
+                            self.thirdMemberImageView.image = #imageLiteral(resourceName: "user")
+                        }
+                    }
+                    image_count += 1
                 }
-                else if count == 1 {
-                    if let profileImageUrl = user.profileImageUrl {
-                        self.secondMemberImageView.loadImage(urlString: profileImageUrl)
-                        self.secondMemberImageView.layer.borderWidth = 0.5
-                    }
-                    else {
-                        self.secondMemberImageView.image = #imageLiteral(resourceName: "user")
-                    }
+                else{
+                    break
                 }
-                else if count == 2 {
-                    if let profileImageUrl = user.profileImageUrl {
-                        self.thirdMemberImageView.loadImage(urlString: profileImageUrl)
-                        self.thirdMemberImageView.layer.borderWidth = 0.5
-                    }
-                    else {
-                        self.thirdMemberImageView.image = #imageLiteral(resourceName: "user")
-                    }
-                }
-                count += 1
             }
-            else{
-                break
+        } else {
+            for user in groupMembers {
+                if image_count < 3 {
+                    if image_count == 0 {
+                        if let profileImageUrl = user.profileImageUrl {
+                            self.groupProfileImageView.loadImage(urlString: profileImageUrl)
+                            self.groupProfileImageView.layer.borderWidth = 0
+                        }
+                        else {
+                            self.groupProfileImageView.image = #imageLiteral(resourceName: "user")
+                        }
+                    }
+                    else if image_count == 1 {
+                        if let profileImageUrl = user.profileImageUrl {
+                            self.firstMemberImageView.loadImage(urlString: profileImageUrl)
+                            self.firstMemberImageView.layer.borderWidth = 0
+                        }
+                        else {
+                            self.firstMemberImageView.image = #imageLiteral(resourceName: "user")
+                        }
+                    }
+                    else if image_count == 2 {
+                        if let profileImageUrl = user.profileImageUrl {
+                            self.secondMemberImageView.loadImage(urlString: profileImageUrl)
+                            self.secondMemberImageView.layer.borderWidth = 0
+                        }
+                        else {
+                            self.secondMemberImageView.image = #imageLiteral(resourceName: "user")
+                        }
+                    }
+                    image_count += 1
+                }
+                else{
+                    break
+                }
             }
         }
     }

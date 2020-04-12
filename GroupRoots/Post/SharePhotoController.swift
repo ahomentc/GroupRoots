@@ -22,7 +22,6 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
     var selectedVideoURL: URL?
     
     private var groups = [Group]()
-    private var selectedGroupName = ""
     private var selectedGroupId = ""
     private var collectionView: UICollectionView!
     var last_selected_indexpath: IndexPath?
@@ -138,7 +137,6 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
     
     internal func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         textView.endEditing(true)
-        self.selectedGroupName = groups[indexPath.row].groupname
         self.selectedGroupId = groups[indexPath.row].groupId
         
         if last_selected_indexpath != nil {
@@ -187,15 +185,15 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
     // Clean it up make it better, make error detection too since its currently commented out
     @objc private func handleShare() {
         guard let postImage = selectedImage else { return }
-        guard let caption = textView.text else { return }
+        let caption = textView.text
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
-        if selectedGroupName == "" || selectedGroupId == "" { return }
+        if selectedGroupId == "" { return }
         
         navigationItem.rightBarButtonItem?.isEnabled = false
         textView.isUserInteractionEnabled = false
         
-        Database.database().createGroupPost(withImage: postImage, withVideo: self.selectedVideoURL, caption: caption, groupId: self.selectedGroupId, completion: { (postId) in
+        Database.database().createGroupPost(withImage: postImage, withVideo: self.selectedVideoURL, caption: caption ?? "", groupId: self.selectedGroupId, completion: { (postId) in
             if postId == "" {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
                 self.textView.isUserInteractionEnabled = true

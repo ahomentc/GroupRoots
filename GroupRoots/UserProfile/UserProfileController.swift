@@ -17,6 +17,7 @@ class UserProfileController: HomePostCellViewController {
     }()
     
     private var groups = [Group]()
+    private var fetchedGroups = false
     
     private var isGridView: Bool = true
     
@@ -44,7 +45,7 @@ class UserProfileController: HomePostCellViewController {
         collectionView?.register(UserProfilePhotoGridCell.self, forCellWithReuseIdentifier: UserProfilePhotoGridCell.cellId)
         collectionView?.register(HomePostCell.self, forCellWithReuseIdentifier: HomePostCell.cellId)
         collectionView?.register(UserProfileEmptyStateCell.self, forCellWithReuseIdentifier: UserProfileEmptyStateCell.cellId)
-        
+        collectionView?.register(MembershipLabelCell.self, forCellWithReuseIdentifier: MembershipLabelCell.cellId)
         collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
 
         let refreshControl = UIRefreshControl()
@@ -143,13 +144,39 @@ class UserProfileController: HomePostCellViewController {
     }
     
     private func fetchAllGroups() {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         collectionView?.refreshControl?.beginRefreshing()
 
         guard let user = user else { return }
         Database.database().fetchAllGroups(withUID: user.uid, completion: { (groups) in
-            self.groups = groups
-            self.collectionView?.reloadData()
-            self.collectionView?.refreshControl?.endRefreshing()
+            if user.uid == currentLoggedInUserId { // show all groups
+                self.groups = groups
+                self.fetchedGroups = true
+                self.collectionView?.reloadData()
+                self.collectionView?.refreshControl?.endRefreshing()
+            }
+            else {
+                var visibleGroups = [Group]()
+                let sync = DispatchGroup()
+                groups.forEach { group in  // check if cell is still visible
+                    sync.enter()
+                    Database.database().isGroupHiddenForUser(withUID: user.uid, groupId: group.groupId, completion: { (isHidden) in
+                        // only allow this if is in group
+                        if !isHidden {
+                            visibleGroups.append(group)
+                        }
+                        sync.leave()
+                    }) { (err) in
+                        return
+                    }
+                }
+                sync.notify(queue: .main) {
+                    self.groups = visibleGroups
+                    self.fetchedGroups = true
+                    self.collectionView?.reloadData()
+                    self.collectionView?.refreshControl?.endRefreshing()
+                }
+            }
         }) { (_) in
             self.collectionView?.refreshControl?.endRefreshing()
         }
@@ -187,18 +214,35 @@ class UserProfileController: HomePostCellViewController {
     
     // when an item is selected, go to that view controller
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if groups.count == 0 || indexPath.item == 0 {
+            return
+        }
         let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
-        groupProfileController.group = groups[indexPath.item]
+        groupProfileController.group = groups[indexPath.item-1]
         navigationController?.pushViewController(groupProfileController, animated: true)
     }
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return groups.count
+        if fetchedGroups == false {
+            return 0
+        }
+        if groups.count == 0 {
+            return 1
+        }
+        return groups.count + 1
     }
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if groups.count == 0 {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: UserProfileEmptyStateCell.cellId, for: indexPath) as! UserProfileEmptyStateCell
+            return cell
+        }
+        if indexPath.item == 0 {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MembershipLabelCell.cellId, for: indexPath) as! MembershipLabelCell
+            return cell
+        }
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
-        cell.group = groups[indexPath.item]
+        cell.group = groups[indexPath.item - 1]
         return cell
     }
     
@@ -212,13 +256,20 @@ class UserProfileController: HomePostCellViewController {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: view.frame.width, height: 160)
+        return CGSize(width: view.frame.width, height: 115)
     }
 
 }
 
 extension UserProfileController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        if groups.count == 0 {
+            let emptyStateCellHeight = (view.safeAreaLayoutGuide.layoutFrame.height - 115)
+            return CGSize(width: view.frame.width, height: emptyStateCellHeight)
+        }
+        if indexPath.item == 0 {
+            return CGSize(width: view.frame.width, height: 40)
+        }
         return CGSize(width: view.frame.width, height: 80)
     }
 }

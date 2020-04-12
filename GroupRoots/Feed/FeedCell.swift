@@ -144,7 +144,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
 
         addSubview(header)
         header.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 5)
-        header.delegate = self        
+        header.delegate = self
     }
     
     func configureHeader() {
@@ -160,7 +160,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return groupPosts?.count ?? -1
+        return (groupPosts?.count ?? -1) + 1
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -171,7 +171,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
             return cell
         }
         else {
-            if indexPath.item-1 < groupPosts?.count ?? 0{                
+            if indexPath.item-1 < groupPosts?.count ?? 0{
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedPostCell.cellId, for: indexPath) as! FeedPostCell
                 cell.isScrollingVertically = isScrollingVertically
                 cell.isScrolling = isScrolling

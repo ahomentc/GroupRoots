@@ -98,10 +98,10 @@ class UserCell: UICollectionViewCell {
         addSubview(denyButton)
         denyButton.anchor(top: topAnchor, bottom: bottomAnchor, right: acceptButton.leftAnchor, paddingTop: 10, paddingBottom: 10, paddingRight: 8)
         
-        let separatorView = UIView()
-        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
-        addSubview(separatorView)
-        separatorView.anchor(left: usernameLabel.leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 0.5)
+//        let separatorView = UIView()
+//        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
+//        addSubview(separatorView)
+//        separatorView.anchor(left: usernameLabel.leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 0.5)
         
     }
     

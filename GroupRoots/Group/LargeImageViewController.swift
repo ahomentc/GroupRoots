@@ -215,8 +215,10 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     }
 
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return totalPostsNum ?? groupPosts.count
-        // !!!!!!!!!!!!! I don't think totalPostsNum is being used. Check this out!!!
+        if groupPosts.count == 0 {
+            return 0
+        }
+        return groupPosts.count
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -244,11 +246,11 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         }
     }
     
-    func configureHeader() {
-        guard let group = group else { return }
-        if groupPostMembers.count == 0 { return }
-        header.group = group
-        header.groupPostMembers = groupPostMembers
+    func configureHeader() {        
+        if groupPosts.count == 0 { return }
+        let groupPost = groupPosts[0]
+        header.group = groupPost.group
+        header.groupMembers = groupPostMembers
     }
     
     func pauseVisibleVideo() {

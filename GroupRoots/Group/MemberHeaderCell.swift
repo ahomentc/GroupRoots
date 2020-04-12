@@ -125,9 +125,9 @@ class GroupProfileHeaderCell: UICollectionViewCell {
     
     private func sharedInit() {
         addSubview(profileImageView)
-        profileImageView.anchor(left: leftAnchor, paddingLeft: 12, width: 100, height: 100)
+        profileImageView.anchor(left: leftAnchor, paddingLeft: 12, width: 90, height: 90)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 100 / 3
+        profileImageView.layer.cornerRadius = 90 / 3
     }
     
     private func configureCell() {
