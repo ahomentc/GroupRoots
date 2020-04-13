@@ -15,6 +15,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     var groupPostsFirstCommentDict = [String: [String: Comment]]()      //    same   |
     var groupPostsNumCommentsDict = [String: [String: Int]]()           // -- same --|
     var isScrolling = false
+    var numGroupsInFeed = 10
     
     private let loadingScreenView: CustomImageView = {
         let iv = CustomImageView()
@@ -134,7 +135,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         // They auto follow it so they'd have to unfollow to not be in following, which means they
         // don't want to see the posts
         sync.enter()
-        Database.database().fetchGroupsFollowing(withUID: currentLoggedInUserId, completion: { (groups) in
+        Database.database().fetchGroupsFollowingDyanmic(withUID: currentLoggedInUserId, toLast: numGroupsInFeed, completion: { (groups) in
             groups.forEach({ (group) in
                 if group_ids.contains(group.groupId) == false && group.groupId != "" {
                     group_ids.insert(group.groupId)
@@ -338,9 +339,16 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         collectionView.visibleCells.forEach { cell in
             (cell as! MyCell).isScrollingVertically = isScrolling
         }
-//        collectionView.visibleCells.forEach { cell in
-//            (cell as! MyCell).playVisibleVideo()
-//        }
+        if maxDistanceScrolled < endPos {
+            maxDistanceScrolled = endPos
+            numGroupsScrolled += 1
+            
+            // if viewed more than 2 groups, load 2 more
+            if numGroupsScrolled % 10 == 0 {
+                numGroupsInFeed += 10
+                fetchGroupPosts()
+            }
+        }
     }
 
     //MARK: - FeedPostCellDelegate

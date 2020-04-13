@@ -1124,6 +1124,45 @@ extension Database {
             cancel?(err)
         }
     }
+    
+    // toLast will keep increasing
+    func fetchGroupsFollowingDyanmic(withUID uid: String, toLast: Int, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
+        var groupUser = uid
+        if groupUser == ""{
+            groupUser = (Auth.auth().currentUser?.uid)!
+        }
+        let ref = Database.database().reference().child("groupsFollowing").child(groupUser)
+        
+        ref.queryOrderedByValue().queryLimited(toLast: UInt(toLast)).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard let dictionaries = snapshot.value as? [String: Any] else {
+                completion([])
+                return
+            }
+            
+            var groups = [Group]()
+            let sync = DispatchGroup()
+            dictionaries.forEach({ (groupId, value) in
+                sync.enter()
+                self.groupExists(groupId: groupId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                            groups.append(group)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            })
+            sync.notify(queue: .main) {
+                completion(groups)
+            }
+        }) { (err) in
+            print("Failed to fetch posts:", err)
+            cancel?(err)
+        }
+    }
      
      func fetchAllGroupIds(withUID uid: String, completion: @escaping ([String]) -> (), withCancel cancel: ((Error) -> ())?) {
          var groupUser = uid
@@ -2647,12 +2686,12 @@ extension Database {
 
     func fetchFirstCommentForPost(withId postId: String, completion: @escaping ([Comment]) -> (), withCancel cancel: ((Error) -> ())?) {
         let commentsReference = Database.database().reference().child("comments").child(postId)
-        commentsReference.observeSingleEvent(of: .value, with: { (snapshot) in
+        commentsReference.queryOrderedByKey().queryLimited(toLast: 1).observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion([])
                 return
             }
-                        
+                    
             var comments = [Comment]()
             
             // this for loop only has 2 iterations
