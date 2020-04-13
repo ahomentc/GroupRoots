@@ -28,6 +28,7 @@ class SearchHeader: UICollectionViewCell {
         let button = UIButton(type: .system)
         button.setTitle("Group", for: .normal)
         button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font =  UIFont.boldSystemFont(ofSize: 16)
         button.backgroundColor = UIColor.white
         button.layer.borderColor = UIColor(white: 0, alpha: 0.6).cgColor
         button.addTarget(self, action: #selector(handleChangeToGroupsView), for: .touchUpInside)
@@ -39,6 +40,7 @@ class SearchHeader: UICollectionViewCell {
         let button = UIButton(type: .system)
         button.setTitle("User", for: .normal)
         button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font =  UIFont.boldSystemFont(ofSize: 16)
         button.backgroundColor = UIColor.white
         button.layer.borderColor = UIColor(white: 0, alpha: 0.6).cgColor
         button.addTarget(self, action: #selector(handleChangeToUsersView), for: .touchUpInside)

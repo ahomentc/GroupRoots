@@ -129,20 +129,10 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         self.groupPosts2D = [[GroupPost]]()
         // get all the userIds of the people user is following
         let sync = DispatchGroup()
-        sync.enter()
-        // fetch the group ids of the user
-        Database.database().fetchAllGroupIds(withUID: currentLoggedInUserId, completion: { (groupIds) in
-            groupIds.forEach({ (groupId) in
-                if group_ids.contains(groupId) == false && groupId != "" {
-                    group_ids.insert(groupId)
-                }
-            })
-            sync.leave()
-        }, withCancel: { (err) in
-            print("Failed to fetch posts:", err)
-            self.loadingScreenView.isHidden = true
-            self.collectionView?.refreshControl?.endRefreshing()
-        })
+        
+        // we don't need to show posts of groups that are member of but not following.
+        // They auto follow it so they'd have to unfollow to not be in following, which means they
+        // don't want to see the posts
         sync.enter()
         Database.database().fetchGroupsFollowing(withUID: currentLoggedInUserId, completion: { (groups) in
             groups.forEach({ (group) in

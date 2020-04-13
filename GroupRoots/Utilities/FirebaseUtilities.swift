@@ -1094,7 +1094,7 @@ extension Database {
         }
         let ref = Database.database().reference().child("groupsFollowing").child(groupUser)
         
-        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrderedByValue().queryLimited(toLast: 100).observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion([])
                 return
@@ -1132,7 +1132,8 @@ extension Database {
          }
          let ref = Database.database().reference().child("users").child(groupUser).child("groups")
          
-         ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+//        queryLimited(toLast: 1)
+        ref.queryOrderedByKey().queryLimited(toLast: 1).observeSingleEvent(of: .value, with: { (snapshot) in
              guard let dictionaries = snapshot.value as? [String: Any] else {
                  completion([])
                  return
@@ -1324,7 +1325,7 @@ extension Database {
         guard let groupId = userGroupRef.key else { return }
         let isPrivateString = isPrivate ? "true" : "false"
         
-        var values = ["id": groupId, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString] as [String : Any]
+        var values = ["id": groupId, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString, "lastPostedDate": 0] as [String : Any]
         let sync = DispatchGroup()
         // set the groupname if it exists
         if groupname != nil && groupname != "" {
@@ -2258,7 +2259,16 @@ extension Database {
                         print("Failed to save post to database", err)
                         completion("")
                     }
-                    completion(postId)
+                    // update lastPostedDate for group
+                    // if wanted to skip the date and just do ordering but in reverse, could do 10000000000000 - Date().timeIntervalSince1970
+                    let lastPostedValue = ["lastPostedDate": Date().timeIntervalSince1970] as [String : Any]
+                    Database.database().reference().child("groups").child(groupId).updateChildValues(lastPostedValue) { (err, ref) in
+                        if let err = err {
+                            print("Failed to save post to database", err)
+                            completion("")
+                        }
+                        completion(postId)
+                    }
                 }
             }
         }
@@ -2273,7 +2283,14 @@ extension Database {
                             print("Failed to save post to database", err)
                             completion("")
                         }
-                        completion(postId)
+                        let lastPostedValue = ["lastPostedDate": Date().timeIntervalSince1970] as [String : Any]
+                        Database.database().reference().child("groups").child(groupId).updateChildValues(lastPostedValue) { (err, ref) in
+                            if let err = err {
+                                print("Failed to save post to database", err)
+                                completion("")
+                            }
+                            completion(postId)
+                        }
                     }
                 }
             }
