@@ -214,6 +214,7 @@ class EditGroupController: UIViewController, UINavigationControllerDelegate {
             }
         }
         
+        // notifications sent from updateGroup too
         Database.database().updateGroup(groupId: group.groupId, changedPrivacy: changedPrivacy, groupname: groupname, isPrivate: isPrivate, image: self.profileImage) { (err) in
             if err != nil {
                 guard let error = err else { self.resetInputFields(); return }
@@ -226,7 +227,6 @@ class EditGroupController: UIViewController, UINavigationControllerDelegate {
             self.resetInputFields()
             self.dismiss(animated: true, completion: nil)
             NotificationCenter.default.post(name: NSNotification.Name("updatedGroup"), object: nil)
-            return
         }
     }
 }

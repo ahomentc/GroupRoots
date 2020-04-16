@@ -56,10 +56,10 @@ class GroupProfileEmptyStateCell: UICollectionViewCell {
             noPostsLabel.text = "No posts yet."
         }
         else if isInFollowPending {
-            noPostsLabel.text = "This Group is Private.\n Your follow is pending."
+            noPostsLabel.text = "This Group is Private.\n Your subscription is pending."
         }
         else {
-            noPostsLabel.text = "This Group is Private.\n Follow a member of the group to see their posts."
+            noPostsLabel.text = "This Group is Private.\n Subscribe to see their posts."
         }
     }
 }

@@ -31,6 +31,19 @@ class GroupFollowersHeader: UICollectionViewCell {
             }
         }
     }
+    
+    var isFollowersView: Bool? {
+        didSet{
+            if isFollowersView! {
+                followersButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
+                pendingFollowersButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
+            }
+            else {
+                pendingFollowersButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
+                followersButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
+            }
+        }
+    }
 
     private lazy var pendingFollowersButton: UIButton = {
         let button = UIButton(type: .system)
@@ -92,13 +105,13 @@ class GroupFollowersHeader: UICollectionViewCell {
     }
 
     @objc private func handleChangeToPendingFollowersView() {
-        pendingFollowersButton.setTitleColor(UIColor.mainBlue, for: .normal)
+        pendingFollowersButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         followersButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
         delegate?.didChangeToPendingFollowersView()
     }
 
     @objc private func handleChangeToFollowersView() {
-        followersButton.setTitleColor(UIColor.mainBlue, for: .normal)
+        followersButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         pendingFollowersButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
         delegate?.didChangeToFollowersView()
     }

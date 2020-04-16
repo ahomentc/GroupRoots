@@ -48,6 +48,8 @@ class FollowPageController: UICollectionViewController {
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
+        navigationItem.title = "Followers"
+        
         self.navigationController?.navigationBar.shadowImage = UIColor.white.as1ptImage()
         
         collectionView?.backgroundColor = .white
@@ -63,8 +65,8 @@ class FollowPageController: UICollectionViewController {
     }
 
     private func configureFollowing() {
-        guard let user = user else { return }
-        navigationItem.title = user.username
+        guard user != nil else { return }
+//        navigationItem.title = user.username
         handleRefresh()
     }
 

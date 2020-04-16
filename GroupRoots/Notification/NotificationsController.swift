@@ -22,7 +22,7 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
         navigationItem.title = "Notifications"
-        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 22)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
 //        self.navigationController?.navigationBar.shadowImage = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).as1ptImage()
         self.navigationController?.navigationBar.shadowImage = UIColor.white.as1ptImage()
@@ -103,6 +103,52 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
         userProfileController.user = user
         navigationController?.pushViewController(userProfileController, animated: true)
+    }
+    
+    func handleShowGroupMemberRequest(group: Group) {
+        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+            let membersController = MembersController(collectionViewLayout: UICollectionViewFlowLayout())
+            membersController.group = group
+            membersController.isInGroup = inGroup
+            membersController.isMembersView = false
+            self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
+            self.navigationItem.backBarButtonItem?.tintColor = .black
+            self.navigationController?.pushViewController(membersController, animated: true)
+        }) { (err) in
+            return
+        }
+    }
+    
+    func handleShowGroupSubscriberRequest(group: Group) {
+        // need to remember that maybe a group was private, made public and notification is still there
+        // maybe make the actionbutton type just be the group if the group isn't private therefore skipping this function
+        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+            let groupFollowersController = GroupFollowersController(collectionViewLayout: UICollectionViewFlowLayout())
+            groupFollowersController.group = group
+            groupFollowersController.isInGroup = inGroup
+            groupFollowersController.isPrivate = group.isPrivate
+            if group.isPrivate ?? false {
+                // if group is private enable go to the requestors page
+                groupFollowersController.isFollowersView = false
+            }
+            self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
+            self.navigationItem.backBarButtonItem?.tintColor = .black
+            self.navigationController?.pushViewController(groupFollowersController, animated: true)
+        }) { (err) in
+            return
+        }
+        
+//        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+//            let membersController = MembersController(collectionViewLayout: UICollectionViewFlowLayout())
+//            membersController.group = group
+//            membersController.isInGroup = inGroup
+//            membersController.isMembersView = false
+//            self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
+//            self.navigationItem.backBarButtonItem?.tintColor = .black
+//            self.navigationController?.pushViewController(membersController, animated: true)
+//        }) { (err) in
+//            return
+//        }
     }
     
     func didTapPost(group: Group, post: GroupPost) {

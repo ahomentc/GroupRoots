@@ -23,7 +23,7 @@ class UserProfileHeader: UICollectionViewCell {
             reloadData()
         }
     }
-    
+
     private let profileImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.clipsToBounds = true

@@ -341,17 +341,19 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
             if followingPending {
                 self.subscribeButton.type = .requested
             }
-            else{
+            else {
                 // check if the user is following the group or not
                 Database.database().isFollowingGroup(groupId: groupId, completion: { (following) in
                     if following {
                         self.subscribeButton.type = .unsubscribe
                         return
                     }
+                    else {
+                        self.subscribeButton.type = .subscribe
+                    }
                 }) { (err) in
                     return
                 }
-                self.subscribeButton.type = .subscribe
             }
         }) { (err) in
             return
@@ -369,12 +371,36 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         
         Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
             self.membersLabel.setValue(members.count)
-            self.membersLabel.isUserInteractionEnabled = !(group.isPrivate ?? true)
+            // check if user is in group or subscribed first
+            Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+                Database.database().isFollowingGroup(groupId: group.groupId, completion: { (following) in
+                    if inGroup || following {
+                        self.membersLabel.isUserInteractionEnabled = true
+                    }
+                    else {
+                        self.membersLabel.isUserInteractionEnabled = !(group.isPrivate ?? true)
+                    }
+                }) { (err) in
+                    return
+                }
+            }) { (_) in}
         }) { (_) in}
         
         Database.database().fetchGroupFollowers(groupId: group.groupId, completion: { (followers) in
             self.totalFollowersLabel.setValue(followers.count)
-            self.totalFollowersLabel.isUserInteractionEnabled = !(group.isPrivate ?? true)
+            // check if user is in group or subscribed first
+            Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+                Database.database().isFollowingGroup(groupId: group.groupId, completion: { (following) in
+                    if inGroup || following {
+                        self.totalFollowersLabel.isUserInteractionEnabled = true
+                    }
+                    else {
+                        self.totalFollowersLabel.isUserInteractionEnabled = !(group.isPrivate ?? true)
+                    }
+                }) { (err) in
+                    return
+                }
+            }) { (_) in}
         }) { (_) in}
     }
     
@@ -511,6 +537,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         }
         
         NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
     }
     
     @objc private func handleSubscribeTap() {
@@ -533,6 +560,39 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                 }
                 self.reloadSubscribeButton() // put this in callback
                 NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
+                
+                // sending notification
+                Database.database().groupExists(groupId: groupId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                            Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+                                Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                    guard let isPrivate = group.isPrivate else { return }
+                                    members.forEach({ (member) in
+                                        if user.uid != member.uid {
+                                            if isPrivate {
+                                                // send notification for subscription request to all members of group
+                                                Database.database().createNotification(to: member, notificationType: NotificationType.groupSubscribeRequest, subjectUser: user, group: group) { (err) in
+                                                    if err != nil {
+                                                        return
+                                                    }
+                                                }
+                                            }
+                                            else {
+                                                // send notification for did subscribe to all members of group
+                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupSubscribe, subjectUser: user, group: group) { (err) in
+                                                    if err != nil {
+                                                        return
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    })
+                                }) { (_) in}
+                            })
+                        })
+                    }
+                })
             }
             
             
@@ -555,8 +615,6 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                 NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
             }
         }
-        
-        NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
     }
 
     @objc private func handleCreateNewGroup(){

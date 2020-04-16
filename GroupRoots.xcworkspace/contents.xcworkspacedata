@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Workspace
    version = "1.0">
-   <FileRef
-      location = "group:/Users/andrei/GroupRoots/GroupRoots/GoogleService-Info.plist">
-   </FileRef>
    <Group
       location = "group:InstagramClone/Assets.xcassets/icon"
       name = "icon">

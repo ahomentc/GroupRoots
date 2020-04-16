@@ -8,8 +8,31 @@
 
 import Foundation
 
+/*
+ 
+ User notifications:
+  - newFollow
+  
+ Group notifications:
+ - groupJoinRequest
+ - newGroupJoin
+ - groupJoinInvitation
+ -* newGroupSubscribe
+ -* newGroupSubscribeRequest
+ -* groupProfileNameEdit
+ -* groupPrivacyChange
+ -* groupProfilePicEdit
+ 
+ Group Post notifications:
+ - groupPostComment
+ - newGroupPost
+ 
+ */
+
 public enum NotificationType {
-    case newFollow, groupJoinRequest, newGroupJoin, groupPostLiked, groupPostComment, newGroupPost, groupJoinInvitation
+ /*      User */ case newFollow,
+ /*     Group */ groupJoinRequest, newGroupJoin, groupJoinInvitation, newGroupSubscribe, groupSubscribeRequest, groupProfileNameEdit, groupProfilePicEdit, groupPrivacyChange,
+ /* GroupPost */ groupPostComment, newGroupPost
 }
 
 struct Notification {

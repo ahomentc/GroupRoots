@@ -8,6 +8,8 @@ protocol NotificationCellDelegate {
     func handleShowUser(user: User)
     func didTapPost(group: Group, post: GroupPost)
     func groupJoinAlert(group: Group)
+    func handleShowGroupMemberRequest(group: Group)
+    func handleShowGroupSubscriberRequest(group: Group)
 }
 
 class NotificationCell: UICollectionViewCell {
@@ -160,19 +162,69 @@ class NotificationCell: UICollectionViewCell {
             let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
             notificationsLabel.addGestureRecognizer(gestureRecognizer)
         }
+        else if notification.type == NotificationType.newGroupSubscribe {
+            var groupname = "your group"
+            if notification.group?.groupname ?? "" != "" {
+                groupname = notification.group?.groupname ?? ""
+            }
+            notificationsLabel.text = "subscribed to " + groupname
+            notificationsLabel.isUserInteractionEnabled = true
+            let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
+            notificationsLabel.addGestureRecognizer(gestureRecognizer)
+        }
+        else if notification.type == NotificationType.groupSubscribeRequest {
+            var groupname = "your group"
+            if notification.group?.groupname ?? "" != "" {
+                groupname = notification.group?.groupname ?? ""
+            }
+            notificationsLabel.text = "requested subscription for " + groupname
+            notificationsLabel.isUserInteractionEnabled = true
+            let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
+            notificationsLabel.addGestureRecognizer(gestureRecognizer)
+        }
+        else if notification.type == NotificationType.groupProfileNameEdit {
+            notificationsLabel.text = "removed your group's name"
+            if notification.group?.groupname ?? "" != "" {
+                let groupname = notification.group?.groupname ?? ""
+                notificationsLabel.text = "changed group name to " + groupname
+            }
+            notificationsLabel.isUserInteractionEnabled = true
+            let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
+            notificationsLabel.addGestureRecognizer(gestureRecognizer)
+        }
+        else if notification.type == NotificationType.groupProfilePicEdit {
+            var groupname = "your group"
+            if notification.group?.groupname ?? "" != "" {
+                groupname = notification.group?.groupname ?? ""
+            }
+            notificationsLabel.text = "edited " + groupname + "'s profile picture"
+            notificationsLabel.isUserInteractionEnabled = true
+            let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
+            notificationsLabel.addGestureRecognizer(gestureRecognizer)
+        }
+        else if notification.type == NotificationType.groupPrivacyChange {
+            guard let group = notification.group else { return }
+            guard let isPrivate = group.isPrivate else { return }
+            var groupname = "your group"
+            if group.groupname != "" {
+                groupname = notification.group?.groupname ?? ""
+            }
+            if isPrivate {
+                notificationsLabel.text = "made " + groupname + " private"
+            }
+            else {
+                notificationsLabel.text = "made " + groupname + " public"
+            }
+            notificationsLabel.isUserInteractionEnabled = true
+            let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
+            notificationsLabel.addGestureRecognizer(gestureRecognizer)
+        }
         else if notification.type == NotificationType.groupPostComment {
             var groupname = "your group"
             if notification.group?.groupname ?? "" != "" {
                 groupname = notification.group?.groupname ?? ""
             }
             notificationsLabel.text = "commented on " + groupname + "'s post "
-        }
-        else if notification.type == NotificationType.groupPostLiked {
-            var groupname = "your group"
-            if notification.group?.groupname ?? "" != "" {
-                groupname = notification.group?.groupname ?? ""
-            }
-            notificationsLabel.text = "liked " + groupname + "'s post "
         }
         else if notification.type == NotificationType.newGroupPost {
             var groupname = "your group"
@@ -219,7 +271,22 @@ class NotificationCell: UICollectionViewCell {
                 self.actionButton.type = .hidden
             }
         }
-        else if notification!.type == NotificationType.newGroupJoin || notification?.type == NotificationType.groupJoinRequest {
+        // decision icon
+        else if notification?.type == NotificationType.groupSubscribeRequest || notification?.type == NotificationType.groupJoinRequest {
+            Database.database().isInGroup(groupId: (self.notification?.group!.groupId)!, completion: { (inGroup) in
+                if inGroup{
+                    self.actionButton.group = self.notification?.group
+                    self.actionButton.type = .decision
+                }
+                else {
+                    self.actionButton.type = .hidden
+                }
+            }) { (err) in
+                return
+            }
+        }
+        // normal group button
+        else if notification!.type == NotificationType.newGroupJoin || notification?.type == NotificationType.newGroupSubscribe || notification?.type == NotificationType.groupProfileNameEdit || notification?.type == NotificationType.groupPrivacyChange || notification?.type == NotificationType.groupProfilePicEdit {
             Database.database().isInGroup(groupId: (self.notification?.group!.groupId)!, completion: { (inGroup) in
                 if inGroup{
                     self.actionButton.group = self.notification?.group
@@ -239,7 +306,6 @@ class NotificationCell: UICollectionViewCell {
             Database.database().isInGroup(groupId: (self.notification?.group!.groupId)!, completion: { (inGroup) in
                 if inGroup{
                     self.actionButton.type = .hidden
-                    print("hidden")
                 }
                 else {
                     self.actionButton.group = self.notification?.group
@@ -259,105 +325,132 @@ class NotificationCell: UICollectionViewCell {
                 return
             }
             self.backgroundColor = .white
-        }
-        
-        guard let currentLoggedInUser = Auth.auth().currentUser?.uid else { return }
-//        actionButton.type = .hidden
-        if notification.type == NotificationType.newFollow {
-            let previousButtonType = actionButton.type
-            actionButton.type = .loading
-            if previousButtonType == .follow {
-                Database.database().followUser(withUID: (notification.from.uid)) { (err) in
-                    if err != nil {
-                        self.actionButton.type = .hidden
-                        return
-                    }
-                    self.reloadActionButton()
-                    Database.database().createNotification(to: (self.notification?.from)!, notificationType: NotificationType.newFollow) { (err) in
+            guard let currentLoggedInUser = Auth.auth().currentUser?.uid else { return }
+            if notification.type == NotificationType.newFollow {
+                let previousButtonType = self.actionButton.type
+                self.actionButton.type = .loading
+                if previousButtonType == .follow {
+                    Database.database().followUser(withUID: (notification.from.uid)) { (err) in
                         if err != nil {
+                            self.actionButton.type = .hidden
                             return
                         }
-                    }
-                }
-            } else if previousButtonType == .unfollow {
-                Database.database().unfollowUser(withUID: (notification.from.uid)) { (err) in
-                    if err != nil {
-                        self.actionButton.type = .hidden
-                        return
-                    }
-                    self.reloadActionButton()
-                }
-            }
-        }
-        else if notification.type == NotificationType.groupJoinInvitation {
-            Database.database().isInGroup(groupId: (self.notification?.group!.groupId)!, completion: { (inGroup) in
-                if inGroup{
-                    // leave the group action here
-                }
-                else {
-                    // join the group action
-                    Database.database().acceptIntoGroup(withUID: currentLoggedInUser, groupId: (self.notification?.group!.groupId)!){ (err) in
-                        if err != nil {
-                            return
-                        }
-                        Database.database().removeFromGroupInvited(withUID: currentLoggedInUser, groupId: (self.notification?.group!.groupId)!) { (err) in
+                        self.reloadActionButton()
+                        Database.database().createNotification(to: (self.notification?.from)!, notificationType: NotificationType.newFollow) { (err) in
                             if err != nil {
                                 return
                             }
-                            // notification that member is now in group
-                            Database.database().fetchUser(withUID: currentLoggedInUser, completion: { (user) in
-                                let groupId = (self.notification?.group!.groupId)!
-                                Database.database().groupExists(groupId: groupId, completion: { (exists) in
-                                    if exists {
-                                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                                            Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
-                                                members.forEach({ (member) in
-                                                    if user.uid != member.uid {
-                                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
-                                                            if err != nil {
-                                                                return
-                                                            }
-                                                            self.reloadActionButton()
-                                                            self.delegate?.groupJoinAlert(group: group)
-                                                            self.delegate?.handleShowGroup(group: group)
-                                                        }
-                                                    }
-                                                })
-                                            }) { (_) in}
-                                        })
-                                    }
-                                    else {
-                                        return
-                                    }
-                                })
-                            })
-
-                            // notification to refresh
-                            NotificationCenter.default.post(name: NSNotification.Name("updateMembers"), object: nil)
                         }
                     }
+                } else if previousButtonType == .unfollow {
+                    Database.database().unfollowUser(withUID: (notification.from.uid)) { (err) in
+                        if err != nil {
+                            self.actionButton.type = .hidden
+                            return
+                        }
+                        self.reloadActionButton()
+                    }
                 }
-            }) { (err) in
-                return
             }
+            else if notification.type == NotificationType.groupJoinInvitation {
+                Database.database().isInGroup(groupId: (self.notification?.group!.groupId)!, completion: { (inGroup) in
+                    if inGroup{
+                        // leave the group action here
+                    }
+                    else {
+                        // join the group action
+                        Database.database().acceptIntoGroup(withUID: currentLoggedInUser, groupId: (self.notification?.group!.groupId)!){ (err) in
+                            if err != nil {
+                                return
+                            }
+                            Database.database().removeFromGroupInvited(withUID: currentLoggedInUser, groupId: (self.notification?.group!.groupId)!) { (err) in
+                                if err != nil {
+                                    return
+                                }
+                                // notification that member is now in group
+                                Database.database().fetchUser(withUID: currentLoggedInUser, completion: { (user) in
+                                    let groupId = (self.notification?.group!.groupId)!
+                                    Database.database().groupExists(groupId: groupId, completion: { (exists) in
+                                        if exists {
+                                            Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                                                Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                                    members.forEach({ (member) in
+                                                        if user.uid != member.uid {
+                                                            Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
+                                                                if err != nil {
+                                                                    return
+                                                                }
+                                                                self.reloadActionButton()
+                                                                self.delegate?.groupJoinAlert(group: group)
+                                                                self.delegate?.handleShowGroup(group: group)
+                                                            }
+                                                        }
+                                                    })
+                                                }) { (_) in}
+                                            })
+                                        }
+                                        else {
+                                            return
+                                        }
+                                    })
+                                })
+
+                                // notification to refresh
+                                NotificationCenter.default.post(name: NSNotification.Name("updateMembers"), object: nil)
+                            }
+                        }
+                    }
+                }) { (err) in
+                    return
+                }
+            }
+            else if notification.type == NotificationType.groupJoinRequest {
+                self.handleShowGroupMemberRequest()
+            }
+            else if notification.type == NotificationType.groupSubscribeRequest {
+                self.handleShowGroupSubscriberRequest()
+            }
+            else if notification.type == NotificationType.newGroupJoin || notification.type == NotificationType.newGroupPost || notification.type == NotificationType.groupPrivacyChange || notification.type == NotificationType.groupProfileNameEdit || notification.type == NotificationType.groupProfilePicEdit || notification.type == NotificationType.newGroupSubscribe {
+                self.handleShowGroup()
+            }
+            NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
         }
-        else if notification.type == NotificationType.newGroupJoin || notification.type == NotificationType.newGroupPost || notification.type == NotificationType.groupJoinRequest {
-            self.handleShowGroup()
-        }
-        NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
     }
     
     @objc private func handleShowGroup() {
         guard let notification = notification else { return }
+        guard let group = notification.group else { return }
         Database.database().interactWithNotification(notificationId: notification.id) { (err) in
             if err != nil {
                 return
             }
             self.backgroundColor = .white
         }
-        
-        delegate?.handleShowGroup(group: (self.notification?.group!)!)
-        self.reloadActionButton()
+        delegate?.handleShowGroup(group: group)
+    }
+    
+    @objc private func handleShowGroupMemberRequest() {
+        guard let notification = notification else { return }
+        guard let group = notification.group else { return }
+        Database.database().interactWithNotification(notificationId: notification.id) { (err) in
+            if err != nil {
+                return
+            }
+            self.backgroundColor = .white
+        }
+        delegate?.handleShowGroupMemberRequest(group: group)
+    }
+    
+    @objc private func handleShowGroupSubscriberRequest() {
+        guard let notification = notification else { return }
+        guard let group = notification.group else { return }
+        Database.database().interactWithNotification(notificationId: notification.id) { (err) in
+            if err != nil {
+                return
+            }
+            self.backgroundColor = .white
+        }
+        delegate?.handleShowGroupSubscriberRequest(group: group)
     }
     
     @objc private func handleDidTapFromUser() {
@@ -384,12 +477,14 @@ class NotificationCell: UICollectionViewCell {
         }
         delegate?.didTapPost(group: group, post: post)
     }
+    
+    
 }
 
 //MARK: - ActionButtonType
 
 private enum ActionButtonType {
-    case loading, follow, unfollow, join, hidden
+    case loading, follow, unfollow, join, hidden, decision
 }
 
 //MARK: - ActionButton
@@ -438,6 +533,8 @@ private class ActionButton: UIButton {
             setupUnfollowStyle()
         case .hidden:
             setupHiddenStyle()
+        case .decision:
+            setupDecisionStyle()
         }
     }
     
@@ -454,11 +551,11 @@ private class ActionButton: UIButton {
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         isUserInteractionEnabled = false
+        setImage(UIImage(), for: .normal)
     }
     
     private func setupJoinStyle() {
         setTitle("Join", for: .normal)
-//        setTitleColor(.white, for: .normal)
         setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         backgroundColor = .clear
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
@@ -467,6 +564,7 @@ private class ActionButton: UIButton {
         layer.borderWidth = 1.4
         titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         isUserInteractionEnabled = true
+        setImage(UIImage(), for: .normal)
     }
     
     private func setupFollowStyle() {
@@ -479,27 +577,26 @@ private class ActionButton: UIButton {
         layer.borderWidth = 1.4
         titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         isUserInteractionEnabled = true
+        setImage(UIImage(), for: .normal)
     }
     
     private func setupUnfollowStyle() {
         setTitle("Unfollow", for: .normal)
-//        setTitleColor(.white, for: .normal)
         setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-//        backgroundColor = UIColor.mainBlue
         backgroundColor = .clear
-//        UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
-//        layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
         layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
         layer.borderWidth = 1.4
         layer.cornerRadius = 5
         titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         isUserInteractionEnabled = true
+        setImage(UIImage(), for: .normal)
     }
     
     private func setupHiddenStyle() {
         setTitle("", for: .normal)
         backgroundColor = .clear
+        setImage(UIImage(), for: .normal)
         layer.borderColor = UIColor(white: 0, alpha: 0).cgColor
         isUserInteractionEnabled = false
     }
@@ -509,12 +606,26 @@ private class ActionButton: UIButton {
             setTitle(String(self.group?.groupname.first?.description ?? ""), for: .normal)
         }
         else {
-            setTitle("", for: .normal)
+            setTitle("G", for: .normal)
         }
         titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         setTitleColor(.black, for: .normal)
         backgroundColor = .clear
+        setImage(UIImage(), for: .normal)
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 25, bottom: 0, right: 25)
+        layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        layer.cornerRadius = 5
+//        layer.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 5, width: 50, height: 50)
+        isUserInteractionEnabled = true
+    }
+    
+    private func setupDecisionStyle() {
+        let image = #imageLiteral(resourceName: "decision")
+//        button.frame = CGRectMake(100, 100, 100, 100)
+        setTitle("", for: .normal)
+        setImage(image, for: .normal)
+        tintColor = .black
+        contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
         layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
         layer.cornerRadius = 5
 //        layer.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 5, width: 50, height: 50)

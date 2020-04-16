@@ -4,7 +4,6 @@ protocol HomePostCellDelegate {
     func didTapComment(groupPost: GroupPost)
     func didTapGroup(group: Group)
     func didTapOptions(groupPost: GroupPost)
-    func didLike(for cell: HomePostCell)
 }
 
 class HomePostCell: UICollectionViewCell {
@@ -34,14 +33,7 @@ class HomePostCell: UICollectionViewCell {
         iv.backgroundColor = UIColor(white: 0.95, alpha: 1)
         return iv
     }()
-    
-    private lazy var likeButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(#imageLiteral(resourceName: "like_unselected").withRenderingMode(.alwaysOriginal), for: .normal)
-        button.addTarget(self, action: #selector(handleLike), for: .touchUpInside)
-        return button
-    }()
-    
+
     private lazy var commentButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(#imageLiteral(resourceName: "comment").withRenderingMode(.alwaysOriginal), for: .normal)
@@ -91,16 +83,13 @@ class HomePostCell: UICollectionViewCell {
         photoImageView.layer.cornerRadius = 10
         
         setupActionButtons()
-
-        addSubview(likeCounter)
-        likeCounter.anchor(top: likeButton.bottomAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: padding)
         
         addSubview(captionLabel)
         captionLabel.anchor(top: likeCounter.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: padding - 6, paddingLeft: padding, paddingRight: padding)
     }
     
     private func setupActionButtons() {
-        let stackView = UIStackView(arrangedSubviews: [likeButton, commentButton])
+        let stackView = UIStackView(arrangedSubviews: [commentButton])
         stackView.distribution = .fillEqually
         stackView.alignment = .top
         stackView.spacing = 16
@@ -115,8 +104,6 @@ class HomePostCell: UICollectionViewCell {
         guard let groupPost = groupPost else { return }
         header.group = groupPost.group
         photoImageView.loadImage(urlString: groupPost.imageUrl)
-        likeButton.setImage(groupPost.likedByCurrentUser == true ? #imageLiteral(resourceName: "like_selected").withRenderingMode(.alwaysOriginal) : #imageLiteral(resourceName: "like_unselected").withRenderingMode(.alwaysOriginal), for: .normal)
-        setLikes(to: groupPost.likes)
         setupAttributedCaption()
     }
     
@@ -130,20 +117,6 @@ class HomePostCell: UICollectionViewCell {
         let timeAgoDisplay = post.creationDate.timeAgoDisplay()
         attributedText.append(NSAttributedString(string: timeAgoDisplay, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.lightGray]))
         captionLabel.attributedText = attributedText
-    }
-    
-    private func setLikes(to value: Int) {
-        if value <= 0 {
-            likeCounter.text = ""
-        } else if value == 1 {
-            likeCounter.text = "1 like"
-        } else {
-            likeCounter.text = "\(value) likes"
-        }
-    }
-    
-    @objc private func handleLike() {
-        delegate?.didLike(for: self)
     }
     
     @objc private func handleComment() {

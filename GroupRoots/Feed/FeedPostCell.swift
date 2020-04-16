@@ -256,7 +256,7 @@ class FeedPostCell: UICollectionViewCell {
         newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding + 100, paddingBottom: padding + 50, paddingRight: padding)
         
         addSubview(postedByLabel)
-        postedByLabel.anchor(bottom: commentsButton.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding - 12, paddingRight: padding - 8)
+        postedByLabel.anchor(bottom: commentsButton.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding - 12, paddingRight: padding)
         
         addSubview(commentsLabel)
         commentsLabel.anchor(left: leftAnchor, bottom:postedByLabel.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding - 5, paddingRight: padding)
@@ -361,6 +361,10 @@ class FeedPostCell: UICollectionViewCell {
             }
             else {
                 self.photoImageView.contentMode = .scaleAspectFill
+//                self.photoImageView.frame.size.height = UIScreen.main.bounds.height * 0.99
+//                self.photoImageView.frame.origin.y = (UIScreen.main.bounds.height - (UIScreen.main.bounds.height * 0.99))
+//                self.photoImageView.frame.size.width = UIScreen.main.bounds.width * 0.97
+//                self.photoImageView.frame.origin.x = (UIScreen.main.bounds.width - (UIScreen.main.bounds.width * 0.97))/2
                 self.photoImageView.frame.size.height = UIScreen.main.bounds.height
                 self.photoImageView.frame.origin.y = 0
                 self.photoImageView.frame.size.width = UIScreen.main.bounds.width
@@ -368,12 +372,6 @@ class FeedPostCell: UICollectionViewCell {
             }
         }
     }
-    
-//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-//        if touches.first != nil {
-//            self.player.pause()
-//        }
-//    }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         if touches.first != nil && self.player.url?.absoluteString ?? "" != "" {

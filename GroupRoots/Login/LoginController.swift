@@ -93,7 +93,7 @@ class LoginController: UIViewController {
     }
     
     private func resetInputFields() {
-        emailTextField.text = ""
+//        emailTextField.text = ""
         passwordTextField.text = ""
         emailTextField.isUserInteractionEnabled = true
         passwordTextField.isUserInteractionEnabled = true

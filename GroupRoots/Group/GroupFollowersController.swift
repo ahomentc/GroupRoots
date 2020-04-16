@@ -18,7 +18,6 @@ class GroupFollowersController: UICollectionViewController {
         }
     }
     private var header: GroupFollowersHeader?
-    private var isFollowersView: Bool = true
     
     var isInGroup: Bool? {
         didSet {
@@ -32,6 +31,12 @@ class GroupFollowersController: UICollectionViewController {
         }
     }
     
+    var isFollowersView: Bool? {
+        didSet {
+            configureGroup()
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         if #available(iOS 13.0, *) {
@@ -42,6 +47,7 @@ class GroupFollowersController: UICollectionViewController {
 
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
+        navigationItem.title = "Subscribers"
         
         collectionView?.backgroundColor = .white
         collectionView?.alwaysBounceVertical = true
@@ -60,12 +66,13 @@ class GroupFollowersController: UICollectionViewController {
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
 
     }
-    
-    // only load the 
+
+    // make this be limited and expand when reach bottom
     private func fetchAllFollowers() {
         collectionView?.refreshControl?.beginRefreshing()
         
         guard let group = group else { return }
+        guard let isFollowersView = isFollowersView else { return }
         
         if isFollowersView {
             // get all followers
@@ -80,7 +87,6 @@ class GroupFollowersController: UICollectionViewController {
         else{
             // get all pending followers
             Database.database().fetchGroupFollowersPending(groupId: group.groupId, completion: { (users) in
-                print("fetching requesting followers")
                 self.users = users
                 self.collectionView?.reloadData()
                 self.collectionView?.refreshControl?.endRefreshing()
@@ -91,8 +97,9 @@ class GroupFollowersController: UICollectionViewController {
     }
 
     private func configureGroup() {
-        guard let group = group else { return }
-        navigationItem.title = group.groupname
+        guard group != nil else { return }
+        guard isFollowersView != nil else { return }
+//        navigationItem.title = group.groupname
         handleRefresh()
     }
     
@@ -125,6 +132,7 @@ class GroupFollowersController: UICollectionViewController {
         if header == nil {
             header = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: GroupFollowersHeader.headerId, for: indexPath) as? GroupFollowersHeader
             header?.delegate = self
+            header?.isFollowersView = isFollowersView ?? true
             header?.showPendingButton = (isInGroup ?? false) && (isPrivate ?? false)
         }
         return header!

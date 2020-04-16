@@ -73,7 +73,9 @@ class GroupProfileController: HomePostCellViewController {
         self.navigationController?.navigationBar.isTranslucent = false
         self.navigationController?.navigationBar.backgroundColor = UIColor.white
         
-        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 18)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+//        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 18)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+//        navigationController?.navigationBar.titleTextAttributes = textAttributes
+        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateGroupProfileFeed, object: nil)
@@ -271,7 +273,7 @@ class GroupProfileController: HomePostCellViewController {
             else {
                 self.canView = false
                 Database.database().isInGroupFollowPending(groupId: groupId, withUID: currentLoggedInUserId, completion: { (followPending) in
-                    self.isInFollowPending = true
+                    self.isInFollowPending = followPending
                     self.collectionView?.reloadData()
                     self.collectionView?.refreshControl?.endRefreshing()
                 }) { (err) in
@@ -428,6 +430,7 @@ extension GroupProfileController: GroupProfileHeaderDelegate {
         Database.database().isInGroup(groupId: group!.groupId, completion: { (inGroup) in
             let membersController = MembersController(collectionViewLayout: UICollectionViewFlowLayout())
             membersController.group = self.group
+            membersController.isMembersView = true
             membersController.isInGroup = inGroup
             self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
             self.navigationItem.backBarButtonItem?.tintColor = .black
@@ -443,6 +446,7 @@ extension GroupProfileController: GroupProfileHeaderDelegate {
             groupFollowersController.group = self.group
             groupFollowersController.isInGroup = inGroup
             groupFollowersController.isPrivate = self.group?.isPrivate
+            groupFollowersController.isFollowersView = true
             self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
             self.navigationItem.backBarButtonItem?.tintColor = .black
             self.navigationController?.pushViewController(groupFollowersController, animated: true)

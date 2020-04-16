@@ -52,7 +52,7 @@ class GroupCell: UICollectionViewCell {
         iv.image = #imageLiteral(resourceName: "user")
         iv.isHidden = true
         iv.layer.borderColor = UIColor.white.cgColor
-        iv.layer.borderWidth = 2
+        iv.layer.borderWidth = 0
         return iv
     }()
     
@@ -112,6 +112,7 @@ class GroupCell: UICollectionViewCell {
     
     private func configureCell() {
         guard let group = group else { return }
+        self.userTwoImageView.layer.borderWidth = 0
         
         // then actually hide it, but can't use "isGroupHiddenOnProfile" because current user will be different
         Database.database().isGroupHiddenOnProfile(groupId: group.groupId, completion: { (isHidden) in
@@ -170,8 +171,10 @@ class GroupCell: UICollectionViewCell {
                     self.userTwoImageView.isHidden = false
                     if let userTwoImageUrl = first_two_users[1].profileImageUrl {
                         self.userTwoImageView.loadImage(urlString: userTwoImageUrl)
+                        self.userTwoImageView.layer.borderWidth = 2
                     } else {
                         self.userTwoImageView.image = #imageLiteral(resourceName: "user")
+                        self.userTwoImageView.layer.borderWidth = 2
                     }
                 }
             }

@@ -3,8 +3,8 @@ import Firebase
 
 class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollectionViewDelegateFlowLayout {
     
-//    override var prefersStatusBarHidden: Bool { return true }
-    override var prefersStatusBarHidden: Bool { return false }
+    override var prefersStatusBarHidden: Bool { return true }
+//    override var prefersStatusBarHidden: Bool { return false }
     
     // 2d representation of the dict, same as dict but with no values
     // later, just use the dict but convert it to this after all data is loaded in
@@ -76,6 +76,9 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         if #available(iOS 13.0, *) {
             overrideUserInterfaceStyle = .light
         }
+        
+        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        navigationController?.navigationBar.titleTextAttributes = textAttributes
             
         loadingScreenView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
         loadingScreenView.layer.cornerRadius = 0
@@ -105,7 +108,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
 
     private func configureNavigationBar() {
         self.configureNavBar()
-        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 22)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
@@ -350,6 +353,15 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
             }
         }
     }
+    
+    override func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool {
+        collectionView.visibleCells.forEach { cell in
+            // TODO: write logic to stop the video before it begins scrolling
+            (cell as! MyCell).pauseVisibleVideo()
+            (cell as! MyCell).isScrollingVertically = isScrolling
+        }
+        return true
+    }
 
     //MARK: - FeedPostCellDelegate
 
@@ -460,6 +472,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     func showMoreMembers(group: Group){
         let membersController = MembersController(collectionViewLayout: UICollectionViewFlowLayout())
         membersController.group = group
+        membersController.isMembersView = true
         membersController.isInGroup = false
         self.navigationController?.pushViewController(membersController, animated: true)
     }

@@ -31,6 +31,19 @@ class MembersHeader: UICollectionViewCell {
             }
         }
     }
+    
+    var isMembersView: Bool? {
+        didSet{
+            if isMembersView! {
+                membersButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
+                requestsButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
+            }
+            else {
+                requestsButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
+                membersButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
+            }
+        }
+    }
 
     private lazy var requestsButton: UIButton = {
         let button = UIButton(type: .system)
@@ -90,17 +103,18 @@ class MembersHeader: UICollectionViewCell {
         bottomDividerView.anchor(top: stackView.bottomAnchor, left: leftAnchor, right: rightAnchor, height: 0.5)
         stackView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 44)
     }
-
-    @objc private func handleChangeToRequestsView() {
-        requestsButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-        membersButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
-        delegate?.didChangeToRequestsView()
-    }
-
-    @objc private func handleChangeToMembersView() {
+    
+    @objc func handleChangeToMembersView() {
         membersButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         requestsButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
         delegate?.didChangeToMembersView()
     }
+
+    @objc func handleChangeToRequestsView() {
+        requestsButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
+        membersButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
+        delegate?.didChangeToRequestsView()
+    }
+    
 }
 

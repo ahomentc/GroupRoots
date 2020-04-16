@@ -30,6 +30,7 @@ class SubscriptionsController: UICollectionViewController {
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
+        navigationItem.title = "Subscriptions"
         self.navigationController?.navigationBar.shadowImage = UIColor.white.as1ptImage()
 //        navigationItem.title = "Subscriptions"
         
@@ -46,9 +47,8 @@ class SubscriptionsController: UICollectionViewController {
 
     @objc private func handleRefresh() {
         guard let user_id = user?.uid else { return }
-        guard let username = user?.username else { return }
 
-        self.navigationItem.title = username
+//        self.navigationItem.title = username
         self.subscriptions.removeAll()
 
         collectionView?.refreshControl?.beginRefreshing()

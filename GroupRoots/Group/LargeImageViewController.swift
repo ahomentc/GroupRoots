@@ -79,8 +79,8 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         self.navigationController?.navigationBar.shadowImage = UIImage()
         self.navigationController?.navigationBar.isTranslucent = true
         self.navigationController?.navigationBar.backgroundColor = .clear
-        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 22)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
-        self.navigationController?.navigationBar.titleTextAttributes = textAttributes
+        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        navigationController?.navigationBar.titleTextAttributes = textAttributes
     }
     
     private func configureGroup() {

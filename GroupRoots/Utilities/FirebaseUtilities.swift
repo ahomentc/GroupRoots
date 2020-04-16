@@ -630,6 +630,21 @@ extension Database {
                                                                 if err != nil {
                                                                     completion(err);return
                                                                 }
+                                                                // sending notification (aysnc ok)
+                                                                Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+                                                                    Database.database().fetchGroupMembers(groupId: groupItem.groupId, completion: { (members) in
+                                                                        members.forEach({ (member) in
+                                                                            if user.uid != member.uid {
+                                                                                // send notification for subscription request to all members of group
+                                                                                Database.database().createNotification(to: member, notificationType: NotificationType.groupSubscribeRequest, subjectUser: user, group: groupItem) { (err) in
+                                                                                    if err != nil {
+                                                                                        return
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        })
+                                                                    }) { (_) in}
+                                                                })
                                                                 sync.leave()
                                                             }
                                                         }
@@ -801,6 +816,7 @@ extension Database {
     }
     
     func updateGroup(groupId: String, changedPrivacy: Bool, groupname: String? = nil, isPrivate: Bool? = nil, image: UIImage? = nil, completion: @escaping (Error?) -> ()){
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         var profileImageUrl = ""
         // set the profile image url to the dictionary if there is an image
         let sync = DispatchGroup()
@@ -831,8 +847,24 @@ extension Database {
                 if groupname != nil && groupname != "" {
                     updates_sync.enter()
                     Database.database().groupnameExists(groupname: groupname!, completion: { (exists) in
-                        if !exists {
-                            if groupname! != old_groupname {
+                        if groupname! != old_groupname {
+                            if !exists {
+                                // send notication for name change to all group members, this can be done asynchronously
+                                Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+                                    Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                        members.forEach({ (member) in
+                                            if user.uid != member.uid {
+                                                Database.database().createNotification(to: member, notificationType: NotificationType.groupProfileNameEdit, subjectUser: user, group: group) { (err) in
+                                                    if err != nil {
+                                                        return
+                                                    }
+                                                }
+                                            }
+                                        })
+                                    }) { (_) in}
+                                })
+                                
+                                // update the group and groupnames in database
                                 Database.database().reference().child("groups").child(groupId).updateChildValues(["groupname": groupname!], withCompletionBlock: { (err, ref) in
                                     if let err = err {
                                         print("Failed to update username in database:", err)
@@ -863,20 +895,35 @@ extension Database {
                             }
                             else {
                                 updates_sync.leave()
+                                let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Groupname Taken"])
+                                completion(error)
+                                return
                             }
                             
                         }
                         else {
                             updates_sync.leave()
-                            let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Groupname Taken"])
-                            completion(error)
-                            return
                         }
                     })
                 }
                 else {
                     // username is empty, check if same as old, if not then change
                     if old_groupname != "" {
+                        // send notication for name change to all group members, this can be done asynchronously
+                       Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+                           Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                               members.forEach({ (member) in
+                                   if user.uid != member.uid {
+                                       Database.database().createNotification(to: member, notificationType: NotificationType.groupProfileNameEdit, subjectUser: user, group: group) { (err) in
+                                           if err != nil {
+                                               return
+                                           }
+                                       }
+                                   }
+                               })
+                           }) { (_) in}
+                       })
+                        
                         updates_sync.enter()
                         Database.database().reference().child("groups").child(groupId).updateChildValues(["groupname": ""], withCompletionBlock: { (err, ref) in
                             if let err = err {
@@ -897,6 +944,21 @@ extension Database {
                 
                 // update isPrivate
                 if changedPrivacy {
+                    
+                    // send notification of privacy change to all members of group
+                    Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+                        Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                            members.forEach({ (member) in
+                                if user.uid != member.uid {
+                                    Database.database().createNotification(to: member, notificationType: NotificationType.groupPrivacyChange, subjectUser: user, group: group) { (err) in
+                                        if err != nil {
+                                            return
+                                        }
+                                    }
+                                }
+                            })
+                        }) { (_) in}
+                    })
                     updates_sync.enter()
                     guard let isPrivate = isPrivate else { return }
                     if isPrivate {
@@ -912,6 +974,21 @@ extension Database {
                 }
                 
                 if profileImageUrl != "" {
+                    // send notication for name change to all group members, this can be done asynchronously
+                   Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+                       Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                           members.forEach({ (member) in
+                               if user.uid != member.uid {
+                                   Database.database().createNotification(to: member, notificationType: NotificationType.groupProfilePicEdit, subjectUser: user, group: group) { (err) in
+                                       if err != nil {
+                                           return
+                                       }
+                                   }
+                               }
+                           })
+                       }) { (_) in}
+                   })
+                    
                     updates_sync.enter()
                     Database.database().reference().child("groups").child(groupId).updateChildValues(["imageUrl": profileImageUrl], withCompletionBlock: { (err, ref) in
                         if let err = err {
@@ -1869,7 +1946,7 @@ extension Database {
         
         // other one is called groupFollowers
         Database.database().reference().child("groupsFollowing").child(currentLoggedInUserId).child(groupId).observeSingleEvent(of: .value, with: { (snapshot) in
-            if let isFollowing = snapshot.value as? Int, isFollowing == 1 {
+            if (snapshot.value as? Double) != nil {
                 completion(true)
             } else {
                 completion(false)
@@ -2902,15 +2979,121 @@ extension Database {
                     }
                 })
                 
+                guard let group = group else { return }
                 Database.database().fetchUser(withUID: subjectUser!.uid) { (user) in
-                    let pushMessage = user.username + " joined your group " + group!.groupname
+                    let pushMessage = user.username + " joined your group " + group.groupname
                     PushNotificationSender().sendPushNotification(to: token, title: "Group Join", body: pushMessage)
                     
                     // Save the notification
-                    let values = ["id": notificationId, "from_id": user.uid, "group_id": group!.groupId, "type": "newGroupJoin", "creationDate": Date().timeIntervalSince1970] as [String : Any]
+                    let values = ["id": notificationId, "from_id": user.uid, "group_id": group.groupId, "type": "newGroupJoin", "creationDate": Date().timeIntervalSince1970] as [String : Any]
                     notificationRef.updateChildValues(values) { (err, ref) in
                         if let err = err {
                             print("Failed to save post to database", err)
+                            completion(err)
+                            return
+                        }
+                        completion(nil)
+                    }
+                }
+            case .newGroupSubscribe:
+                guard let group = group else { return }
+                Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
+                    let pushMessage = user.username + " subscribed to your group " + group.groupname
+                    PushNotificationSender().sendPushNotification(to: token, title: "New Subscription", body: pushMessage)
+                    
+                    // Save the notification
+                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group.groupId, "type": "newGroupSubscribe", "creationDate": Date().timeIntervalSince1970] as [String : Any]
+                    notificationRef.updateChildValues(values) { (err, ref) in
+                        if let err = err {
+                            print("Failed to send notification", err)
+                            completion(err)
+                            return
+                        }
+                        completion(nil)
+                    }
+                }
+            case .groupSubscribeRequest:
+                guard let group = group else { return }
+                Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
+                    let pushMessage = user.username + " requested subscription to your group " + group.groupname
+                    PushNotificationSender().sendPushNotification(to: token, title: "New Subscription Request", body: pushMessage)
+                    
+                    // Save the notification
+                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group.groupId, "type": "groupSubscribeRequest", "creationDate": Date().timeIntervalSince1970] as [String : Any]
+                    notificationRef.updateChildValues(values) { (err, ref) in
+                        if let err = err {
+                            print("Failed to send notification", err)
+                            completion(err)
+                            return
+                        }
+                        completion(nil)
+                    }
+                }
+            case .groupProfileNameEdit:
+                guard let group = group else { return }
+                Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
+                    let groupname = group.groupname
+                    var pushMessage = ""
+                    if groupname == "" {
+                        pushMessage = user.username + " removed your group's name"
+                    }
+                    else {
+                        pushMessage = user.username + " changed group name to " + groupname
+                    }
+                    
+                    PushNotificationSender().sendPushNotification(to: token, title: "Group Name Edit", body: pushMessage)
+                    
+                    // Save the notification
+                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group.groupId, "type": "groupProfileNameEdit", "creationDate": Date().timeIntervalSince1970] as [String : Any]
+                    notificationRef.updateChildValues(values) { (err, ref) in
+                        if let err = err {
+                            print("Failed to send notification", err)
+                            completion(err)
+                            return
+                        }
+                        completion(nil)
+                    }
+                }
+            case .groupPrivacyChange:
+                guard let group = group else { return }
+                guard let isPrivate = group.isPrivate else { return }
+                Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
+                    var groupname = group.groupname
+                    if groupname == "" { groupname = "your group" }
+                    var pushMessage = ""
+                    if isPrivate {
+                        pushMessage = user.username + " made " + groupname + " private"
+                    }
+                    else {
+                        pushMessage = user.username + " made " + groupname + " public"
+                    }
+                    
+                    PushNotificationSender().sendPushNotification(to: token, title: "Group Privacy Change", body: pushMessage)
+                    
+                    // Save the notification
+                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group.groupId, "type": "groupPrivacyChange", "creationDate": Date().timeIntervalSince1970] as [String : Any]
+                    notificationRef.updateChildValues(values) { (err, ref) in
+                        if let err = err {
+                            print("Failed to send notification", err)
+                            completion(err)
+                            return
+                        }
+                        completion(nil)
+                    }
+                }
+            case .groupProfilePicEdit:
+                guard let group = group else { return }
+                Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
+                    var groupname = group.groupname
+                    if groupname == "" { groupname = "your group" }
+                    let pushMessage = user.username + " edited " + groupname + "'s profile picture"
+                    PushNotificationSender().sendPushNotification(to: token, title: "Group Profile Picture Edit", body: pushMessage)
+                    
+                    // Save the notification
+                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group.groupId, "type": "groupProfilePicEdit", "creationDate": Date().timeIntervalSince1970] as [String : Any]
+                    notificationRef.updateChildValues(values) { (err, ref) in
+                        if let err = err {
+                            print("Failed to send notification", err)
                             completion(err)
                             return
                         }
@@ -2918,38 +3101,20 @@ extension Database {
                     }
                 }
             case .groupPostComment:
+                guard let group = group else { return }
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
                     
                     // could add a check to see if the currentLoggedInUser is following the user in the group.
                     // if not following, then could not send a notification for them.
                     // could add this here, before this function is called, + have default and change from settings
                     
-                    let pushMessage = user.username + " commented on your group " + group!.groupname + "'s post"
+                    var groupname = group.groupname
+                    if groupname == "" { groupname = "your group" }
+                    let pushMessage = user.username + " commented on " + groupname + "'s post"
                     PushNotificationSender().sendPushNotification(to: token, title: "Comment", body: pushMessage)
                     
                     // Save the notification
-                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group!.groupId, "group_post_id": groupPost!.id, "type": "groupPostComment", "creationDate": Date().timeIntervalSince1970] as [String : Any]
-                    notificationRef.updateChildValues(values) { (err, ref) in
-                        if let err = err {
-                            print("Failed to save post to database", err)
-                            completion(err)
-                            return
-                        }
-                        completion(nil)
-                    }
-                }
-            case .groupPostLiked:
-                Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    
-                    // could add a check to see if the currentLoggedInUser is following the user in the group.
-                    // if not following, then could not send a notification for them.
-                    // could add this here, before this function is called, + have default and change from settings
-                    
-                    let pushMessage = user.username + " liked your group " + group!.groupname + "'s post"
-                    PushNotificationSender().sendPushNotification(to: token, title: "Like", body: pushMessage)
-                    
-                    // Save the notification
-                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group!.groupId, "group_post_id": groupPost!.id, "type": "groupPostLiked", "creationDate": Date().timeIntervalSince1970] as [String : Any]
+                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group.groupId, "group_post_id": groupPost!.id, "type": "groupPostComment", "creationDate": Date().timeIntervalSince1970] as [String : Any]
                     notificationRef.updateChildValues(values) { (err, ref) in
                         if let err = err {
                             print("Failed to save post to database", err)
@@ -2960,17 +3125,20 @@ extension Database {
                     }
                 }
             case .newGroupPost:
+                guard let group = group else { return }
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
                     
                     // could add a check to see if the currentLoggedInUser is following the user in the group.
                     // if not following, then could not send a notification for them.
                     // could add this here, before this function is called, + have default and change from settings
                     
-                    let pushMessage = user.username + " posted in " + group!.groupname
+                    var groupname = group.groupname
+                    if groupname == "" { groupname = "your group" }
+                    let pushMessage = user.username + " posted in " + groupname
                     PushNotificationSender().sendPushNotification(to: token, title: "Group Post", body: pushMessage)
                     
                     // Save the notification
-                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group!.groupId, "group_post_id": groupPost!.id, "type": "newGroupPost", "creationDate": Date().timeIntervalSince1970] as [String : Any]
+                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group.groupId, "group_post_id": groupPost!.id, "type": "newGroupPost", "creationDate": Date().timeIntervalSince1970] as [String : Any]
                     notificationRef.updateChildValues(values) { (err, ref) in
                         if let err = err {
                             print("Failed to save post to database", err)
@@ -2981,13 +3149,16 @@ extension Database {
                     }
                 }
             case .groupJoinInvitation:
+                guard let group = group else { return }
                 // someone in the group is inviting a user
-                Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    let pushMessage = user.username + " invited you to group: " + group!.groupname
+                Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in                    
+                    var groupname = group.groupname
+                    if groupname == "" { groupname = "a group" }
+                    let pushMessage = user.username + " invited you to join " + groupname
                     PushNotificationSender().sendPushNotification(to: token, title: "Group Invitation", body: pushMessage)
                     
                     // Save the notification
-                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group!.groupId, "type": "groupJoinInvitation", "creationDate": Date().timeIntervalSince1970] as [String : Any]
+                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group.groupId, "type": "groupJoinInvitation", "creationDate": Date().timeIntervalSince1970] as [String : Any]
                     notificationRef.updateChildValues(values) { (err, ref) in
                         if let err = err {
                             print("Failed to save post to database", err)
@@ -3033,20 +3204,32 @@ extension Database {
                                 completion(exists)
                                 return
                             })
-                        case "groupPostComment":
+                        case "newGroupSubscribe":
                             self.groupExists(groupId: group_id, completion: { (exists) in
-                                if exists {
-                                    self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
-                                        completion(post_exists)
-                                        return
-                                    })
-                                }
-                                else{
-                                    completion(false)
-                                    return
-                                }
+                                completion(exists)
+                                return
                             })
-                        case "groupPostLiked":
+                        case "groupSubscribeRequest":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                completion(exists)
+                                return
+                            })
+                        case "groupProfileNameEdit":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                completion(exists)
+                                return
+                            })
+                        case "groupPrivacyChange":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                completion(exists)
+                                return
+                            })
+                        case "groupProfilePicEdit":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                completion(exists)
+                                return
+                            })
+                        case "groupPostComment":
                             self.groupExists(groupId: group_id, completion: { (exists) in
                                 if exists {
                                     self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
@@ -3145,6 +3328,81 @@ extension Database {
                                         return
                                     }
                                 })
+                            case "newGroupSubscribe":
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.newGroupSubscribe, dictionary: notificationDictionary)
+                                            notification.id = notificationId
+                                            completion(notification)
+                                        })
+                                    }
+                                    else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
+                                        return
+                                    }
+                                })
+                            case "groupSubscribeRequest":
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.groupSubscribeRequest, dictionary: notificationDictionary)
+                                            notification.id = notificationId
+                                            completion(notification)
+                                        })
+                                    }
+                                    else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
+                                        return
+                                    }
+                                })
+                            case "groupProfileNameEdit":
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.groupProfileNameEdit, dictionary: notificationDictionary)
+                                            notification.id = notificationId
+                                            completion(notification)
+                                        })
+                                    }
+                                    else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
+                                        return
+                                    }
+                                })
+                            case "groupPrivacyChange":
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.groupPrivacyChange, dictionary: notificationDictionary)
+                                            notification.id = notificationId
+                                            completion(notification)
+                                        })
+                                    }
+                                    else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
+                                        return
+                                    }
+                                })
+                            case "groupProfilePicEdit":
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.groupProfilePicEdit, dictionary: notificationDictionary)
+                                            notification.id = notificationId
+                                            completion(notification)
+                                        })
+                                    }
+                                    else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
+                                        return
+                                    }
+                                })
                             case "groupPostComment":
                                 // need from, group, post
                                 self.groupExists(groupId: group_id, completion: { (exists) in
@@ -3154,33 +3412,6 @@ extension Database {
                                                 if post_exists{
                                                     Database.database().fetchGroupPost(groupId: group_id, postId: group_post_id, completion: { (post) in
                                                         var notification = Notification(group: group, groupPost: post, from: fromUser, to: toUser, type: NotificationType.groupPostComment, dictionary: notificationDictionary)
-                                                        notification.id = notificationId
-                                                        completion(notification)
-                                                    })
-                                                }
-                                                else{
-                                                    let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "groupPost existance"])
-                                                    cancel?(err)
-                                                    return
-                                                }
-                                            })
-                                        })
-                                    }
-                                    else {
-                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
-                                        cancel?(err)
-                                        return
-                                    }
-                                })
-                            case "groupPostLiked":
-                                // need from, group, post
-                                self.groupExists(groupId: group_id, completion: { (exists) in
-                                    if exists {
-                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
-                                            self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
-                                                if post_exists{
-                                                    Database.database().fetchGroupPost(groupId: group_id, postId: group_post_id, completion: { (post) in
-                                                        var notification = Notification(group: group, groupPost: post, from: fromUser, to: toUser, type: NotificationType.groupPostLiked, dictionary: notificationDictionary)
                                                         notification.id = notificationId
                                                         completion(notification)
                                                     })

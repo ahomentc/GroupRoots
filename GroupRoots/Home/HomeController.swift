@@ -35,7 +35,7 @@ class HomeController: HomePostCellViewController {
     
     private func configureNavigationBar() {
         navigationItem.title = "DayOnes"
-        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Gill Sans", size: 22)!]
+        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Gill Sans", size: 18)!]
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "inbox").withRenderingMode(.alwaysOriginal), style: .plain, target: self, action: nil)
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)

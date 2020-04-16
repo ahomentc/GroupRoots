@@ -18,7 +18,12 @@ class MembersController: UICollectionViewController {
         }
     }
     private var header: MembersHeader?
-    private var isMembersView: Bool = true
+
+    var isMembersView: Bool? {
+        didSet {
+            configureGroup()
+        }
+    }
     
     var isInGroup: Bool? {
         didSet {
@@ -43,6 +48,7 @@ class MembersController: UICollectionViewController {
 
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
+        navigationItem.title = "Members"
         
         collectionView?.backgroundColor = .white
         collectionView?.alwaysBounceVertical = true
@@ -62,10 +68,10 @@ class MembersController: UICollectionViewController {
     }
     
     private func fetchAllMembers() {
-        collectionView?.refreshControl?.beginRefreshing()
-        
         guard let group = group else { return }
+        guard let isMembersView = isMembersView else { return }
         
+        collectionView?.refreshControl?.beginRefreshing()
         if isMembersView {
             // get all members
             Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (users) in
@@ -89,21 +95,9 @@ class MembersController: UICollectionViewController {
     }
 
     private func configureGroup() {
-        guard let group = group else { return }
-
-        // instead, the if statement should be if the current user is in the group
-        // additional controls available if true
-        
-//        if user.uid == Auth.auth().currentUser?.uid {
-//            navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "gear").withRenderingMode(.alwaysOriginal), style: .plain, target: self, action: #selector(handleSettings))
-//        } else {
-//            let optionsButton = UIBarButtonItem(title: "•••", style: .plain, target: nil, action: nil)
-//            optionsButton.tintColor = .black
-//            navigationItem.rightBarButtonItem = optionsButton
-//        }
-//
-        navigationItem.title = group.groupname
-
+        guard group != nil else { return }
+        guard isMembersView != nil else { return }
+//        navigationItem.title = group.groupname
         handleRefresh()
     }
     
@@ -145,6 +139,7 @@ class MembersController: UICollectionViewController {
             header = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: MembersHeader.headerId, for: indexPath) as? MembersHeader
             header?.delegate = self
             header?.isInGroup = isInGroup ?? false
+            header?.isMembersView = isMembersView ?? true
         }
         return header!
     }
