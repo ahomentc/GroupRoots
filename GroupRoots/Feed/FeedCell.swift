@@ -50,6 +50,12 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         }
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        groupMembers = nil
+        groupPosts = nil
+    }
+    
     // this might be bad but to clarify. FeedController sets groupPostsViewers for this cell. That in turn sets viewersForPosts
     var groupPostsViewers: [String: [User]]? { // key is the postId
         didSet{
@@ -148,10 +154,13 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     }
     
     func configureHeader() {
+        header.groupMembers = []
+        header.group = nil
         if groupPosts?.count == 0 { return }
         guard let groupPost = groupPosts?[0] else { return }
         header.group = groupPost.group
         guard let groupMembers = groupMembers else { return }
+        if groupMembers.count == 0 { return }
         header.groupMembers = groupMembers
     }
     

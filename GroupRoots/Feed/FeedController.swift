@@ -16,6 +16,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     var groupPostsNumCommentsDict = [String: [String: Int]]()           // -- same --|
     var isScrolling = false
     var numGroupsInFeed = 10
+    var disableVideo = false
     
     private let loadingScreenView: CustomImageView = {
         let iv = CustomImageView()
@@ -48,14 +49,15 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         self.navigationController?.isNavigationBarHidden = false
         // Show the navigation bar on other view controllers
         self.collectionView?.refreshControl?.endRefreshing()
+        self.disableVideo = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
-//        handleRefresh()
         self.configureNavBar()
+        self.disableVideo = false
         
         collectionView.visibleCells.forEach { cell in
             (cell as! MyCell).pauseVisibleVideo()
@@ -286,6 +288,8 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
         let myCell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! MyCell
         if indexPath.row < groupPosts2D.count{
             let groupId = groupPosts2D[indexPath.row][0].group.groupId
+            myCell.groupMembers = []
+            myCell.header.groupMembers = []
             myCell.groupPosts = groupPosts2D[indexPath.row]
             myCell.groupMembers = groupMembers[groupId]
             myCell.groupPostsTotalViewers = groupPostsTotalViewersDict[groupId]
@@ -394,11 +398,16 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     }
     
     func showViewers(viewers: [User], viewsCount: Int) {
+        collectionView.visibleCells.forEach { cell in
+            (cell as! MyCell).pauseVisibleVideo()
+        }
+        
         let viewersController = ViewersController()
         viewersController.viewers = viewers
         viewersController.viewsCount = viewsCount
         let navController = UINavigationController(rootViewController: viewersController)
         self.present(navController, animated: true, completion: nil)
+        
     }
 
     func didTapOptions(groupPost: GroupPost) {
@@ -478,7 +487,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
     }
     
     func requestPlay(for_lower cell1: FeedPostCell, for_upper cell2: MyCell) {
-        if !isScrolling {
+        if !isScrolling && !disableVideo {
             // check to see if visible too
             collectionView.visibleCells.forEach { cell_visible in  // check if cell is still visible
                 if cell_visible == cell2 {

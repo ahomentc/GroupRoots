@@ -106,7 +106,6 @@ class FeedPostCellHeader: UIView {
     }
     
     private func sharedInit() {
-        
         addSubview(groupProfileImageView)
         groupProfileImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding + 20, paddingBottom: padding, width: 50 , height: 50)
         groupProfileImageView.layer.cornerRadius = 20
@@ -146,14 +145,24 @@ class FeedPostCellHeader: UIView {
 //        optionsButton.anchor(top: topAnchor, bottom: bottomAnchor, right: rightAnchor, paddingRight: padding, width: 44)
     }
     
+    open func clearPastCell() {
+        self.groupProfileImageView.image = CustomImageView.imageWithColor(color: .clear)
+        self.firstMemberImageView.image = CustomImageView.imageWithColor(color: .clear)
+        self.secondMemberImageView.image = CustomImageView.imageWithColor(color: .clear)
+        self.thirdMemberImageView.image = CustomImageView.imageWithColor(color: .clear)
+    }
+    
     private func configureGroup() {
+        clearPastCell()
+        
         guard let group = group else { return }
-        guard groupMembers != nil else { return }
+        guard let groupMembers = groupMembers else { return }
+        if groupMembers.count == 0 { return }
         
         // set groupname
         usernameButton.setTitle(group.groupname, for: .normal)
         usernameButton.setTitleColor(.white, for: .normal)
-        
+                
         // set group and profile images
         configureMemberImages(group: group)
         
@@ -182,17 +191,16 @@ class FeedPostCellHeader: UIView {
     
     func configureMemberImages(group: Group){
         guard let groupMembers = groupMembers else { return }
-        
-        firstMemberImageView.image = UIImage()
-        secondMemberImageView.image = UIImage()
-        thirdMemberImageView.image = UIImage()
+            
         var image_count = 0
         
         if let profileImageUrl = group.groupProfileImageUrl {
             self.groupProfileImageView.loadImage(urlString: profileImageUrl)
             self.groupProfileImageView.layer.borderWidth = 2
             self.groupProfileImageView.layer.borderColor = UIColor.white.cgColor
+//            print("---")
             for user in groupMembers {
+//                print(user)
                 if image_count < 3 {
                     if image_count == 0 {
                         if let profileImageUrl = user.profileImageUrl {

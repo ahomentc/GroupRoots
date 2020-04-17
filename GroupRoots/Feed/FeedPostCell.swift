@@ -10,6 +10,7 @@ import UIKit
 import Firebase
 import Player
 import AVFoundation
+import SGImageCache
 
 protocol InnerPostCellDelegate {
     func didTapComment(groupPost: GroupPost)
@@ -295,6 +296,8 @@ class FeedPostCell: UICollectionViewCell {
     }
     
     private func configurePost() {
+        self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
+        
         guard let groupPost = groupPost else { return }
 
         setupAttributedCaption(groupPost: groupPost)
@@ -321,12 +324,44 @@ class FeedPostCell: UICollectionViewCell {
             self.imageBackground.isHidden = false
             self.player.view.isHidden = true
             
-            photoImageView.loadImageWithCompletion(urlString: groupPost.imageUrl, completion: { () in
+//            photoImageView.loadImageWithCompletion(urlString: groupPost.imageUrl, completion: { () in
+//                self.setImageDimensions()
+//                self.photoImageView.getAvgColor(imageUrl: groupPost.imageUrl, completion: { (imgColor) in
+//                    self.imageBackground.backgroundColor = imgColor
+//                })
+//            })
+            
+            // use this here:
+//            let promise = SGImageCache.getImageForURL(url)
+//            promise.swiftThen({object in
+//              if let image = object as? UIImage {
+//                  self.imageView.image = image
+//              }
+//              return nil
+//            })
+//            promise.onRetry = {
+//              self.showLoadingSpinner()
+//            }
+//            promise.onFail = { (error: NSError?, wasFatal: Bool) -> () in
+//              self.displayError(error)
+//            }
+            
+            if let image = SGImageCache.image(forURL: groupPost.imageUrl) {
+                photoImageView.image = image   // image loaded immediately from cache
                 self.setImageDimensions()
                 self.photoImageView.getAvgColor(imageUrl: groupPost.imageUrl, completion: { (imgColor) in
                     self.imageBackground.backgroundColor = imgColor
                 })
-            })
+            } else {
+                SGImageCache.getImage(url: groupPost.imageUrl) { [weak self] image in
+                    self?.photoImageView.image = image   // image loaded async
+                    self?.setImageDimensions()
+                    self?.photoImageView.getAvgColor(imageUrl: groupPost.imageUrl, completion: { (imgColor) in
+                        self?.imageBackground.backgroundColor = imgColor
+                    })
+                }
+            }
+            
         }
         else {
             self.player.url = URL(string: groupPost.videoUrl)

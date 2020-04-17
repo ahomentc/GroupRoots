@@ -137,18 +137,6 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         }) { (err) in
             return
         }
-        
-//        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
-//            let membersController = MembersController(collectionViewLayout: UICollectionViewFlowLayout())
-//            membersController.group = group
-//            membersController.isInGroup = inGroup
-//            membersController.isMembersView = false
-//            self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
-//            self.navigationItem.backBarButtonItem?.tintColor = .black
-//            self.navigationController?.pushViewController(membersController, animated: true)
-//        }) { (err) in
-//            return
-//        }
     }
     
     func didTapPost(group: Group, post: GroupPost) {
@@ -185,9 +173,6 @@ extension NotificationsController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: view.frame.width, height: 80)
     }
-//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-//        return CGSize(width: view.frame.width, height: 44)
-//    }
 }
 
 
