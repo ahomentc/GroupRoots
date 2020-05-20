@@ -15,6 +15,7 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
     var email: String?
     var username: String?
     var name: String?
+    var profileImage: UIImage?
     
     private lazy var backLabel: UILabel = {
         let label = UILabel()
@@ -84,8 +85,6 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
         button.addTarget(self, action: #selector(handleAlreadyHaveAccount), for: .touchUpInside)
         return button
     }()
-    
-    private var profileImage: UIImage?
     
     override func viewDidLoad() {
         super.viewDidLoad()

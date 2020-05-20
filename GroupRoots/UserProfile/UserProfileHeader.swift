@@ -95,8 +95,8 @@ class UserProfileHeader: UICollectionViewCell {
     private func sharedInit() {
         addSubview(profileImageView)
         profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: padding, width: 80, height: 80)
-//        profileImageView.layer.cornerRadius = 80 / 2
-        profileImageView.layer.cornerRadius = 32
+        profileImageView.layer.cornerRadius = 80 / 2
+//        profileImageView.layer.cornerRadius = 32
         
         let stackView = UIStackView(arrangedSubviews: [followingLabel, followersLabel, subscriptionsLabel])
         stackView.distribution = .fillEqually

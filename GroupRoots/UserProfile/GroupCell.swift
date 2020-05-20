@@ -74,13 +74,17 @@ class GroupCell: UICollectionViewCell {
         sharedInit()
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        self.backgroundColor = UIColor.clear
+    }
+    
     private func sharedInit() {
         
         addSubview(profileImageView)
         profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 60, height: 60)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-//        profileImageView.layer.cornerRadius = 60 / 2
-        profileImageView.layer.cornerRadius = 24
+        profileImageView.layer.cornerRadius = 60 / 2
         profileImageView.isHidden = false
         
         addSubview(userOneImageView)
@@ -127,21 +131,29 @@ class GroupCell: UICollectionViewCell {
             return
         }
         
-        Database.database().fetchFirstTwoGroupMembers(groupId: group.groupId, completion: { (first_two_users) in
+        Database.database().fetchFirstNGroupMembers(groupId: group.groupId, n: 3, completion: { (first_n_users) in
             if group.groupname != "" {
                 self.groupnameLabel.text = group.groupname
             }
             else {
-                if first_two_users.count == 2 {
-                    var usernames = first_two_users[0].username + " & " + first_two_users[1].username
+                if first_n_users.count > 2 {
+                    var usernames = first_n_users[0].username + " & " + first_n_users[1].username + " & " + first_n_users[2].username
                     if usernames.count > 21 {
                         usernames = String(usernames.prefix(21)) // keep only the first 21 characters
                         usernames = usernames + "..."
                     }
                     self.groupnameLabel.text = usernames
                 }
-                else if first_two_users.count == 1 {
-                    var usernames = first_two_users[0].username
+                else if first_n_users.count == 2 {
+                    var usernames = first_n_users[0].username + " & " + first_n_users[1].username
+                    if usernames.count > 21 {
+                        usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                        usernames = usernames + "..."
+                    }
+                    self.groupnameLabel.text = usernames
+                }
+                else if first_n_users.count == 1 {
+                    var usernames = first_n_users[0].username
                     if usernames.count > 21 {
                         usernames = String(usernames.prefix(21)) // keep only the first 21 characters
                         usernames = usernames + "..."
@@ -160,20 +172,22 @@ class GroupCell: UICollectionViewCell {
                 self.userOneImageView.isHidden = false
                 self.userTwoImageView.isHidden = true
                 
-                if let userOneImageUrl = first_two_users[0].profileImageUrl {
+                if let userOneImageUrl = first_n_users[0].profileImageUrl {
                     self.userOneImageView.loadImage(urlString: userOneImageUrl)
                 } else {
                     self.userOneImageView.image = #imageLiteral(resourceName: "user")
+                    self.userOneImageView.backgroundColor = .white
                 }
                 
                 // set the second user (only if it exists)
-                if first_two_users.count == 2 {
+                if first_n_users.count > 1 {
                     self.userTwoImageView.isHidden = false
-                    if let userTwoImageUrl = first_two_users[1].profileImageUrl {
+                    if let userTwoImageUrl = first_n_users[1].profileImageUrl {
                         self.userTwoImageView.loadImage(urlString: userTwoImageUrl)
                         self.userTwoImageView.layer.borderWidth = 2
                     } else {
                         self.userTwoImageView.image = #imageLiteral(resourceName: "user")
+                        self.userTwoImageView.backgroundColor = .white
                         self.userTwoImageView.layer.borderWidth = 2
                     }
                 }

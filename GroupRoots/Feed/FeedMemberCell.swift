@@ -40,13 +40,13 @@ class FeedMemberCell: UITableViewCell {
         addSubview(profileImageView)
         profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 50, height: 50)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 20
+        profileImageView.layer.cornerRadius = 50/2
         
         addSubview(usernameLabel)
         usernameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 15)
         usernameLabel.textColor = UIColor.white
         
-        backgroundColor = UIColor.black
+        backgroundColor = UIColor.clear
 //        let separatorView = UIView()
 //        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.1)
 //        addSubview(separatorView)

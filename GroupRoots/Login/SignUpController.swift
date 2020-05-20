@@ -192,6 +192,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
                         signUpTwoController.email = email
                         signUpTwoController.username = username
                         signUpTwoController.name = name
+                        signUpTwoController.profileImage = self.profileImage
                         self.navigationController?.pushViewController(signUpTwoController, animated: true)
                     }
                     else {

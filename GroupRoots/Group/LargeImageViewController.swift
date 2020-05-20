@@ -200,13 +200,14 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         collectionView?.register(MembersCell.self, forCellWithReuseIdentifier: MembersCell.cellId)
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
+        collectionView.isPagingEnabled = true
         
         self.configureNavigationBar()
             
         self.view.backgroundColor = UIColor.black
         
         self.view.addSubview(header)
-        header.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: 25, paddingLeft: 5)
+        header.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: 25, paddingLeft: 5, paddingRight: UIScreen.main.bounds.width/2)
         header.delegate = self
     }
     

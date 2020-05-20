@@ -65,7 +65,7 @@ class FollowPageCell: UICollectionViewCell {
         addSubview(profileImageView)
         profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 50, height: 50)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 20
+        profileImageView.layer.cornerRadius = 50/2
         
         addSubview(usernameLabel)
         usernameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 8)

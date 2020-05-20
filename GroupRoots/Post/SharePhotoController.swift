@@ -226,7 +226,6 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                     return
                 }
             })
-            
             NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
             NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
             self.dismiss(animated: true, completion: nil)

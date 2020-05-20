@@ -50,10 +50,16 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         }
     }
     
+    var usingCachedData: Bool?
+    
     override func prepareForReuse() {
         super.prepareForReuse()
         groupMembers = nil
         groupPosts = nil
+        groupPostsTotalViewers = nil
+        checkedIfCommentExists = false
+        groupPostsFirstComment = nil
+        groupPostsNumComments = nil
     }
     
     // this might be bad but to clarify. FeedController sets groupPostsViewers for this cell. That in turn sets viewersForPosts
@@ -108,34 +114,46 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     func reloadGroupData(){
         guard let groupPosts = groupPosts else { return }
         guard groupPostsNumComments != nil else { return }
-        if !checkedIfCommentExists { return } // this is needed because groupPostsFirstComment might be nil even if check
+                
+        self.collectionView.reloadData(); // this is causing or uncovering some problems where video is playing over itself
+        self.collectionView.layoutIfNeeded()
         
-        
-        // need to check if in group, else viewers will be nil and always return
-        if groupPosts.count > 0 {
+        if groupPosts.count > 0 { // need to check if in group, else viewers will be nil and always return
             Database.database().isInGroup(groupId: groupPosts[0].group.groupId, completion: { (inGroup) in
                 if inGroup{
-                    guard self.groupPostsTotalViewers != nil else { return }
-                    guard self.groupPostsViewers != nil else { return }
-                    DispatchQueue.main.async{ self.collectionView.reloadData() }
+                    DispatchQueue.main.async{
+                        self.collectionView.reloadData()
+                        self.collectionView.layoutIfNeeded()
+                        self.collectionView.scrollToItem(at: IndexPath(item: 1, section: 0), at: .centeredHorizontally, animated: false)
+                    }
                 }
                 else {
-                    DispatchQueue.main.async{ self.collectionView.reloadData()}
+                    DispatchQueue.main.async{
+                        self.collectionView.reloadData();
+                        self.collectionView.layoutIfNeeded()
+                        self.collectionView.scrollToItem(at: IndexPath(item: 1, section: 0), at: .centeredHorizontally, animated: false)
+                    }
                 }
             }) { (err) in return }
         }
         else {
-            DispatchQueue.main.async{ self.collectionView.reloadData() }
+            self.collectionView.reloadData()
+            self.collectionView.layoutIfNeeded()
         }
     }
     
     func setupViews() {
-        let layout = UPCarouselFlowLayout()
+//        let layout = UPCarouselFlowLayout()
+//        layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
+//        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+//        layout.spacingMode = UPCarouselFlowLayoutSpacingMode.fixed(spacing: 8)
+//        layout.sideItemAlpha = 0.7
+//        layout.sideItemScale = 0.7
+        
+        let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-        layout.spacingMode = UPCarouselFlowLayoutSpacingMode.fixed(spacing: 8)
-        layout.sideItemAlpha = 0.7
-        layout.sideItemScale = 0.7
+        layout.minimumLineSpacing = CGFloat(0)
         
         collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), collectionViewLayout: layout)
         collectionView.delegate = self
@@ -146,10 +164,11 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
         collectionView?.register(MembersCell.self, forCellWithReuseIdentifier: MembersCell.cellId)
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
+        collectionView.isPagingEnabled = true
         self.addSubview(collectionView)
 
         addSubview(header)
-        header.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 5)
+        header.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 5, paddingRight: UIScreen.main.bounds.width/2)
         header.delegate = self
     }
     
@@ -186,8 +205,12 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
                 cell.isScrolling = isScrolling
                 cell.delegate = self
                 cell.emptyComment = true
-
                 guard let groupPosts = groupPosts else { return cell }
+                
+                if (usingCachedData ?? true) && groupPosts[indexPath.item-1].videoUrl != "" {
+                    return collectionView.dequeueReusableCell(withReuseIdentifier: EmptyFeedPostCell.cellId, for: indexPath) as! EmptyFeedPostCell
+                }
+                
                 cell.groupPost = groupPosts[indexPath.item-1]
                 
                 guard let groupPostsNumComments = groupPostsNumComments else { return cell }
@@ -210,7 +233,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
                 if groupPostsTotalViewers[postId] != nil {
                     cell.numViewsForPost = groupPostsTotalViewers[postId]
                 }
-                                
+                       
                 return cell
             }
             else {
@@ -262,7 +285,8 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
     //MARK: - InnerPostCellDelegate
     
     func requestPlay(for cell: FeedPostCell) {
-        if !isScrolling {
+        guard let usingCachedData = usingCachedData else { return }
+        if !isScrolling && !usingCachedData  {
             collectionView.visibleCells.forEach { cell2 in  // check if cell is still visible
                 if cell2 == cell {
                     delegate?.requestPlay(for_lower: cell, for_upper: self)
@@ -327,7 +351,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
 }
 
 extension MyCell: UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+    private func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewFlowLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
     }
 }

@@ -1,5 +1,6 @@
 import UIKit
 import Firebase
+import NVActivityIndicatorView
 
 class EmptyFeedPostCell: UICollectionViewCell {
     
@@ -13,13 +14,16 @@ class EmptyFeedPostCell: UICollectionViewCell {
         return iv
     }()
     
-    let loadingLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Loading"
-        label.textColor = UIColor.white
-        label.numberOfLines = 0
-        return label
-    }()
+//    let loadingLabel: UILabel = {
+//        let label = UILabel()
+//        label.text = "Loading"
+//        label.textColor = UIColor.white
+//        label.numberOfLines = 0
+//        label.textAlignment = .center
+//        return label
+//    }()
+    
+    let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
     
     var activityIndicator = UIActivityIndicatorView()
     
@@ -37,8 +41,12 @@ class EmptyFeedPostCell: UICollectionViewCell {
 
     private func sharedInit() {
         
-        addSubview(loadingLabel)
-        loadingLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: padding + UIScreen.main.bounds.height/2 - 14, paddingLeft: padding + UIScreen.main.bounds.width/2 - 30)
+//        addSubview(loadingLabel)
+//        loadingLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: padding + UIScreen.main.bounds.height/2 - 14)
+        
+        activityIndicatorView.isHidden = true
+        insertSubview(activityIndicatorView, at: 20)
+        activityIndicatorView.startAnimating()
         
         addSubview(photoImageView)
         photoImageView.anchor(top: topAnchor, left: leftAnchor, bottom: nil, right: rightAnchor, paddingTop: padding + 12)

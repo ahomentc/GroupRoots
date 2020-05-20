@@ -28,6 +28,10 @@
 		7578BB1E23D27CEE00AF9BFB /* GroupProfileHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7578BB1D23D27CEE00AF9BFB /* GroupProfileHeader.swift */; };
 		7578BB2023D27CFB00AF9BFB /* GroupProfileEmptyStateCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7578BB1F23D27CFB00AF9BFB /* GroupProfileEmptyStateCell.swift */; };
 		7578BB2223D28F4B00AF9BFB /* GroupPost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7578BB2123D28F4B00AF9BFB /* GroupPost.swift */; };
+		757B35C92472336500C9AFE1 /* ProfileFeedController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757B35C82472336500C9AFE1 /* ProfileFeedController.swift */; };
+		757B35CB2472435900C9AFE1 /* FeedGroupCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757B35CA2472435900C9AFE1 /* FeedGroupCell.swift */; };
+		757B35CD24724A3300C9AFE1 /* FeedGroupPageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757B35CC24724A3300C9AFE1 /* FeedGroupPageCell.swift */; };
+		757B35CF24724A4300C9AFE1 /* FeedGroupPostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757B35CE24724A4300C9AFE1 /* FeedGroupPostCell.swift */; };
 		7582758F23DD65BC00D64D4C /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7582758E23DD65BC00D64D4C /* Notification.swift */; };
 		75914804244592E600285546 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 75914803244592E600285546 /* GoogleService-Info.plist */; };
 		759912C523DD446200B415EB /* PushNotificationSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759912C423DD446200B415EB /* PushNotificationSender.swift */; };
@@ -116,6 +120,10 @@
 		7578BB1D23D27CEE00AF9BFB /* GroupProfileHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupProfileHeader.swift; sourceTree = "<group>"; };
 		7578BB1F23D27CFB00AF9BFB /* GroupProfileEmptyStateCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupProfileEmptyStateCell.swift; sourceTree = "<group>"; };
 		7578BB2123D28F4B00AF9BFB /* GroupPost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupPost.swift; sourceTree = "<group>"; };
+		757B35C82472336500C9AFE1 /* ProfileFeedController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileFeedController.swift; sourceTree = "<group>"; };
+		757B35CA2472435900C9AFE1 /* FeedGroupCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedGroupCell.swift; sourceTree = "<group>"; };
+		757B35CC24724A3300C9AFE1 /* FeedGroupPageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedGroupPageCell.swift; sourceTree = "<group>"; };
+		757B35CE24724A4300C9AFE1 /* FeedGroupPostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedGroupPostCell.swift; sourceTree = "<group>"; };
 		7582758E23DD65BC00D64D4C /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notification.swift; sourceTree = "<group>"; };
 		75914803244592E600285546 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "GroupRoots/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		759912C423DD446200B415EB /* PushNotificationSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationSender.swift; sourceTree = "<group>"; };
@@ -247,6 +255,17 @@
 			path = Group;
 			sourceTree = "<group>";
 		};
+		757B35C72472334200C9AFE1 /* ProfileFeed */ = {
+			isa = PBXGroup;
+			children = (
+				757B35C82472336500C9AFE1 /* ProfileFeedController.swift */,
+				757B35CA2472435900C9AFE1 /* FeedGroupCell.swift */,
+				757B35CC24724A3300C9AFE1 /* FeedGroupPageCell.swift */,
+				757B35CE24724A4300C9AFE1 /* FeedGroupPostCell.swift */,
+			);
+			path = ProfileFeed;
+			sourceTree = "<group>";
+		};
 		75BB488B23DAB1CD00CF008F /* Feed */ = {
 			isa = PBXGroup;
 			children = (
@@ -311,6 +330,7 @@
 			children = (
 				AD2A2CB0205C88DE0023D5C8 /* AppDelegate.swift */,
 				AD4D8CEB2060634600A49BA4 /* MainTabBarController.swift */,
+				757B35C72472334200C9AFE1 /* ProfileFeed */,
 				75BB488B23DAB1CD00CF008F /* Feed */,
 				750FA44823D3052B00D33CF8 /* Notification */,
 				7578BB1823D27C8900AF9BFB /* Group */,
@@ -557,6 +577,7 @@
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
 				"${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework",
 				"${BUILT_PRODUCTS_DIR}/MGEvents/MGEvents.framework",
+				"${BUILT_PRODUCTS_DIR}/NVActivityIndicatorView/NVActivityIndicatorView.framework",
 				"${BUILT_PRODUCTS_DIR}/Player/Player.framework",
 				"${BUILT_PRODUCTS_DIR}/PromiseKit/PromiseKit.framework",
 				"${BUILT_PRODUCTS_DIR}/PromisesObjC/FBLPromises.framework",
@@ -581,6 +602,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MGEvents.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NVActivityIndicatorView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Player.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PromiseKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBLPromises.framework",
@@ -630,6 +652,7 @@
 				750FA45423D4201E00D33CF8 /* UserCell.swift in Sources */,
 				75B65DE9240A51A4006CBA0B /* GroupFollowerCell.swift in Sources */,
 				75EFCCFA23F11D9D00B7580D /* EmtpyFeedCell.swift in Sources */,
+				757B35CB2472435900C9AFE1 /* FeedGroupCell.swift in Sources */,
 				ADAC080B21102E8D00615E62 /* UserSearchController.swift in Sources */,
 				ADE95AF7210D1D6E003D9A54 /* UserProfilePhotoGridCell.swift in Sources */,
 				AD32EF772114E21900BB7B56 /* CustomAnimationPresentor.swift in Sources */,
@@ -643,6 +666,8 @@
 				759CB61323D62CE100178673 /* MembersHeader.swift in Sources */,
 				759CB61123D593E000178673 /* LargeImageViewController.swift in Sources */,
 				AD32EF732114189400BB7B56 /* CameraController.swift in Sources */,
+				757B35C92472336500C9AFE1 /* ProfileFeedController.swift in Sources */,
+				757B35CF24724A4300C9AFE1 /* FeedGroupPostCell.swift in Sources */,
 				75B65DE52408FB32006CBA0B /* ViewerCell.swift in Sources */,
 				75ACAFC723F677BD00DAE747 /* FollowPageHeader.swift in Sources */,
 				75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */,
@@ -668,6 +693,7 @@
 				7582758F23DD65BC00D64D4C /* Notification.swift in Sources */,
 				75B65DED241364CC006CBA0B /* LargeImageViewHeader.swift in Sources */,
 				ADE95AFE210D6F34003D9A54 /* HomePostCell.swift in Sources */,
+				757B35CD24724A3300C9AFE1 /* FeedGroupPageCell.swift in Sources */,
 				7578BB1223D2694F00AF9BFB /* GroupCell.swift in Sources */,
 				AD32DEC9210C10A0002F4973 /* PhotoSelectorHeader.swift in Sources */,
 				AD1F3158211B98D100262BF1 /* HomePostCellHeader.swift in Sources */,

@@ -56,6 +56,11 @@ class MembersCell: UICollectionViewCell, UITableViewDataSource, UITableViewDeleg
         sharedInit()
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        showMoreLabel.text = ""
+        members = [User]()
+    }
     
     var tableView: UITableView!
     private func sharedInit() {
@@ -65,7 +70,7 @@ class MembersCell: UICollectionViewCell, UITableViewDataSource, UITableViewDeleg
         
         let displayWidth: CGFloat = self.frame.width
 //        let displayHeight: CGFloat = self.frame.height
-        tableView = UITableView(frame: CGRect(x: 10, y: 180, width: displayWidth, height: 80*4))
+        tableView = UITableView(frame: CGRect(x: 10, y: 180, width: displayWidth-10, height: 80*4))
         tableView.register(FeedMemberCell.self, forCellReuseIdentifier: "cellId")
         tableView.dataSource = self
         tableView.delegate = self

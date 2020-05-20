@@ -11,6 +11,7 @@ import Firebase
 import Player
 import AVFoundation
 import SGImageCache
+import NVActivityIndicatorView
 
 protocol InnerPostCellDelegate {
     func didTapComment(groupPost: GroupPost)
@@ -25,37 +26,49 @@ protocol InnerPostCellDelegate {
 
 class FeedPostCell: UICollectionViewCell {
     
+    
     var delegate: InnerPostCellDelegate?
+    var timer = Timer()
     
     var groupPost: GroupPost? {
         didSet {
-            configurePost()
+            if groupPost != nil {
+                configurePost()
+            }
         }
     }
 
     var numComments: Int? {
         didSet {
-            configureCommentButton(numComments: numComments!)
+            if numComments != nil {
+                configureCommentButton(numComments: numComments!)
+            }
         }
     }
 
     var firstComment: Comment? {
         didSet {
-            setupCommentCaption(comment: firstComment!)
+            if firstComment != nil {
+                setupCommentCaption(comment: firstComment!)
+            }
         }
     }
     
     var emptyComment: Bool? {
         didSet {
-            if emptyComment! {
-                self.commentsLabel.text = ""
+            if emptyComment != nil {
+                if emptyComment! {
+                    self.commentsLabel.text = ""
+                }
             }
         }
     }
     
     var numViewsForPost: Int? {
         didSet {
-            setupViewsButton(viewsCount: numViewsForPost!)
+            if numViewsForPost != nil {
+                setupViewsButton(viewsCount: numViewsForPost!)
+            }
         }
     }
     
@@ -64,10 +77,31 @@ class FeedPostCell: UICollectionViewCell {
             configurePost()
         }
     }
+    
     var isScrollingVertically: Bool? {
         didSet {
             configurePost()
         }
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        self.groupPost = nil
+        self.numComments = nil
+        self.firstComment = nil
+        self.emptyComment = nil
+        self.numViewsForPost = nil
+        
+        let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 0)])
+        postedByLabel.attributedText = attributedText
+        captionLabel.attributedText = attributedText
+        commentsLabel.attributedText = attributedText
+        
+        self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
+        self.player.pause()
+        self.player.url = URL(string: "")
+//        self.player.playerDelegate = self
+        self.activityIndicatorView.isHidden = true
     }
     
     private lazy var postedByLabel: UILabel = {
@@ -111,7 +145,7 @@ class FeedPostCell: UICollectionViewCell {
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleDidTapCommentUser))
         label.addGestureRecognizer(gestureRecognizer)
         
-        let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
+        let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 0)])
         label.attributedText = attributedText
         
         return label
@@ -131,6 +165,7 @@ class FeedPostCell: UICollectionViewCell {
         button.addTarget(self, action: #selector(showViewers), for: .touchUpInside)
         button.layer.zPosition = 4;
         button.isHidden = true
+        button.contentEdgeInsets = UIEdgeInsets(top: 15, left: 15, bottom: 15, right: 15)
         return button
     }()
     
@@ -144,6 +179,17 @@ class FeedPostCell: UICollectionViewCell {
         return label
     }()
     
+    private lazy var playButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.frame = CGRect(x: UIScreen.main.bounds.width/2 - 100, y: UIScreen.main.bounds.height/2 - 100, width: 200, height: 200)
+        button.tintColor = UIColor.white
+        button.isUserInteractionEnabled = false
+        button.setImage(#imageLiteral(resourceName: "play").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.isHidden = true
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        return button
+    }()
+    
     let timeLabel: UILabel = {
         let label = UILabel()
         label.layer.zPosition = 4;
@@ -155,7 +201,7 @@ class FeedPostCell: UICollectionViewCell {
         let label = UIButton(type: .system)
         label.setTitleColor(.white, for: .normal)
         label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
-        label.setTitle("Show More", for: .normal)
+        label.setTitle("Comments", for: .normal)
         label.layer.zPosition = 4;
         label.contentHorizontalAlignment = .left
         label.addTarget(self, action: #selector(handleComment), for: .touchUpInside)
@@ -167,7 +213,7 @@ class FeedPostCell: UICollectionViewCell {
         let label = UIButton(type: .system)
         label.setTitleColor(.white, for: .normal)
         label.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: UIFont.Weight.medium)
-        label.setTitle("Comment", for: .normal)
+        label.setTitle("", for: .normal)
         label.layer.zPosition = 4;
         label.contentHorizontalAlignment = .left
         label.addTarget(self, action: #selector(handleComment), for: .touchUpInside)
@@ -220,10 +266,24 @@ class FeedPostCell: UICollectionViewCell {
         button.setTitle("•••", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
+        button.layer.zPosition = 4;
         button.addTarget(self, action: #selector(handleOptionsTap), for: .touchUpInside)
+        button.contentEdgeInsets = UIEdgeInsets(top: 20, left: 15, bottom: 15, right: 15)
         return button
     }()
     
+    
+//    let loadingLabel: UILabel = {
+//        let label = UILabel()
+//        label.text = "Loading"
+//        label.textColor = UIColor.white
+//        label.numberOfLines = 0
+//        label.textAlignment = .center
+//        label.isHidden = true
+//        return label
+//    }()
+    
+    let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
     
     static var cellId = "homePostCellId"
     
@@ -238,33 +298,36 @@ class FeedPostCell: UICollectionViewCell {
     }
     
     private func sharedInit() {
-        addSubview(optionsButton)
-        optionsButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: padding + 6 + padding + 110, paddingRight: padding)
-        
-        addSubview(viewCountLabel)
-        viewCountLabel.anchor(top: topAnchor, right: rightAnchor, paddingTop: padding + 6 + padding + 80, paddingRight: padding)
-        
-        addSubview(viewButton)
-        viewButton.anchor(top: topAnchor, right: viewCountLabel.leftAnchor, paddingTop: padding + 5 + padding + 80, paddingRight: padding)
-        
-        addSubview(timeLabel)
-        timeLabel.anchor(bottom:bottomAnchor, right: rightAnchor, paddingBottom: padding + 50, paddingRight: padding)
-        
-        addSubview(commentsButton)
-        commentsButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding, paddingBottom: padding + 50, paddingRight: padding)
-        
-        addSubview(newCommentButton)
-        newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding + 100, paddingBottom: padding + 50, paddingRight: padding)
         
         addSubview(postedByLabel)
-        postedByLabel.anchor(bottom: commentsButton.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding - 12, paddingRight: padding)
+        postedByLabel.anchor(bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding + 45, paddingRight: padding)
+        
+        addSubview(newCommentButton)
+        newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: 0, paddingBottom: padding + 55)
+        
+        addSubview(commentsButton)
+        commentsButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding, paddingBottom: padding + 55)
+        
+        addSubview(timeLabel)
+        timeLabel.anchor(bottom: postedByLabel.topAnchor, right: rightAnchor, paddingBottom: padding - 10, paddingRight: padding)
         
         addSubview(commentsLabel)
-        commentsLabel.anchor(left: leftAnchor, bottom:postedByLabel.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding - 5, paddingRight: padding)
+        commentsLabel.anchor(left: leftAnchor, bottom: commentsButton.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding, paddingRight: padding)
         commentsLabel.isHidden = true
          
         addSubview(captionLabel)
-        captionLabel.anchor(left: leftAnchor, bottom: commentsLabel.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding - 5, paddingRight: padding - 8)
+        captionLabel.anchor(left: leftAnchor, bottom: commentsLabel.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding, paddingRight: padding - 8)
+        
+        addSubview(viewCountLabel)
+        viewCountLabel.anchor(top: topAnchor, right: rightAnchor, paddingTop: padding + 90, paddingRight: padding)
+
+        addSubview(viewButton)
+        viewButton.anchor(top: topAnchor, right: viewCountLabel.leftAnchor, paddingTop: padding + 75, paddingRight: 0)
+
+        addSubview(optionsButton)
+        optionsButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: padding + 20, paddingRight: padding)
+        
+        insertSubview(playButton, at: 11)
         
         coverView.heightAnchor.constraint(equalToConstant: 250).isActive = true
         coverView.layer.cornerRadius = 0
@@ -288,15 +351,36 @@ class FeedPostCell: UICollectionViewCell {
         player.autoplay = false
         player.playbackResumesWhenBecameActive = false
         player.playbackResumesWhenEnteringForeground = false
+        player.playerDelegate = self
         
         insertSubview(imageBackground, at: 1)
         imageBackground.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
         imageBackground.layer.cornerRadius = 0
         imageBackground.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        
+//        insertSubview(loadingLabel, at: 19)
+//        loadingLabel.isHidden = true
+//        loadingLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: padding + UIScreen.main.bounds.height/2 - 14)
+        
+        activityIndicatorView.isHidden = true
+        playButton.isHidden = true
+        insertSubview(activityIndicatorView, at: 20)
+        activityIndicatorView.startAnimating()
+        
+        timer = Timer.scheduledTimer(timeInterval: 0.3, target: self, selector: #selector(updatePlayButton), userInfo: nil, repeats: true)
+    }
+    
+    @objc private func updatePlayButton(){
+        guard let groupPost = groupPost else { return }
+        if self.player.playbackState == .playing {
+            self.playButton.isHidden = true
+        }
+        else if self.player.playbackState == .paused && groupPost.videoUrl != "" && self.activityIndicatorView.isHidden == true {
+            self.playButton.isHidden = false
+        }
     }
     
     private func configurePost() {
-        self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
         
         guard let groupPost = groupPost else { return }
 
@@ -312,6 +396,8 @@ class FeedPostCell: UICollectionViewCell {
         setImageDimensions()
         photoImageView.isHidden = true
         imageBackground.isHidden = true
+        activityIndicatorView.isHidden = true
+        playButton.isHidden = true
         player.view.isHidden = true
         delegate?.didView(groupPost: groupPost)
         // is a picture
@@ -323,6 +409,8 @@ class FeedPostCell: UICollectionViewCell {
             self.photoImageView.isHidden = false
             self.imageBackground.isHidden = false
             self.player.view.isHidden = true
+            self.activityIndicatorView.isHidden = true
+            self.playButton.isHidden = true
             
 //            photoImageView.loadImageWithCompletion(urlString: groupPost.imageUrl, completion: { () in
 //                self.setImageDimensions()
@@ -345,20 +433,18 @@ class FeedPostCell: UICollectionViewCell {
 //            promise.onFail = { (error: NSError?, wasFatal: Bool) -> () in
 //              self.displayError(error)
 //            }
-            
+
             if let image = SGImageCache.image(forURL: groupPost.imageUrl) {
                 photoImageView.image = image   // image loaded immediately from cache
                 self.setImageDimensions()
-                self.photoImageView.getAvgColor(imageUrl: groupPost.imageUrl, completion: { (imgColor) in
-                    self.imageBackground.backgroundColor = imgColor
-                })
+                self.imageBackground.backgroundColor = UIColor(red: CGFloat(groupPost.avgRed), green: CGFloat(groupPost.avgGreen), blue: CGFloat(groupPost.avgBlue), alpha: CGFloat(groupPost.avgAlpha))
+                
             } else {
+                self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
                 SGImageCache.getImage(url: groupPost.imageUrl) { [weak self] image in
                     self?.photoImageView.image = image   // image loaded async
                     self?.setImageDimensions()
-                    self?.photoImageView.getAvgColor(imageUrl: groupPost.imageUrl, completion: { (imgColor) in
-                        self?.imageBackground.backgroundColor = imgColor
-                    })
+                    self?.imageBackground.backgroundColor = UIColor(red: CGFloat(groupPost.avgRed), green: CGFloat(groupPost.avgGreen), blue: CGFloat(groupPost.avgBlue), alpha: CGFloat(groupPost.avgAlpha))
                 }
             }
             
@@ -369,13 +455,16 @@ class FeedPostCell: UICollectionViewCell {
             self.player.muted = false
             self.player.playerView.playerBackgroundColor = .black
             
-            self.player.view.isHidden = false
+//            self.player.view.isHidden = false
+            self.player.view.isHidden = true
+            self.activityIndicatorView.isHidden = false
+            self.playButton.isHidden = true
             self.imageBackground.isHidden = true
             self.photoImageView.isHidden = true
             
             do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
             
-            let seconds = 1.0
+            let seconds = 2.0
             DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
                 self.delegate?.requestPlay(for: self)
             }
@@ -386,6 +475,7 @@ class FeedPostCell: UICollectionViewCell {
     private func setImageDimensions(){
         let width = self.photoImageView.image?.size.width
         let height = self.photoImageView.image?.size.height
+        self.photoImageView.layer.cornerRadius = 5
         if width != nil && height != nil {
             if width! >= height! {
                 self.photoImageView.contentMode = .scaleToFill
@@ -413,22 +503,44 @@ class FeedPostCell: UICollectionViewCell {
             do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
             if self.player.playbackState == .playing {
                 self.player.pause()
+                self.playButton.isHidden = false
             }
             else if self.player.playbackState == .paused {
                 self.player.playFromCurrentTime()
+                self.playButton.isHidden = true
             }
         }
     }
     
     private func setupGroupPoster(groupPost: GroupPost) {
-        Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let groupId = groupPost.group.groupId
+        Database.database().isInGroup(groupId: groupId, completion: { (inGroup) in
             if inGroup {
-                let attributedText = NSMutableAttributedString(string: "Posted by " + groupPost.user.username, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)])
+                let attributedText = NSMutableAttributedString(string: "Posted by " + groupPost.user.username, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)])
                 self.postedByLabel.attributedText = attributedText
             }
-            else{
-                let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 0)])
-                self.postedByLabel.attributedText = attributedText
+            else {
+                // check to see if autosubscribed and if membersFollowing count > 0
+                Database.database().checkIfAutoSubscribed(groupId: groupId, withUID: currentLoggedInUserId, completion: { (isAutoSubscribed) in
+                    if isAutoSubscribed {
+                        Database.database().fetchMembersFollowingForSubscription(groupId: groupId, withUID: currentLoggedInUserId, completion: { (members_following) in
+                            if members_following.count > 0 {
+                                let first_following_username = members_following[0].username
+                                let attributedText = NSMutableAttributedString(string: "Because you follow " + first_following_username, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)])
+                                self.postedByLabel.attributedText = attributedText
+                            }
+                            else {
+                                let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 0)])
+                                self.postedByLabel.attributedText = attributedText
+                            }
+                        }) { (_) in}
+                    }
+                    else {
+                        let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 0)])
+                        self.postedByLabel.attributedText = attributedText
+                    }
+                }) { (err) in return }
             }
         }) { (err) in
             return
@@ -465,32 +577,37 @@ class FeedPostCell: UICollectionViewCell {
     }
     
     private func configureCommentButton(numComments: Int){
-        if numComments < 1{
-            self.commentsButton.setTitle("Comment", for: .normal)
-            self.commentsButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: UIFont.Weight.medium)
-            self.commentsButton.setTitleColor(.white, for: .normal)
-            self.newCommentButton.isUserInteractionEnabled = false
-            self.newCommentButton.isHidden = true
-        }
-        else if numComments == 1{
-            self.commentsButton.setTitle("Comment", for: .normal)
-            self.commentsButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: UIFont.Weight.medium)
-            self.commentsButton.setTitleColor(.white, for: .normal)
-            self.newCommentButton.isUserInteractionEnabled = false
-            self.newCommentButton.isHidden = true
-        }
-        else if numComments > 1{
-            self.commentsButton.setTitle("Show More", for: .normal)
-            self.commentsButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
-            self.commentsButton.setTitleColor(.white, for: .normal)
-            self.newCommentButton.isUserInteractionEnabled = true
-            self.newCommentButton.isHidden = false
-        }
+        self.commentsButton.setTitle("Comments", for: .normal)
+        self.commentsButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        self.commentsButton.setTitleColor(.white, for: .normal)
+        self.newCommentButton.isUserInteractionEnabled = true
+        self.newCommentButton.isHidden = false
+//        if numComments < 1{
+//            self.commentsButton.setTitle("Comment", for: .normal)
+//            self.commentsButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: UIFont.Weight.medium)
+//            self.commentsButton.setTitleColor(.white, for: .normal)
+//            self.newCommentButton.isUserInteractionEnabled = false
+//            self.newCommentButton.isHidden = true
+//        }
+//        else if numComments == 1{
+//            self.commentsButton.setTitle("Comment", for: .normal)
+//            self.commentsButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: UIFont.Weight.medium)
+//            self.commentsButton.setTitleColor(.white, for: .normal)
+//            self.newCommentButton.isUserInteractionEnabled = false
+//            self.newCommentButton.isHidden = true
+//        }
+//        else if numComments > 1{
+//            self.commentsButton.setTitle("Show More", for: .normal)
+//            self.commentsButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+//            self.commentsButton.setTitleColor(.white, for: .normal)
+//            self.newCommentButton.isUserInteractionEnabled = true
+//            self.newCommentButton.isHidden = false
+//        }
     }
     
     private func setupTimeLabel(groupPost: GroupPost) {
         let timeAgoDisplay = groupPost.creationDate.timeAgoDisplay()
-        let attributedText = NSAttributedString(string: timeAgoDisplay, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.white])
+        let attributedText = NSAttributedString(string: timeAgoDisplay, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12), NSAttributedString.Key.foregroundColor: UIColor.white])
         timeLabel.attributedText = attributedText
     }
     
@@ -523,4 +640,31 @@ class FeedPostCell: UICollectionViewCell {
         guard let groupPost = groupPost else { return }
         delegate?.didTapViewers(groupPost: groupPost)
     }
+}
+
+
+extension FeedPostCell: PlayerDelegate {
+    func playerReady(_ player: Player) {
+        
+    }
+    
+    func playerPlaybackStateDidChange(_ player: Player) {
+        
+    }
+    
+    func playerBufferingStateDidChange(_ player: Player) {
+        self.activityIndicatorView.isHidden = true
+        self.player.view.isHidden = false
+        self.photoImageView.isHidden = true
+    }
+    
+    func playerBufferTimeDidChange(_ bufferTime: Double) {
+        
+    }
+    
+    func player(_ player: Player, didFailWithError error: Error?) {
+        
+    }
+    
+    
 }

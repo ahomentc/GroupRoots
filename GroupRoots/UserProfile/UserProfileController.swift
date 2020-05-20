@@ -35,7 +35,7 @@ class UserProfileController: HomePostCellViewController {
         self.navigationController?.navigationBar.isTranslucent = false
         self.navigationController?.navigationBar.backgroundColor = UIColor.white
         
-        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 18)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         
 //        NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateUserProfileFeed, object: nil)
@@ -57,6 +57,18 @@ class UserProfileController: HomePostCellViewController {
 
         configureAlertController()
         fetchAllGroups()
+        
+        if user == nil {
+            guard let uid = Auth.auth().currentUser?.uid else { return }
+            Database.database().fetchUser(withUID: uid) { (current_user) in
+                if self.user == nil { // if user is still nil after the fetch
+                    self.user = current_user
+                    self.configureUser()
+                    self.configureAlertController()
+                    self.fetchAllGroups()
+                }
+            }
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -86,6 +98,14 @@ class UserProfileController: HomePostCellViewController {
         let logOutAction = UIAlertAction(title: "Log Out", style: .default) { (_) in
             do {
                 try Auth.auth().signOut()
+                
+                // remove all local storage
+                let defaults = UserDefaults.standard
+                let dictionary = defaults.dictionaryRepresentation()
+                dictionary.keys.forEach { key in
+                    defaults.removeObject(forKey: key)
+                }
+                
                 let loginController = LoginController()
                 let navController = UINavigationController(rootViewController: loginController)
                 navController.modalPresentationStyle = .fullScreen

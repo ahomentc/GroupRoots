@@ -18,11 +18,11 @@ target 'GroupRoots' do
   pod 'Firebase/Messaging'
   
   pod 'GoogleSignIn'
-
   pod "BSImagePicker", "~> 2.8"
   pod 'YPImagePicker'
   pod "Player", "~> 0.13.2"
   pod 'SGImageCache'
   pod "UPCarouselFlowLayout"
+  pod 'NVActivityIndicatorView'
 
 end

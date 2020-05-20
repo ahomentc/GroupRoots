@@ -137,6 +137,9 @@ PODS:
     - nanopb/encode (= 0.3.9011)
   - nanopb/decode (0.3.9011)
   - nanopb/encode (0.3.9011)
+  - NVActivityIndicatorView (4.8.0):
+    - NVActivityIndicatorView/Presenter (= 4.8.0)
+  - NVActivityIndicatorView/Presenter (4.8.0)
   - Player (0.13.2)
   - PromiseKit/Promise (1.7.7)
   - PromisesObjC (1.2.8)
@@ -165,6 +168,7 @@ DEPENDENCIES:
   - Firebase/Messaging
   - Firebase/Storage
   - GoogleSignIn
+  - NVActivityIndicatorView
   - Player (~> 0.13.2)
   - SGImageCache
   - UPCarouselFlowLayout
@@ -200,6 +204,7 @@ SPEC REPOS:
     - leveldb-library
     - MGEvents
     - nanopb
+    - NVActivityIndicatorView
     - Player
     - PromiseKit
     - PromisesObjC
@@ -240,6 +245,7 @@ SPEC CHECKSUMS:
   leveldb-library: 55d93ee664b4007aac644a782d11da33fba316f7
   MGEvents: 989c1396082a25e760f03056bdc0af1b6c439c78
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
+  NVActivityIndicatorView: d24b7ebcf80af5dcd994adb650e2b6c93379270f
   Player: 7a2bcad3631034fa47d4b6fdedf7c4075fc236fe
   PromiseKit: 9007df2f9e2ef725467084ab3880cf932ab935a4
   PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
@@ -251,6 +257,6 @@ SPEC CHECKSUMS:
   UPCarouselFlowLayout: 4c7d2c43a10ebb1597bde502a53699d378341dad
   YPImagePicker: 7a34eabd0ef544ae8fbf9785c3df9ec5bbf242e3
 
-PODFILE CHECKSUM: 52f9abaa18d01d74d87131881ae53f2b2aa7167b
+PODFILE CHECKSUM: 086814ff2fb2ab60347491d8eca1c624a9ca04be
 
 COCOAPODS: 1.5.3

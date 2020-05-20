@@ -182,7 +182,7 @@ class GroupFollowerCell: UICollectionViewCell {
                     if err != nil {
                         return
                     }
-                    Database.database().addToGroupsFollowing(groupId: group.groupId, withUID: user.uid) { (err) in
+                    Database.database().addToGroupsFollowing(groupId: group.groupId, withUID: user.uid, autoSubscribed: false) { (err) in
                         if err != nil {
                             return
                         }

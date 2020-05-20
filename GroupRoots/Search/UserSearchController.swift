@@ -31,7 +31,7 @@ class UserSearchController: UICollectionViewController {
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
         self.navigationController?.navigationBar.shadowImage = UIColor.white.as1ptImage()
-        
+                
         collectionView?.backgroundColor = .white
         collectionView?.alwaysBounceVertical = true
         collectionView?.keyboardDismissMode = .onDrag

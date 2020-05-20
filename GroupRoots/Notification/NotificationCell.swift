@@ -99,7 +99,7 @@ class NotificationCell: UICollectionViewCell {
         addSubview(profileImageView)
         profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 45, height: 45)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 18
+        profileImageView.layer.cornerRadius = 45/2
         
         addSubview(postImageView)
         postImageView.anchor(right: rightAnchor, paddingRight: 8, width: 50, height: 50)

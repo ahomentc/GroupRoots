@@ -48,12 +48,13 @@ class GroupProfileController: HomePostCellViewController {
     private lazy var acceptInviteButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Accept Invitation", for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.addTarget(self, action: #selector(handleInviteJoin), for: .touchUpInside)
         button.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         button.backgroundColor = UIColor.white
         button.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
-        button.layer.cornerRadius = 5
-        button.layer.borderWidth = 1.2
+        button.layer.cornerRadius = 8
+        button.layer.borderWidth = 2
         button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
         button.isUserInteractionEnabled = true
         return button
@@ -291,12 +292,10 @@ class GroupProfileController: HomePostCellViewController {
             return
         }
         
-        let layout = UPCarouselFlowLayout()
+        let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-        layout.spacingMode = UPCarouselFlowLayoutSpacingMode.fixed(spacing: 8)
-        layout.sideItemAlpha = 0.7
-        layout.sideItemScale = 0.7
+        layout.minimumLineSpacing = CGFloat(0)
 
         let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
         largeImageViewController.group = group
@@ -455,21 +454,19 @@ extension GroupProfileController: GroupProfileHeaderDelegate {
         }
     }
     
-    @objc internal func handleShowEditGroup(){
-        let editGroupController = EditGroupController()
-        editGroupController.group = self.group
-        let navController = UINavigationController(rootViewController: editGroupController)
-        navController.modalPresentationStyle = .fullScreen
+    @objc internal func handleShowAddMember(){
+        let layout = UICollectionViewFlowLayout()
+        let inviteToGroupController = InviteToGroupController(collectionViewLayout: layout)
+        inviteToGroupController.group = self.group
+        let navController = UINavigationController(rootViewController: inviteToGroupController)
+//        navController.modalPresentationStyle = .fullScreen
         self.present(navController, animated: true, completion: nil)
     }
     
     @objc internal func showInviteCopyAlert() {
-        let alert = UIAlertController(title: "", message: "Invite Code copied to clipboard", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Invite Code Copied", message: "Your friends can enter this code when signing up to automatically join your group", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
         self.present(alert, animated: true, completion: nil)
-        let when = DispatchTime.now() + 2
-        DispatchQueue.main.asyncAfter(deadline: when){
-          alert.dismiss(animated: true, completion: nil)
-        }
     }
 }
 

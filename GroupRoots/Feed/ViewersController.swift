@@ -1,7 +1,14 @@
 import UIKit
 import Firebase
 
+protocol ViewersControllerDelegate {
+//    func dismissViewersController(_ controller: UIViewController)
+    func didTapUser(user: User)
+}
+
 class ViewersController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate  {
+    
+    var delegate: ViewersControllerDelegate?
     
     var viewers: [User]? {
         didSet {
@@ -62,9 +69,14 @@ class ViewersController: UIViewController, UICollectionViewDataSource, UICollect
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if indexPath.item < viewers?.count ?? 0 {
-            let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
-            userProfileController.user = viewers?[indexPath.item]
-            navigationController?.pushViewController(userProfileController, animated: true)
+//            let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+//            userProfileController.user = viewers?[indexPath.item]
+//            navigationController?.pushViewController(userProfileController, animated: true)
+            guard let viewers = viewers else { return }
+            let tappedUser = viewers[indexPath.item]
+            self.dismiss(animated: true, completion: {
+                self.delegate?.didTapUser(user: tappedUser)
+            })
         }
     }
     

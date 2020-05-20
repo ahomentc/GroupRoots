@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct GroupPost: Equatable {
+struct GroupPost: Equatable, Codable {
     
     var id: String
     
@@ -18,6 +18,10 @@ struct GroupPost: Equatable {
     let videoUrl: String
     let caption: String
     let creationDate: Date
+    let avgRed: Double
+    let avgGreen: Double
+    let avgBlue: Double
+    let avgAlpha: Double
     
     var likes: Int = 0
     var likedByCurrentUser = false
@@ -32,9 +36,15 @@ struct GroupPost: Equatable {
         
         let secondsFrom1970 = dictionary["creationDate"] as? Double ?? 0
         self.creationDate = Date(timeIntervalSince1970: secondsFrom1970)
+        
+        self.avgRed = dictionary["avgRed"] as? Double ?? 0
+        self.avgGreen = dictionary["avgGreen"] as? Double ?? 0
+        self.avgBlue = dictionary["avgBlue"] as? Double ?? 0
+        self.avgAlpha = dictionary["avgAlpha"] as? Double ?? 1
     }
     
     static func ==(lhs: GroupPost, rhs: GroupPost) -> Bool {
         return lhs.id == rhs.id
     }
+    
 }

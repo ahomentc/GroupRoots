@@ -18,7 +18,7 @@ protocol GroupProfileHeaderDelegate {
     func handleShowFollowers()
     func showInviteCopyAlert()
     func handleDidJoinGroupFromInvite()
-    func handleShowEditGroup()
+    func handleShowAddMember()
     func didTapUser(user: User)
 }
 
@@ -116,9 +116,9 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         return button
     }()
     
-    private let editProfileButton: UIButton = {
+    private let addMemberButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Edit Group", for: .normal)
+        button.setTitle("Add Member", for: .normal)
         button.backgroundColor = UIColor.white
         button.isHidden = true
         button.layer.cornerRadius = 5
@@ -126,7 +126,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         button.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         button.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
         button.layer.borderWidth = 1
-        button.addTarget(self, action: #selector(handleShowEditGroup), for: .touchUpInside)
+        button.addTarget(self, action: #selector(handleShowAddMember), for: .touchUpInside)
         return button
     }()
     
@@ -234,12 +234,13 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
-            return 20
-        }
-        else {
-            return 10
-        }
+        return 10
+//        if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
+//            return 20
+//        }
+//        else {
+//            return 10
+//        }
     }
 
     func reloadGroupData() {
@@ -261,7 +262,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
             addSubview(bioLabel)
             bioLabel.anchor(top: collectionView.bottomAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: 30, height: 34)
             
-            let buttonStackView = UIStackView(arrangedSubviews: [joinButton, subscribeButton, editProfileButton])
+            let buttonStackView = UIStackView(arrangedSubviews: [joinButton, subscribeButton, addMemberButton])
             buttonStackView.distribution = .fillProportionally
             buttonStackView.spacing = 15
             addSubview(buttonStackView)
@@ -280,10 +281,10 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
 //            addSubview(subscribeButton)
 //            subscribeButton.anchor(top: collectionView.bottomAnchor, left: joinButton.rightAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
 //
-//            addSubview(editProfileButton)
-//            editProfileButton.anchor(top: collectionView.bottomAnchor, right: rightAnchor, paddingTop: 15, paddingRight: 15,  width: 100, height: 34)
+//            addSubview(addMemberButton)
+//            addMemberButton.anchor(top: collectionView.bottomAnchor, right: rightAnchor, paddingTop: 15, paddingRight: 15,  width: 100, height: 34)
             
-            let buttonStackView = UIStackView(arrangedSubviews: [joinButton, subscribeButton, editProfileButton])
+            let buttonStackView = UIStackView(arrangedSubviews: [joinButton, subscribeButton, addMemberButton])
             buttonStackView.distribution = .fillProportionally
             buttonStackView.spacing = 15
             addSubview(buttonStackView)
@@ -410,7 +411,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         Database.database().isInGroup(groupId: groupId, completion: { (inGroup) in
             if inGroup {
                 self.inviteCodeButton.isHidden = false
-                self.editProfileButton.isHidden = false // also just update the edit profile button here out of laziness
+                self.addMemberButton.isHidden = false // also just update the edit profile button here out of laziness
                 
                 let code = String(groupId.suffix(6))
 //                self.inviteCodeButton.setTitle("Invite Code: " + code, for: .normal)
@@ -629,8 +630,8 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         delegate?.handleShowFollowers()
     }
     
-    @objc private func handleShowEditGroup(){
-        delegate?.handleShowEditGroup()
+    @objc private func handleShowAddMember(){
+        delegate?.handleShowAddMember()
     }
     
     @objc private func handleInviteTap(){
@@ -755,6 +756,8 @@ private class GroupJoinButton: UIButton {
         layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         isUserInteractionEnabled = true
+        layer.cornerRadius = 5
+        layer.borderWidth = 1
     }
 
     private func setupLeaveStyle() {
@@ -775,7 +778,7 @@ private class GroupJoinButton: UIButton {
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
         layer.cornerRadius = 5
-        layer.borderWidth = 1.4
+        layer.borderWidth = 1
         titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         isUserInteractionEnabled = true
     }
@@ -787,7 +790,7 @@ private class GroupJoinButton: UIButton {
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
         layer.cornerRadius = 5
-        layer.borderWidth = 1.4
+        layer.borderWidth = 1
         titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         isUserInteractionEnabled = true
     }
@@ -809,7 +812,7 @@ extension GroupProfileHeader: UICollectionViewDelegateFlowLayout {
         if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
             if indexPath.item == 0 {
 //                return CGSize(width: 112, height: 100)
-                return CGSize(width: 102, height: 90)
+                return CGSize(width: 92, height: 90)
             }
             else {
                 return CGSize(width: 80, height: 80)
@@ -821,14 +824,17 @@ extension GroupProfileHeader: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        if users.count == 1 && (group?.groupProfileImageUrl == nil || group?.groupProfileImageUrl == "") {
+            let totalCellWidth = 80 * collectionView.numberOfItems(inSection: 0)
+            let totalSpacingWidth = 10 * (collectionView.numberOfItems(inSection: 0) - 1)
 
-        let totalCellWidth = 80 * collectionView.numberOfItems(inSection: 0)
-        let totalSpacingWidth = 10 * (collectionView.numberOfItems(inSection: 0) - 1)
+            let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
+            let rightInset = leftInset
 
-        let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
-        let rightInset = leftInset
-
-        return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
-
+            return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
+        }
+        else {
+            return UIEdgeInsets(top: 0, left: 25, bottom: 0, right: 0)
+        }
     }
 }

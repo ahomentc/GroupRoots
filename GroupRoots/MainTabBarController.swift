@@ -1,11 +1,3 @@
-//
-//  MainTabBarController.swift
-//  InstagramClone
-//
-//  Created by Mac Gallagher on 3/19/18.
-//  Copyright © 2018 Mac Gallagher. All rights reserved.
-//
-
 import UIKit
 import Firebase
 import UPCarouselFlowLayout
@@ -39,17 +31,25 @@ class MainTabBarController: UITabBarController {
     }
     
     func setupViewControllers() {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-//        let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_unselected"), selectedImage: #imageLiteral(resourceName: "home_selected"), rootViewController: HomeController(collectionViewLayout: UICollectionViewFlowLayout()))
-        
-//        let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_unselected"), selectedImage: #imageLiteral(resourceName: "home_selected"), rootViewController: HomeFeedController())
-        
-        
-        let layout = UPCarouselFlowLayout()
+        guard (Auth.auth().currentUser?.uid) != nil else { return }
+
+//        do {
+//            try reachability.startNotifier()
+//        } catch {
+//            print("Unable to start notifier")
+//        }
+                
+//        let layout = UPCarouselFlowLayout()
+//        layout.scrollDirection = UICollectionView.ScrollDirection.vertical
+//        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+//        layout.spacingMode = UPCarouselFlowLayoutSpacingMode.fixed(spacing: 20)
+        let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.vertical
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-        layout.spacingMode = UPCarouselFlowLayoutSpacingMode.fixed(spacing: 20)
-        let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_5"), selectedImage: #imageLiteral(resourceName: "home_5"), rootViewController: FeedController(collectionViewLayout: layout))
+        layout.minimumLineSpacing = CGFloat(0)
+        
+//        let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_5"), selectedImage: #imageLiteral(resourceName: "home_5"), rootViewController: FeedController(collectionViewLayout: layout))
+        let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_5"), selectedImage: #imageLiteral(resourceName: "home_5"), rootViewController: ProfileFeedController(collectionViewLayout: layout))
         
         let searchNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "search_2"), selectedImage: #imageLiteral(resourceName: "search_2"), rootViewController: UserSearchController(collectionViewLayout: UICollectionViewFlowLayout()))
         let plusNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "plus"), selectedImage: #imageLiteral(resourceName: "plus"))
@@ -64,20 +64,15 @@ class MainTabBarController: UITabBarController {
         Database.database().hasLatestNotificationBeenSeen(completion: { (seen) in
             if !seen {
                 likeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "bell_2_unread"), selectedImage: #imageLiteral(resourceName: "bell_2"), rootViewController: NotificationsController(collectionViewLayout: UICollectionViewFlowLayout()))
-                
             }
             sync.leave()
         })
-        
-        sync.enter()
-        Database.database().fetchUser(withUID: uid) { (user) in
-            userProfileController.user = user
-            sync.leave()
-        }
-        
+
+
         sync.notify(queue: .main){
             self.viewControllers = [homeNavController, searchNavController, plusNavController, likeNavController, userProfileNavController]
         }
+        self.viewControllers = [homeNavController, searchNavController, plusNavController, likeNavController, userProfileNavController]
     }
     
     private func presentLoginController() {

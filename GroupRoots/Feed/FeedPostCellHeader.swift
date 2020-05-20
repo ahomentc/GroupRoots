@@ -108,23 +108,30 @@ class FeedPostCellHeader: UIView {
     private func sharedInit() {
         addSubview(groupProfileImageView)
         groupProfileImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding + 20, paddingBottom: padding, width: 50 , height: 50)
-        groupProfileImageView.layer.cornerRadius = 20
-        groupProfileImageView.layer.borderWidth = 2
+        groupProfileImageView.layer.cornerRadius = 50/2
+        groupProfileImageView.layer.zPosition = 8
+        groupProfileImageView.layer.borderWidth = 0
         groupProfileImageView.layer.borderColor = UIColor.white.cgColor
         groupProfileImageView.isUserInteractionEnabled = true
         groupProfileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
         groupProfileImageView.image = #imageLiteral(resourceName: "user")
         
         addSubview(firstMemberImageView)
-        firstMemberImageView.anchor(top: topAnchor, left: groupProfileImageView.rightAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding, paddingBottom: padding, width: 50 , height: 50)
-        firstMemberImageView.layer.cornerRadius = 20
+        firstMemberImageView.anchor(top: topAnchor, left: groupProfileImageView.rightAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: -20, paddingBottom: padding, width: 50 , height: 50)
+        firstMemberImageView.layer.cornerRadius = 50/2
+        firstMemberImageView.layer.borderWidth = 0
+        firstMemberImageView.layer.borderColor = UIColor.white.cgColor
+        firstMemberImageView.layer.zPosition = 7
         firstMemberImageView.isUserInteractionEnabled = true
         firstMemberImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
         firstMemberImageView.image = #imageLiteral(resourceName: "user")
 
         addSubview(secondMemberImageView)
-        secondMemberImageView.anchor(top: topAnchor, left: firstMemberImageView.rightAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: padding, paddingBottom: padding, width: 50, height: 50)
-        secondMemberImageView.layer.cornerRadius = 20
+        secondMemberImageView.anchor(top: topAnchor, left: firstMemberImageView.rightAnchor, bottom: bottomAnchor, paddingTop: padding + 20, paddingLeft: -20, paddingBottom: padding, width: 50, height: 50)
+        secondMemberImageView.layer.cornerRadius = 50/2
+        secondMemberImageView.layer.borderWidth = 0
+        secondMemberImageView.layer.borderColor = UIColor.white.cgColor
+        secondMemberImageView.layer.zPosition = 6
         secondMemberImageView.isUserInteractionEnabled = true
         secondMemberImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleGroupTap)))
         secondMemberImageView.image = UIImage()
@@ -150,6 +157,11 @@ class FeedPostCellHeader: UIView {
         self.firstMemberImageView.image = CustomImageView.imageWithColor(color: .clear)
         self.secondMemberImageView.image = CustomImageView.imageWithColor(color: .clear)
         self.thirdMemberImageView.image = CustomImageView.imageWithColor(color: .clear)
+        
+        self.groupProfileImageView.backgroundColor = .clear
+        self.firstMemberImageView.backgroundColor = .clear
+        self.secondMemberImageView.backgroundColor = .clear
+        self.thirdMemberImageView.backgroundColor = .clear
     }
     
     private func configureGroup() {
@@ -167,18 +179,26 @@ class FeedPostCellHeader: UIView {
         configureMemberImages(group: group)
         
         // set up groupname if there is none
-        Database.database().fetchFirstTwoGroupMembers(groupId: group.groupId, completion: { (first_two_users) in
+        Database.database().fetchFirstNGroupMembers(groupId: group.groupId, n: 3, completion: { (first_n_users) in
             if group.groupname == "" {
-                if first_two_users.count == 2 {
-                    var usernames = first_two_users[0].username + " & " + first_two_users[1].username
+                if first_n_users.count > 2 {
+                    var usernames = first_n_users[0].username + " & " + first_n_users[1].username + " & " + first_n_users[2].username
                     if usernames.count > 21 {
                         usernames = String(usernames.prefix(21)) // keep only the first 21 characters
                         usernames = usernames + "..."
                     }
                     self.usernameButton.setTitle(usernames, for: .normal)
                 }
-                else if first_two_users.count == 1 {
-                    var usernames = first_two_users[0].username
+                else if first_n_users.count == 2 {
+                    var usernames = first_n_users[0].username + " & " + first_n_users[1].username
+                    if usernames.count > 21 {
+                        usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                        usernames = usernames + "..."
+                    }
+                    self.usernameButton.setTitle(usernames, for: .normal)
+                }
+                else if first_n_users.count == 1 {
+                    var usernames = first_n_users[0].username
                     if usernames.count > 21 {
                         usernames = String(usernames.prefix(21)) // keep only the first 21 characters
                         usernames = usernames + "..."
@@ -191,42 +211,47 @@ class FeedPostCellHeader: UIView {
     
     func configureMemberImages(group: Group){
         guard let groupMembers = groupMembers else { return }
-            
+        self.groupProfileImageView.layer.borderWidth = 0
+        self.firstMemberImageView.layer.borderWidth = 0
+        self.secondMemberImageView.layer.borderWidth = 0
+        self.thirdMemberImageView.layer.borderWidth = 0
+        
         var image_count = 0
         
         if let profileImageUrl = group.groupProfileImageUrl {
             self.groupProfileImageView.loadImage(urlString: profileImageUrl)
             self.groupProfileImageView.layer.borderWidth = 2
             self.groupProfileImageView.layer.borderColor = UIColor.white.cgColor
-//            print("---")
             for user in groupMembers {
-//                print(user)
                 if image_count < 3 {
                     if image_count == 0 {
+                        self.firstMemberImageView.layer.borderWidth = 2
                         if let profileImageUrl = user.profileImageUrl {
                             self.firstMemberImageView.loadImage(urlString: profileImageUrl)
-                            self.firstMemberImageView.layer.borderWidth = 0
                         }
                         else {
                             self.firstMemberImageView.image = #imageLiteral(resourceName: "user")
+                            self.firstMemberImageView.backgroundColor = .white
                         }
                     }
                     else if image_count == 1 {
+                        self.secondMemberImageView.layer.borderWidth = 2
                         if let profileImageUrl = user.profileImageUrl {
                             self.secondMemberImageView.loadImage(urlString: profileImageUrl)
-                            self.secondMemberImageView.layer.borderWidth = 0
                         }
                         else {
                             self.secondMemberImageView.image = #imageLiteral(resourceName: "user")
+                            self.secondMemberImageView.backgroundColor = .white
                         }
                     }
-                    else if image_count == 2 {
+                    else if image_count > 1 {
+                        self.thirdMemberImageView.layer.borderWidth = 2
                         if let profileImageUrl = user.profileImageUrl {
                             self.thirdMemberImageView.loadImage(urlString: profileImageUrl)
-                            self.thirdMemberImageView.layer.borderWidth = 0
                         }
                         else {
                             self.thirdMemberImageView.image = #imageLiteral(resourceName: "user")
+                            self.thirdMemberImageView.backgroundColor = .white
                         }
                     }
                     image_count += 1
@@ -239,30 +264,33 @@ class FeedPostCellHeader: UIView {
             for user in groupMembers {
                 if image_count < 3 {
                     if image_count == 0 {
+                        self.groupProfileImageView.layer.borderWidth = 2
                         if let profileImageUrl = user.profileImageUrl {
                             self.groupProfileImageView.loadImage(urlString: profileImageUrl)
-                            self.groupProfileImageView.layer.borderWidth = 0
                         }
                         else {
                             self.groupProfileImageView.image = #imageLiteral(resourceName: "user")
+                            self.groupProfileImageView.backgroundColor = .white
                         }
                     }
                     else if image_count == 1 {
+                        self.firstMemberImageView.layer.borderWidth = 2
                         if let profileImageUrl = user.profileImageUrl {
                             self.firstMemberImageView.loadImage(urlString: profileImageUrl)
-                            self.firstMemberImageView.layer.borderWidth = 0
                         }
                         else {
                             self.firstMemberImageView.image = #imageLiteral(resourceName: "user")
+                            self.firstMemberImageView.backgroundColor = .white
                         }
                     }
                     else if image_count == 2 {
+                        self.secondMemberImageView.layer.borderWidth = 2
                         if let profileImageUrl = user.profileImageUrl {
                             self.secondMemberImageView.loadImage(urlString: profileImageUrl)
-                            self.secondMemberImageView.layer.borderWidth = 0
                         }
                         else {
                             self.secondMemberImageView.image = #imageLiteral(resourceName: "user")
+                            self.secondMemberImageView.backgroundColor = .white
                         }
                     }
                     image_count += 1
