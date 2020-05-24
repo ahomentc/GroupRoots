@@ -20,7 +20,7 @@ class FeedGroupPostCell: UICollectionViewCell {
                 photoImageView.image = image   // image loaded immediately from cache
                 
             } else {
-                self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
+                self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
                 SGImageCache.getImage(url: imageUrl) { [weak self] image in
                     self?.photoImageView.image = image   // image loaded async
                 }
@@ -28,11 +28,12 @@ class FeedGroupPostCell: UICollectionViewCell {
         }
     }
     
-    private let photoImageView: CustomImageView = {
+    public let photoImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
-        iv.backgroundColor = UIColor(white: 0.95, alpha: 1)
+        iv.backgroundColor = UIColor(white: 1, alpha: 0.1)
+//        iv.backgroundColor = .white
         return iv
     }()
     
@@ -50,13 +51,21 @@ class FeedGroupPostCell: UICollectionViewCell {
     
     private func sharedInit() {
         addSubview(photoImageView)
-        photoImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: CGFloat(2), paddingLeft: CGFloat(2), paddingBottom: CGFloat(2), paddingRight: CGFloat(2), width: 0, height: 0)
-        photoImageView.layer.cornerRadius = 3
+        photoImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: CGFloat(1), paddingLeft: CGFloat(1), paddingBottom: CGFloat(1), paddingRight: CGFloat(1), width: 0, height: 0)
+        photoImageView.layer.cornerRadius = 10
+        photoImageView.layer.borderColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
+        photoImageView.layer.borderWidth = 0
+        photoImageView.backgroundColor = UIColor(white: 1, alpha: 0.1)
+        self.layer.borderWidth = 0
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        photoImageView.image = CustomImageView.imageWithColor(color: .black)
+        photoImageView.image = CustomImageView.imageWithColor(color: .white)
+        photoImageView.layer.borderColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
+        photoImageView.layer.borderWidth = 0
+        photoImageView.backgroundColor = UIColor(white: 1, alpha: 0.1)
+        self.layer.borderWidth = 0
     }
 }
 

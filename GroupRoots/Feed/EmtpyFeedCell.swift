@@ -45,6 +45,7 @@ class EmptyFeedPostCell: UICollectionViewCell {
 //        loadingLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: padding + UIScreen.main.bounds.height/2 - 14)
         
         activityIndicatorView.isHidden = true
+        activityIndicatorView.color = .black
         insertSubview(activityIndicatorView, at: 20)
         activityIndicatorView.startAnimating()
         

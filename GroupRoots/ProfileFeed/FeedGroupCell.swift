@@ -85,8 +85,9 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     var numPicsScrolled = 1
 
     var collectionView: UICollectionView!
+    var headerCollectionView: UICollectionView!
     
-    let header = FeedPostCellHeader()
+    let header = ProfileFeedCellHeader()
     var delegate: FeedGroupCellDelegate?
 
     override init(frame: CGRect) {
@@ -129,12 +130,24 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     }
     
     func setupViews() {
+        addSubview(header)
+        header.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 0, paddingLeft: 5, paddingRight: 5)
+        header.delegate = self
+        header.isUserInteractionEnabled = true
+        
+        let header_layout = UICollectionViewFlowLayout()
+        header_layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
+        header_layout.itemSize = CGSize(width: 90, height: 90)
+        header_layout.minimumLineSpacing = CGFloat(0)
+        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: 175, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 175), collectionViewLayout: header_layout)
+        
+        
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         layout.minimumLineSpacing = CGFloat(0)
         
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 175, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 175), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -142,14 +155,13 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         collectionView?.register(FeedGroupPageCell.self, forCellWithReuseIdentifier: FeedGroupPageCell.cellId)
         collectionView?.register(EmptyFeedPostCell.self, forCellWithReuseIdentifier: EmptyFeedPostCell.cellId)
         collectionView?.register(MembersCell.self, forCellWithReuseIdentifier: MembersCell.cellId)
+        collectionView?.register(ProfileFeedCellHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: ProfileFeedCellHeader.headerId)
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.isPagingEnabled = true
         self.addSubview(collectionView)
-
-        addSubview(header)
-        header.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 5, paddingRight: UIScreen.main.bounds.width/2)
-        header.delegate = self
+        
+        self.backgroundColor = .white
     }
     
     func configureHeader() {
@@ -236,13 +248,13 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
 
 extension FeedGroupCell: UICollectionViewDelegateFlowLayout {
     private func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewFlowLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        return CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 175)
     }
 }
 
 //MARK: - HomePostCellHeaderDelegate
 
-extension FeedGroupCell: FeedPostCellHeaderDelegate {
+extension FeedGroupCell: ProfileFeedCellHeaderDelegate {
     
     func didTapGroup() {
         guard let group = groupPosts?[0].group else { return }
@@ -258,4 +270,3 @@ extension FeedGroupCell: FeedPostCellHeaderDelegate {
         collectionView.scrollToItem(at: IndexPath(item: 1, section: 0), at: .centeredHorizontally, animated: true)
     }
 }
-

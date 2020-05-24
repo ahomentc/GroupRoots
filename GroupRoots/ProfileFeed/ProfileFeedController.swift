@@ -10,7 +10,7 @@ import UIKit
 import Firebase
 
 // add "GroupCellDelegate" here v
-class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate {
+class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate {
 //    override var prefersStatusBarHidden: Bool { return true }
     
     // 2d representation of the dict, same as dict but with no values
@@ -95,7 +95,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
+//        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
         self.configureNavBar()
         
         collectionView.visibleCells.forEach { cell in
@@ -119,8 +119,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         loadingScreenView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
         loadingScreenView.layer.cornerRadius = 0
         loadingScreenView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-        loadingScreenView.image =  #imageLiteral(resourceName: "Splash3")
-        self.view.insertSubview(loadingScreenView, at: 5)
+        loadingScreenView.image =  #imageLiteral(resourceName: "Splash4")
+        self.view.insertSubview(loadingScreenView, at: 10)
         
         reloadButton.frame = CGRect(x: UIScreen.main.bounds.width/2-50, y: UIScreen.main.bounds.height/2, width: 100, height: 50)
         reloadButton.layer.cornerRadius = 18
@@ -137,15 +137,18 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         collectionView?.allowsSelection = false
         collectionView?.showsVerticalScrollIndicator = false
         collectionView?.isPagingEnabled = true
-        collectionView?.delegate = self;
-        collectionView?.dataSource = self;
+        collectionView?.delegate = self
+        collectionView?.dataSource = self
+//        collectionView?.backgroundColor = UIColor(white: 1, alpha: 0.95)
+        collectionView?.backgroundColor = .clear
         
+        self.view.backgroundColor = .white
         
         // what happens here if there's been paging... more specifically, what happens when refresh and had paging occur?
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateHomeFeed, object: nil)
         
 //        self.view.backgroundColor = UIColor.black
-        self.view.backgroundColor = UIColor.white
+//        self.view.backgroundColor = UIColor.white
         
         // get data from cache if there
         if let groupPosts2DRetrieved = UserDefaults.standard.object(forKey: "groupPosts2D") as? Data {
@@ -699,7 +702,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             myCell.groupPostsFirstComment = groupPostsFirstCommentDict[groupId]
             myCell.groupPostsNumComments = groupPostsNumCommentsDict[groupId]
 //            myCell.feedController = self
-//            myCell.delegate = self
+            myCell.delegate = self
             myCell.tag = indexPath.row
 //            myCell.isScrollingVertically = isScrolling
             myCell.maxDistanceScrolled = CGFloat(0)
@@ -776,6 +779,38 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             }
         }
         return true
+    }
+    
+    func didTapComment(groupPost: GroupPost) {
+        
+    }
+    
+    func didTapGroup(group: Group) {
+        
+    }
+    
+    func didTapOptions(groupPost: GroupPost) {
+        
+    }
+    
+    func didSelectUser(selectedUser: User) {
+        
+    }
+    
+    func showMoreMembers(group: Group) {
+        
+    }
+    
+    func didView(groupPost: GroupPost) {
+        
+    }
+    
+    func showViewers(viewers: [User], viewsCount: Int) {
+        
+    }
+    
+    func requestPlay(for_lower cell1: FeedPostCell, for_upper cell2: MyCell) {
+        
     }
 
     func didTapUser(user: User) {

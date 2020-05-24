@@ -32,6 +32,7 @@
 		757B35CB2472435900C9AFE1 /* FeedGroupCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757B35CA2472435900C9AFE1 /* FeedGroupCell.swift */; };
 		757B35CD24724A3300C9AFE1 /* FeedGroupPageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757B35CC24724A3300C9AFE1 /* FeedGroupPageCell.swift */; };
 		757B35CF24724A4300C9AFE1 /* FeedGroupPostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757B35CE24724A4300C9AFE1 /* FeedGroupPostCell.swift */; };
+		757B35D12474DBB200C9AFE1 /* ProfileFeedCellHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757B35D02474DBB200C9AFE1 /* ProfileFeedCellHeader.swift */; };
 		7582758F23DD65BC00D64D4C /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7582758E23DD65BC00D64D4C /* Notification.swift */; };
 		75914804244592E600285546 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 75914803244592E600285546 /* GoogleService-Info.plist */; };
 		759912C523DD446200B415EB /* PushNotificationSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759912C423DD446200B415EB /* PushNotificationSender.swift */; };
@@ -124,6 +125,7 @@
 		757B35CA2472435900C9AFE1 /* FeedGroupCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedGroupCell.swift; sourceTree = "<group>"; };
 		757B35CC24724A3300C9AFE1 /* FeedGroupPageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedGroupPageCell.swift; sourceTree = "<group>"; };
 		757B35CE24724A4300C9AFE1 /* FeedGroupPostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedGroupPostCell.swift; sourceTree = "<group>"; };
+		757B35D02474DBB200C9AFE1 /* ProfileFeedCellHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileFeedCellHeader.swift; sourceTree = "<group>"; };
 		7582758E23DD65BC00D64D4C /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notification.swift; sourceTree = "<group>"; };
 		75914803244592E600285546 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "GroupRoots/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		759912C423DD446200B415EB /* PushNotificationSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationSender.swift; sourceTree = "<group>"; };
@@ -262,6 +264,7 @@
 				757B35CA2472435900C9AFE1 /* FeedGroupCell.swift */,
 				757B35CC24724A3300C9AFE1 /* FeedGroupPageCell.swift */,
 				757B35CE24724A4300C9AFE1 /* FeedGroupPostCell.swift */,
+				757B35D02474DBB200C9AFE1 /* ProfileFeedCellHeader.swift */,
 			);
 			path = ProfileFeed;
 			sourceTree = "<group>";
@@ -700,6 +703,7 @@
 				75B65DEB240A5594006CBA0B /* GroupFollowersHeader.swift in Sources */,
 				AD3164D02114F0A1001F5DA7 /* CommentsController.swift in Sources */,
 				AD32DEC5210BEF6F002F4973 /* PhotoSelectorController.swift in Sources */,
+				757B35D12474DBB200C9AFE1 /* ProfileFeedCellHeader.swift in Sources */,
 				754295C223DFFB6E00893EFD /* NotificationCell.swift in Sources */,
 				75B65DE7240A506C006CBA0B /* GroupFollowersController.swift in Sources */,
 				75BB489323DACF2000CF008F /* FeedPostCellHeader.swift in Sources */,

@@ -29,10 +29,10 @@ class MemberHeaderCell: UICollectionViewCell {
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
         iv.image = #imageLiteral(resourceName: "user")
-//        iv.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
-//        iv.layer.borderWidth = 0.5
-        iv.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.9).cgColor
-        iv.layer.borderWidth = 2.5
+//        iv.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.9).cgColor
+//        iv.layer.borderWidth = 2.5
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderWidth = 0
         return iv
     }()
     
@@ -107,12 +107,12 @@ class GroupProfileHeaderCell: UICollectionViewCell {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
-        iv.image = #imageLiteral(resourceName: "user")
-        iv.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
-        iv.layer.borderWidth = 0.5
+        iv.image = #imageLiteral(resourceName: "group_profile_3")
 //        iv.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
 //        iv.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
-//        iv.layer.borderWidth = 2
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderWidth = 0
+        iv.backgroundColor = .white
         return iv
     }()
     
@@ -133,9 +133,9 @@ class GroupProfileHeaderCell: UICollectionViewCell {
 //        profileImageView.anchor(left: leftAnchor, paddingLeft: 12, width: 90, height: 90)
 //        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
 //        profileImageView.layer.cornerRadius = 90 / 3
-        profileImageView.anchor(left: leftAnchor, paddingLeft: 0, width: 90, height: 90)
+        profileImageView.anchor(left: leftAnchor, paddingLeft: 0, width: 75, height: 75)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 90 / 2
+        profileImageView.layer.cornerRadius = 75 / 2
         
 //        let separatorView = UIView()
 //        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.4)

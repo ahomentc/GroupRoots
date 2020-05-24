@@ -105,17 +105,6 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         return button
     }()
     
-    private lazy var requestsButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Members", for: .normal)
-        button.setTitleColor(.black, for: .normal)
-        button.backgroundColor = UIColor.white
-        button.layer.borderColor = UIColor(white: 0, alpha: 0.6).cgColor
-        button.addTarget(self, action: #selector(handleShowRequests), for: .touchUpInside)
-        button.isUserInteractionEnabled = true
-        return button
-    }()
-    
     private let addMemberButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Add Member", for: .normal)
@@ -172,7 +161,6 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
     }
 
     private func sharedInit() {
-
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         collectionView = UICollectionView(frame: CGRect(x: 0, y: 5, width: UIScreen.main.bounds.width, height: 90), collectionViewLayout: layout)
