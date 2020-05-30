@@ -341,13 +341,13 @@ exports.removeUserFromGroupFollowPendingOnUnfollow = functions.database.ref('/fo
 //		membersFollowing count of follower for group is == 1 and 
 //		follower is not a member of group:
 //			unsubscribe follower with the usual stuff
-exports.removeGroupSubscribersOnProfileHide = functions.database.ref('/users/{user_hiding}/groups/{group_id}/hidden').onCreate((hidden_snapshot, context) => {
+exports.removeGroupSubscribersOnProfileHide = functions.database.ref('/users/{user_hiding}/groups/{group_id}/hidden').onCreate((snapshot, context) => {
 	const user_hiding = context.params.user_hiding;
 	const group_id = context.params.group_id;
-	if (hidden_snapshot === null || hidden_snapshot.val() === null) {
+	if (snapshot === null || snapshot.val() === null) {
 		return null;
 	}
-	var is_hidden = hidden_snapshot.val()
+	var is_hidden = snapshot.val()
 	if (is_hidden) {
 		return snapshot.ref.root.child('/followers/' + user_hiding).once('value', followers => {
 			const promises = [];
@@ -411,13 +411,13 @@ exports.removeGroupSubscribersOnProfileHide = functions.database.ref('/users/{us
 	}
 })
 
-exports.removeGroupSubscribersOnProfileHideUpdate = functions.database.ref('/users/{user_hiding}/groups/{group_id}/hidden').onUpdate((hidden_snapshot, context) => {
+exports.removeGroupSubscribersOnProfileHideUpdate = functions.database.ref('/users/{user_hiding}/groups/{group_id}/hidden').onUpdate((snapshot, context) => {
 	const user_hiding = context.params.user_hiding;
 	const group_id = context.params.group_id;
-	if (hidden_snapshot === null || hidden_snapshot.val() === null) {
+	if (snapshot === null || snapshot.val() === null) {
 		return null;
 	}
-	var is_hidden = hidden_snapshot.val()
+	var is_hidden = snapshot.val()
 	if (is_hidden) {
 		return snapshot.ref.root.child('/followers/' + user_hiding).once('value', followers => {
 			const promises = [];
