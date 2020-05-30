@@ -73,7 +73,9 @@ class SubscriptionsController: UICollectionViewController {
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SubscriptionCell.cellId, for: indexPath) as! SubscriptionCell
-        cell.group = subscriptions[indexPath.item]
+        if subscriptions.count != 0 && indexPath.item < subscriptions.count {
+            cell.group = subscriptions[indexPath.item]
+        }
 //        cell.delegate = self
         return cell
     }

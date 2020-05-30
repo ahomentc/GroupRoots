@@ -622,117 +622,130 @@ extension Database {
                     let sync = DispatchGroup()
                     groups.forEach({ (groupItem) in
                         sync.enter()
-                        // see if group is private
-                        guard let isPrivate = groupItem.isPrivate else { completion(err); return }
                         
-                        // add uid to membersFollowing of the current user's groupsFollowing for the group
-                        // do this only if the group is public
-                        
-                        Database.database().isFollowingGroup(groupId: groupItem.groupId, completion: { (following) in
-                            let lower_sync = DispatchGroup()
-                            let groupId = groupItem.groupId
-                            
-                            // A follows B
-                            if following { // add B to membersFollowing for the group in A's groupsFollowing
-                                let values = [uid: 1]
-                                lower_sync.enter()
-                                let ref = Database.database().reference().child("groupsFollowing").child(currentLoggedInUserId).child(groupId).child("membersFollowing")
-                                ref.updateChildValues(values) { (err, ref) in
-                                    if let err = err {
-                                        completion(err)
-                                        return
-                                    }
-                                    lower_sync.leave()
-                                }
-                            }
-                            else {
-                                if isPrivate {
-                                    // add B to A's memberFollowing for the request to subscribe to the group, right under the autoSubscribed
-                                    let values = [uid: 1]
-                                    lower_sync.enter()
-                                    let ref = Database.database().reference().child("groupFollowPending").child(groupId).child(currentLoggedInUserId).child("membersFollowing")
-                                    ref.updateChildValues(values) { (err, ref) in
-                                        if let err = err {
-                                            completion(err)
-                                            return
+                        // check if the group is hidden
+                        Database.database().isGroupHiddenForUser(withUID: uid, groupId: groupItem.groupId, completion: { (isHidden) in
+                            if !isHidden {
+                                // see if group is private
+                                guard let isPrivate = groupItem.isPrivate else { completion(err); return }
+                                
+                                // add uid to membersFollowing of the current user's groupsFollowing for the group
+                                // do this only if the group is public
+                                Database.database().isFollowingGroup(groupId: groupItem.groupId, completion: { (following) in
+                                    let lower_sync = DispatchGroup()
+                                    let groupId = groupItem.groupId
+                                    
+                                    // This is the membersFollowing part:
+                                    
+                                    // A follows B
+                                    if following { // add B to membersFollowing for the group in A's groupsFollowing
+                                        let values = [uid: 1]
+                                        lower_sync.enter()
+                                        let ref = Database.database().reference().child("groupsFollowing").child(currentLoggedInUserId).child(groupId).child("membersFollowing")
+                                        ref.updateChildValues(values) { (err, ref) in
+                                            if let err = err {
+                                                completion(err)
+                                                return
+                                            }
+                                            lower_sync.leave()
                                         }
-                                        lower_sync.leave()
                                     }
-                                }
-                                else { //  add B to membersFollowing for the group in A's groupsFollowing
-                                    let values = [uid: 1]
-                                    lower_sync.enter()
-                                    let ref = Database.database().reference().child("groupsFollowing").child(currentLoggedInUserId).child(groupId).child("membersFollowing")
-                                    ref.updateChildValues(values) { (err, ref) in
-                                        if let err = err {
-                                            completion(err)
-                                            return
+                                    else {
+                                        if isPrivate {
+                                            // add B to A's memberFollowing for the request to subscribe to the group, right under the autoSubscribed
+                                            let values = [uid: 1]
+                                            lower_sync.enter()
+                                            let ref = Database.database().reference().child("groupFollowPending").child(groupId).child(currentLoggedInUserId).child("membersFollowing")
+                                            ref.updateChildValues(values) { (err, ref) in
+                                                if let err = err {
+                                                    completion(err)
+                                                    return
+                                                }
+                                                lower_sync.leave()
+                                            }
                                         }
-                                        lower_sync.leave()
+                                        else { //  add B to membersFollowing for the group in A's groupsFollowing
+                                            let values = [uid: 1]
+                                            lower_sync.enter()
+                                            let ref = Database.database().reference().child("groupsFollowing").child(currentLoggedInUserId).child(groupId).child("membersFollowing")
+                                            ref.updateChildValues(values) { (err, ref) in
+                                                if let err = err {
+                                                    completion(err)
+                                                    return
+                                                }
+                                                lower_sync.leave()
+                                            }
+                                        }
                                     }
-                                }
-                            }
-                            
-                            lower_sync.notify(queue: .main){
-                                // A follows B
-                                // Subscribe user A to B's groups that are public
-                                // Add A to the groupFollowPending for B's groups that are private with info that it was B who A followed
-                                if !following {
-                                    Database.database().isInGroupRemovedUsers(groupId: groupItem.groupId, withUID: currentLoggedInUserId, completion: { (inGroupRemoved) in
-                                        if !inGroupRemoved {
-                                            Database.database().isInUserRemovedGroups(groupId: groupItem.groupId, withUID: currentLoggedInUserId, completion: { (inUserRemoved) in
-                                                if !inUserRemoved {
-                                                    if isPrivate{
-                                                        // private group
-                                                        Database.database().isInGroupFollowPending(groupId: groupItem.groupId, withUID: currentLoggedInUserId, completion: { (inGroupPending) in
-                                                            if !inGroupPending {
-                                                                Database.database().addToGroupFollowPending(groupId: groupItem.groupId, withUID: currentLoggedInUserId, autoSubscribed: true) { (err) in
-                                                                    if err != nil {
-                                                                        completion(err);return
-                                                                    }
-                                                                    // sending notification (aysnc ok)
-                                                                    Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
-                                                                        Database.database().fetchGroupMembers(groupId: groupItem.groupId, completion: { (members) in
-                                                                            members.forEach({ (member) in
-                                                                                if user.uid != member.uid {
-                                                                                    // send notification for subscription request to all members of group
-                                                                                    Database.database().createNotification(to: member, notificationType: NotificationType.groupSubscribeRequest, subjectUser: user, group: groupItem) { (err) in
-                                                                                        if err != nil {
-                                                                                            return
+                                    
+                                    // This is the actual following part:
+                                    lower_sync.notify(queue: .main){
+                                        // A follows B
+                                        // Subscribe user A to B's groups that are public
+                                        // Add A to the groupFollowPending for B's groups that are private with info that it was B who A followed
+                                        if !following {
+                                            Database.database().isInGroupRemovedUsers(groupId: groupItem.groupId, withUID: currentLoggedInUserId, completion: { (inGroupRemoved) in
+                                                if !inGroupRemoved {
+                                                    Database.database().isInUserRemovedGroups(groupId: groupItem.groupId, withUID: currentLoggedInUserId, completion: { (inUserRemoved) in
+                                                        if !inUserRemoved {
+                                                            if isPrivate{
+                                                                // private group
+                                                                Database.database().isInGroupFollowPending(groupId: groupItem.groupId, withUID: currentLoggedInUserId, completion: { (inGroupPending) in
+                                                                    if !inGroupPending {
+                                                                        Database.database().addToGroupFollowPending(groupId: groupItem.groupId, withUID: currentLoggedInUserId, autoSubscribed: true) { (err) in
+                                                                            if err != nil {
+                                                                                completion(err);return
+                                                                            }
+                                                                            // sending notification (aysnc ok)
+                                                                            Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+                                                                                Database.database().fetchGroupMembers(groupId: groupItem.groupId, completion: { (members) in
+                                                                                    members.forEach({ (member) in
+                                                                                        if user.uid != member.uid {
+                                                                                            // send notification for subscription request to all members of group
+                                                                                            Database.database().createNotification(to: member, notificationType: NotificationType.groupSubscribeRequest, subjectUser: user, group: groupItem) { (err) in
+                                                                                                if err != nil {
+                                                                                                    return
+                                                                                                }
+                                                                                            }
                                                                                         }
-                                                                                    }
-                                                                                }
+                                                                                    })
+                                                                                }) { (_) in}
                                                                             })
-                                                                        }) { (_) in}
-                                                                    })
-                                                                    sync.leave()
+                                                                            sync.leave()
+                                                                        }
+                                                                    }
+                                                                    else {
+                                                                        sync.leave()
+                                                                    }
+                                                                }) { (err) in
+                                                                    completion(err);return
                                                                 }
                                                             }
                                                             else {
-                                                                sync.leave()
-                                                            }
-                                                        }) { (err) in
-                                                            completion(err);return
-                                                        }
-                                                    }
-                                                    else {
-                                                        // public group
-                                                        Database.database().addToGroupFollowers(groupId: groupItem.groupId, withUID: currentLoggedInUserId) { (err) in
-                                                            if err != nil {
-                                                                completion(err);return
-                                                            }
-                                                            Database.database().addToGroupsFollowing(groupId: groupItem.groupId, withUID: currentLoggedInUserId, autoSubscribed: true) { (err) in
-                                                                if err != nil {
-                                                                    completion(err);return
-                                                                }
-                                                                Database.database().removeFromGroupFollowPending(groupId: groupItem.groupId, withUID: currentLoggedInUserId, completion: { (err) in
+                                                                // public group
+                                                                Database.database().addToGroupFollowers(groupId: groupItem.groupId, withUID: currentLoggedInUserId) { (err) in
                                                                     if err != nil {
                                                                         completion(err);return
                                                                     }
-                                                                    sync.leave()
-                                                                })
+                                                                    Database.database().addToGroupsFollowing(groupId: groupItem.groupId, withUID: currentLoggedInUserId, autoSubscribed: true) { (err) in
+                                                                        if err != nil {
+                                                                            completion(err);return
+                                                                        }
+                                                                        Database.database().removeFromGroupFollowPending(groupId: groupItem.groupId, withUID: currentLoggedInUserId, completion: { (err) in
+                                                                            if err != nil {
+                                                                                completion(err);return
+                                                                            }
+                                                                            sync.leave()
+                                                                        })
+                                                                    }
+                                                                }
                                                             }
                                                         }
+                                                        else {
+                                                            sync.leave()
+                                                        }
+                                                    }) { (err) in
+                                                        completion(err);return
                                                     }
                                                 }
                                                 else {
@@ -745,13 +758,13 @@ extension Database {
                                         else {
                                             sync.leave()
                                         }
-                                    }) { (err) in
-                                        completion(err);return
                                     }
+                                }) { (err) in
+                                    completion(err);return
                                 }
-                                else {
-                                    sync.leave()
-                                }
+                            }
+                            else {
+                                sync.leave()
                             }
                         }) { (err) in
                             completion(err);return
@@ -783,76 +796,77 @@ extension Database {
                     completion(err)
                     return
                 }
-                
-                // nonUidGroups = now need to get all groups of currentLoggedInUser's following
-                // excluding uid following (might be overlap with uid's groups is ok)
-                
-                // Go through groupsfollowing(currentLoggedInUserId) and if group in there not in nonUidGroups:
-                // Remove from that groups followers and pending, remove group from currentLoggedInUserId's groupsFollowing
-                
-                Database.database().reference().child("following").child(currentLoggedInUserId).observeSingleEvent(of: .value, with: { (snapshot) in
-                    let sync = DispatchGroup()
-                    var group_ids = Set<String>()
-                    let userIdsDictionary = snapshot.value as? [String: Any]
-                    
-                    // then fetch all the group ids of which following users are members in and put them in group_ids
-                    userIdsDictionary?.forEach({ (arg) in
-                        let (userId, _) = arg
-                        
-                        if userId != uid {
-                            sync.enter()
-                            Database.database().fetchAllGroupIds(withUID: userId, completion: { (groupIds) in
-                                groupIds.forEach({ (groupId) in
-                                    if group_ids.contains(groupId) == false && groupId != "" {
-                                        group_ids.insert(groupId)
-                                    }
-                                })
-                                sync.leave()
-                            }, withCancel: { (err) in
-                                print("Failed to fetch posts:", err)
-                            })
-                        }
-                    })
-                    // run below when all the group ids have been collected
-                    sync.notify(queue: .main) {
-                        Database.database().reference().child("groupsFollowing").child(currentLoggedInUserId).observeSingleEvent(of: .value, with: { (followingSnapshot) in
-                            let groupIdsDictionary = followingSnapshot.value as? [String: Any]
-                            groupIdsDictionary?.forEach({ (arg) in
-                                let (groupId, _) = arg
-                                // group following is not in group_ids
-                                if group_ids.contains(groupId) == false && groupId != "" {
-                                    Database.database().reference().child("groupFollowPending").child(groupId).child(currentLoggedInUserId).removeValue { (err, _) in
-                                        if let err = err {
-                                            completion(err)
-                                            return
-                                        }
-                                        // remove user from group followers and from user groupsfollowing
-                                        Database.database().reference().child("groupFollowers").child(groupId).child(currentLoggedInUserId).removeValue { (err, _) in
-                                            if let err = err {
-                                                print("Failed to remove user from following:", err)
-                                                completion(err)
-                                                return
-                                            }
-                                            Database.database().reference().child("groupsFollowing").child(currentLoggedInUserId).child(groupId).removeValue { (err, _) in
-                                                if let err = err {
-                                                    print("Failed to remove user from following:", err)
-                                                    completion(err)
-                                                    return
-                                                }
-                                                completion(nil)
-                                            }
-                                        }
-                                    }
-                                }
-                                else {
-                                    completion(nil)
-                                }
-                            })
-                        })
-                    }
-                }) { (err) in
-                    print("Failed to fetch posts:", err)
-                }
+                completion(nil)
+                // NO LONGER DO THE FOLLOWING, INSTEAD HAVE NOTIFICATION ASKING IF SHOULD UNSUBSCRIBE
+//                // nonUidGroups = now need to get all groups of currentLoggedInUser's following
+//                // excluding uid following (might be overlap with uid's groups is ok)
+//
+//                // Go through groupsfollowing(currentLoggedInUserId) and if group in there not in nonUidGroups:
+//                // Remove from that groups followers and pending, remove group from currentLoggedInUserId's groupsFollowing
+//
+//                Database.database().reference().child("following").child(currentLoggedInUserId).observeSingleEvent(of: .value, with: { (snapshot) in
+//                    let sync = DispatchGroup()
+//                    var group_ids = Set<String>()
+//                    let userIdsDictionary = snapshot.value as? [String: Any]
+//
+//                    // then fetch all the group ids of which following users are members in and put them in group_ids
+//                    userIdsDictionary?.forEach({ (arg) in
+//                        let (userId, _) = arg
+//
+//                        if userId != uid {
+//                            sync.enter()
+//                            Database.database().fetchAllGroupIds(withUID: userId, completion: { (groupIds) in
+//                                groupIds.forEach({ (groupId) in
+//                                    if group_ids.contains(groupId) == false && groupId != "" {
+//                                        group_ids.insert(groupId)
+//                                    }
+//                                })
+//                                sync.leave()
+//                            }, withCancel: { (err) in
+//                                print("Failed to fetch posts:", err)
+//                            })
+//                        }
+//                    })
+//                    // run below when all the group ids have been collected
+//                    sync.notify(queue: .main) {
+//                        Database.database().reference().child("groupsFollowing").child(currentLoggedInUserId).observeSingleEvent(of: .value, with: { (followingSnapshot) in
+//                            let groupIdsDictionary = followingSnapshot.value as? [String: Any]
+//                            groupIdsDictionary?.forEach({ (arg) in
+//                                let (groupId, _) = arg
+//                                // group following is not in group_ids
+//                                if group_ids.contains(groupId) == false && groupId != "" {
+//                                    Database.database().reference().child("groupFollowPending").child(groupId).child(currentLoggedInUserId).removeValue { (err, _) in
+//                                        if let err = err {
+//                                            completion(err)
+//                                            return
+//                                        }
+//                                        // remove user from group followers and from user groupsfollowing
+//                                        Database.database().reference().child("groupFollowers").child(groupId).child(currentLoggedInUserId).removeValue { (err, _) in
+//                                            if let err = err {
+//                                                print("Failed to remove user from following:", err)
+//                                                completion(err)
+//                                                return
+//                                            }
+//                                            Database.database().reference().child("groupsFollowing").child(currentLoggedInUserId).child(groupId).removeValue { (err, _) in
+//                                                if let err = err {
+//                                                    print("Failed to remove user from following:", err)
+//                                                    completion(err)
+//                                                    return
+//                                                }
+//                                                completion(nil)
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                                else {
+//                                    completion(nil)
+//                                }
+//                            })
+//                        })
+//                    }
+//                }) { (err) in
+//                    print("Failed to fetch posts:", err)
+//                }
                 
             })
         }
@@ -1194,16 +1208,10 @@ extension Database {
         let ref = Database.database().reference().child("users").child(groupUser).child("groups")
         
         ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
-//        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
-//            guard let dictionaries = snapshot.value as? [String: Any] else {
-//                completion([])
-//                return
-//            }
             
             var groups = [Group]()
 
             let sync = DispatchGroup()
-//            dictionaries.forEach({ (groupId, value) in
             for child in snapshot.children.allObjects as! [DataSnapshot] {
                 let groupId = child.key
                 sync.enter()
@@ -3056,12 +3064,16 @@ extension Database {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
         Database.database().reference().child("usersViewed").child(currentLoggedInUserId).child(postId).observeSingleEvent(of: .value, with: { (snapshot) in
-            if let isIn = snapshot.value as? Int, isIn == 1 {
-                completion(true)
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(true)
+                }
             } else {
                 completion(false)
             }
-            
         }) { (err) in
             print("Failed to check if following:", err)
             cancel?(err)

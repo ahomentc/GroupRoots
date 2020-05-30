@@ -11,11 +11,11 @@ class MainTabBarController: UITabBarController {
         }
         
         tabBar.tintColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
-//        tabBar.isTranslucent = true
-//        tabBar.barTintColor = UIColor.clear
-//        tabBar.backgroundImage = UIImage()
-//        tabBar.shadowImage = UIImage()
-//        tabBar.unselectedItemTintColor = UIColor.white
+        tabBar.isTranslucent = true
+        tabBar.barTintColor = UIColor.clear
+        tabBar.backgroundImage = UIImage()
+        tabBar.shadowImage = UIImage()
+        tabBar.unselectedItemTintColor = UIColor.white
         tabBar.backgroundColor = UIColor(red: 0/255, green: 0/255, blue: 0/255, alpha: 0.1)
         
         delegate = self
@@ -119,20 +119,7 @@ extension MainTabBarController: UITabBarControllerDelegate {
             tabBar.backgroundColor = UIColor.clear
             tabBar.unselectedItemTintColor = UIColor.gray
         }
-//        else if index != 0 {
-//            tabBar.selectionIndicatorImage = UIImage()
-//            tabBar.backgroundColor = UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1)
-//            tabBar.unselectedItemTintColor = UIColor.gray
-//        }
-        else{
-            tabBar.selectionIndicatorImage = UIImage()
-            tabBar.backgroundColor = UIColor(red: 0/255, green: 0/255, blue: 0/255, alpha: 0.1)
-            tabBar.unselectedItemTintColor = UIColor.white
-        }
         if index == 2 {
-//            let layout = UICollectionViewFlowLayout()
-//            let photoSelectorController = PhotoSelectorController(collectionViewLayout: layout)
-//            let nacController = UINavigationController(rootViewController: photoSelectorController)
             let sharePhotoController = SharePhotoController()
             let nacController = UINavigationController(rootViewController: sharePhotoController)
             nacController.modalPresentationStyle = .fullScreen

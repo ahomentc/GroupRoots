@@ -11,7 +11,7 @@ import Firebase
 
 // add "GroupCellDelegate" here v
 class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate {
-//    override var prefersStatusBarHidden: Bool { return true }
+    override var prefersStatusBarHidden: Bool { return false }
     
     // 2d representation of the dict, same as dict but with no values
     // later, just use the dict but convert it to this after all data is loaded in
@@ -95,16 +95,33 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-//        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
-        self.configureNavBar()
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+
         
         collectionView.visibleCells.forEach { cell in
-            if cell is MyCell {
-                (cell as! MyCell).pauseVisibleVideo()
+            if cell is FeedGroupCell {
+                (cell as! FeedGroupCell).pauseVisibleVideo()
             }
         }
         
         self.collectionView.scrollToNearestVisibleCollectionViewCell()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        self.configureNavBar()
+        
+        // check if fullscreen and set tabBar color accordingly
+        collectionView.visibleCells.forEach { cell in
+            if cell is FeedGroupCell {
+                let visible_cell = cell as! FeedGroupCell
+                if visible_cell.isFullScreen {
+                    NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
+                }
+                else {
+                    NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+                }
+            }
+        }
     }
     
     override func viewDidLoad() {
@@ -113,7 +130,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             overrideUserInterfaceStyle = .light
         }
         
-        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+        
+        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor.black]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         
         loadingScreenView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
@@ -139,16 +158,13 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         collectionView?.isPagingEnabled = true
         collectionView?.delegate = self
         collectionView?.dataSource = self
-//        collectionView?.backgroundColor = UIColor(white: 1, alpha: 0.95)
         collectionView?.backgroundColor = .clear
         
         self.view.backgroundColor = .white
         
         // what happens here if there's been paging... more specifically, what happens when refresh and had paging occur?
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateHomeFeed, object: nil)
-        
-//        self.view.backgroundColor = UIColor.black
-//        self.view.backgroundColor = UIColor.white
+
         
         // get data from cache if there
         if let groupPosts2DRetrieved = UserDefaults.standard.object(forKey: "groupPosts2D") as? Data {
@@ -199,7 +215,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.groupPostsNumCommentsDict = groupPostsNumCommentsDict
         }
         
-        //        fetchAllPosts()
+//        fetchPostsDynamic()
         fetchAllFreshGroupPosts()
         configureNavigationBar()
         
@@ -228,26 +244,25 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     @objc private func handleRefresh() {
         // stop video of visible cell
-//        collectionView.visibleCells.forEach { cell in
-//            if cell is MyCell {
-//                // TODO: write logic to stop the video before it begins scrolling
-//                (cell as! MyCell).pauseVisibleVideo()
-//                (cell as! MyCell).isScrollingVertically = isScrolling
-//            }
-//        }
+        collectionView.visibleCells.forEach { cell in
+            if cell is FeedGroupCell {
+                // TODO: write logic to stop the video before it begins scrolling
+                (cell as! FeedGroupCell).pauseVisibleVideo()
+            }
+        }
         fetchAllFreshGroupPosts()
     }
     
     private func configureNavigationBar() {
         self.configureNavBar()
-        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor.black]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
     }
 
     // adds to groupPosts with the fetched
-    private func fetchAllPosts() {
+    private func fetchPostsDynamic() {
         showEmptyStateViewIfNeeded()
         fetchGroupPosts()
     }
@@ -676,6 +691,15 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         self.navigationController?.navigationBar.backgroundColor = .clear
     }
     
+    // to be used when transitioning back to ProfileFeedController
+    func configureNavBarForTransition(){
+        self.navigationController?.navigationBar.height(CGFloat(0))
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationController?.navigationBar.backgroundColor = UIColor.init(white: 0, alpha: 0.5)
+    }
+    
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if groupPosts2D.count == 0 {
             return 0
@@ -684,7 +708,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let myCell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! FeedGroupCell
+        let feedCell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! FeedGroupCell
         if indexPath.row == groupPosts2D.count {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: EmptyFeedPostCell.cellId, for: indexPath) as! EmptyFeedPostCell
             return cell
@@ -692,23 +716,23 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         else if indexPath.row < groupPosts2D.count {
             let posts = groupPosts2D[indexPath.row]
             let groupId = posts[0].group.groupId
-            myCell.groupMembers = []
-            myCell.header.groupMembers = []
-            myCell.groupPosts = posts
-            myCell.usingCachedData = self.usingCachedData
-            myCell.groupMembers = groupMembers[groupId]
-            myCell.groupPostsTotalViewers = groupPostsTotalViewersDict[groupId]
-            myCell.groupPostsViewers = groupPostsVisibleViewersDict[groupId]
-            myCell.groupPostsFirstComment = groupPostsFirstCommentDict[groupId]
-            myCell.groupPostsNumComments = groupPostsNumCommentsDict[groupId]
-//            myCell.feedController = self
-            myCell.delegate = self
-            myCell.tag = indexPath.row
-//            myCell.isScrollingVertically = isScrolling
-            myCell.maxDistanceScrolled = CGFloat(0)
-            myCell.numPicsScrolled = 1
+            feedCell.groupMembers = []
+//            feedCell.header.groupMembers = []
+            feedCell.groupPosts = posts
+            feedCell.usingCachedData = self.usingCachedData
+            feedCell.groupMembers = groupMembers[groupId]
+            feedCell.groupPostsTotalViewers = groupPostsTotalViewersDict[groupId]
+            feedCell.groupPostsViewers = groupPostsVisibleViewersDict[groupId]
+            feedCell.groupPostsFirstComment = groupPostsFirstCommentDict[groupId]
+            feedCell.groupPostsNumComments = groupPostsNumCommentsDict[groupId]
+//            feedCell.feedController = self
+            feedCell.delegate = self
+            feedCell.tag = indexPath.row
+//            feedCell.isScrollingVertically = isScrolling
+            feedCell.maxDistanceScrolled = CGFloat(0)
+            feedCell.numPicsScrolled = 1
         }
-        return myCell
+        return feedCell
     }
     
     @objc private func loadFromNoInternet() {
@@ -730,13 +754,11 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         collectionView.visibleCells.forEach { cell in
-            if cell is MyCell {
+            if cell is FeedGroupCell {
                 // TODO: write logic to stop the video before it begins scrolling
-                (cell as! MyCell).pauseVisibleVideo()
-//                (cell as! MyCell).isScrollingVertically = isScrolling
+                (cell as! FeedGroupCell).pauseVisibleVideo()
             }
         }
-//        isScrolling = true
     }
     
     override func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
@@ -754,12 +776,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     private var maxDistanceScrolled = CGFloat(0)
     private var numGroupsScrolled = 1
     func stoppedScrolling(endPos: CGFloat) {
-//        isScrolling = false
-//        collectionView.visibleCells.forEach { cell in
-//            if cell is MyCell {
-//                (cell as! MyCell).isScrollingVertically = isScrolling
-//            }
-//        }
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false, block: { timer in
             if let indexPath = self.collectionView.indexPathsForVisibleItems.last {
                 if indexPath.row ==  self.numGroupsInFeed {
@@ -767,15 +783,26 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.fetchAllFreshGroupPosts()
                 }
             }
+            
+            // check if fullscreen and set tabBar color accordingly
+            self.collectionView.visibleCells.forEach { cell in
+                if cell is FeedGroupCell {
+                    let visible_cell = cell as! FeedGroupCell
+                    if visible_cell.isFullScreen {
+                        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
+                    }
+                    else {
+                        NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+                    }
+                }
+            }
         })
     }
     
     override func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool {
         collectionView.visibleCells.forEach { cell in
-            // TODO: write logic to stop the video before it begins scrolling
-            if cell is MyCell {
-                (cell as! MyCell).pauseVisibleVideo()
-//                (cell as! MyCell).isScrollingVertically = isScrolling
+            if cell is FeedGroupCell {
+                (cell as! FeedGroupCell).pauseVisibleVideo()
             }
         }
         return true
@@ -786,11 +813,67 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     func didTapGroup(group: Group) {
-        
+        let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+        groupProfileController.group = group
+        groupProfileController.modalPresentationCapturesStatusBarAppearance = true
+        navigationController?.pushViewController(groupProfileController, animated: true)
     }
     
     func didTapOptions(groupPost: GroupPost) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        alertController.addAction(cancelAction)
         
+        Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
+            if inGroup {
+                if let deleteAction = self.deleteAction(forPost: groupPost) {
+                    alertController.addAction(deleteAction)
+                    self.present(alertController, animated: true, completion: nil)
+                }
+            }
+            else{
+                if let unsubscribeAction = self.unsubscribeAction(forPost: groupPost, uid: currentLoggedInUserId) {
+                    alertController.addAction(unsubscribeAction)
+                    self.present(alertController, animated: true, completion: nil)
+                }
+            }
+        }) { (err) in
+            return
+        }
+    }
+    
+    private func deleteAction(forPost groupPost: GroupPost) -> UIAlertAction? {
+        let action = UIAlertAction(title: "Delete", style: .destructive, handler: { (_) in
+            
+            let alert = UIAlertController(title: "Delete Post?", message: nil, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "Delete", style: .default, handler: { (_) in
+                
+                Database.database().deleteGroupPost(groupId: groupPost.group.groupId, postId: groupPost.id) { (_) in
+                }
+            }))
+            self.present(alert, animated: true, completion: nil)
+        })
+        return action
+    }
+    
+    private func unsubscribeAction(forPost groupPost: GroupPost, uid: String) -> UIAlertAction? {
+        let action = UIAlertAction(title: "Unsubscribe", style: .destructive, handler: { (_) in
+            
+            let alert = UIAlertController(title: "Unsubscribe?", message: nil, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "Unsubscribe", style: .default, handler: { (_) in
+                
+                Database.database().deleteGroupPost(groupId: groupPost.group.groupId, postId: groupPost.id) { (_) in
+                }
+                Database.database().removeGroupFromUserFollowing(withUID: uid, groupId: groupPost.group.groupId) { (err) in
+                    
+                }
+            }))
+            self.present(alert, animated: true, completion: nil)
+        })
+        return action
     }
     
     func didSelectUser(selectedUser: User) {
@@ -802,11 +885,22 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     func didView(groupPost: GroupPost) {
-        
+        Database.database().addToViewedPosts(postId: groupPost.id, completion: { _ in })
     }
     
     func showViewers(viewers: [User], viewsCount: Int) {
+        collectionView.visibleCells.forEach { cell in
+            if cell is FeedGroupCell {
+                (cell as! FeedGroupCell).pauseVisibleVideo()
+            }
+        }
         
+        let viewersController = ViewersController()
+        viewersController.viewers = viewers
+        viewersController.viewsCount = viewsCount
+        viewersController.delegate = self
+        let navController = UINavigationController(rootViewController: viewersController)
+        self.present(navController, animated: true, completion: nil)
     }
     
     func requestPlay(for_lower cell1: FeedPostCell, for_upper cell2: MyCell) {
@@ -814,6 +908,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
 
     func didTapUser(user: User) {
-        
+        let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+        userProfileController.user = user
+        userProfileController.modalPresentationCapturesStatusBarAppearance = true
+        navigationController?.pushViewController(userProfileController, animated: true)
     }
 }

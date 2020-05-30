@@ -336,11 +336,90 @@ exports.removeUserFromGroupFollowPendingOnUnfollow = functions.database.ref('/fo
 	}).catch(() => {return null});
 })
 
+// When a user hides a group, for each follower:
+// 		check if follower is subscribed to group and 
+//		membersFollowing count of follower for group is == 1 and 
+//		follower is not a member of group:
+//			unsubscribe follower with the usual stuff
+exports.removeGroupSubscribersOnProfileHide = functions.database.ref('/users/{user_hiding}/groups/{group_id}/hidden').onUpdate((hidden_snapshot, context) => {
+	const user_hiding = context.params.user_hiding;
+	const group_id = context.params.group_id;
+	if (hidden_snapshot === null || hidden_snapshot.val() === null) {
+		return null;
+	}
+	var is_hidden = hidden_snapshot.val()
+	if (is_hidden) {
+		return snapshot.ref.root.child('/followers/' + user_hiding).once('value', followers => {
+			const promises = [];
+			var sync = new DispatchGroup();
+			var token_0 = sync.enter();
+			followers.forEach(function(follower) {
+				var follower_id = follower.key;
+				var token = sync.enter()
+				snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id).once('value', is_subscriber_snapshot => {
+					let is_subscribed = (is_subscriber_snapshot.val() !== null);
+					if (is_subscribed) {
+						snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id + '/autoSubscribed').once('value', auto_subscribed => {
+							if (auto_subscribed !== null && auto_subscribed.val() !== null){
+								var is_auto_subscribed = auto_subscribed.val()
+								if (is_auto_subscribed) {
+									snapshot.ref.root.child('/groups/' + group_id + '/members/' + follower_id).once('value', in_group_snapshot => {
+										let not_in_group = (in_group_snapshot.val() === null);
+										if (not_in_group) {
+											snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id + '/membersFollowing').once('value', membersFollowing => {
+												if (membersFollowing !== null && membersFollowing.length === 1){
+													promises.push(snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + follower_id).remove());
+													promises.push(snapshot.ref.root.child('/groupFollowers/' + group_id + '/' + follower_id).remove());
+													promises.push(snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id).remove());
+													sync.leave(token);
+												}
+												else {
+													sync.leave(token)
+												}
+											})
+										}
+										else {
+											sync.leave(token)
+										}
+									})	
+								}
+								else {
+									sync.leave(token)
+								}
+							}
+							else {
+								sync.leave(token)
+							}
+						})
+					}
+					else {
+						sync.leave(token)
+					}
+				})
+			})
+			sync.leave(token_0);
+			sync.notify(function() {
+				if (promises.length === 0) {
+					return null;
+				}
+				return Promise.all(promises);
+			})
+		}).catch(() => {return null});
+	}
+	else {
+		return null;
+	}
+}
+
 // exports.updateGroupFollowersCountOnSubscribe
 
 // exports.updateGroupFollowersCountOnUnSubscribe
 
-// exports.udpateUserFollowersCount
+// exports.updateUserFollowersCountOnFollow
+
+// exports.updateUserFollowersCountOnUnfollow
+
+// exports.update
 
 
 

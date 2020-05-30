@@ -140,19 +140,17 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
     }
     
     func didTapPost(group: Group, post: GroupPost) {
-        let layout = UPCarouselFlowLayout()
+        let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-        layout.spacingMode = UPCarouselFlowLayoutSpacingMode.fixed(spacing: 8)
-        layout.sideItemAlpha = 0.7
-        layout.sideItemScale = 0.7
-
+        layout.minimumLineSpacing = CGFloat(0)
+        
         let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
         largeImageViewController.group = group
         largeImageViewController.postToScrollToId = post.id
-        self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
-        self.navigationItem.backBarButtonItem?.tintColor = .white
-        navigationController?.pushViewController(largeImageViewController, animated: true)
+        let navController = UINavigationController(rootViewController: largeImageViewController)
+        navController.modalPresentationStyle = .fullScreen
+        self.present(navController, animated: true, completion: nil)
     }
     
     func groupJoinAlert(group: Group) {

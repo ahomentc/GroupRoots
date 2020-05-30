@@ -300,13 +300,13 @@ class FeedPostCell: UICollectionViewCell {
     private func sharedInit() {
         
         addSubview(postedByLabel)
-        postedByLabel.anchor(bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding + 45, paddingRight: padding)
+        postedByLabel.anchor(bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding + 55, paddingRight: padding)
         
         addSubview(newCommentButton)
-        newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: 0, paddingBottom: padding + 55)
+        newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: 0, paddingBottom: padding + 65)
         
         addSubview(commentsButton)
-        commentsButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding, paddingBottom: padding + 55)
+        commentsButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding, paddingBottom: padding + 65)
         
         addSubview(timeLabel)
         timeLabel.anchor(bottom: postedByLabel.topAnchor, right: rightAnchor, paddingBottom: padding - 10, paddingRight: padding)
@@ -318,14 +318,14 @@ class FeedPostCell: UICollectionViewCell {
         addSubview(captionLabel)
         captionLabel.anchor(left: leftAnchor, bottom: commentsLabel.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding, paddingRight: padding - 8)
         
-        addSubview(viewCountLabel)
-        viewCountLabel.anchor(top: topAnchor, right: rightAnchor, paddingTop: padding + 90, paddingRight: padding)
-
         addSubview(viewButton)
-        viewButton.anchor(top: topAnchor, right: viewCountLabel.leftAnchor, paddingTop: padding + 75, paddingRight: 0)
+        viewButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: padding + 65, paddingLeft: padding)
+        
+        addSubview(viewCountLabel)
+        viewCountLabel.anchor(top: topAnchor, left: viewButton.rightAnchor, paddingTop: padding + 80)
 
         addSubview(optionsButton)
-        optionsButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: padding + 20, paddingRight: padding)
+        optionsButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: padding + 10, paddingLeft: padding)
         
         insertSubview(playButton, at: 11)
         
@@ -370,6 +370,8 @@ class FeedPostCell: UICollectionViewCell {
         timer = Timer.scheduledTimer(timeInterval: 0.3, target: self, selector: #selector(updatePlayButton), userInfo: nil, repeats: true)
     }
     
+//    delegate?.didView(groupPost: groupPost)
+    
     @objc private func updatePlayButton(){
         guard let groupPost = groupPost else { return }
         if self.player.playbackState == .playing {
@@ -399,7 +401,7 @@ class FeedPostCell: UICollectionViewCell {
         activityIndicatorView.isHidden = true
         playButton.isHidden = true
         player.view.isHidden = true
-        delegate?.didView(groupPost: groupPost)
+        
         // is a picture
         if groupPost.videoUrl == "" {
             self.player.url = URL(string: "")
@@ -411,28 +413,6 @@ class FeedPostCell: UICollectionViewCell {
             self.player.view.isHidden = true
             self.activityIndicatorView.isHidden = true
             self.playButton.isHidden = true
-            
-//            photoImageView.loadImageWithCompletion(urlString: groupPost.imageUrl, completion: { () in
-//                self.setImageDimensions()
-//                self.photoImageView.getAvgColor(imageUrl: groupPost.imageUrl, completion: { (imgColor) in
-//                    self.imageBackground.backgroundColor = imgColor
-//                })
-//            })
-            
-            // use this here:
-//            let promise = SGImageCache.getImageForURL(url)
-//            promise.swiftThen({object in
-//              if let image = object as? UIImage {
-//                  self.imageView.image = image
-//              }
-//              return nil
-//            })
-//            promise.onRetry = {
-//              self.showLoadingSpinner()
-//            }
-//            promise.onFail = { (error: NSError?, wasFatal: Bool) -> () in
-//              self.displayError(error)
-//            }
 
             if let image = SGImageCache.image(forURL: groupPost.imageUrl) {
                 photoImageView.image = image   // image loaded immediately from cache
@@ -461,6 +441,7 @@ class FeedPostCell: UICollectionViewCell {
             self.playButton.isHidden = true
             self.imageBackground.isHidden = true
             self.photoImageView.isHidden = true
+            self.backgroundColor = UIColor.black
             
             do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
             

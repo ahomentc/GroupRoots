@@ -9,12 +9,19 @@
 import UIKit
 import Firebase
 
+protocol FeedGroupPageCellDelegate {
+    func didTapPostCell(for_cell cell: FeedGroupPageCell, cell_number: Int)
+    func didView(groupPost: GroupPost)
+}
+
 class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate {
     // don't need comments, views, etc because its just the grid view of the posts
     // [have another thing like FeedCell that replaces FeedGroupPageCell when go to full view post mode]
     
     var collectionView: UICollectionView!
     static var cellId = "feedGroupPageCellId"
+    
+    var delegate: FeedGroupPageCellDelegate?
     
     // only contains four group posts
     var groupPosts: [GroupPost]? {
@@ -55,7 +62,6 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-//        self.groupPosts?.count ?? 0
         return 4
     }
     
@@ -65,15 +71,18 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
             cell.groupPost = self.groupPosts?[indexPath.row]
             cell.tag = indexPath.row
         }
-        if indexPath.row == 0 {
-//            cell.photoImageView.layer.borderWidth = 4
-//            cell.photoImageView.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
-            
-//            cell.layer.borderWidth = 3
-//            cell.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
-//            cell.layer.cornerRadius = 4
-        }
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if indexPath.row < self.groupPosts?.count ?? 0{
+            delegate?.didTapPostCell(for_cell: self, cell_number: indexPath.row)
+            
+            let post = groupPosts?[indexPath.row]
+            if post != nil {
+                delegate?.didView(groupPost: post!)
+            }
+        }
     }
     
 }

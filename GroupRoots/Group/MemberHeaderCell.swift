@@ -128,19 +128,16 @@ class GroupProfileHeaderCell: UICollectionViewCell {
         sharedInit()
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        profileImageView.image = #imageLiteral(resourceName: "group_profile_3")
+    }
+    
     private func sharedInit() {
         addSubview(profileImageView)
-//        profileImageView.anchor(left: leftAnchor, paddingLeft: 12, width: 90, height: 90)
-//        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-//        profileImageView.layer.cornerRadius = 90 / 3
         profileImageView.anchor(left: leftAnchor, paddingLeft: 0, width: 75, height: 75)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         profileImageView.layer.cornerRadius = 75 / 2
-        
-//        let separatorView = UIView()
-//        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.4)
-//        addSubview(separatorView)
-//        separatorView.anchor(top: topAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 10, paddingBottom: 10, width: 0.5)
     }
     
     private func configureCell() {

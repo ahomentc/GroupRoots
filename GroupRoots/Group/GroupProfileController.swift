@@ -74,9 +74,8 @@ class GroupProfileController: HomePostCellViewController {
         self.navigationController?.navigationBar.isTranslucent = false
         self.navigationController?.navigationBar.backgroundColor = UIColor.white
         
-//        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 18)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
-//        navigationController?.navigationBar.titleTextAttributes = textAttributes
-        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+//        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor.black]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateGroupProfileFeed, object: nil)
@@ -102,6 +101,15 @@ class GroupProfileController: HomePostCellViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+        
+//        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+//        self.navigationController?.navigationBar.shadowImage = UIImage()
+//        self.navigationController?.navigationBar.isTranslucent = false
+//        self.navigationController?.navigationBar.backgroundColor = UIColor.white
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
@@ -297,12 +305,22 @@ class GroupProfileController: HomePostCellViewController {
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         layout.minimumLineSpacing = CGFloat(0)
 
+//        let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
+//        largeImageViewController.group = group
+//        largeImageViewController.indexPath = indexPath
+//        self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
+//        self.navigationItem.backBarButtonItem?.tintColor = .white
+//        navigationController?.pushViewController(largeImageViewController, animated: true)
+        
         let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
         largeImageViewController.group = group
         largeImageViewController.indexPath = indexPath
-        self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
-        self.navigationItem.backBarButtonItem?.tintColor = .white
-        navigationController?.pushViewController(largeImageViewController, animated: true)
+        let navController = UINavigationController(rootViewController: largeImageViewController)
+        navController.modalPresentationStyle = .fullScreen
+        self.present(navController, animated: true, completion: nil)
+        
+        let groupPost = groupPosts[indexPath.row]
+        handleDidView(groupPost: groupPost)
     }
 
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -339,6 +357,10 @@ class GroupProfileController: HomePostCellViewController {
             header?.numberOfPosts = self.groupPosts.count
         }
         return header!
+    }
+    
+    func handleDidView(groupPost: GroupPost) {
+        Database.database().addToViewedPosts(postId: groupPost.id, completion: { _ in })
     }
 }
 
@@ -381,7 +403,7 @@ extension GroupProfileController: UICollectionViewDelegateFlowLayout {
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: view.frame.width, height: 300)
+        return CGSize(width: view.frame.width, height: 250)
     }
 
 }

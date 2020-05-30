@@ -24,14 +24,7 @@ class InviteSelectionController: UIViewController, UICollectionViewDataSource, U
     }
     
     var user: User?
-//    {
-//        didSet {
-//            DispatchQueue.main.async{
-//                self.collectionView.reloadData()
-//            }
-//        }
-//    }
-    
+
     var collectionView: UICollectionView!
     
     override func viewDidLoad() {
@@ -41,8 +34,11 @@ class InviteSelectionController: UIViewController, UICollectionViewDataSource, U
             overrideUserInterfaceStyle = .light
         }
         
-        navigationController?.isNavigationBarHidden = true
+//        navigationController?.isNavigationBarHidden = true
         view.backgroundColor = .white
+        navigationItem.title = "Invite"
+        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        navigationController?.navigationBar.titleTextAttributes = textAttributes
         
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)

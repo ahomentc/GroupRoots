@@ -140,7 +140,6 @@ class ProfileFeedCellHeader: UICollectionViewCell, UICollectionViewDataSource, U
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        print("selected icon")
         if indexPath.item > 0 {
             let user = users[indexPath.item-1]
             delegate?.didTapUser(user: user)

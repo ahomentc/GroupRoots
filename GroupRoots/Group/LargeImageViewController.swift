@@ -11,7 +11,7 @@ import Firebase
 import UPCarouselFlowLayout
 
 class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate {
-    
+    override var prefersStatusBarHidden: Bool { return true }
     // the group posts loaded so far
     // When calling to fetch posts, we pass the last post in this set
     // we compare the date of the last post will all posts and retreive the n posts
@@ -49,6 +49,16 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     // value is an array of GroupPosts of that group
     var groupPostsDict: [String:[GroupPost]] = [:]
     
+    private lazy var closeButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(#imageLiteral(resourceName: "compress"), for: .normal)
+        button.isUserInteractionEnabled = true
+        button.tintColor = UIColor.white
+        button.addTarget(self, action: #selector(handleCloseFullscreen), for: .touchUpInside)
+        button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
+        return button
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         if #available(iOS 13.0, *) {
@@ -69,6 +79,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.isScrolling = true
+        self.navigationController?.isNavigationBarHidden = false
     }
     
     private func configureNavigationBar() {
@@ -81,6 +92,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         self.navigationController?.navigationBar.backgroundColor = .clear
         let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
+        self.navigationController?.isNavigationBarHidden = true
     }
     
     private func configureGroup() {
@@ -203,12 +215,11 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         collectionView.isPagingEnabled = true
         
         self.configureNavigationBar()
+        
+        self.view.addSubview(closeButton)
+        closeButton.anchor(top: self.view.topAnchor, right: self.view.rightAnchor, paddingTop: 30, paddingRight: 20)
             
         self.view.backgroundColor = UIColor.black
-        
-        self.view.addSubview(header)
-        header.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: 25, paddingLeft: 5, paddingRight: UIScreen.main.bounds.width/2)
-        header.delegate = self
     }
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
@@ -245,6 +256,10 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: EmptyFeedPostCell.cellId, for: indexPath) as! EmptyFeedPostCell
             return cell
         }
+    }
+    
+    @objc func handleCloseFullscreen(){
+        self.dismiss(animated: true, completion: {})
     }
     
     func configureHeader() {        
@@ -291,6 +306,16 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
 
     func stoppedScrolling(endPos: CGFloat) {
         isScrolling = false
+        
+        // set didView for cell
+        collectionView.visibleCells.forEach { cell in
+            if cell is FeedPostCell {
+                let groupPost = (cell as! FeedPostCell).groupPost
+                if groupPost != nil {
+                    handleDidView(groupPost: groupPost!)
+                }
+            }
+        }
     }
     
     func requestPlay(for cell: FeedPostCell) {
@@ -302,6 +327,10 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                 }
             }
         }
+    }
+    
+    func handleDidView(groupPost: GroupPost) {
+        Database.database().addToViewedPosts(postId: groupPost.id, completion: { _ in })
     }
     
     private func deleteAction(forPost groupPost: GroupPost) -> UIAlertAction? {

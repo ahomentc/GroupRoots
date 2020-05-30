@@ -812,7 +812,7 @@ extension GroupProfileHeader: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        if users.count == 1 && (group?.groupProfileImageUrl == nil || group?.groupProfileImageUrl == "") {
+        if users.count == 1 {
             let totalCellWidth = 80 * collectionView.numberOfItems(inSection: 0)
             let totalSpacingWidth = 10 * (collectionView.numberOfItems(inSection: 0) - 1)
 
