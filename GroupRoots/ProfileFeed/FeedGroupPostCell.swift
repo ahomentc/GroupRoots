@@ -9,17 +9,15 @@
 import UIKit
 import SGImageCache
 import Firebase
+import NVActivityIndicatorView
 
 class FeedGroupPostCell: UICollectionViewCell {
     
     var groupPost: GroupPost? {
         didSet {
-            guard let imageUrl = groupPost?.imageUrl else { return }
-            photoImageView.loadImage(urlString: imageUrl)
-            
+            guard let imageUrl = self.groupPost?.imageUrl else { return }
             if let image = SGImageCache.image(forURL: imageUrl) {
-                photoImageView.image = image   // image loaded immediately from cache
-                
+                self.photoImageView.image = image   // image loaded immediately from cache
             } else {
                 self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
                 SGImageCache.getImage(url: imageUrl) { [weak self] image in
@@ -28,13 +26,13 @@ class FeedGroupPostCell: UICollectionViewCell {
             }
             
             // set a playButton (not clickable) for video previews
-            guard let videoUrl = groupPost?.videoUrl else { return }
+            guard let videoUrl = self.groupPost?.videoUrl else { return }
             if videoUrl != "" {
-                playButton.isHidden = false
+                self.playButton.isHidden = false
             }
-
+            
             // set newDot as visible or not
-            guard let post_id = groupPost?.id else { return }
+            guard let post_id = self.groupPost?.id else { return }
             Database.database().hasViewedPost(postId: post_id, completion: { (hasViewed) in
                 if hasViewed{
                     self.newDot.isHidden = true
@@ -45,13 +43,12 @@ class FeedGroupPostCell: UICollectionViewCell {
             }) { (err) in return }
         }
     }
-    
+
     public let photoImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
         iv.backgroundColor = UIColor(white: 1, alpha: 0.1)
-//        iv.backgroundColor = .white
         return iv
     }()
     
@@ -96,6 +93,11 @@ class FeedGroupPostCell: UICollectionViewCell {
     }
     
     private func sharedInit() {
+//        activityIndicatorView.isHidden = false
+//        activityIndicatorView.color = .black
+//        insertSubview(activityIndicatorView, at: 20)
+//        activityIndicatorView.startAnimating()
+        
         insertSubview(photoImageView, at: 4)
         photoImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: CGFloat(1), paddingLeft: CGFloat(1), paddingBottom: CGFloat(1), paddingRight: CGFloat(1), width: 0, height: 0)
         photoImageView.layer.cornerRadius = 10
@@ -129,5 +131,7 @@ class FeedGroupPostCell: UICollectionViewCell {
         playButton.isHidden = true
         newDot.isHidden = true
         groupPost = nil
+        
+//        activityIndicatorView.isHidden = false
     }
 }

@@ -65,7 +65,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
 
     func showEmptyStateViewIfNeeded() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-        Database.database().numberOfFollowingForUser(withUID: currentLoggedInUserId) { (followingCount) in
+        Database.database().numberOfSubscriptionsForUser(withUID: currentLoggedInUserId) { (followingCount) in
             Database.database().numberOfGroupsForUser(withUID: currentLoggedInUserId, completion: { (groupsCount) in
                 if followingCount == 0 && groupsCount == 0 {
                     TableViewHelper.EmptyMessage(message: "Welcome to GroupRoots!\nFollow friends to view group posts", viewController: self)
@@ -953,7 +953,7 @@ class TableViewHelper {
         let rect = CGRect(origin: CGPoint(x: 0,y :0), size: CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
         let messageLabel = UILabel(frame: rect)
         messageLabel.text = message
-        messageLabel.textColor = UIColor.white
+        messageLabel.textColor = UIColor.black
         messageLabel.numberOfLines = 0;
         messageLabel.textAlignment = .center;
         messageLabel.font = UIFont(name: "Avenir", size: 20)

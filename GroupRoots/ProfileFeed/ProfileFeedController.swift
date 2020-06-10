@@ -8,6 +8,7 @@
 
 import UIKit
 import Firebase
+import NVActivityIndicatorView
 
 // add "GroupCellDelegate" here v
 class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate {
@@ -68,9 +69,11 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         return button
     }()
     
+    let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
+    
     func showEmptyStateViewIfNeeded() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-        Database.database().numberOfFollowingForUser(withUID: currentLoggedInUserId) { (followingCount) in
+        Database.database().numberOfSubscriptionsForUser(withUID: currentLoggedInUserId) { (followingCount) in
             Database.database().numberOfGroupsForUser(withUID: currentLoggedInUserId, completion: { (groupsCount) in
                 if followingCount == 0 && groupsCount == 0 {
                     TableViewHelper.EmptyMessage(message: "Welcome to GroupRoots!\nFollow friends to view group posts", viewController: self)
@@ -234,6 +237,11 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.reloadButton.isHidden = true
             self.noInternetLabel.isHidden = true
             self.noInternetBackground.isHidden = true
+            
+            activityIndicatorView.isHidden = false
+            activityIndicatorView.color = .white
+            self.view.insertSubview(activityIndicatorView, at: 20)
+            activityIndicatorView.startAnimating()
         }else{
             print("Internet Connection not Available!")
             self.reloadButton.isHidden = false
@@ -304,6 +312,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         // run below when all the group ids have been collected
         sync.notify(queue: .main) {
             let lower_sync = DispatchGroup()
+            lower_sync.enter()
             group_ids.forEach({ (groupId) in
                 lower_sync.enter()
                 // could change this function to have only posts but maybe this could be useful in the future
@@ -422,6 +431,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.collectionView?.refreshControl?.endRefreshing()
                 })
             })
+            lower_sync.leave()
             lower_sync.notify(queue: .main) {
                 tempGroupPosts2D.sort(by: { (p1, p2) -> Bool in
                     return p1[0].creationDate.compare(p2[0].creationDate) == .orderedDescending
@@ -462,11 +472,17 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 if let groupPostsNumCommentsDictEncodedData = try? JSONEncoder().encode(self.groupPostsNumCommentsDict) {
                     UserDefaults.standard.set(groupPostsNumCommentsDictEncodedData, forKey: "groupPostsNumCommentsDict")
                 }
-                                
+
                 self.loadingScreenView.isHidden = true
+                self.activityIndicatorView.isHidden = true
             
-                self.collectionView?.reloadData()
-                self.collectionView?.refreshControl?.endRefreshing()
+                DispatchQueue.main.async{
+                    Timer.scheduledTimer(withTimeInterval: 0.005, repeats: false, block: { timer in
+                        self.collectionView?.reloadData()
+                        self.collectionView?.refreshControl?.endRefreshing()
+                        self.collectionView.layoutIfNeeded()
+                    })
+                }
             }
         }
     }
@@ -675,9 +691,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                                 
                 self.loadingScreenView.isHidden = true
             
-                self.collectionView?.reloadData()
-                self.collectionView?.refreshControl?.endRefreshing()
-                
+                DispatchQueue.main.async{
+                    self.collectionView?.reloadData()
+                    self.collectionView?.refreshControl?.endRefreshing()
+                }
             }
         }
     }

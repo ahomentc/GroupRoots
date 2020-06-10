@@ -459,18 +459,13 @@ extension Database {
     
     func fetchUserFollowers(withUID uid: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("followers").child(uid)
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion([])
-                return
-            }
-                        
+        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
             var users = [User]()
             
             let sync = DispatchGroup()
-            dictionaries.forEach({ (arg) in
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
                 sync.enter()
-                let (userId, _) = arg
+                let userId = child.key
                 self.userExists(withUID: userId, completion: { (exists) in
                     if exists{
                         Database.database().fetchUser(withUID: userId, completion: { (user) in
@@ -482,7 +477,7 @@ extension Database {
                         sync.leave()
                     }
                 })
-            })
+            }
             sync.notify(queue: .main) {
                 completion(users)
                 return
@@ -495,17 +490,13 @@ extension Database {
     
     func fetchUserFollowing(withUID uid: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("following").child(uid)
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion([])
-                return
-            }
+        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
 
             var users = [User]()
             let sync = DispatchGroup()
-            dictionaries.forEach({ (arg) in
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
                 sync.enter()
-                let (userId, _) = arg
+                let userId = child.key
                 self.userExists(withUID: userId, completion: { (exists) in
                     if exists{
                         Database.database().fetchUser(withUID: userId, completion: { (user) in
@@ -517,7 +508,7 @@ extension Database {
                         sync.leave()
                     }
                 })
-            })
+            }
             sync.notify(queue: .main) {
                 completion(users)
                 return
@@ -530,17 +521,12 @@ extension Database {
     
     func fetchUserSubscriptions(withUID uid: String, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groupsFollowing").child(uid)
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion([])
-                return
-            }
-
+        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
             var groups = [Group]()
             let sync = DispatchGroup()
-            dictionaries.forEach({ (arg) in
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
                 sync.enter()
-                let (groupId, _) = arg
+                let groupId = child.key
                 self.groupExists(groupId: groupId, completion: { (exists) in
                     if exists {
                         Database.database().fetchGroup(groupId: groupId, completion: { (group) in
@@ -552,7 +538,7 @@ extension Database {
                         sync.leave()
                     }
                 })
-            })
+            }
             sync.notify(queue: .main) {
                 completion(groups)
                 return
@@ -1138,30 +1124,28 @@ extension Database {
     
     func fetchFirstNGroupMembers(groupId: String, n: Int, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groups").child(groupId).child("members")
-        ref.queryOrderedByKey().queryLimited(toFirst: UInt(n)).observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion([])
-                return
-            }
-                        
+        ref.queryOrderedByKey().queryLimited(toFirst: UInt(n)).observe(.value, with: { (snapshot) in
             var users = [User]()
             
-            dictionaries.forEach({ (arg) in
-                
-                let (userId, _) = arg
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                sync.enter()
+                let userId = child.key
                 self.userExists(withUID: userId, completion: { (exists) in
                     if exists{
                         Database.database().fetchUser(withUID: userId, completion: { (user) in
                             users.append(user)
-
-                            if users.count == dictionaries.count {
-                                completion(users)
-                            }
+                            sync.leave()
                         })
                     }
+                    else {
+                        sync.leave()
+                    }
                 })
-            })
-            
+            }
+            sync.notify(queue: .main) {
+                completion(users)
+            }
         }) { (err) in
             print("Failed to fetch all users from database:", (err))
             cancel?(err)
@@ -1170,30 +1154,27 @@ extension Database {
     
     func fetchGroupMembers(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groups").child(groupId).child("members")
-        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion([])
-                return
-            }
-                        
+        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
             var users = [User]()
-            
-            dictionaries.forEach({ (arg) in
-                
-                let (userId, _) = arg
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let userId = child.key
+                sync.enter()
                 self.userExists(withUID: userId, completion: { (exists) in
                     if exists{
                         Database.database().fetchUser(withUID: userId, completion: { (user) in
                             users.append(user)
-
-                            if users.count == dictionaries.count {
-                                completion(users)
-                            }
+                            sync.leave()
                         })
                     }
+                    else {
+                        sync.leave()
+                    }
                 })
-            })
-            
+            }
+            sync.notify(queue: .main) {
+                completion(users)
+            }
         }) { (err) in
             print("Failed to fetch all users from database:", (err))
             cancel?(err)
@@ -1359,22 +1340,25 @@ extension Database {
          }
          let ref = Database.database().reference().child("users").child(groupUser).child("groups")
          
-//        queryLimited(toLast: 1)
-        ref.queryOrderedByKey().queryLimited(toLast: 1).observeSingleEvent(of: .value, with: { (snapshot) in
-             guard let dictionaries = snapshot.value as? [String: Any] else {
-                 completion([])
-                 return
-             }
-             
-             var groups = [String]()
-
-             dictionaries.forEach({ (groupId, value) in
-                 groups.append(groupId)
-
-                 if groups.count == dictionaries.count {
-                     completion(groups)
-                 }
-             })
+        ref.queryOrderedByKey().queryLimited(toLast: 1).observe(.value, with: { (snapshot) in
+            var groups = [String]()
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let groupId = child.key
+                sync.enter()
+                self.groupExists(groupId: groupId, completion: { (exists) in
+                    if exists{
+                        groups.append(groupId)
+                        sync.leave()
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                completion(groups)
+            }
          }) { (err) in
              print("Failed to fetch posts:", err)
              cancel?(err)
@@ -1383,30 +1367,27 @@ extension Database {
     
     func fetchGroupRequestUsers(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groups").child(groupId).child("requestedMembers")
-        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion([])
-                return
-            }
-                        
+        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
             var users = [User]()
-            
-            dictionaries.forEach({ (arg) in
-                
-                let (userId, _) = arg
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let userId = child.key
+                sync.enter()
                 self.userExists(withUID: userId, completion: { (exists) in
                     if exists{
                         Database.database().fetchUser(withUID: userId, completion: { (user) in
                             users.append(user)
-
-                            if users.count == dictionaries.count {
-                                completion(users)
-                            }
+                            sync.leave()
                         })
                     }
+                    else {
+                        sync.leave()
+                    }
                 })
-            })
-            
+            }
+            sync.notify(queue: .main) {
+                completion(users)
+            }
         }) { (err) in
             print("Failed to fetch all users from database:", (err))
             cancel?(err)
@@ -1628,7 +1609,8 @@ extension Database {
                         // ^^ but do this later
                         let values = [groupId: 1]
                         let code = String(groupId.suffix(6))
-                        let invitationRef = Database.database().reference().child("inviteCodes").child(code)
+                        let stripped_code = code.replacingOccurrences(of: "_", with: "a", options: .literal, range: nil)
+                        let invitationRef = Database.database().reference().child("inviteCodes").child(stripped_code)
                         invitationRef.updateChildValues(values) { (err, ref) in
                             if let err = err {
                                 completion(err)
@@ -2363,18 +2345,13 @@ extension Database {
 
     func fetchGroupFollowers(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groupFollowers").child(groupId)
-        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion([])
-                return
-            }
-                        
+        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
             var users = [User]()
             
             let sync = DispatchGroup()
-            dictionaries.forEach({ (arg) in
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
                 sync.enter()
-                let (userId, _) = arg
+                let userId = child.key
                 self.userExists(withUID: userId, completion: { (exists) in
                     if exists{
                         Database.database().fetchUser(withUID: userId, completion: { (user) in
@@ -2386,7 +2363,7 @@ extension Database {
                         sync.leave()
                     }
                 })
-            })
+            }
             sync.notify(queue: .main) {
                 completion(users)
                 return
@@ -3100,17 +3077,27 @@ extension Database {
         }
     }
     
+//    func fetchNumPostViewers(postId: String, completion: @escaping (Int) -> (), withCancel cancel: ((Error) -> ())?) {
+//        let ref = Database.database().reference().child("postViews").child(postId)
+//        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+//            guard let dictionaries = snapshot.value as? [String: Any] else {
+//                completion(0)
+//                return
+//            }
+//            completion(dictionaries.count)
+//        }) { (err) in
+//            print("Failed to fetch posts:", err)
+//            cancel?(err)
+//        }
+//    }
     func fetchNumPostViewers(postId: String, completion: @escaping (Int) -> (), withCancel cancel: ((Error) -> ())?) {
-        let ref = Database.database().reference().child("postViews").child(postId)
-        ref.observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion(0)
-                return
+        Database.database().reference().child("postViewsCount").child(postId).observeSingleEvent(of: .value) { (snapshot) in
+            if let val = snapshot.value as? Int {
+                completion(val)
             }
-            completion(dictionaries.count)
-        }) { (err) in
-            print("Failed to fetch posts:", err)
-            cancel?(err)
+            else {
+                completion(0)
+            }
         }
     }
     
@@ -3863,21 +3850,12 @@ extension Database {
         }
     }
     
-    func numberOfFollowersForUser(withUID uid: String, completion: @escaping (Int) -> ()) {
-        Database.database().reference().child("followers").child(uid).observeSingleEvent(of: .value) { (snapshot) in
-            if let dictionaries = snapshot.value as? [String: Any] {
-                completion(dictionaries.count)
-            } else {
-                completion(0)
-            }
-        }
-    }
-    
     func numberOfSubscriptionsForUser(withUID uid: String, completion: @escaping (Int) -> ()) {
-        Database.database().reference().child("groupsFollowing").child(uid).observeSingleEvent(of: .value) { (snapshot) in
-            if let dictionaries = snapshot.value as? [String: Any] {
-                completion(dictionaries.count)
-            } else {
+        Database.database().reference().child("userSubscriptionsCount").child(uid).observeSingleEvent(of: .value) { (snapshot) in
+            if let val = snapshot.value as? Int {
+                completion(val)
+            }
+            else {
                 completion(0)
             }
         }
@@ -3907,40 +3885,44 @@ extension Database {
 //    }
     
     func numberOfMembersForGroup(groupId: String, completion: @escaping (Int) -> ()) {
-        Database.database().reference().child("groups").child(groupId).child("members").observeSingleEvent(of: .value) { (snapshot) in
-            if let dictionaries = snapshot.value as? [String: Any] {
-                completion(dictionaries.count)
-            } else {
+        Database.database().reference().child("groupMembersCount").child(groupId).observeSingleEvent(of: .value) { (snapshot) in
+            if let val = snapshot.value as? Int {
+                completion(val)
+            }
+            else {
                 completion(0)
             }
         }
     }
     
     func numberOfGroupsForUser(withUID uid: String, completion: @escaping (Int) -> ()) {
-        Database.database().reference().child("users").child(uid).child("groups").observeSingleEvent(of: .value) { (snapshot) in
-            if let dictionaries = snapshot.value as? [String: Any] {
-                completion(dictionaries.count)
-            } else {
+        Database.database().reference().child("usersGroupsCount").child(uid).observeSingleEvent(of: .value) { (snapshot) in
+            if let val = snapshot.value as? Int {
+                completion(val)
+            }
+            else {
                 completion(0)
             }
         }
     }
     
-    func numberOfFollowingForUser(withUID uid: String, completion: @escaping (Int) -> ()) {
-        Database.database().reference().child("groupsFollowing").child(uid).observeSingleEvent(of: .value) { (snapshot) in
-            if let dictionaries = snapshot.value as? [String: Any] {
-                completion(dictionaries.count)
-            } else {
-                completion(0)
+        func numberOfFollowersForUser(withUID uid: String, completion: @escaping (Int) -> ()) {
+            Database.database().reference().child("userFollowersCount").child(uid).observeSingleEvent(of: .value) { (snapshot) in
+                if let val = snapshot.value as? Int {
+                    completion(val)
+                }
+                else {
+                    completion(0)
+                }
             }
         }
-    }
     
     func numberOfUsersFollowingForUser(withUID uid: String, completion: @escaping (Int) -> ()) {
-        Database.database().reference().child("following").child(uid).observeSingleEvent(of: .value) { (snapshot) in
-            if let dictionaries = snapshot.value as? [String: Any] {
-                completion(dictionaries.count)
-            } else {
+        Database.database().reference().child("userFollowingCount").child(uid).observeSingleEvent(of: .value) { (snapshot) in
+            if let val = snapshot.value as? Int {
+                completion(val)
+            }
+            else {
                 completion(0)
             }
         }

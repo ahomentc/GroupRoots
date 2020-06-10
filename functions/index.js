@@ -236,36 +236,58 @@ exports.notificationOnFollowingMemberLeave = functions.database.ref('/groups/{gr
 		var sync = new DispatchGroup();
 		var token_0 = sync.enter();
 		followers.forEach(function(follower) {
+			// make sure that follower isn't a member of the group
+
 			var follower_id = follower.key;
 			var token = sync.enter()
 			snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id).once('value', in_subscriber_snapshot => {
 				let is_subscribed = (in_subscriber_snapshot.val() !== null);
 				if (is_subscribed) {
-					snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id + '/autoSubscribed').once('value', auto_subscribed => {
-						if (auto_subscribed !== null && auto_subscribed.val() !== null){
-							var is_auto_subscribed = auto_subscribed.val()
-							if (is_auto_subscribed) {
-								snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id + '/membersFollowing').once('value', membersFollowing => {
-									var count = 0 // don't know how to get the count of membersFollowing so this for now
-									membersFollowing.forEach(function(memberFollowing) {
-										count += 1
-									})
-									if (count === 0 || membersFollowing === null){
-										// send notification of unsubscribe_request
-										var creation_time = parseInt(Math.floor(Date.now()/1000))
-										var values = {
-											type: "unsubscribeRequest",
-											group_id: group_id,
-											creationDate: creation_time
-										}
-										let promise = snapshot.ref.root.child('notifications/' + follower_id).push(values);
-										promises.push(promise);
+					snapshot.after.ref.root.child('/groups/' + group_id + '/members/' + follower_id).once('value', in_group_snapshot => {
+						let not_in_group = (in_group_snapshot.val() === null);
+						if (not_in_group) {
+							snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id + '/autoSubscribed').once('value', auto_subscribed => {
+								if (auto_subscribed !== null && auto_subscribed.val() !== null){
+									var is_auto_subscribed = auto_subscribed.val()
+									if (is_auto_subscribed) {
+										snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id + '/membersFollowing').once('value', membersFollowing => {
+											var count = 0 // don't know how to get the count of membersFollowing so this for now
+											membersFollowing.forEach(function(memberFollowing) {
+												count += 1
+											})
+											if (count === 0 || membersFollowing === null){
+												// send notification of unsubscribe_request
+												var creation_time = parseInt(Math.floor(Date.now()/1000))
+												var values = {
+													type: "unsubscribeRequest",
+													group_id: group_id,
+													creationDate: creation_time
+												}
+												let promise = snapshot.ref.root.child('notifications/' + follower_id).push(values);
+												promises.push(promise);
+												sync.leave(token);
+											}
+											else {
+												sync.leave(token);
+											}
+										})
+									}
+									else {
 										sync.leave(token);
 									}
-								})
-							}
+								}
+								else {
+									sync.leave(token);
+								}
+							})
+						}
+						else {
+							sync.leave(token);
 						}
 					})
+				}
+				else {
+					sync.leave(token);
 				}
 			})
 		})
@@ -495,15 +517,100 @@ exports.removeGroupSubscribersOnProfileHideUpdate = functions.database.ref('/use
 	}).catch(() => {return null});
 })
 
-// exports.updateGroupFollowersCountOnSubscribe
 
-// exports.updateGroupFollowersCountOnUnSubscribe
+// ---------------- Updating counts ----------------
 
-// exports.updateUserFollowersCountOnFollow
+exports.updateGroupFollowersCountOnSubscribe = functions.database.ref('/groupFollowers/{group_id}/{subscribing_user_id}').onCreate((snapshot, context) => {
+	const group_id = context.params.group_id;
+    return snapshot.ref.root.child('/groupFollowersCount/' + group_id).transaction(counter_value => {
+		return (counter_value || 0) + 1;
+	}).catch(() => {return null});
+})
 
-// exports.updateUserFollowersCountOnUnfollow
+exports.updateGroupFollowersCountOnUnSubscribe = functions.database.ref('/groupFollowers/{group_id}/{subscribing_user_id}').onDelete((snapshot, context) => {
+	const group_id = context.params.group_id;
+    return snapshot.ref.root.child('/groupFollowersCount/' + group_id).transaction(counter_value => {
+		return (counter_value || 1) - 1;
+	}).catch(() => {return null});
+})
 
-// exports.update
+exports.updateUserFollowersCountOnFollow = functions.database.ref('/followers/{following_user}/{follower_user}').onCreate((snapshot, context) => {
+	const following_user = context.params.following_user;
+	return snapshot.ref.root.child('/userFollowersCount/' + following_user).transaction(counter_value => {
+		return (counter_value || 0) + 1;
+	}).catch(() => {return null});
+})
+
+exports.updateUserFollowersCountOnUnfollow = functions.database.ref('/followers/{following_user}/{follower_user}').onDelete((snapshot, context) => {
+	const following_user = context.params.following_user;
+	return snapshot.ref.root.child('/userFollowersCount/' + following_user).transaction(counter_value => {
+		return (counter_value || 1) - 1;
+	}).catch(() => {return null});
+})
+
+exports.updateGroupMembersCountOnJoin = functions.database.ref('/groups/{group_id}/members/{joining_user_id}').onCreate((snapshot, context) => {
+	const group_id = context.params.group_id;
+	return snapshot.ref.root.child('/groupMembersCount/' + group_id).transaction(counter_value => {
+		return (counter_value || 0) + 1;
+	}).catch(() => {return null});
+})
+
+exports.updateGroupMembersCountOnLeave = functions.database.ref('/groups/{group_id}/members/{leaving_user_id}').onDelete((snapshot, context) => {
+	const group_id = context.params.group_id;
+	return snapshot.ref.root.child('/groupMembersCount/' + group_id).transaction(counter_value => {
+		return (counter_value || 1) - 1;
+	}).catch(() => {return null});
+})
+
+exports.updateUserSubscriptionsCountOnSubscribe = functions.database.ref('/groupFollowers/{group_id}/{subscribing_user_id}').onCreate((snapshot, context) => {
+	const subscribing_user_id = context.params.subscribing_user_id;
+	return snapshot.ref.root.child('/userSubscriptionsCount/' + subscribing_user_id).transaction(counter_value => {
+		return (counter_value || 0) + 1;
+	}).catch(() => {return null});
+})
+
+exports.updateUserSubscriptionsCountOnUnSubscribe = functions.database.ref('/groupFollowers/{group_id}/{un_subscribing_user_id}').onDelete((snapshot, context) => {
+	const un_subscribing_user_id = context.params.un_subscribing_user_id;
+	return snapshot.ref.root.child('/userSubscriptionsCount/' + un_subscribing_user_id).transaction(counter_value => {
+		return (counter_value || 1) - 1;
+	}).catch(() => {return null});
+})
+
+exports.updateUserFollowingCountOnFollow = functions.database.ref('/followers/{following_user}/{follower_user}').onCreate((snapshot, context) => {
+	const follower_user = context.params.follower_user;
+	return snapshot.ref.root.child('/userFollowingCount/' + follower_user).transaction(counter_value => {
+		return (counter_value || 0) + 1;
+	}).catch(() => {return null});
+})
+
+exports.updateUserFollowingCountOnUnFollow = functions.database.ref('/followers/{following_user}/{follower_user}').onDelete((snapshot, context) => {
+	const follower_user = context.params.follower_user;
+	return snapshot.ref.root.child('/userFollowingCount/' + follower_user).transaction(counter_value => {
+		return (counter_value || 1) - 1;
+	}).catch(() => {return null});
+})
+
+exports.updatePostViewsCountOnView = functions.database.ref('/postViews/{post_id}/{user_id}').onCreate((snapshot, context) => {
+	const post_id = context.params.post_id;
+	return snapshot.ref.root.child('/postViewsCount/' + post_id).transaction(counter_value => {
+		return (counter_value || 0) + 1;
+	}).catch(() => {return null});
+})
+
+exports.updateNumGroupsCountOnJoin = functions.database.ref('/groups/{group_id}/members/{joining_user_id}').onCreate((snapshot, context) => {
+	const joining_user_id = context.params.joining_user_id;
+	return snapshot.ref.root.child('/usersGroupsCount/' + joining_user_id).transaction(counter_value => {
+		return (counter_value || 0) + 1;
+	}).catch(() => {return null});
+})
+
+exports.updateNumGroupsCountOnLeave = functions.database.ref('/groups/{group_id}/members/{leaving_user_id}').onDelete((snapshot, context) => {
+	const leaving_user_id = context.params.leaving_user_id;
+	return snapshot.ref.root.child('/usersGroupsCount/' + leaving_user_id).transaction(counter_value => {
+		return (counter_value || 1) - 1;
+	}).catch(() => {return null});
+})
+
 
 
 

@@ -133,7 +133,7 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
     }
     
     @objc private func handleTextInputChange() {
-        let isFormValid = passwordTextField.text?.isEmpty == false && passwordMatchTextField.text?.isEmpty == false && invitationTextField.text?.isEmpty == false
+        let isFormValid = passwordTextField.text?.isEmpty == false && passwordMatchTextField.text?.isEmpty == false
         if isFormValid {
             signUpButton.isEnabled = true
             signUpButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
@@ -177,28 +177,36 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
         signUpButton.isEnabled = false
         signUpButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
         
-        Database.database().fetchInviteCodeGroupId(code: code, completion: { (groupId) in
-            if groupId != "" || code == "qwerty123" {
-                Auth.auth().createUser(withEmail: email, username: username, name: name, password: password, image: self.profileImage) { (err) in
-                    if err != nil {
-                        
-                    }
-                    
-                    if code == "qwerty123"{
-                        guard let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController else { return }
-                        mainTabBarController.setupViewControllers()
-                        mainTabBarController.selectedIndex = 0
-                        self.dismiss(animated: true, completion: nil)
-                        return
-                    }
-                    
-                    // get the groupId that the code belongs to
-                    // send a request to join the group
-                    // auto follow/subscribe to the group so it appears in the feed
+        var groupId = ""
+        let sync = DispatchGroup()
+        sync.enter()
+        if code != "" {
+            Database.database().fetchInviteCodeGroupId(code: code, completion: { (group_id) in
+                groupId = group_id
+                sync.leave()
+            })
+        }
+        else {
+            sync.leave()
+        }
+        
+        sync.notify(queue: .main) {
+            if code != "" && groupId == "" {
+                let alert = UIAlertController(title: "Invalid Invitation", message: "Your invitation code is no longer valid", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                self.present(alert, animated: true)
+                self.resetInputFields()
+                self.invitationTextField.text = ""
+                return
+            }
+            
+            Auth.auth().createUser(withEmail: email, username: username, name: name, password: password, image: self.profileImage) { (err) in
+
+                // get the groupId that the code belongs to
+                // send a request to join the group
+                // auto follow/subscribe to the group so it appears in the feed
+                if groupId != "" {
                     Database.database().joinGroup(groupId: groupId) { (err) in
-                        if err != nil {
-                            return
-                        }
                         // send the notification each each user in the group
                         Database.database().groupExists(groupId: groupId, completion: { (exists) in
                             if exists {
@@ -206,23 +214,14 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
                                     Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
                                         users.forEach({ (user) in
                                             Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinRequest, group: group) { (err) in
-                                                if err != nil {
-                                                    return
-                                                }
                                             }
                                         })
                                     }) { (_) in}
                                 })
                             }
-                            else {
-                                return
-                            }
                         })
                         
                         Database.database().subscribeToGroup(groupId: groupId) { (err) in
-                            if err != nil {
-                                return
-                            }
                             print("subscribed")
                             NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
                             
@@ -233,16 +232,14 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
                         }
                     }
                 }
+                else {
+                    guard let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController else { return }
+                    mainTabBarController.setupViewControllers()
+                    mainTabBarController.selectedIndex = 0
+                    self.dismiss(animated: true, completion: nil)
+                }
             }
-            else {
-                let alert = UIAlertController(title: "Invalid Invitation", message: "Your invitation code is no longer valid", preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-                self.present(alert, animated: true)
-                self.resetInputFields()
-                self.invitationTextField.text = ""
-            }
-            
-        })
+        }
     }
 }
 

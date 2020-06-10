@@ -15,18 +15,16 @@ protocol FeedGroupPageCellDelegate {
 }
 
 class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate {
-    // don't need comments, views, etc because its just the grid view of the posts
-    // [have another thing like FeedCell that replaces FeedGroupPageCell when go to full view post mode]
-    
     var collectionView: UICollectionView!
     static var cellId = "feedGroupPageCellId"
-    
     var delegate: FeedGroupPageCellDelegate?
     
     // only contains four group posts
     var groupPosts: [GroupPost]? {
         didSet {
-            self.collectionView.reloadData()
+            DispatchQueue.main.async{
+                self.collectionView.reloadData()
+            }
         }
     }
     
@@ -68,8 +66,8 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedGroupPostCell.cellId, for: indexPath) as! FeedGroupPostCell
         if indexPath.row < self.groupPosts?.count ?? 0{
-            cell.groupPost = self.groupPosts?[indexPath.row]
             cell.tag = indexPath.row
+            cell.groupPost = self.groupPosts?[indexPath.row]
         }
         return cell
     }

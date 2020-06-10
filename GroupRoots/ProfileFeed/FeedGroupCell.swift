@@ -170,26 +170,22 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         }
         usernameButton.setTitleColor(.black, for: .normal)
         
-        if groupPosts.count > 0 { // need to check if in group, else viewers will be nil and always return
-            Database.database().isInGroup(groupId: groupPosts[0].group.groupId, completion: { (inGroup) in
-                if inGroup{
-                    DispatchQueue.main.async{
-                        self.collectionView.reloadData()
-                        self.collectionView.layoutIfNeeded()
-                    }
-                }
-                else {
-                    DispatchQueue.main.async{
-                        self.collectionView.reloadData();
-                        self.collectionView.layoutIfNeeded()
-                    }
-                }
-            }) { (err) in return }
-        }
-        else {
-            self.collectionView.reloadData()
-            self.collectionView.layoutIfNeeded()
-        }
+//        if groupPosts.count > 0 { // need to check if in group, else viewers will be nil and always return
+//            Database.database().isInGroup(groupId: groupPosts[0].group.groupId, completion: { (inGroup) in
+//                if inGroup{
+//                    self.collectionView.reloadData()
+//                    self.collectionView.layoutIfNeeded()
+//                }
+//                else {
+//                    self.collectionView.reloadData()
+//                    self.collectionView.layoutIfNeeded()
+//                }
+//            }) { (err) in return }
+//        }
+//        else {
+//            self.collectionView.reloadData()
+//            self.collectionView.layoutIfNeeded()
+//        }
     }
     
     func setupViews() {
@@ -431,7 +427,14 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     }
     
     func requestPlay(for cell: FeedPostCell) {
-        
+//        guard let usingCachedData = usingCachedData else { return }
+//        if !isScrolling && !usingCachedData  {
+//            collectionView.visibleCells.forEach { cell2 in  // check if cell is still visible
+//                if cell2 == cell {
+//                    delegate?.requestPlay(for_lower: cell, for_upper: self)
+//                }
+//            }
+//        }
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
