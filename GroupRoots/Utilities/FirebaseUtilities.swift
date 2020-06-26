@@ -1224,7 +1224,7 @@ extension Database {
             groupUser = (Auth.auth().currentUser?.uid)!
         }
         let ref = Database.database().reference().child("groupsFollowing").child(groupUser)
-        
+    
         ref.queryOrderedByValue().queryLimited(toLast: 100).observeSingleEvent(of: .value, with: { (snapshot) in
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 completion([])
@@ -1259,20 +1259,16 @@ extension Database {
     // toLast will keep increasing
     func fetchGroupsFollowingDynamic(withUID uid: String, toLast: Int, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
         var groupUser = uid
-        if groupUser == ""{
+        if groupUser == "" {
             groupUser = (Auth.auth().currentUser?.uid)!
         }
         let ref = Database.database().reference().child("groupsFollowing").child(groupUser)
-        
-        // change this to queryOrderedByChild value
-        ref.queryOrdered(byChild: "lastPostedDate").queryLimited(toLast: UInt(toLast)).observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion([])
-                return
-            }
+        ref.queryOrdered(byChild: "lastPostedDate").queryLimited(toLast: UInt(toLast)).observe(.value, with: { (snapshot) in
             var groups = [Group]()
             let sync = DispatchGroup()
-            dictionaries.forEach({ (groupId, value) in
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let groupId = child.key
+                print(groupId)
                 sync.enter()
                 self.groupExists(groupId: groupId, completion: { (exists) in
                     if exists {
@@ -1285,7 +1281,7 @@ extension Database {
                         sync.leave()
                     }
                 })
-            })
+            }
             sync.notify(queue: .main) {
                 completion(groups)
             }
@@ -1295,43 +1291,57 @@ extension Database {
         }
     }
     
-//    func fetchGroupsFollowingDyanmicLast(withUID uid: String, toLast: Int, groupSize: Int, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
-//        var groupUser = uid
-//        if groupUser == ""{
-//            groupUser = (Auth.auth().currentUser?.uid)!
-//        }
-//        let ref = Database.database().reference().child("groupsFollowing").child(groupUser)
-//
-//        // change this to queryOrderedByChild value
-//        ref.queryOrdered(byChild: "lastPostedDate").queryLimited(toLast: UInt(toLast)).queryLimited(toFirst: UInt(5)).observeSingleEvent(of: .value, with: { (snapshot) in
-//            guard let dictionaries = snapshot.value as? [String: Any] else {
-//                completion([])
-//                return
-//            }
-//            var groups = [Group]()
-//            let sync = DispatchGroup()
-//            dictionaries.forEach({ (groupId, value) in
-//                sync.enter()
-//                self.groupExists(groupId: groupId, completion: { (exists) in
-//                    if exists {
-//                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-//                            groups.append(group)
-//                            sync.leave()
-//                        })
-//                    }
-//                    else {
-//                        sync.leave()
-//                    }
-//                })
-//            })
-//            sync.notify(queue: .main) {
-//                completion(groups)
-//            }
-//        }) { (err) in
-//            print("Failed to fetch posts:", err)
-//            cancel?(err)
-//        }
-//    }
+    func fetchNextGroupsFollowing(withUID uid: String, endAt: Double, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
+        print("fetching")
+        let end_at = Int(endAt)
+//        M9RnGGUt0Qqe02jBBrY  177  test5
+//        M9RnHMLj_-R2YZ5F2DH  199  test6
+//        M9RnCTsDTdvWPI_Jc_G  244  test2
+//        M9RnFASWW1TVVBGE7Wb  330  test4
+//        M9RnDyvRrFgDORlbiKM  413  test3
+//        M9Rn6RCqVEiFr13UWOF  454  test1
+
+        var batch_size = 4
+        if endAt == 10000000000000 { // only get 3 posts if first batch because we remove the first of batch of the rest of the batches
+            batch_size = 3
+        }
+
+        var groupUser = uid
+        if groupUser == "" {
+            groupUser = (Auth.auth().currentUser?.uid)!
+        }
+        let ref = Database.database().reference().child("groupsFollowing").child(groupUser)
+        ref.queryOrdered(byChild: "lastPostedDate").queryEnding(atValue: end_at).queryLimited(toLast: UInt(batch_size)).observe(.value, with: { (snapshot) in
+            var groups = [Group]()
+            let sync = DispatchGroup()
+            sync.enter()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let groupId = child.key
+                sync.enter()
+                self.groupExists(groupId: groupId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                            groups.append(group)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            }
+            sync.leave()
+            sync.notify(queue: .main) {
+                if endAt != 10000000000000 && groups.count > 0 {
+                    groups.remove(at: groups.count-1)
+                }
+                completion(groups)
+            }
+        }) { (err) in
+            print("Failed to fetch posts:", err)
+            cancel?(err)
+        }
+    }
      
      func fetchAllGroupIds(withUID uid: String, completion: @escaping ([String]) -> (), withCancel cancel: ((Error) -> ())?) {
          var groupUser = uid
@@ -2720,7 +2730,6 @@ extension Database {
     
     func fetchAllGroupPosts(groupId: String, completion: @escaping ([Any]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("posts").child(groupId)
-    
         // this returns it backwards
         // so we'll continuously do limit last, with the limit increasing the 3, there will be a counter
         // we don't know how many posts there are in a group, we should figure this out for each group
@@ -3708,16 +3717,12 @@ extension Database {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         let ref = Database.database().reference().child("notifications").child(currentLoggedInUserId)
 
-        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                completion([])
-                return
-            }
-
+        ref.queryOrdered(byChild: "creationDate").observeSingleEvent(of: .value, with: { (snapshot) in
             var notifications = [Notification]()
 
             let sync = DispatchGroup()
-            dictionaries.forEach({ (notificationId, value) in
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let notificationId = child.key
                 sync.enter()
                 self.notificationIsValid(notificationId: notificationId, completion: { (valid) in
                     if valid{
@@ -3730,11 +3735,52 @@ extension Database {
                         sync.leave()
                     }
                 })
-            })
+            }
             sync.notify(queue: .main) {
                 notifications.sort(by: { (not1, not2) -> Bool in
                     return not1.creationDate.compare(not2.creationDate) == .orderedDescending
                 })
+                completion(notifications)
+                return
+            }
+        }) { (err) in
+            print("Failed to fetch posts:", err)
+            cancel?(err)
+        }
+    }
+        
+    // toSkip skips the notifications that already have been retrieved (the latest ones)
+    func fetchMoreNotifications(endAt: Double, completion: @escaping ([Notification]) -> (), withCancel cancel: ((Error) -> ())?) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let ref = Database.database().reference().child("notifications").child(currentLoggedInUserId)
+        // endAt gets included in the next one but it shouldn't
+        ref.queryOrdered(byChild: "creationDate").queryEnding(atValue: endAt).queryLimited(toLast: 10).observe(.value, with: { (snapshot) in
+            var notifications = [Notification]()
+
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let notificationId = child.key
+                sync.enter()
+                self.notificationIsValid(notificationId: notificationId, completion: { (valid) in
+                    if valid {
+                        Database.database().fetchNotification(notificationId: notificationId, completion: { (notification) in
+                            notifications.append(notification)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                notifications.sort(by: { (not1, not2) -> Bool in
+                    return not1.creationDate.compare(not2.creationDate) == .orderedDescending
+                })
+                // queryEnding keeps the oldest entree of the last batch so remove it here if not the first batch
+                if endAt != 10000000000000.0 && notifications.count > 0 {
+                    notifications.remove(at: 0)
+                }
                 completion(notifications)
                 return
             }
@@ -3906,19 +3952,30 @@ extension Database {
         }
     }
     
-        func numberOfFollowersForUser(withUID uid: String, completion: @escaping (Int) -> ()) {
-            Database.database().reference().child("userFollowersCount").child(uid).observeSingleEvent(of: .value) { (snapshot) in
-                if let val = snapshot.value as? Int {
-                    completion(val)
-                }
-                else {
-                    completion(0)
-                }
+    func numberOfFollowersForUser(withUID uid: String, completion: @escaping (Int) -> ()) {
+        Database.database().reference().child("userFollowersCount").child(uid).observeSingleEvent(of: .value) { (snapshot) in
+            if let val = snapshot.value as? Int {
+                completion(val)
+            }
+            else {
+                completion(0)
             }
         }
+    }
     
     func numberOfUsersFollowingForUser(withUID uid: String, completion: @escaping (Int) -> ()) {
         Database.database().reference().child("userFollowingCount").child(uid).observeSingleEvent(of: .value) { (snapshot) in
+            if let val = snapshot.value as? Int {
+                completion(val)
+            }
+            else {
+                completion(0)
+            }
+        }
+    }
+    
+    func numberOfNotificationsForUser(withUID uid: String, completion: @escaping (Int) -> ()) {
+        Database.database().reference().child("usersNotificationsCount").child(uid).observeSingleEvent(of: .value) { (snapshot) in
             if let val = snapshot.value as? Int {
                 completion(val)
             }

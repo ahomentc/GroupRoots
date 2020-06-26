@@ -56,6 +56,7 @@
 		75BB489323DACF2000CF008F /* FeedPostCellHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BB489223DACF2000CF008F /* FeedPostCellHeader.swift */; };
 		75BB489523DB00E800CF008F /* MembersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BB489423DB00E800CF008F /* MembersCell.swift */; };
 		75CAD5FC243C527E006941B2 /* MemberHeaderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */; };
+		75DD552924A2F89800FE9E7D /* LoadMoreNotificationsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */; };
 		75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */; };
 		75EFCCFA23F11D9D00B7580D /* EmtpyFeedCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */; };
 		75F2C2A923DD220C0037C76D /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */; };
@@ -149,6 +150,7 @@
 		75BB489223DACF2000CF008F /* FeedPostCellHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedPostCellHeader.swift; sourceTree = "<group>"; };
 		75BB489423DB00E800CF008F /* MembersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersCell.swift; sourceTree = "<group>"; };
 		75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberHeaderCell.swift; sourceTree = "<group>"; };
+		75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadMoreNotificationsCell.swift; sourceTree = "<group>"; };
 		75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpTwoController.swift; sourceTree = "<group>"; };
 		75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmtpyFeedCell.swift; sourceTree = "<group>"; };
 		75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationManager.swift; sourceTree = "<group>"; };
@@ -228,6 +230,7 @@
 		750FA44823D3052B00D33CF8 /* Notification */ = {
 			isa = PBXGroup;
 			children = (
+				75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */,
 				750FA44923D3055900D33CF8 /* NotificationsController.swift */,
 				754295C123DFFB6E00893EFD /* NotificationCell.swift */,
 			);
@@ -650,6 +653,7 @@
 				75B65DE32408F8E8006CBA0B /* ViewersController.swift in Sources */,
 				ADE95AF9210D4539003D9A54 /* CustomImageView.swift in Sources */,
 				75CAD5FC243C527E006941B2 /* MemberHeaderCell.swift in Sources */,
+				75DD552924A2F89800FE9E7D /* LoadMoreNotificationsCell.swift in Sources */,
 				ADE95AF5210D1B8E003D9A54 /* Post.swift in Sources */,
 				AD215F16205DA9B6000E42AD /* Extensions.swift in Sources */,
 				750FA45423D4201E00D33CF8 /* UserCell.swift in Sources */,

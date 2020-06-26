@@ -6,6 +6,12 @@ class EmptyFeedPostCell: UICollectionViewCell {
     
     let padding: CGFloat = 12
     
+    var fetchedAllGroups: Bool? {
+        didSet {
+            setLoadingVisibility(fetchedAllGroups: fetchedAllGroups!)
+        }
+    }
+    
     private let photoImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
@@ -14,14 +20,16 @@ class EmptyFeedPostCell: UICollectionViewCell {
         return iv
     }()
     
-//    let loadingLabel: UILabel = {
-//        let label = UILabel()
-//        label.text = "Loading"
-//        label.textColor = UIColor.white
-//        label.numberOfLines = 0
-//        label.textAlignment = .center
-//        return label
-//    }()
+    let endLabel: UILabel = {
+        let label = UILabel()
+        label.text = "You're All Caught Up!"
+        label.isHidden = true
+        label.textColor = UIColor.black
+        label.numberOfLines = 0
+        label.size(22)
+        label.textAlignment = .center
+        return label
+    }()
     
     let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
     
@@ -38,11 +46,16 @@ class EmptyFeedPostCell: UICollectionViewCell {
         super.init(coder: aDecoder)
         sharedInit()
     }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        endLabel.isHidden = true
+        activityIndicatorView.isHidden = false
+    }
 
     private func sharedInit() {
-        
-//        addSubview(loadingLabel)
-//        loadingLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: padding + UIScreen.main.bounds.height/2 - 14)
+        addSubview(endLabel)
+        endLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: padding + UIScreen.main.bounds.height/2 - 14)
         
         activityIndicatorView.isHidden = true
         activityIndicatorView.color = .black
@@ -51,9 +64,13 @@ class EmptyFeedPostCell: UICollectionViewCell {
         
         addSubview(photoImageView)
         photoImageView.anchor(top: topAnchor, left: leftAnchor, bottom: nil, right: rightAnchor, paddingTop: padding + 12)
-//        photoImageView.heightAnchor.constraint(equalTo: widthAnchor, multiplier: 1).isActive = true
-//        photoImageView.layer.cornerRadius = 10
         photoImageView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-
+    }
+    
+    func setLoadingVisibility(fetchedAllGroups: Bool){
+        if fetchedAllGroups {
+            activityIndicatorView.isHidden = true
+            endLabel.isHidden = false
+        }
     }
 }

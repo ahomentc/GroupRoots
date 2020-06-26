@@ -10,8 +10,13 @@ import UIKit
 import Firebase
 import UPCarouselFlowLayout
 
-class NotificationsController: HomePostCellViewController, NotificationCellDelegate {
+class NotificationsController: HomePostCellViewController, NotificationCellDelegate, loadMoreNotificationsCellDelegate {
+    func handleLoadMoreNotifications() {
+        fetchMoreNotifications()
+    }
+    
     private var notifications = [Notification]()
+    var oldestRetrievedDate = 10000000000000.0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,12 +39,14 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         collectionView?.backgroundColor = .white
         collectionView?.alwaysBounceVertical = true
         collectionView?.register(NotificationCell.self, forCellWithReuseIdentifier: NotificationCell.cellId)
+        collectionView?.register(LoadMoreNotificationsCell.self, forCellWithReuseIdentifier: LoadMoreNotificationsCell.cellId)
 
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         collectionView?.refreshControl = refreshControl
                 
-        fetchAllNotifications()
+//        fetchAllNotifications()
+        fetchMoreNotifications()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -69,16 +76,44 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
             self.collectionView?.refreshControl?.endRefreshing()
         }
     }
+    
+    private func fetchMoreNotifications() {
+        collectionView?.refreshControl?.beginRefreshing()
+
+        Database.database().fetchMoreNotifications(endAt: oldestRetrievedDate, completion: { (notifications) in
+            self.notifications += notifications
+            if notifications.last == nil {
+                self.collectionView?.refreshControl?.endRefreshing()
+                return
+            }
+            self.oldestRetrievedDate = notifications.last!.creationDate.timeIntervalSince1970
+            self.collectionView?.reloadData()
+            self.collectionView?.refreshControl?.endRefreshing()
+        }) { (_) in
+            self.collectionView?.refreshControl?.endRefreshing()
+        }
+    }
 
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return notifications.count
+        if notifications.count > 0 {
+            return notifications.count + 1
+        }
+        return 0
     }
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NotificationCell.cellId, for: indexPath) as! NotificationCell
-        cell.notification = notifications[indexPath.item]
-        cell.delegate = self
-        return cell
+        if indexPath.row < notifications.count{
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NotificationCell.cellId, for: indexPath) as! NotificationCell
+            cell.notification = notifications[indexPath.item]
+            cell.delegate = self
+            return cell
+        }
+        else {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: LoadMoreNotificationsCell.cellId, for: indexPath) as! LoadMoreNotificationsCell
+            cell.delegate = self
+            cell.index = indexPath.row // set tag as the row to decide whether or not the load more label is visible
+            return cell
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
@@ -90,7 +125,13 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
     }
 
     @objc private func handleRefresh() {
-            fetchAllNotifications()
+        // this needs to be changed to do this behavior:
+        // clear notifications array
+        // retrieve the first couple of notifications
+        
+        notifications = [Notification]()
+        oldestRetrievedDate = 10000000000000.0
+        fetchMoreNotifications() // for now we don't clear for testing
     }
     
     func handleShowGroup(group: Group) {

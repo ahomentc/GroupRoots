@@ -198,7 +198,6 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
                 self.textView.isUserInteractionEnabled = true
                 
-                NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
                 NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
                 self.dismiss(animated: true, completion: nil)
                 return
@@ -226,7 +225,6 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                     return
                 }
             })
-            NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
             NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
             self.dismiss(animated: true, completion: nil)
         })
