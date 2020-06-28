@@ -253,7 +253,11 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 }
                 else {
                     let count = Int(ceil(Double(groupPosts?.count ?? 0)/4))
-                    self.pageControlSwipe.numberOfPages = count
+                    if count < 5 {
+                        self.pageControlSwipe.numberOfPages = count
+                    } else {
+                        self.pageControlSwipe.numberOfPages = 5
+                    }
                     if count == 1 {
                         self.pageControlSwipe.isHidden = true
                     }
@@ -364,7 +368,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     {
         let pageWidth = scrollView.frame.width
         self.currentPage = Int((scrollView.contentOffset.x + pageWidth / 2) / pageWidth)
-        self.pageControlSwipe.currentPage = self.currentPage
+        self.pageControlSwipe.currentPage = self.currentPage % 5
     }
 
     @objc func handleGroupTap(){

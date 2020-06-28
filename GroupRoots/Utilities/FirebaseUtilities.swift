@@ -459,7 +459,7 @@ extension Database {
     
     func fetchUserFollowers(withUID uid: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("followers").child(uid)
-        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             var users = [User]()
             
             let sync = DispatchGroup()
@@ -490,7 +490,7 @@ extension Database {
     
     func fetchUserFollowing(withUID uid: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("following").child(uid)
-        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
 
             var users = [User]()
             let sync = DispatchGroup()
@@ -521,7 +521,7 @@ extension Database {
     
     func fetchUserSubscriptions(withUID uid: String, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groupsFollowing").child(uid)
-        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             var groups = [Group]()
             let sync = DispatchGroup()
             for child in snapshot.children.allObjects as! [DataSnapshot] {
@@ -1124,7 +1124,7 @@ extension Database {
     
     func fetchFirstNGroupMembers(groupId: String, n: Int, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groups").child(groupId).child("members")
-        ref.queryOrderedByKey().queryLimited(toFirst: UInt(n)).observe(.value, with: { (snapshot) in
+        ref.queryOrderedByKey().queryLimited(toFirst: UInt(n)).observeSingleEvent(of: .value, with: { (snapshot) in
             var users = [User]()
             
             let sync = DispatchGroup()
@@ -1154,7 +1154,7 @@ extension Database {
     
     func fetchGroupMembers(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groups").child(groupId).child("members")
-        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             var users = [User]()
             let sync = DispatchGroup()
             for child in snapshot.children.allObjects as! [DataSnapshot] {
@@ -1188,7 +1188,7 @@ extension Database {
         }
         let ref = Database.database().reference().child("users").child(groupUser).child("groups")
         
-        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             
             var groups = [Group]()
 
@@ -1263,7 +1263,7 @@ extension Database {
             groupUser = (Auth.auth().currentUser?.uid)!
         }
         let ref = Database.database().reference().child("groupsFollowing").child(groupUser)
-        ref.queryOrdered(byChild: "lastPostedDate").queryLimited(toLast: UInt(toLast)).observe(.value, with: { (snapshot) in
+        ref.queryOrdered(byChild: "lastPostedDate").queryLimited(toLast: UInt(toLast)).observeSingleEvent(of: .value, with: { (snapshot) in
             var groups = [Group]()
             let sync = DispatchGroup()
             for child in snapshot.children.allObjects as! [DataSnapshot] {
@@ -1311,7 +1311,7 @@ extension Database {
             groupUser = (Auth.auth().currentUser?.uid)!
         }
         let ref = Database.database().reference().child("groupsFollowing").child(groupUser)
-        ref.queryOrdered(byChild: "lastPostedDate").queryEnding(atValue: end_at).queryLimited(toLast: UInt(batch_size)).observe(.value, with: { (snapshot) in
+        ref.queryOrdered(byChild: "lastPostedDate").queryEnding(atValue: end_at).queryLimited(toLast: UInt(batch_size)).observeSingleEvent(of: .value, with: { (snapshot) in
             var groups = [Group]()
             let sync = DispatchGroup()
             sync.enter()
@@ -1350,7 +1350,7 @@ extension Database {
          }
          let ref = Database.database().reference().child("users").child(groupUser).child("groups")
          
-        ref.queryOrderedByKey().queryLimited(toLast: 1).observe(.value, with: { (snapshot) in
+        ref.queryOrderedByKey().queryLimited(toLast: 1).observeSingleEvent(of: .value, with: { (snapshot) in
             var groups = [String]()
             let sync = DispatchGroup()
             for child in snapshot.children.allObjects as! [DataSnapshot] {
@@ -1377,7 +1377,7 @@ extension Database {
     
     func fetchGroupRequestUsers(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groups").child(groupId).child("requestedMembers")
-        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             var users = [User]()
             let sync = DispatchGroup()
             for child in snapshot.children.allObjects as! [DataSnapshot] {
@@ -2355,7 +2355,7 @@ extension Database {
 
     func fetchGroupFollowers(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groupFollowers").child(groupId)
-        ref.queryOrderedByKey().observe(.value, with: { (snapshot) in
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             var users = [User]()
             
             let sync = DispatchGroup()
@@ -3754,7 +3754,7 @@ extension Database {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         let ref = Database.database().reference().child("notifications").child(currentLoggedInUserId)
         // endAt gets included in the next one but it shouldn't
-        ref.queryOrdered(byChild: "creationDate").queryEnding(atValue: endAt).queryLimited(toLast: 10).observe(.value, with: { (snapshot) in
+        ref.queryOrdered(byChild: "creationDate").queryEnding(atValue: endAt).queryLimited(toLast: 10).observeSingleEvent(of: .value, with: { (snapshot) in
             var notifications = [Notification]()
 
             let sync = DispatchGroup()
