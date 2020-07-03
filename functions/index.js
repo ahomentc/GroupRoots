@@ -92,8 +92,9 @@ exports.autoBecomeSubscriberOnGroupMembershipJoin = functions.database.ref('/gro
 				return snapshot.ref.root.child('/groupsFollowing/' + new_member_id + '/' + group_id + '/autoSubscribed').set("false"); // not auto subscriber if in group
 			}
 			else {
+				var current_time = parseInt(Math.floor(Date.now()/1000))
 				const promises = [];
-				let promise_followers = snapshot.ref.root.child('/groupFollowers/' + group_id + '/' + new_member_id).set(1);
+				let promise_followers = snapshot.ref.root.child('/groupFollowers/' + group_id + '/' + new_member_id).set(current_time);
 				let promise_following = snapshot.ref.root.child('/groupsFollowing/' + new_member_id + '/' + group_id + '/lastPostedDate').set(post_date);
 				let promise_following_auto = snapshot.ref.root.child('/groupsFollowing/' + new_member_id + '/' + group_id + '/autoSubscribed').set("false"); // not auto subscriber if in group
 				let promise_remove = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + new_member_id).remove();
@@ -127,7 +128,7 @@ exports.autoSubscribeFollowers = functions.database.ref('/groups/{groupId}/membe
 				if(post_date === "0" || post_date === 0){
 					post_date = 1;
 				}
-				post_date = parseInt(post_date.toString()).toString()
+				post_date = parseInt(post_date.toString())
 				const promises = [];
 				var sync = new DispatchGroup();
 				var token_0 = sync.enter();
@@ -136,10 +137,11 @@ exports.autoSubscribeFollowers = functions.database.ref('/groups/{groupId}/membe
 					var token = sync.enter()
 					snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id).once('value', in_subscriber_snapshot => {
 						let is_subscribed = (in_subscriber_snapshot.val() !== null);
+						var current_time = parseInt(Math.floor(Date.now()/1000))
 						if (is_subscribed) {
 							// if the user is already subscribed to the group, 
 							// just add uid to membersFollowing of the group for new_member_follower_id				
-							let promise = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/membersFollowing/' + new_member_id).set(1);
+							let promise = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/membersFollowing/' + new_member_id).set(current_time);
 							promises.push(promise);
 							sync.leave(token);
 							// tested with 1 follower
@@ -165,7 +167,7 @@ exports.autoSubscribeFollowers = functions.database.ref('/groups/{groupId}/membe
 								});						
 
 								lower_sync.notify(function() {
-                   	 				let promise = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id + '/membersFollowing/' + new_member_id).set(1);
+                   	 				let promise = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id + '/membersFollowing/' + new_member_id).set(current_time);
 									promises.push(promise);
 									sync.leave(token);
                 				})
@@ -174,11 +176,10 @@ exports.autoSubscribeFollowers = functions.database.ref('/groups/{groupId}/membe
 							else {
 								// add to followers/following and autoFollow (since group is public would have auto became subscribed if manually clicked subscribe button)
 								// add new_member_id to membersFollowing for the group
-
-								let promise_followers = snapshot.ref.root.child('/groupFollowers/' + group_id + '/' + member_follower_id).set(1);
+								let promise_followers = snapshot.ref.root.child('/groupFollowers/' + group_id + '/' + member_follower_id).set(current_time);
 								let promise_following = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/lastPostedDate').set(post_date);
 								let promise_following_auto = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/autoSubscribed').set("true");
-								let promise_membersFollowing = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/membersFollowing/' + new_member_id).set(1);
+								let promise_membersFollowing = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/membersFollowing/' + new_member_id).set(current_time);
 								promises.push(promise_followers);
 								promises.push(promise_following);
 								promises.push(promise_following_auto);
@@ -611,10 +612,12 @@ exports.updateNumGroupsCountOnLeave = functions.database.ref('/groups/{group_id}
 	}).catch(() => {return null});
 })
 
-
-
-
-
+exports.updateNumNotificationsCountOnNew = functions.database.ref('/notifications/{user_id}/{notification_id}').onCreate((snapshot, context) => {
+	const user_id = context.params.user_id;
+	return snapshot.ref.root.child('/usersNotificationsCount/' + user_id).transaction(counter_value => {
+		return (counter_value || 0) + 1;
+	}).catch(() => {return null});
+})
 
 
 

@@ -13,7 +13,7 @@ import Firebase
 
  // This will be the basis of group profile controller
 
-class FollowPageController: UICollectionViewController {
+class FollowPageController: UICollectionViewController, loadMoreFollowersCellDelegate {
 
     var user: User? {
         didSet {
@@ -23,6 +23,7 @@ class FollowPageController: UICollectionViewController {
     
     var following = [User]()
     var followers = [User]()
+    var oldestRetrievedDate = 10000000000000.0
 
     private var header: FollowPageHeader?
 
@@ -56,6 +57,7 @@ class FollowPageController: UICollectionViewController {
         collectionView?.alwaysBounceVertical = true
         collectionView?.keyboardDismissMode = .onDrag
         collectionView?.register(FollowPageCell.self, forCellWithReuseIdentifier: FollowPageCell.cellId)
+        collectionView?.register(LoadMoreFollowersCell.self, forCellWithReuseIdentifier: LoadMoreFollowersCell.cellId)
         collectionView?.register(FollowPageHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: FollowPageHeader.headerId)
 
         let refreshControl = UIRefreshControl()
@@ -79,18 +81,40 @@ class FollowPageController: UICollectionViewController {
 
         followers.removeAll()
         following.removeAll()
+        oldestRetrievedDate = 10000000000000.0
         
         self.collectionView?.refreshControl?.beginRefreshing()
-        Database.database().fetchUserFollowers(withUID: user_id, completion: { (follower_users) in
-            self.followers = follower_users
-            Database.database().fetchUserFollowing(withUID: user_id, completion: { (following_users) in
-                self.following = following_users
-                self.collectionView?.reloadData()
-                self.collectionView?.refreshControl?.endRefreshing()
-            }) { (err) in
-                self.collectionView?.refreshControl?.endRefreshing()
-            }
+
+        Database.database().fetchUserFollowing(withUID: user_id, completion: { (following_users) in
+            self.following = following_users
+            self.collectionView?.reloadData()
+            self.collectionView?.refreshControl?.endRefreshing()
         }) { (err) in
+            self.collectionView?.refreshControl?.endRefreshing()
+        }
+        
+        fetchMoreFollowers()
+    }
+    
+    func handleLoadMoreFollowers() {
+        fetchMoreFollowers()
+    }
+    
+    private func fetchMoreFollowers() {
+        guard let user_id = user?.uid else { return }
+        
+        collectionView?.refreshControl?.beginRefreshing()
+        Database.database().fetchMoreFollowers(withUID: user_id, endAt: oldestRetrievedDate, completion: { (follower_users, lastFollow) in
+            self.followers += follower_users
+            if follower_users.last == nil {
+                self.collectionView?.refreshControl?.endRefreshing()
+                return
+            }
+            self.oldestRetrievedDate = lastFollow
+            print("setting oldest date as: ", self.oldestRetrievedDate)
+            self.collectionView?.reloadData()
+            self.collectionView?.refreshControl?.endRefreshing()
+        }) { (_) in
             self.collectionView?.refreshControl?.endRefreshing()
         }
     }
@@ -98,31 +122,47 @@ class FollowPageController: UICollectionViewController {
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
         if isFollowerView! {
-            userProfileController.user = followers[indexPath.item]
+            if indexPath.item < followers.count {
+                userProfileController.user = followers[indexPath.item]
+                navigationController?.pushViewController(userProfileController, animated: true)
+            }
         }
         else{
             userProfileController.user = following[indexPath.item]
+            navigationController?.pushViewController(userProfileController, animated: true)
         }
-        navigationController?.pushViewController(userProfileController, animated: true)
     }
 
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if isFollowerView! {
-            return followers.count
+            if followers.count > 0 {
+                return followers.count + 1
+            }
+            return 0
         }
         return following.count
     }
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FollowPageCell.cellId, for: indexPath) as! FollowPageCell
         if isFollowerView! {
-            cell.user = followers[indexPath.item]
+            if indexPath.row < followers.count {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FollowPageCell.cellId, for: indexPath) as! FollowPageCell
+                cell.user = followers[indexPath.item]
+                return cell
+            }
+            else {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: LoadMoreFollowersCell.cellId, for: indexPath) as! LoadMoreFollowersCell
+                cell.delegate = self
+                cell.index = indexPath.row // set tag as the row to decide whether or not the load more label is visible
+                cell.user = user
+                return cell
+            }
         }
         else {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FollowPageCell.cellId, for: indexPath) as! FollowPageCell
             cell.user = following[indexPath.item]
+            return cell
         }
-//        cell.delegate = self
-        return cell
     }
     
     override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {

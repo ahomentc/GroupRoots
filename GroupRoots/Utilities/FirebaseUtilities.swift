@@ -488,6 +488,49 @@ extension Database {
         }
     }
     
+    func fetchMoreFollowers(withUID uid: String, endAt: Double, completion: @escaping ([User],Double) -> (), withCancel cancel: ((Error) -> ())?) {
+        print("endAt is: ", endAt)
+        let ref = Database.database().reference().child("followers").child(uid)
+        // endAt gets included in the next one but it shouldn't
+        ref.queryOrderedByValue().queryEnding(atValue: endAt).queryLimited(toLast: 100).observeSingleEvent(of: .value, with: { (snapshot) in
+            var users = [User]()
+            var followDates = [String: Double]()
+
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let userId = child.key
+                followDates[userId] = child.value as? Double
+                sync.enter()
+                self.userExists(withUID: userId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchUser(withUID: userId, completion: { (user) in
+                            users.append(user)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                users.sort(by: { (p1, p2) -> Bool in
+                    return followDates[p1.uid] ?? 0 > followDates[p2.uid] ?? 0
+                })
+                
+                // queryEnding keeps the oldest entree of the last batch so remove it here if not the first batch
+                if endAt != 10000000000000 && users.count > 0 {
+                    users.remove(at: 0)
+                }
+                completion(users,followDates[users.last?.uid ?? ""] ?? 10000000000000)
+                return
+            }
+        }) { (err) in
+            print("Failed to fetch posts:", err)
+            cancel?(err)
+        }
+    }
+    
     func fetchUserFollowing(withUID uid: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("following").child(uid)
         ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
@@ -553,8 +596,13 @@ extension Database {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
         Database.database().reference().child("following").child(currentLoggedInUserId).child(uid).observeSingleEvent(of: .value, with: { (snapshot) in
-            if let isFollowing = snapshot.value as? Int, isFollowing == 1 {
-                completion(true)
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(true)
+                }
             } else {
                 completion(false)
             }
@@ -586,14 +634,15 @@ extension Database {
     func followUser(withUID uid: String, completion: @escaping (Error?) -> ()) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
-        let values = [uid: 1]
+        
+        let values = [uid: Date().timeIntervalSince1970]
         Database.database().reference().child("following").child(currentLoggedInUserId).updateChildValues(values) { (err, ref) in
             if let err = err {
                 completion(err)
                 return
             }
             
-            let values = [currentLoggedInUserId: 1]
+            let values = [currentLoggedInUserId: Date().timeIntervalSince1970]
             Database.database().reference().child("followers").child(uid).updateChildValues(values) { (err, ref) in
                 if let err = err {
                     completion(err)
@@ -1290,7 +1339,7 @@ extension Database {
             cancel?(err)
         }
     }
-    
+
     func fetchNextGroupsFollowing(withUID uid: String, endAt: Double, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
         print("fetching")
         let end_at = Int(endAt)
@@ -1690,8 +1739,13 @@ extension Database {
     func isUserInvitedToGroup(withUID uid: String, groupId: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         Database.database().reference().child("groupInvitationsForUsers").child(currentLoggedInUserId).child(groupId).observeSingleEvent(of: .value, with: { (snapshot) in
-            if let isIn = snapshot.value as? Int, isIn == 1 {
-                completion(true)
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(true)
+                }
             } else {
                 completion(false)
             }
@@ -2036,8 +2090,13 @@ extension Database {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
         Database.database().reference().child("users").child(currentLoggedInUserId).child("requestedGroups").child(groupId).observeSingleEvent(of: .value, with: { (snapshot) in
-            if let isIn = snapshot.value as? Int, isIn == 1 {
-                completion(true)
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(true)
+                }
             } else {
                 completion(false)
             }
@@ -2324,7 +2383,7 @@ extension Database {
     }
     
     func addToGroupFollowers(groupId: String, withUID uid: String, completion: @escaping (Error?) -> ()) {
-        let values = [uid: 1]
+        let values = [uid: Date().timeIntervalSince1970]
         Database.database().reference().child("groupFollowers").child(groupId).updateChildValues(values) { (err, ref) in
             if let err = err {
                 completion(err)

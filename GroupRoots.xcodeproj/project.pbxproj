@@ -12,6 +12,7 @@
 		750FA45423D4201E00D33CF8 /* UserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750FA45323D4201E00D33CF8 /* UserCell.swift */; };
 		7521D0482434506A0028FC9C /* SearchHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521D0472434506A0028FC9C /* SearchHeader.swift */; };
 		7521D04A243463480028FC9C /* GroupSearchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521D049243463480028FC9C /* GroupSearchCell.swift */; };
+		7522E43A24A937F60013A351 /* LoadMoreFollowersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7522E43924A937F60013A351 /* LoadMoreFollowersCell.swift */; };
 		754295C223DFFB6E00893EFD /* NotificationCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754295C123DFFB6E00893EFD /* NotificationCell.swift */; };
 		754295C423E162F600893EFD /* InviteSelectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754295C323E162F600893EFD /* InviteSelectionController.swift */; };
 		754295C623E3E3AE00893EFD /* check.png in Resources */ = {isa = PBXBuildFile; fileRef = 754295C523E3E3AD00893EFD /* check.png */; };
@@ -106,6 +107,7 @@
 		750FA45323D4201E00D33CF8 /* UserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCell.swift; sourceTree = "<group>"; };
 		7521D0472434506A0028FC9C /* SearchHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchHeader.swift; sourceTree = "<group>"; };
 		7521D049243463480028FC9C /* GroupSearchCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSearchCell.swift; sourceTree = "<group>"; };
+		7522E43924A937F60013A351 /* LoadMoreFollowersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadMoreFollowersCell.swift; sourceTree = "<group>"; };
 		754295C123DFFB6E00893EFD /* NotificationCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCell.swift; sourceTree = "<group>"; };
 		754295C323E162F600893EFD /* InviteSelectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteSelectionController.swift; sourceTree = "<group>"; };
 		754295C523E3E3AD00893EFD /* check.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = check.png; path = Assets.xcassets/check.png; sourceTree = "<group>"; };
@@ -401,6 +403,7 @@
 				75ACAFC423F6768A00DAE747 /* FollowPageController.swift */,
 				75ACAFC623F677BD00DAE747 /* FollowPageHeader.swift */,
 				75ACAFC823F7DE8700DAE747 /* FollowPageCell.swift */,
+				7522E43924A937F60013A351 /* LoadMoreFollowersCell.swift */,
 				75B65DEE24144284006CBA0B /* SubscriptionsController.swift */,
 				75B65DF0241442FF006CBA0B /* SubscriptionCell.swift */,
 				756E3D16243980BB00E167BA /* EditProfileController.swift */,
@@ -672,6 +675,7 @@
 				75B65DEF24144284006CBA0B /* SubscriptionsController.swift in Sources */,
 				759CB61323D62CE100178673 /* MembersHeader.swift in Sources */,
 				759CB61123D593E000178673 /* LargeImageViewController.swift in Sources */,
+				7522E43A24A937F60013A351 /* LoadMoreFollowersCell.swift in Sources */,
 				AD32EF732114189400BB7B56 /* CameraController.swift in Sources */,
 				757B35C92472336500C9AFE1 /* ProfileFeedController.swift in Sources */,
 				757B35CF24724A4300C9AFE1 /* FeedGroupPostCell.swift in Sources */,
