@@ -64,7 +64,7 @@ exports.updateGroupsLastPosted = functions.database.ref('/posts/{groupId}/{postI
 		const promises = []
 		follower_snapshot.forEach(function(follower) {
         	var uid = follower.key;
-        	var post_time = parseInt(Math.floor(Date.now()/1000))
+        	var post_time = parseFloat(Date.now()/1000)
 			let promise = snapshot.ref.root.child('/groupsFollowing/' + uid + '/' + group_id + '/lastPostedDate').set(post_time);
 			promises.push(promise);
     		});
@@ -86,13 +86,13 @@ exports.autoBecomeSubscriberOnGroupMembershipJoin = functions.database.ref('/gro
 				post_date = 1;
 			}
 			// post_date = parseInt(parseInt(post_date.toString()).toString())
-			post_date = parseInt(post_date)
+			post_date = parseFloat(post_date)
 			let is_subscribed = (in_subscriber_snapshot.val() !== null);
 			if (is_subscribed) {
 				return snapshot.ref.root.child('/groupsFollowing/' + new_member_id + '/' + group_id + '/autoSubscribed').set("false"); // not auto subscriber if in group
 			}
 			else {
-				var current_time = parseInt(Math.floor(Date.now()/1000))
+				var current_time = parseFloat(Date.now()/1000)
 				const promises = [];
 				let promise_followers = snapshot.ref.root.child('/groupFollowers/' + group_id + '/' + new_member_id).set(current_time);
 				let promise_following = snapshot.ref.root.child('/groupsFollowing/' + new_member_id + '/' + group_id + '/lastPostedDate').set(post_date);
@@ -128,7 +128,7 @@ exports.autoSubscribeFollowers = functions.database.ref('/groups/{groupId}/membe
 				if(post_date === "0" || post_date === 0){
 					post_date = 1;
 				}
-				post_date = parseInt(post_date.toString())
+				post_date = parseFloat(post_date.toString())
 				const promises = [];
 				var sync = new DispatchGroup();
 				var token_0 = sync.enter();
@@ -137,7 +137,7 @@ exports.autoSubscribeFollowers = functions.database.ref('/groups/{groupId}/membe
 					var token = sync.enter()
 					snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id).once('value', in_subscriber_snapshot => {
 						let is_subscribed = (in_subscriber_snapshot.val() !== null);
-						var current_time = parseInt(Math.floor(Date.now()/1000))
+						var current_time = parseFloat(Date.now()/1000)
 						if (is_subscribed) {
 							// if the user is already subscribed to the group, 
 							// just add uid to membersFollowing of the group for new_member_follower_id				
@@ -258,7 +258,7 @@ exports.notificationOnFollowingMemberLeave = functions.database.ref('/groups/{gr
 											})
 											if (count === 0 || membersFollowing === null){
 												// send notification of unsubscribe_request
-												var creation_time = parseInt(Math.floor(Date.now()/1000))
+												var creation_time = parseFloat(Date.now()/1000)
 												var values = {
 													type: "unsubscribeRequest",
 													group_id: group_id,
@@ -319,7 +319,7 @@ exports.notificationOnNoMembersFollowing = functions.database.ref('/groupsFollow
 			return snapshot.ref.root.child('/groupsFollowing/' + user_id + '/' + group_id + '/membersFollowing').once('value', membersFollowing => {
 				if (membersFollowing.length === 0 || membersFollowing === null){
 					// send notification of unsubscribe_request
-					var creation_time = parseInt(Math.floor(Date.now()/1000))
+					var creation_time = parseFloat(Date.now()/1000)
 					var values = {
 						type: "unsubscribeRequest",
 						group_id: group_id,

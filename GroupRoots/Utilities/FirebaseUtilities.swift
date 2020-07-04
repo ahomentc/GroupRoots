@@ -492,7 +492,7 @@ extension Database {
         print("endAt is: ", endAt)
         let ref = Database.database().reference().child("followers").child(uid)
         // endAt gets included in the next one but it shouldn't
-        ref.queryOrderedByValue().queryEnding(atValue: endAt).queryLimited(toLast: 100).observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrderedByValue().queryEnding(atValue: endAt).queryLimited(toLast: 30).observeSingleEvent(of: .value, with: { (snapshot) in
             var users = [User]()
             var followDates = [String: Double]()
 
@@ -2422,13 +2422,13 @@ extension Database {
                 sync.enter()
                 let userId = child.key
                 self.userExists(withUID: userId, completion: { (exists) in
-                    if exists{
+                    if exists {
                         Database.database().fetchUser(withUID: userId, completion: { (user) in
                             users.append(user)
                             sync.leave()
                         })
                     }
-                    else{
+                    else {
                         sync.leave()
                     }
                 })
@@ -2439,6 +2439,48 @@ extension Database {
             }
         }) { (err) in
             print("Failed to fetch all users from database:", (err))
+            cancel?(err)
+        }
+    }
+    
+    func fetchMoreGroupFollowers(groupId: String, endAt: Double, completion: @escaping ([User],Double) -> (), withCancel cancel: ((Error) -> ())?) {
+        let ref = Database.database().reference().child("groupFollowers").child(groupId)
+        // endAt gets included in the next one but it shouldn't
+        ref.queryOrderedByValue().queryEnding(atValue: endAt).queryLimited(toLast: 30).observeSingleEvent(of: .value, with: { (snapshot) in
+            var users = [User]()
+            var followDates = [String: Double]()
+
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let userId = child.key
+                followDates[userId] = child.value as? Double
+                sync.enter()
+                self.userExists(withUID: userId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchUser(withUID: userId, completion: { (user) in
+                            users.append(user)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                users.sort(by: { (p1, p2) -> Bool in
+                    return followDates[p1.uid] ?? 0 > followDates[p2.uid] ?? 0
+                })
+                
+                // queryEnding keeps the oldest entree of the last batch so remove it here if not the first batch
+                if endAt != 10000000000000 && users.count > 0 {
+                    users.remove(at: 0)
+                }
+                completion(users,followDates[users.last?.uid ?? ""] ?? 10000000000000)
+                return
+            }
+        }) { (err) in
+            print("Failed to fetch posts:", err)
             cancel?(err)
         }
     }
@@ -3991,6 +4033,17 @@ extension Database {
     
     func numberOfMembersForGroup(groupId: String, completion: @escaping (Int) -> ()) {
         Database.database().reference().child("groupMembersCount").child(groupId).observeSingleEvent(of: .value) { (snapshot) in
+            if let val = snapshot.value as? Int {
+                completion(val)
+            }
+            else {
+                completion(0)
+            }
+        }
+    }
+    
+    func numberOfSubscribersForGroup(groupId: String, completion: @escaping (Int) -> ()) {
+        Database.database().reference().child("groupFollowersCount").child(groupId).observeSingleEvent(of: .value) { (snapshot) in
             if let val = snapshot.value as? Int {
                 completion(val)
             }

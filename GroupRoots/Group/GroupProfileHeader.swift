@@ -358,8 +358,8 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
             self.postsLabel.setValue(count)
         }
         
-        Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
-            self.membersLabel.setValue(members.count)
+        Database.database().numberOfMembersForGroup(groupId: group.groupId) { (membersCount) in
+            self.membersLabel.setValue(membersCount)
             // check if user is in group or subscribed first
             Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
                 Database.database().isFollowingGroup(groupId: group.groupId, completion: { (following) in
@@ -373,10 +373,10 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                     return
                 }
             }) { (_) in}
-        }) { (_) in}
+        }
         
-        Database.database().fetchGroupFollowers(groupId: group.groupId, completion: { (followers) in
-            self.totalFollowersLabel.setValue(followers.count)
+        Database.database().numberOfSubscribersForGroup(groupId: group.groupId) { (membersCount) in
+            self.totalFollowersLabel.setValue(membersCount)
             // check if user is in group or subscribed first
             Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
                 Database.database().isFollowingGroup(groupId: group.groupId, completion: { (following) in
@@ -390,7 +390,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                     return
                 }
             }) { (_) in}
-        }) { (_) in}
+        }
     }
     
     private func reloadInviteCode() {

@@ -9,9 +9,11 @@
 import UIKit
 import Firebase
 
-class GroupFollowersController: UICollectionViewController {
+class GroupFollowersController: UICollectionViewController, loadMoreSubscribersCellDelegate {
     
     private var users = [User]()
+    var oldestRetrievedDate = 10000000000000.0
+    
     var group: Group? {
         didSet {
             configureGroup()
@@ -53,6 +55,7 @@ class GroupFollowersController: UICollectionViewController {
         collectionView?.alwaysBounceVertical = true
         collectionView?.keyboardDismissMode = .onDrag
         collectionView?.register(GroupFollowerCell.self, forCellWithReuseIdentifier: GroupFollowerCell.cellId)
+        collectionView?.register(LoadMoreSubscribersCell.self, forCellWithReuseIdentifier: LoadMoreSubscribersCell.cellId)
         collectionView?.register(GroupFollowersHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: GroupFollowersHeader.headerId)
         
         let refreshControl = UIRefreshControl()
@@ -68,16 +71,20 @@ class GroupFollowersController: UICollectionViewController {
     }
 
     // make this be limited and expand when reach bottom
-    private func fetchAllFollowers() {
+    private func fetchSubscribers() {
         collectionView?.refreshControl?.beginRefreshing()
         
         guard let group = group else { return }
         guard let isFollowersView = isFollowersView else { return }
         
         if isFollowersView {
-            // get all followers
-            Database.database().fetchGroupFollowers(groupId: group.groupId, completion: { (users) in
-                self.users = users
+            Database.database().fetchMoreGroupFollowers(groupId: group.groupId, endAt: oldestRetrievedDate, completion: { (followers, lastFollow) in
+                self.users += followers
+                if followers.last == nil {
+                    self.collectionView?.refreshControl?.endRefreshing()
+                    return
+                }
+                self.oldestRetrievedDate = lastFollow
                 self.collectionView?.reloadData()
                 self.collectionView?.refreshControl?.endRefreshing()
             }) { (_) in
@@ -95,6 +102,10 @@ class GroupFollowersController: UICollectionViewController {
             }
         }
     }
+    
+    func handleLoadMoreSubscribers() {
+        fetchSubscribers()
+    }
 
     private func configureGroup() {
         guard group != nil else { return }
@@ -104,28 +115,65 @@ class GroupFollowersController: UICollectionViewController {
     }
     
     @objc private func handleRefresh() {
-        fetchAllFollowers()
+        users.removeAll()
+        oldestRetrievedDate = 10000000000000.0
+        fetchSubscribers()
     }
     
     // when an item is selected, go to that view controller
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
-        userProfileController.user = users[indexPath.item]
-        navigationController?.pushViewController(userProfileController, animated: true)
+        
+        if isFollowersView! {
+            if indexPath.item < users.count {
+                userProfileController.user = users[indexPath.item]
+                navigationController?.pushViewController(userProfileController, animated: true)
+            }
+        }
+        else{
+            userProfileController.user = users[indexPath.item]
+            navigationController?.pushViewController(userProfileController, animated: true)
+        }
     }
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return users.count
+        if !isFollowersView! {
+            return users.count
+        }
+        
+        if users.count > 0 {
+            return users.count + 1
+        }
+        return 0
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupFollowerCell.cellId, for: indexPath) as! GroupFollowerCell
-        cell.user = users[indexPath.item]
-        cell.group = group
-        cell.showRemoveButton = isInGroup ?? false
-        cell.isFollowersView = isFollowersView
-        cell.delegate = self
-        return cell
+        if !isFollowersView! {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupFollowerCell.cellId, for: indexPath) as! GroupFollowerCell
+            cell.user = users[indexPath.item]
+            cell.group = group
+            cell.showRemoveButton = isInGroup ?? false
+            cell.isFollowersView = isFollowersView
+            cell.delegate = self
+            return cell
+        }
+        
+        if indexPath.row < users.count {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupFollowerCell.cellId, for: indexPath) as! GroupFollowerCell
+            cell.user = users[indexPath.item]
+            cell.group = group
+            cell.showRemoveButton = isInGroup ?? false
+            cell.isFollowersView = isFollowersView
+            cell.delegate = self
+            return cell
+        }
+        else {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: LoadMoreSubscribersCell.cellId, for: indexPath) as! LoadMoreSubscribersCell
+            cell.delegate = self
+            cell.index = indexPath.row // set tag as the row to decide whether or not the load more label is visible
+            cell.group = group
+            return cell
+        }
     }
     
     override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
@@ -160,7 +208,9 @@ extension GroupFollowersController: GroupFollowersCellDelegate {
         // notification instead of this
         
         // just refereshes the page
-        fetchAllFollowers()
+        users = []                                  // just added
+        oldestRetrievedDate = 10000000000000.0      // just added
+        fetchSubscribers()
         self.collectionView.reloadData()
     }
 }
@@ -172,15 +222,17 @@ extension GroupFollowersController: GroupFollowersHeaderDelegate {
     func didChangeToFollowersView() {
         isFollowersView = true
         users = []
+        oldestRetrievedDate = 10000000000000.0
         collectionView?.reloadData()
-        fetchAllFollowers()
+//        fetchSubscribers()
     }
     
     func didChangeToPendingFollowersView() {
         isFollowersView = false
         users = []
+        oldestRetrievedDate = 10000000000000.0
         collectionView?.reloadData()
-        fetchAllFollowers()
+        fetchSubscribers()
     }
 }
 
