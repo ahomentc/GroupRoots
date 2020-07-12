@@ -403,9 +403,28 @@ extension GroupProfileController: UICollectionViewDelegateFlowLayout {
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: view.frame.width, height: 250)
+        // adjust height based on group's bio
+        guard let group = group else { return CGSize(width: view.frame.width, height: 250) }
+//        let bio = group.bio
+//        let bio = "this is the bio. this is the second sentence. this is the second sentence. this is the second sentence"
+//        let bio = "this is the bio. this is the second sentence. this is the second sentence"
+//        let bio = "this is the bio. this is the second sentence."
+        let bio = group.bio
+        if bio == "" {
+            return CGSize(width: view.frame.width, height: 250)
+        }
+        else {
+            if bio.count < 50 {
+                return CGSize(width: view.frame.width, height: 270)
+            }
+            else if bio.count < 100 {
+                return CGSize(width: view.frame.width, height: 290)
+            }
+            else {
+                return CGSize(width: view.frame.width, height: 310)
+            }
+        }
     }
-
 }
 
 //MARK: - GroupProfileHeaderDelegate

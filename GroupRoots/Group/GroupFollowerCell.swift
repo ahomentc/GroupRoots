@@ -172,25 +172,16 @@ class GroupFollowerCell: UICollectionViewCell {
             }
         }
         else if self.actionButton.type == .acceptFollow {
-            // Remove user from pending and add user to followers
-            Database.database().removeUserFromGroupPending(withUID:user.uid,groupId: group.groupId){ (err) in
+            Database.database().acceptSubscriptionToPrivateGroup(withUID:user.uid, groupId: group.groupId){ (err) in
                 if err != nil {
                     return
                 }
-
-                Database.database().addToGroupFollowers(groupId: group.groupId, withUID: user.uid) { (err) in
-                    if err != nil {
-                        return
-                    }
-                    Database.database().addToGroupsFollowing(groupId: group.groupId, withUID: user.uid, autoSubscribed: false) { (err) in
-                        if err != nil {
-                            return
-                        }
-                        // notification to refresh
-                        NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
-                    }
-                }
+                // notification to refresh
+//                NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
+                let userDataDict:[String: String] = ["id": user.uid]
+                NotificationCenter.default.post(name: NSNotification.Name("removeASubscribeRequestor"), object: nil, userInfo: userDataDict)
             }
+            
         }
     }
 }

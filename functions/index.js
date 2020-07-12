@@ -237,14 +237,16 @@ exports.notificationOnFollowingMemberLeave = functions.database.ref('/groups/{gr
 		var sync = new DispatchGroup();
 		var token_0 = sync.enter();
 		followers.forEach(function(follower) {
-			// make sure that follower isn't a member of the group
-
 			var follower_id = follower.key;
+
+			// need to remove from membersFollowing in groupsFollowing TODO
+			promises.push(snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id + '/membersFollowing/' + leaving_user_id).remove());
+
 			var token = sync.enter()
 			snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id).once('value', in_subscriber_snapshot => {
 				let is_subscribed = (in_subscriber_snapshot.val() !== null);
 				if (is_subscribed) {
-					snapshot.after.ref.root.child('/groups/' + group_id + '/members/' + follower_id).once('value', in_group_snapshot => {
+					snapshot.ref.root.child('/groups/' + group_id + '/members/' + follower_id).once('value', in_group_snapshot => {
 						let not_in_group = (in_group_snapshot.val() === null);
 						if (not_in_group) {
 							snapshot.ref.root.child('/groupsFollowing/' + follower_id + '/' + group_id + '/autoSubscribed').once('value', auto_subscribed => {
@@ -256,11 +258,13 @@ exports.notificationOnFollowingMemberLeave = functions.database.ref('/groups/{gr
 											membersFollowing.forEach(function(memberFollowing) {
 												count += 1
 											})
-											if (count === 0 || membersFollowing === null){
+											// check if count is 1 because leaving user is removed from membersFollowing only after this part in the promise
+											if (count === 0 || count === 1 || membersFollowing === null){
 												// send notification of unsubscribe_request
 												var creation_time = parseFloat(Date.now()/1000)
 												var values = {
 													type: "unsubscribeRequest",
+													from_id: leaving_user_id,
 													group_id: group_id,
 													creationDate: creation_time
 												}
@@ -518,6 +522,55 @@ exports.removeGroupSubscribersOnProfileHideUpdate = functions.database.ref('/use
 	}).catch(() => {return null});
 })
 
+exports.transferToMembersFollowingOnSubscribe = functions.database.ref('/groupsFollowing/{user_id}/{group_id}').onCreate((snapshot, context) => {
+	const user_id = context.params.user_id;
+	const group_id = context.params.group_id;
+
+	// first check to see if the group is private
+	return snapshot.ref.root.child('/groups/' + group_id + '/private').once('value', private_snapshot => {
+		var private_string = private_snapshot.val().toString();
+		if (private_string === "true") {
+			return snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + user_id + '/membersFollowing').once('value', membersFollowing => {
+				return snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + user_id + '/autoSubscribed').once('value', auto_subscribed => {
+					return snapshot.ref.root.child('/groups/' + group_id + '/lastPostedDate').once('value', last_post_date => {
+						const promises = [];
+
+						var post_date = last_post_date.val();
+						if(post_date === "0" || post_date === 0){
+							post_date = 1;
+						}
+						post_date = parseFloat(post_date)
+
+						let setLastPosted = snapshot.ref.root.child('/groupsFollowing/' + user_id + '/' + group_id + '/lastPostedDate').set(post_date);
+						promises.push(setLastPosted);
+
+						// set the auto_subscribed from groupFollowPending for the groupFollowing 
+						if (auto_subscribed !== null && auto_subscribed.val() !== null){
+							var is_auto_subscribed = auto_subscribed.val()
+							let set_auto_subscribed = snapshot.ref.root.child('/groupsFollowing/' + user_id + '/' + group_id + '/autoSubscribed').set(is_auto_subscribed);
+							promises.push(set_auto_subscribed);
+						}
+					
+						// remove the newly subscribed member from groupFollowPending, this deletes membersFollowing from under the user's entree in groupFollowPending too
+						let promise_removeGroupFollowPending = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + user_id).remove();
+						promises.push(promise_removeGroupFollowPending);
+
+						membersFollowing.forEach(function(following) {
+							var following_id = following.key;
+							var following_val = following.val();
+							let promise_membersFollowing = snapshot.ref.root.child('/groupsFollowing/' + user_id + '/' + group_id + '/membersFollowing/' + following_id).set(following_val);
+							promises.push(promise_membersFollowing);
+						})
+						return Promise.all(promises);
+					}).catch(() => {return null});
+				}).catch(() => {return null});
+			}).catch(() => {return null});
+		}
+		else {
+			return null;
+		}
+	}).catch(() => {return null});
+})
 
 // ---------------- Updating counts ----------------
 

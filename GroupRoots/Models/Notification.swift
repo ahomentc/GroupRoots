@@ -31,7 +31,7 @@ import Foundation
 
 public enum NotificationType {
  /*      User */ case newFollow,
- /*     Group */ groupJoinRequest, newGroupJoin, groupJoinInvitation, newGroupSubscribe, groupSubscribeRequest, groupProfileNameEdit, groupProfilePicEdit, groupPrivacyChange,
+ /*     Group */ groupJoinRequest, newGroupJoin, groupJoinInvitation, newGroupSubscribe, groupSubscribeRequest, groupProfileNameEdit, groupProfilePicEdit, groupPrivacyChange, unsubscribeRequest,
  /* GroupPost */ groupPostComment, newGroupPost
 }
 
@@ -52,8 +52,10 @@ struct Notification {
         self.from = from ?? User(uid: "", dictionary: ["" : ""])
         self.to = to
         self.type = type
-        self.group = group ?? Group(groupId: "", dictionary: ["" : ""])
-        self.groupPost = groupPost ?? GroupPost(group: Group(groupId: "", dictionary: ["" : ""]), user: User(uid: "", dictionary: ["" : ""]), dictionary: ["" : ""])
+        self.group = group
+//        self.group = group ?? Group(groupId: "", dictionary: ["" : ""])
+        self.groupPost = groupPost
+//        self.groupPost = groupPost ?? GroupPost(group: Group(groupId: "", dictionary: ["" : ""]), user: User(uid: "", dictionary: ["" : ""]), dictionary: ["" : ""])
         self.message = dictionary["message"] as? String ?? ""
 
         let secondsFrom1970 = dictionary["creationDate"] as? Double ?? 0

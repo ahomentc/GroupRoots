@@ -18,6 +18,8 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
             imageView.image = selectedImage
         }
     }
+    
+    var preSelectedGroup: Group?
 
     var selectedVideoURL: URL?
     
@@ -83,6 +85,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         let picker = YPImagePicker(configuration: config)
         
         picker.didFinishPicking { [unowned picker] items, cancelled in
+            self.scrollToPreSelected()
             if cancelled {
                 print("Picker was canceled")
                 picker.dismiss(animated: true, completion: nil)
@@ -106,6 +109,32 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
     
     @objc private func handleCancel() {
         dismiss(animated: true, completion: nil)
+    }
+    
+    private func scrollToPreSelected(){
+        // check to see if preSelectedGroup has a value, if so then select and scroll to it
+        guard let preSelected = self.preSelectedGroup else { return }
+        
+        // loop through groups to find index of preSelected
+        var index = 0
+        for group in self.groups {
+            if group.groupId == preSelected.groupId {
+                break
+            }
+            index += 1
+        }
+        let newIndexPath = IndexPath(row: index, section: 0)
+        if index > 2 {
+            // scroll to the cell that is before the preselected one
+            let previousOfNewIndexPath = IndexPath(row: index-1, section: 0)
+            self.collectionView.scrollToItem(at: previousOfNewIndexPath, at: .top, animated: false)
+        }
+        self.selectedGroupId = preSelected.groupId
+        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { timer in
+            let cell = self.collectionView.cellForItem(at: newIndexPath)
+            cell?.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
+            self.last_selected_indexpath = newIndexPath
+        })
     }
     
     private func layoutViews() {
@@ -157,17 +186,23 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
     internal func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
         cell.group = groups[indexPath.item]
+        if last_selected_indexpath == indexPath {
+            cell.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
+        }
         return cell
     }
     
     private func fetchAllGroups() {
         Database.database().fetchAllGroups(withUID: "", completion: { (groups) in
             self.groups = groups
+            
             let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
             let displayWidth: CGFloat = self.view.frame.width
             let displayHeight: CGFloat = self.view.frame.height
+            
             let layout = UICollectionViewFlowLayout()
             layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
+            
             self.collectionView = UICollectionView(frame: CGRect(x: 0, y: 240, width: displayWidth, height: displayHeight - barHeight - 240), collectionViewLayout: layout)
             self.collectionView.delegate = self
             self.collectionView.dataSource = self
@@ -175,6 +210,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
             self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
             self.collectionView.backgroundColor = UIColor.white
             self.view.addSubview(self.collectionView)
+            
         }) { (_) in
         }
     }

@@ -139,11 +139,24 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         return button
     }()
     
-    private var bioLabel: UILabel = {
-        let label = UILabel()
-        label.text = ""
-        label.isHidden = true
-        return label
+//    private var bioLabel: UILabel = {
+//        let label = UILabel()
+//        label.text = ""
+//        label.isHidden = true
+//        label.lineBreakMode = .byWordWrapping
+//        label.numberOfLines = 2
+//        return label
+//    }()
+    
+    private let bioLabel: UITextView = {
+        let textView = UITextView()
+        textView.font = UIFont.systemFont(ofSize: 14)
+        textView.isScrollEnabled = false
+        textView.isUserInteractionEnabled = false
+        textView.backgroundColor = UIColor.clear
+        textView.isHidden = true
+        textView.textContainer.lineBreakMode = .byWordWrapping
+        return textView
     }()
 
     private let padding: CGFloat = 12
@@ -243,18 +256,21 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         }
         
         let bio = group.bio
-        bioLabel.text = bio
+//        let bio = "this is the bio. this is the second sentence. this is the second sentence. this is the second sentence"
+//        let bio = "this is the bio. this is the second sentence."
         bioLabel.isHidden = false
+        let attributedText = NSMutableAttributedString(string: bio, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
+        bioLabel.attributedText = attributedText
         
         if bio != "" {
             addSubview(bioLabel)
-            bioLabel.anchor(top: collectionView.bottomAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: 30, height: 34)
+            bioLabel.anchor(top: collectionView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: 30, paddingRight: 30)
             
             let buttonStackView = UIStackView(arrangedSubviews: [joinButton, subscribeButton, addMemberButton])
             buttonStackView.distribution = .fillProportionally
             buttonStackView.spacing = 15
             addSubview(buttonStackView)
-            buttonStackView.anchor(top: bioLabel.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 30, paddingRight: 30, height: 34)
+            buttonStackView.anchor(top: bioLabel.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 20, paddingLeft: 30, paddingRight: 30, height: 34)
             
             let stackView = UIStackView(arrangedSubviews: [membersLabel, totalFollowersLabel, inviteCodeButton])
             stackView.distribution = .fillEqually

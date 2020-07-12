@@ -78,6 +78,15 @@ class UserProfileHeader: UICollectionViewCell {
         return label
     }()
     
+    private let websiteLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 16)
+        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleWebsiteTap))
+        label.addGestureRecognizer(gestureRecognizer)
+        label.isUserInteractionEnabled = true
+        return label
+    }()
+    
     private let padding: CGFloat = 12
     
     static var headerId = "userProfileHeaderId"
@@ -115,6 +124,14 @@ class UserProfileHeader: UICollectionViewCell {
         
         addSubview(followButton)
         followButton.anchor(top: stackView.bottomAnchor, left: profileImageView.rightAnchor, right: GroupButton.leftAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
+        
+//        addSubview(websiteLabel)
+//        let url = URL(string: "https://www.apple.com")!
+//        let attributedString = NSMutableAttributedString(string: url.absoluteString, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16), .link: url, .underlineColor: UIColor.clear])
+//        self.websiteLabel.attributedText = attributedString
+//        websiteLabel.anchor(top: profileImageView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: padding + 20, paddingLeft: padding + 10, paddingRight: padding + 10)
+        
+        
                 
         NotificationCenter.default.addObserver(self, selector: #selector(reloadData), name: NSNotification.Name.updateUserProfile, object: nil)
     }
@@ -246,6 +263,11 @@ class UserProfileHeader: UICollectionViewCell {
     
     @objc private func handleShowSubscriptionsPage() {
         delegate?.didSelectSubscriptionsPage()
+    }
+    
+    @objc private func handleWebsiteTap() {
+        guard let url = URL(string: "https://google.com") else { return }
+        UIApplication.shared.open(url)
     }
 }
 
@@ -436,7 +458,7 @@ private class GroupRecruitButton: UIButton {
     }
     
     private func setupInviteStyle() {
-        setTitle("Invite to a Group", for: .normal)
+        setTitle("Invite to Group", for: .normal)
         setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         backgroundColor = UIColor.white
         layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor

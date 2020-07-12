@@ -236,6 +236,17 @@ class NotificationCell: UICollectionViewCell {
             let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
             notificationsLabel.addGestureRecognizer(gestureRecognizer)
         }
+        else if notification.type == NotificationType.unsubscribeRequest {
+            guard let group = notification.group else { return }
+            var groupname = "your group"
+            if group.groupname != "" {
+                groupname = notification.group?.groupname ?? ""
+            }
+            notificationsLabel.text = "left " + groupname + ". Unsubscribe?"
+            notificationsLabel.isUserInteractionEnabled = true
+            let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
+            notificationsLabel.addGestureRecognizer(gestureRecognizer)
+        }
         if let profileImageUrl = notification.from.profileImageUrl {
             profileImageView.loadImage(urlString: profileImageUrl)
         } else {
@@ -277,6 +288,19 @@ class NotificationCell: UICollectionViewCell {
                 if inGroup{
                     self.actionButton.group = self.notification?.group
                     self.actionButton.type = .decision
+                }
+                else {
+                    self.actionButton.type = .hidden
+                }
+            }) { (err) in
+                return
+            }
+        }
+        // unsubscribe button
+        else if notification?.type == NotificationType.unsubscribeRequest {
+            Database.database().isFollowingGroup(groupId: (self.notification?.group!.groupId)!, completion: { (following) in
+                if following {
+                    self.actionButton.type = .unsubscribe
                 }
                 else {
                     self.actionButton.type = .hidden
@@ -350,6 +374,15 @@ class NotificationCell: UICollectionViewCell {
                         }
                         self.reloadActionButton()
                     }
+                }
+            }
+            else if notification.type == NotificationType.unsubscribeRequest {
+                Database.database().removeGroupFromUserFollowing(withUID: currentLoggedInUser, groupId: (self.notification?.group!.groupId)!) { (err) in
+                    if err != nil {
+                        self.actionButton.type = .hidden
+                        return
+                    }
+                    self.reloadActionButton()
                 }
             }
             else if notification.type == NotificationType.groupJoinInvitation {
@@ -484,7 +517,7 @@ class NotificationCell: UICollectionViewCell {
 //MARK: - ActionButtonType
 
 private enum ActionButtonType {
-    case loading, follow, unfollow, join, hidden, decision
+    case loading, follow, unfollow, join, hidden, decision, unsubscribe
 }
 
 //MARK: - ActionButton
@@ -535,6 +568,8 @@ private class ActionButton: UIButton {
             setupHiddenStyle()
         case .decision:
             setupDecisionStyle()
+        case .unsubscribe:
+            setupUnsubscribeStyle()
         }
     }
     
@@ -582,6 +617,19 @@ private class ActionButton: UIButton {
     
     private func setupUnfollowStyle() {
         setTitle("Unfollow", for: .normal)
+        setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
+        backgroundColor = .clear
+        contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
+        layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
+        layer.borderWidth = 1.4
+        layer.cornerRadius = 5
+        titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        isUserInteractionEnabled = true
+        setImage(UIImage(), for: .normal)
+    }
+    
+    private func setupUnsubscribeStyle() {
+        setTitle("Unsubscribe", for: .normal)
         setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         backgroundColor = .clear
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)

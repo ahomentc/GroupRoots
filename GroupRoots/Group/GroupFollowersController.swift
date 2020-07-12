@@ -65,6 +65,7 @@ class GroupFollowersController: UICollectionViewController, loadMoreSubscribersC
         // This might be redundant since the delegate is already being called
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name(rawValue: "updateMembers"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name(rawValue: "updateFollowers"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.removeASubscribeRequestor(_:)), name: NSNotification.Name(rawValue: "removeASubscribeRequestor"), object: nil)
         
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
 
@@ -115,9 +116,27 @@ class GroupFollowersController: UICollectionViewController, loadMoreSubscribersC
     }
     
     @objc private func handleRefresh() {
+        print("handling refresh")
         users.removeAll()
         oldestRetrievedDate = 10000000000000.0
         fetchSubscribers()
+    }
+    
+    @objc private func removeASubscribeRequestor(_ notification: NSNotification){
+        if let dict = notification.userInfo as NSDictionary? {
+            if let user_id = dict["id"] as? String{
+                // remove user_id from self.users
+                print("user_id: ", user_id)
+                print(users)
+                users.removeAll { $0.uid == user_id }
+                print("----***----")
+                print(users)
+                
+                self.collectionView?.refreshControl?.beginRefreshing()
+                self.collectionView?.reloadData()
+                self.collectionView?.refreshControl?.endRefreshing()
+            }
+        }
     }
     
     // when an item is selected, go to that view controller
@@ -150,7 +169,9 @@ class GroupFollowersController: UICollectionViewController, loadMoreSubscribersC
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if !isFollowersView! {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupFollowerCell.cellId, for: indexPath) as! GroupFollowerCell
-            cell.user = users[indexPath.item]
+            if indexPath.row < users.count {
+                cell.user = users[indexPath.item]
+            }
             cell.group = group
             cell.showRemoveButton = isInGroup ?? false
             cell.isFollowersView = isFollowersView

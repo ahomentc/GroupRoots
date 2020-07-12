@@ -77,12 +77,16 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     var checkedIfCommentExists = false
     var groupPostsFirstComment: [String: Comment]? { // key is the postId
         didSet {
+            guard let groupPostsFirstComment = groupPostsFirstComment else { return }
+            firstCommentForPosts = groupPostsFirstComment
             self.reloadGroupData()
         }
     }
     
     var groupPostsNumComments: [String: Int]? { // key is the postId
         didSet {
+            guard let groupPostsNumComments = groupPostsNumComments else { return }
+            numCommentsForPosts = groupPostsNumComments
             self.reloadGroupData()
         }
     }

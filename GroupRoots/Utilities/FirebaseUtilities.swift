@@ -925,7 +925,7 @@ extension Database {
         }
     }
     
-    func updateGroup(groupId: String, changedPrivacy: Bool, groupname: String? = nil, isPrivate: Bool? = nil, image: UIImage? = nil, completion: @escaping (Error?) -> ()){
+    func updateGroup(groupId: String, changedPrivacy: Bool, groupname: String? = nil, bio: String? = nil, isPrivate: Bool? = nil, image: UIImage? = nil, completion: @escaping (Error?) -> ()){
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         var profileImageUrl = ""
         // set the profile image url to the dictionary if there is an image
@@ -944,8 +944,10 @@ extension Database {
             
             // get original username
             var old_groupname = ""
+            var old_bio = ""
             Database.database().fetchGroup(groupId: groupId, completion: { (group) in
                 old_groupname = group.groupname
+                old_bio = group.bio
                 
                 // update the user with the new values
                 // can't do: Database.database().reference().child("users").updateChildValues(values)
@@ -1020,7 +1022,7 @@ extension Database {
                     // username is empty, check if same as old, if not then change
                     if old_groupname != "" {
                         // send notication for name change to all group members, this can be done asynchronously
-                       Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+                        Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
                            Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
                                members.forEach({ (member) in
                                    if user.uid != member.uid {
@@ -1032,7 +1034,7 @@ extension Database {
                                    }
                                })
                            }) { (_) in}
-                       })
+                        })
                         
                         updates_sync.enter()
                         Database.database().reference().child("groups").child(groupId).updateChildValues(["groupname": ""], withCompletionBlock: { (err, ref) in
@@ -1052,9 +1054,40 @@ extension Database {
                     }
                 }
                 
+                // update the username if not nil
+                if bio != nil && bio != "" {
+                    updates_sync.enter()
+                    if bio! != old_bio {
+                        Database.database().reference().child("groups").child(groupId).updateChildValues(["bio": bio!], withCompletionBlock: { (err, ref) in
+                            if let err = err {
+                                print("Failed to update bio in database:", err)
+                                updates_sync.leave()
+                                return
+                            }
+                            updates_sync.leave()
+                        })
+                    }
+                    else {
+                        updates_sync.leave()
+                    }
+                }
+                else {
+                    // username is empty, check if same as old, if not then change
+                    if old_bio != "" {
+                        updates_sync.enter()
+                        Database.database().reference().child("groups").child(groupId).updateChildValues(["bio": ""], withCompletionBlock: { (err, ref) in
+                            if let err = err {
+                                print("Failed to update bio in database:", err)
+                                updates_sync.leave()
+                                return
+                            }
+                            updates_sync.leave()
+                        })
+                    }
+                }
+                
                 // update isPrivate
                 if changedPrivacy {
-                    
                     // send notification of privacy change to all members of group
                     Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
                         Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
@@ -1193,6 +1226,9 @@ extension Database {
                 })
             }
             sync.notify(queue: .main) {
+                users.sort(by: { (u1, u2) -> Bool in
+                    return u1.uid.compare(u2.uid) == .orderedAscending
+                })
                 completion(users)
             }
         }) { (err) in
@@ -1222,6 +1258,9 @@ extension Database {
                 })
             }
             sync.notify(queue: .main) {
+                users.sort(by: { (u1, u2) -> Bool in
+                    return u1.uid.compare(u2.uid) == .orderedAscending
+                })
                 completion(users)
             }
         }) { (err) in
@@ -1669,7 +1708,8 @@ extension Database {
                         let values = [groupId: 1]
                         let code = String(groupId.suffix(6))
                         let stripped_code = code.replacingOccurrences(of: "_", with: "a", options: .literal, range: nil)
-                        let invitationRef = Database.database().reference().child("inviteCodes").child(stripped_code)
+                        let stripped_code2 = stripped_code.replacingOccurrences(of: "-", with: "b", options: .literal, range: nil)
+                        let invitationRef = Database.database().reference().child("inviteCodes").child(stripped_code2)
                         invitationRef.updateChildValues(values) { (err, ref) in
                             if let err = err {
                                 completion(err)
@@ -1810,6 +1850,7 @@ extension Database {
                                 if err != nil {
                                     completion(err);return
                                 }
+                                // moved to cloud function inside function "transferToMembersFollowingOnSubscribe"
                                 Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: uid, completion: { (err) in
                                     if err != nil {
                                         completion(err);return
@@ -2203,6 +2244,31 @@ extension Database {
         }
     }
     
+//    func checkIfAutoSubscribedInGroupFollowPending(groupId: String, withUID uid: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+//        Database.database().reference().child("groupFollowPending").child(groupId).child(uid).child("autoSubscribed").observeSingleEvent(of: .value, with: { (snapshot) in
+//            if snapshot.value != nil {
+//                if snapshot.value! is NSNull {
+//                    print("false 1")
+//                    completion(false)
+//                }
+//                else {
+//                    if let is_auto_subscribed = snapshot.value as? String, is_auto_subscribed == "true" {
+//                        completion(true)
+//                    } else {
+//                        completion(false)
+//                    }
+//                }
+//            } else {
+//                completion(false)
+//                print("false 3")
+//            }
+//
+//        }) { (err) in
+//            print("Failed to check if auto subscribed:", err)
+//            cancel?(err)
+//        }
+//    }
+    
     func fetchMembersFollowingForSubscription(groupId: String, withUID uid: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groupsFollowing").child(uid).child(groupId).child("membersFollowing")
         ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
@@ -2239,6 +2305,25 @@ extension Database {
         }
     }
     
+    // this is for a private group when the user is acceped to follow
+    // removing form groupFollowPending inside a cloud function
+    func acceptSubscriptionToPrivateGroup(withUID uid: String, groupId: String, completion: @escaping (Error?) -> ()) {
+        Database.database().addToGroupFollowers(groupId: groupId, withUID: uid) { (err) in
+            if err != nil {
+                return
+            }
+            // autoSubscribed okay as false because set correctly in cloud function, just need placeholder here
+            Database.database().addToGroupsFollowing(groupId: groupId, withUID: uid, autoSubscribed: false) { (err) in
+                if err != nil {
+                    return
+                }
+                // notification to refresh
+                completion(nil)
+            }
+        }
+    }
+    
+    // this is called when the user presses a button to subscribe, more like a request to subscribe to group
     func subscribeToGroup(groupId: String, completion: @escaping (Error?) -> ()) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
@@ -2306,6 +2391,8 @@ extension Database {
                                                     if err != nil {
                                                         completion(err);return
                                                     }
+                                                    
+                                                    // this is actually useless since there is no group follow pending for public groups
                                                     Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: currentLoggedInUserId, completion: { (err) in
                                                         if err != nil {
                                                             completion(err);return
@@ -3471,6 +3558,9 @@ extension Database {
                         completion(nil)
                     }
                 }
+            case .unsubscribeRequest:
+                // no notification for unsubscribe request
+                completion(nil)
             case .groupJoinInvitation:
                 guard let group = group else { return }
                 // someone in the group is inviting a user
@@ -3583,6 +3673,11 @@ extension Database {
                                 completion(exists)
                                 return
                             })
+                        case "unsubscribeRequest":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                completion(exists)
+                                return
+                            })
                         default:
                             completion(false)
                             return
@@ -3671,6 +3766,21 @@ extension Database {
                                     if exists {
                                         Database.database().fetchGroup(groupId: group_id, completion: { (group) in
                                             var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.groupSubscribeRequest, dictionary: notificationDictionary)
+                                            notification.id = notificationId
+                                            completion(notification)
+                                        })
+                                    }
+                                    else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
+                                        return
+                                    }
+                                })
+                            case "unsubscribeRequest":
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            var notification = Notification(group: group, from: fromUser, to: toUser, type: NotificationType.unsubscribeRequest, dictionary: notificationDictionary)
                                             notification.id = notificationId
                                             completion(notification)
                                         })
@@ -3864,7 +3974,9 @@ extension Database {
                 sync.enter()
                 self.notificationIsValid(notificationId: notificationId, completion: { (valid) in
                     if valid {
+                        print("fetching")
                         Database.database().fetchNotification(notificationId: notificationId, completion: { (notification) in
+                            print("fetched")
                             notifications.append(notification)
                             sync.leave()
                         })
@@ -3878,6 +3990,7 @@ extension Database {
                 notifications.sort(by: { (not1, not2) -> Bool in
                     return not1.creationDate.compare(not2.creationDate) == .orderedDescending
                 })
+                print(notifications.count)
                 // queryEnding keeps the oldest entree of the last batch so remove it here if not the first batch
                 if endAt != 10000000000000.0 && notifications.count > 0 {
                     notifications.remove(at: 0)

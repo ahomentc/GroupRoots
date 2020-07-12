@@ -100,7 +100,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+//        NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
 
         
         collectionView.visibleCells.forEach { cell in
@@ -632,7 +632,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     func didTapComment(groupPost: GroupPost) {
-        
+        let commentsController = CommentsController(collectionViewLayout: UICollectionViewFlowLayout())
+        commentsController.groupPost = groupPost
+        navigationController?.pushViewController(commentsController, animated: true)
     }
     
     func didTapGroup(group: Group) {
