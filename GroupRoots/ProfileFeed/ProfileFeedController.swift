@@ -43,14 +43,14 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.numberOfLines = 0
         label.isHidden = true
         label.textAlignment = .center
-        let attributedText = NSMutableAttributedString(string: "No Internet Connection", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 18)])
+        let attributedText = NSMutableAttributedString(string: "No Internet Connection", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 18)])
         label.attributedText = attributedText
         return label
     }()
     
     private let noInternetBackground: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(white: 0, alpha: 0.5)
+        view.backgroundColor = UIColor(white: 0, alpha: 0.6)
         view.layer.zPosition = 3
         view.isUserInteractionEnabled = false
         view.layer.cornerRadius = 10
@@ -66,7 +66,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         button.layer.borderWidth = 1
         button.layer.borderColor = UIColor.white.cgColor
         button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitle("Retry", for: .normal)
         return button
     }()
@@ -99,10 +99,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-//        NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
-
-        
         collectionView.visibleCells.forEach { cell in
             if cell is FeedGroupCell {
                 (cell as! FeedGroupCell).pauseVisibleVideo()
@@ -219,8 +215,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
 //            self.groupPostsNumCommentsDict = groupPostsNumCommentsDict
 //        }
         
-        print("loading group posts")
-        loadGroupPosts()
+//        print("loading group posts")
+//        loadGroupPosts()
         configureNavigationBar()
         
         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true, block: { timer in
@@ -239,6 +235,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             activityIndicatorView.color = .black
             self.view.insertSubview(activityIndicatorView, at: 20)
             activityIndicatorView.startAnimating()
+            
+            self.loadGroupPosts()
+            
         }else{
             print("Internet Connection not Available!")
             self.reloadButton.isHidden = false
@@ -497,7 +496,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
 
                 self.loadingScreenView.isHidden = true
                 self.activityIndicatorView.isHidden = true
-
+ 
                 DispatchQueue.main.async{
                     self.collectionView?.reloadData()
                     self.collectionView?.refreshControl?.endRefreshing()
@@ -599,7 +598,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     private var maxDistanceScrolled = CGFloat(0)
     private var numGroupsScrolled = 1
     func stoppedScrolling(endPos: CGFloat) {
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false, block: { timer in
+        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { timer in
             if let indexPath = self.collectionView.indexPathsForVisibleItems.last {
                 if indexPath.row ==  self.numGroupsInFeed {
                     self.numGroupsInFeed += 3
@@ -617,6 +616,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     else {
                         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
                     }
+                }
+                else {
+                    NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
                 }
             }
         })

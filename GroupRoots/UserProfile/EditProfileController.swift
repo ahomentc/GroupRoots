@@ -68,6 +68,25 @@ class EditProfileController: UIViewController, UINavigationControllerDelegate {
         return tf
     }()
     
+    private lazy var bioTextField: UITextField = {
+        let tf = UITextField()
+        tf.placeholder = "Bio"
+        tf.autocorrectionType = .no
+        tf.autocapitalizationType = .none
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
+        tf.borderStyle = .none
+        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.delegate = self
+        return tf
+    }()
+    
+    private let bioLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Bio"
+        label.font = UIFont.boldSystemFont(ofSize: 14)
+        return label
+    }()
+    
     private let usernameLabel: UILabel = {
         let label = UILabel()
         label.text = "Username"
@@ -120,6 +139,7 @@ class EditProfileController: UIViewController, UINavigationControllerDelegate {
         
         usernameTextField.text = user.username
         nameTextField.text = user.name
+        bioTextField.text = user.bio
         
         let separatorViewTop = UIView()
         separatorViewTop.backgroundColor = UIColor(white: 0, alpha: 0.1)
@@ -135,13 +155,24 @@ class EditProfileController: UIViewController, UINavigationControllerDelegate {
         let separatorViewMid = UIView()
         separatorViewMid.backgroundColor = UIColor(white: 0, alpha: 0.1)
         view.addSubview(separatorViewMid)
-        separatorViewMid.anchor(top: usernameLabel.bottomAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 15, paddingLeft: 25, paddingRight: 25, height: 0.5)
+        separatorViewMid.anchor(top: usernameLabel.bottomAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 15, height: 0.5)
+        
+        view.addSubview(bioLabel)
+        bioLabel.anchor(top: separatorViewMid.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, paddingTop: 15, paddingLeft: 20)
+        
+        view.addSubview(bioTextField)
+        bioTextField.anchor(top: separatorViewMid.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 10, paddingLeft: 130, height: 30)
+        
+        let separatorViewMid2 = UIView()
+        separatorViewMid2.backgroundColor = UIColor(white: 0, alpha: 0.1)
+        view.addSubview(separatorViewMid2)
+        separatorViewMid2.anchor(top: bioLabel.bottomAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 15, height: 0.5)
         
         view.addSubview(nameLabel)
-        nameLabel.anchor(top: separatorViewMid.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, paddingTop: 15, paddingLeft: 20)
+        nameLabel.anchor(top: separatorViewMid2.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, paddingTop: 15, paddingLeft: 20)
         
         view.addSubview(nameTextField)
-        nameTextField.anchor(top: separatorViewMid.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 10, paddingLeft: 130, height: 30)
+        nameTextField.anchor(top: separatorViewMid2.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 10, paddingLeft: 130, height: 30)
         
         let separatorViewBottom = UIView()
         separatorViewBottom.backgroundColor = UIColor(white: 0, alpha: 0.1)
@@ -154,6 +185,8 @@ class EditProfileController: UIViewController, UINavigationControllerDelegate {
         usernameTextField.text = ""
         usernameTextField.isUserInteractionEnabled = true
         nameTextField.isUserInteractionEnabled = true
+        bioTextField.text = ""
+        bioTextField.isUserInteractionEnabled = true
     }
     
     @objc private func selectImage() {
@@ -172,9 +205,11 @@ class EditProfileController: UIViewController, UINavigationControllerDelegate {
         
         let username = usernameTextField.text
         let name = nameTextField.text
-        
+        let bio = bioTextField.text
+    
         usernameTextField.isUserInteractionEnabled = false
         nameTextField.isUserInteractionEnabled = false
+        bioTextField.isUserInteractionEnabled = false
                 
 //     username regex:   ^[a-zA-Z0-9_-]*$   must match
         if username != nil {
@@ -187,7 +222,7 @@ class EditProfileController: UIViewController, UINavigationControllerDelegate {
             }
         }
         
-        Database.database().updateUser(withUID: currentLoggedInUserId, username: username, name: name, image: self.profileImage) { (err) in
+        Database.database().updateUser(withUID: currentLoggedInUserId, username: username, name: name, bio: bio, image: self.profileImage) { (err) in
             if err != nil {
                 guard let error = err else { self.resetInputFields(); return }
                 if error.localizedDescription == "Username Taken" {
@@ -196,6 +231,7 @@ class EditProfileController: UIViewController, UINavigationControllerDelegate {
                     self.present(alert, animated: true)
                 }
             }
+            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
             self.resetInputFields()
             self.dismiss(animated: true, completion: nil)
             NotificationCenter.default.post(name: NSNotification.Name("updatedUser"), object: nil)
@@ -227,6 +263,16 @@ extension EditProfileController: UITextFieldDelegate {
         textField.resignFirstResponder()
         return true
     }
+    
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        let currentCharacterCount = textField.text?.count ?? 0
+        if range.length + range.location > currentCharacterCount {
+            return false
+        }
+        let newLength = currentCharacterCount + string.count - range.length
+        return newLength <= 120
+    }
+
 }
 
 // Helper function inserted by Swift 4.2 migrator.

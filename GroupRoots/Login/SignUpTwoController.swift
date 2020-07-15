@@ -16,6 +16,7 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
     var username: String?
     var name: String?
     var profileImage: UIImage?
+    var bio: String?
     
     private lazy var backLabel: UILabel = {
         let label = UILabel()
@@ -115,10 +116,6 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
     }
     
     private func resetInputFields() {
-//        passwordTextField.text = ""
-//        passwordMatchTextField.text = ""
-//        invitationTextField.text = ""
-        
         passwordTextField.isUserInteractionEnabled = true
         invitationTextField.isUserInteractionEnabled = true
         
@@ -158,6 +155,7 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
         guard let email = email else { return }
         guard let username = username else { return }
         guard let name = name else { return }
+        guard let bio = bio else { return }
         
         if password != passwordMatch {
             self.passwordTextField.text = ""
@@ -200,7 +198,7 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
                 return
             }
             
-            Auth.auth().createUser(withEmail: email, username: username, name: name, password: password, image: self.profileImage) { (err) in
+            Auth.auth().createUser(withEmail: email, username: username, name: name, bio: bio, password: password, image: self.profileImage) { (err) in
 
                 // get the groupId that the code belongs to
                 // send a request to join the group

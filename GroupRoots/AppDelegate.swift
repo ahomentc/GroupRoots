@@ -10,6 +10,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         FirebaseApp.configure()
         let pushManager = PushNotificationManager()
         pushManager.registerForPushNotifications()
+        
         window = UIWindow()
         window?.makeKeyAndVisible()
         window?.backgroundColor = .black

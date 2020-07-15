@@ -20,7 +20,7 @@ class UserProfileHeader: UICollectionViewCell {
     
     var user: User? {
         didSet {
-            reloadData()
+            setFirstData()
         }
     }
 
@@ -87,6 +87,17 @@ class UserProfileHeader: UICollectionViewCell {
         return label
     }()
     
+    private let bioLabel: UITextView = {
+        let textView = UITextView()
+        textView.font = UIFont.systemFont(ofSize: 14)
+        textView.isScrollEnabled = false
+        textView.isUserInteractionEnabled = false
+        textView.backgroundColor = UIColor.clear
+        textView.isHidden = true
+        textView.textContainer.lineBreakMode = .byWordWrapping
+        return textView
+    }()
+    
     private let padding: CGFloat = 12
     
     static var headerId = "userProfileHeaderId"
@@ -102,10 +113,16 @@ class UserProfileHeader: UICollectionViewCell {
     }
     
     private func sharedInit() {
+        NotificationCenter.default.addObserver(self, selector: #selector(reloadData), name: NSNotification.Name.updateUserProfile, object: nil)
+    }
+    
+    @objc func setFirstData() {
+        guard let user = user else { return }
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        
         addSubview(profileImageView)
         profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: padding, width: 80, height: 80)
         profileImageView.layer.cornerRadius = 80 / 2
-//        profileImageView.layer.cornerRadius = 32
         
         let stackView = UIStackView(arrangedSubviews: [followingLabel, followersLabel, subscriptionsLabel])
         stackView.distribution = .fillEqually
@@ -113,27 +130,48 @@ class UserProfileHeader: UICollectionViewCell {
         addSubview(stackView)
         stackView.anchor(top: topAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding + 10, paddingLeft: padding - 5, paddingRight: padding - 5)
         
-//        addSubview(GroupButton)
-//        GroupButton.anchor(top: stackView.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
-//
-//        addSubview(followButton)
-//        followButton.anchor(top: GroupButton.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
+        let bio = user.bio
+        bioLabel.isHidden = false
+        let attributedText = NSMutableAttributedString(string: bio, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
+        bioLabel.attributedText = attributedText
         
-        addSubview(GroupButton)
-        GroupButton.anchor(top: stackView.bottomAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
-        
-        addSubview(followButton)
-        followButton.anchor(top: stackView.bottomAnchor, left: profileImageView.rightAnchor, right: GroupButton.leftAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
-        
-//        addSubview(websiteLabel)
-//        let url = URL(string: "https://www.apple.com")!
-//        let attributedString = NSMutableAttributedString(string: url.absoluteString, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16), .link: url, .underlineColor: UIColor.clear])
-//        self.websiteLabel.attributedText = attributedString
-//        websiteLabel.anchor(top: profileImageView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: padding + 20, paddingLeft: padding + 10, paddingRight: padding + 10)
-        
-        
+        if bio != "" {
+            addSubview(bioLabel)
+            bioLabel.anchor(top: stackView.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding)
+            
+            if user.uid == currentLoggedInUserId {
+                addSubview(GroupButton)
+                GroupButton.anchor(top: bioLabel.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding, paddingRight: padding, height: 34)
+            }
+            else {
+                addSubview(GroupButton)
+                GroupButton.anchor(top: bioLabel.bottomAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
                 
-        NotificationCenter.default.addObserver(self, selector: #selector(reloadData), name: NSNotification.Name.updateUserProfile, object: nil)
+                addSubview(followButton)
+                followButton.anchor(top: bioLabel.bottomAnchor, left: profileImageView.rightAnchor, right: GroupButton.leftAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
+            }
+        }
+        else {
+            if user.uid == currentLoggedInUserId {
+                addSubview(GroupButton)
+                GroupButton.anchor(top: stackView.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding, paddingRight: padding, height: 34)
+            }
+            else {
+                addSubview(GroupButton)
+                GroupButton.anchor(top: stackView.bottomAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
+                
+                addSubview(followButton)
+                followButton.anchor(top: stackView.bottomAnchor, left: profileImageView.rightAnchor, right: GroupButton.leftAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
+            }
+        }
+        
+        usernameLabel.text = user.username
+        reloadFollowButton()
+        reloadGroupButton()
+        reloadUserStats()
+        if let profileImageUrl = user.profileImageUrl {
+            profileImageView.loadImage(urlString: profileImageUrl)
+        }
     }
     
     @objc func reloadData() {

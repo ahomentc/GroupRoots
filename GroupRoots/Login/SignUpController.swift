@@ -62,6 +62,19 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         return tf
     }()
     
+    private lazy var bioTextField: UITextField = {
+        let tf = UITextField()
+        tf.placeholder = "Bio"
+        tf.autocorrectionType = .no
+        tf.autocapitalizationType = .none
+        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.borderStyle = .roundedRect
+        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.delegate = self
+        tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
+        return tf
+    }()
+    
     private let nextButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Next", for: .normal)
@@ -108,13 +121,13 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     
     private func setupInputFields() {
 //        let stackView = UIStackView(arrangedSubviews: [emailTextField, usernameTextField, nameTextField, passwordTextField, invitationTextField, signUpButton])
-        let stackView = UIStackView(arrangedSubviews: [emailTextField, usernameTextField, nameTextField, nextButton])
+        let stackView = UIStackView(arrangedSubviews: [emailTextField, usernameTextField, nameTextField, bioTextField, nextButton])
         stackView.distribution = .fillEqually
         stackView.axis = .vertical
         stackView.spacing = 10
         
         view.addSubview(stackView)
-        stackView.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 40, paddingLeft: 40, paddingRight: 40, height: 210)
+        stackView.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 40, paddingLeft: 40, paddingRight: 40, height: 262)
     }
     
     private func resetInputFields() {
@@ -125,6 +138,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         emailTextField.isUserInteractionEnabled = true
         usernameTextField.isUserInteractionEnabled = true
         nameTextField.isUserInteractionEnabled = true
+        bioTextField.isUserInteractionEnabled = true
         
         nextButton.isEnabled = false
         nextButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
@@ -134,6 +148,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         usernameTextField.resignFirstResponder()
         nameTextField.resignFirstResponder()
         emailTextField.resignFirstResponder()
+        bioTextField.resignFirstResponder()
     }
     
     @objc private func handlePlusPhoto() {
@@ -162,6 +177,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         guard let email = emailTextField.text else { return }
         guard let username = usernameTextField.text else { return }
         guard let name = nameTextField.text else { return }
+        guard let bio = bioTextField.text else { return }
         
 //     username regex:   ^[a-zA-Z0-9_-]*$   must match
         if username.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
@@ -193,6 +209,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
                         signUpTwoController.username = username
                         signUpTwoController.name = name
                         signUpTwoController.profileImage = self.profileImage
+                        signUpTwoController.bio = bio
                         self.navigationController?.pushViewController(signUpTwoController, animated: true)
                     }
                     else {
@@ -237,6 +254,15 @@ extension SignUpController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
+    }
+    
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        let currentCharacterCount = textField.text?.count ?? 0
+        if range.length + range.location > currentCharacterCount {
+            return false
+        }
+        let newLength = currentCharacterCount + string.count - range.length
+        return newLength <= 120
     }
 }
 

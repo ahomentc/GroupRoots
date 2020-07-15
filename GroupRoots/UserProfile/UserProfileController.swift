@@ -278,7 +278,22 @@ class UserProfileController: HomePostCellViewController {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: view.frame.width, height: 115)
+        guard let user = user else { return CGSize(width: view.frame.width, height: 115) }
+        let bio = user.bio
+        if bio == "" {
+            return CGSize(width: view.frame.width, height: 115)
+        }
+        else {
+            if bio.count < 40 {
+                return CGSize(width: view.frame.width, height: 145)
+            }
+            else if bio.count < 80 {
+                return CGSize(width: view.frame.width, height: 165)
+            }
+            else {
+                return CGSize(width: view.frame.width, height: 185)
+            }
+        }
     }
 
 }

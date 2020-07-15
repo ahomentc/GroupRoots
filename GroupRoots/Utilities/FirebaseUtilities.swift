@@ -2,7 +2,7 @@ import Foundation
 import Firebase
 
 extension Auth {
-    func createUser(withEmail email: String, username: String, name: String, password: String, image: UIImage?, completion: @escaping (Error?) -> ()) {
+    func createUser(withEmail email: String, username: String, name: String, bio: String, password: String, image: UIImage?, completion: @escaping (Error?) -> ()) {
         Database.database().usernameExists(username: username, completion: { (exists) in
             if !exists{
                 Auth.auth().createUser(withEmail: email, password: password, completion: { (user, err) in
@@ -14,12 +14,12 @@ extension Auth {
                     guard let uid = user?.user.uid else { return }
                     if let image = image {
                         Storage.storage().uploadUserProfileImage(image: image, completion: { (profileImageUrl) in
-                            self.uploadUser(withUID: uid, username: username, name: name, profileImageUrl: profileImageUrl) {
+                            self.uploadUser(withUID: uid, username: username, name: name, bio: bio, profileImageUrl: profileImageUrl) {
                                 completion(nil)
                             }
                         })
                     } else {
-                        self.uploadUser(withUID: uid, username: username, name: name) {
+                        self.uploadUser(withUID: uid, username: username, name: name, bio: bio) {
                             completion(nil)
                         }
                     }
@@ -33,8 +33,8 @@ extension Auth {
         })
     }
     
-    private func uploadUser(withUID uid: String, username: String, name: String, profileImageUrl: String? = nil, completion: @escaping (() -> ())) {
-        var dictionaryValues = ["username": username, "name": name]
+    private func uploadUser(withUID uid: String, username: String, name: String, bio: String, profileImageUrl: String? = nil, completion: @escaping (() -> ())) {
+        var dictionaryValues = ["username": username, "name": name, "bio": bio]
         if profileImageUrl != nil {
             dictionaryValues["profileImageUrl"] = profileImageUrl
         }
@@ -52,11 +52,9 @@ extension Auth {
                     return
                 }
                 completion()
-                
             })
         })
     }
-    
 }
 
 extension Storage {
@@ -196,7 +194,7 @@ extension Database {
     
     
     // make sure to do Username exists
-    func updateUser(withUID uid: String, username: String? = nil, name: String? = nil, image: UIImage? = nil, completion: @escaping (Error?) -> ()){
+    func updateUser(withUID uid: String, username: String? = nil, name: String? = nil, bio: String? = nil, image: UIImage? = nil, completion: @escaping (Error?) -> ()){
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         var profileImageUrl = ""
         
@@ -215,8 +213,10 @@ extension Database {
         sync.notify(queue: .main){
             // get original username
             var old_username = ""
+            var old_bio = ""
             Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
                 old_username = user.username
+                old_bio = user.bio
                 
                 // update the user with the new values
                 // can't do: Database.database().reference().child("users").updateChildValues(values)
@@ -276,6 +276,37 @@ extension Database {
                         }
                         updates_sync.leave()
                     })
+                }
+                
+                if bio != nil && bio != "" {
+                    updates_sync.enter()
+                    if bio! != old_bio {
+                        Database.database().reference().child("users").child(currentLoggedInUserId).updateChildValues(["bio": bio!], withCompletionBlock: { (err, ref) in
+                            if let err = err {
+                                print("Failed to update bio in database:", err)
+                                updates_sync.leave()
+                                return
+                            }
+                            updates_sync.leave()
+                        })
+                    }
+                    else {
+                        updates_sync.leave()
+                    }
+                }
+                else {
+                    // username is empty, check if same as old, if not then change
+                    if old_bio != "" {
+                        updates_sync.enter()
+                        Database.database().reference().child("users").child(currentLoggedInUserId).updateChildValues(["bio": ""], withCompletionBlock: { (err, ref) in
+                            if let err = err {
+                                print("Failed to update bio in database:", err)
+                                updates_sync.leave()
+                                return
+                            }
+                            updates_sync.leave()
+                        })
+                    }
                 }
                 
                 if profileImageUrl != "" {
@@ -1053,8 +1084,7 @@ extension Database {
                         })
                     }
                 }
-                
-                // update the username if not nil
+
                 if bio != nil && bio != "" {
                     updates_sync.enter()
                     if bio! != old_bio {
@@ -4206,6 +4236,29 @@ extension Database {
             }
             else {
                 completion(0)
+            }
+        }
+    }
+    
+    func currentVersionIsValid(completion: @escaping (Bool) -> ()) {
+        Database.database().reference().child("min_app_version").observeSingleEvent(of: .value) { (snapshot) in
+            if let min_app_version = snapshot.value as? Double {
+                if let current_app_version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                    if let current = Double(current_app_version) {
+                        completion(current >= min_app_version)
+                    }
+                    completion(true)
+                }
+                completion(true)
+            }
+            completion(true)
+        }
+    }
+    
+    func fetch_link_to_app(completion: @escaping (String) -> ()) {
+        Database.database().reference().child("link_to_app").observeSingleEvent(of: .value) { (snapshot) in
+            if let link_to_app = snapshot.value as? String {
+                completion(link_to_app)
             }
         }
     }

@@ -279,15 +279,6 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
             stackView.anchor(top: buttonStackView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 30, paddingRight: 30)
         }
         else {
-//            addSubview(joinButton)
-//            joinButton.anchor(top: collectionView.bottomAnchor, left: leftAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
-//
-//            addSubview(subscribeButton)
-//            subscribeButton.anchor(top: collectionView.bottomAnchor, left: joinButton.rightAnchor, paddingTop: 15, paddingLeft: 15, height: 34)
-//
-//            addSubview(addMemberButton)
-//            addMemberButton.anchor(top: collectionView.bottomAnchor, right: rightAnchor, paddingTop: 15, paddingRight: 15,  width: 100, height: 34)
-            
             let buttonStackView = UIStackView(arrangedSubviews: [joinButton, subscribeButton, addMemberButton])
             buttonStackView.distribution = .fillProportionally
             buttonStackView.spacing = 15

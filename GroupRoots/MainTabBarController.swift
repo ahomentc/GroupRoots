@@ -4,11 +4,28 @@ import UPCarouselFlowLayout
 
 class MainTabBarController: UITabBarController {
     
+    private let loadingScreenView: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.layer.zPosition = 10
+        iv.clipsToBounds = true
+        iv.backgroundColor = UIColor(white: 0, alpha: 1)
+        return iv
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         if #available(iOS 13.0, *) {
             overrideUserInterfaceStyle = .light
         }
+        
+        loadingScreenView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
+        loadingScreenView.layer.cornerRadius = 0
+        loadingScreenView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        loadingScreenView.image =  #imageLiteral(resourceName: "Splash4")
+        self.view.insertSubview(loadingScreenView, at: 10)
+        
+        self.view.backgroundColor = UIColor.white
         
         tabBar.tintColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         tabBar.isTranslucent = true
@@ -16,14 +33,35 @@ class MainTabBarController: UITabBarController {
         tabBar.backgroundImage = UIImage()
         tabBar.shadowImage = UIImage()
         tabBar.unselectedItemTintColor = UIColor.white
-        tabBar.backgroundColor = UIColor(red: 0/255, green: 0/255, blue: 0/255, alpha: 0.1)
+        tabBar.backgroundColor = UIColor(red: 0/255, green: 0/255, blue: 0/255, alpha: 0)
         
         delegate = self
-                
-        if Auth.auth().currentUser == nil {
-            presentLoginController()
+        
+        // check if the current version of the app is valid or needs to be updated
+        // only run this if there is internet
+        if Reachability.isConnectedToNetwork(){
+            Database.database().currentVersionIsValid(completion: { (is_valid) in
+                if is_valid {
+                    self.loadingScreenView.isHidden = true
+                    if Auth.auth().currentUser == nil {
+                        self.presentLoginController()
+                    } else {
+                        self.setupViewControllers()
+                    }
+                }
+                else {
+                    // present force update screen
+                    self.loadingScreenView.isHidden = true
+                    self.presentForceUpdateController()
+                }
+            })
         } else {
-            setupViewControllers()
+            self.loadingScreenView.isHidden = true
+            if Auth.auth().currentUser == nil {
+                self.presentLoginController()
+            } else {
+                self.setupViewControllers()
+            }
         }
         
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarClear), name: NSNotification.Name(rawValue: "tabBarClear"), object: nil)
@@ -34,22 +72,11 @@ class MainTabBarController: UITabBarController {
     func setupViewControllers() {
         guard (Auth.auth().currentUser?.uid) != nil else { return }
 
-//        do {
-//            try reachability.startNotifier()
-//        } catch {
-//            print("Unable to start notifier")
-//        }
-                
-//        let layout = UPCarouselFlowLayout()
-//        layout.scrollDirection = UICollectionView.ScrollDirection.vertical
-//        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-//        layout.spacingMode = UPCarouselFlowLayoutSpacingMode.fixed(spacing: 20)
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.vertical
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         layout.minimumLineSpacing = CGFloat(0)
         
-//        let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_5"), selectedImage: #imageLiteral(resourceName: "home_5"), rootViewController: FeedController(collectionViewLayout: layout))
         let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_5"), selectedImage: #imageLiteral(resourceName: "home_5"), rootViewController: ProfileFeedController(collectionViewLayout: layout))
         
         let searchNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "search_2"), selectedImage: #imageLiteral(resourceName: "search_2"), rootViewController: UserSearchController(collectionViewLayout: UICollectionViewFlowLayout()))
@@ -80,6 +107,15 @@ class MainTabBarController: UITabBarController {
         DispatchQueue.main.async { // wait until MainTabBarController is inside UI
             let loginController = LoginController()
             let navController = UINavigationController(rootViewController: loginController)
+            navController.modalPresentationStyle = .fullScreen
+            self.present(navController, animated: true, completion: nil)
+        }
+    }
+    
+    private func presentForceUpdateController() {
+        DispatchQueue.main.async { // wait until MainTabBarController is inside UI
+            let forceUpdateController = ForceUpdateController()
+            let navController = UINavigationController(rootViewController: forceUpdateController)
             navController.modalPresentationStyle = .fullScreen
             self.present(navController, animated: true, completion: nil)
         }
@@ -121,8 +157,6 @@ extension MainTabBarController: UITabBarControllerDelegate {
         }
         if index == 2 {
             let sharePhotoController = SharePhotoController()
-            
-            
             if let topController = UIApplication.topViewController() {
                 if type(of: topController) == GroupProfileController.self {
                     let groupProfile = topController as? GroupProfileController

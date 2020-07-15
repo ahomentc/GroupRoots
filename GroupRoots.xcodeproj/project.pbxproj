@@ -10,6 +10,7 @@
 		750FA44A23D3055900D33CF8 /* NotificationsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750FA44923D3055900D33CF8 /* NotificationsController.swift */; };
 		750FA45223D41B3600D33CF8 /* MembersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750FA45123D41B3600D33CF8 /* MembersController.swift */; };
 		750FA45423D4201E00D33CF8 /* UserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750FA45323D4201E00D33CF8 /* UserCell.swift */; };
+		7521C74E24BD428E003FCFB4 /* ForceUpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521C74D24BD428E003FCFB4 /* ForceUpdateController.swift */; };
 		7521D0482434506A0028FC9C /* SearchHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521D0472434506A0028FC9C /* SearchHeader.swift */; };
 		7521D04A243463480028FC9C /* GroupSearchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521D049243463480028FC9C /* GroupSearchCell.swift */; };
 		7522E43A24A937F60013A351 /* LoadMoreFollowersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7522E43924A937F60013A351 /* LoadMoreFollowersCell.swift */; };
@@ -106,6 +107,7 @@
 		750FA44923D3055900D33CF8 /* NotificationsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsController.swift; sourceTree = "<group>"; };
 		750FA45123D41B3600D33CF8 /* MembersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersController.swift; sourceTree = "<group>"; };
 		750FA45323D4201E00D33CF8 /* UserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCell.swift; sourceTree = "<group>"; };
+		7521C74D24BD428E003FCFB4 /* ForceUpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForceUpdateController.swift; sourceTree = "<group>"; };
 		7521D0472434506A0028FC9C /* SearchHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchHeader.swift; sourceTree = "<group>"; };
 		7521D049243463480028FC9C /* GroupSearchCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSearchCell.swift; sourceTree = "<group>"; };
 		7522E43924A937F60013A351 /* LoadMoreFollowersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadMoreFollowersCell.swift; sourceTree = "<group>"; };
@@ -341,6 +343,7 @@
 			children = (
 				AD2A2CB0205C88DE0023D5C8 /* AppDelegate.swift */,
 				AD4D8CEB2060634600A49BA4 /* MainTabBarController.swift */,
+				7521C74D24BD428E003FCFB4 /* ForceUpdateController.swift */,
 				757B35C72472334200C9AFE1 /* ProfileFeed */,
 				75BB488B23DAB1CD00CF008F /* Feed */,
 				750FA44823D3052B00D33CF8 /* Notification */,
@@ -556,21 +559,17 @@
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-GroupRoots/Pods-GroupRoots-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-GroupRoots/Pods-GroupRoots-resources.sh",
 				"${PODS_ROOT}/GoogleSignIn/Resources/GoogleSignIn.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-			);
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleSignIn.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-GroupRoots/Pods-GroupRoots-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-GroupRoots/Pods-GroupRoots-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		4EC4568FA215CC5B0AC33863 /* [CP] Embed Pods Frameworks */ = {
@@ -579,7 +578,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-GroupRoots/Pods-GroupRoots-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-GroupRoots/Pods-GroupRoots-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/AFNetworking/AFNetworking.framework",
 				"${BUILT_PRODUCTS_DIR}/AppAuth/AppAuth.framework",
 				"${BUILT_PRODUCTS_DIR}/BSGridCollectionViewLayout/BSGridCollectionViewLayout.framework",
@@ -630,7 +629,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-GroupRoots/Pods-GroupRoots-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-GroupRoots/Pods-GroupRoots-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -720,6 +719,7 @@
 				75B65DE7240A506C006CBA0B /* GroupFollowersController.swift in Sources */,
 				75BB489323DACF2000CF008F /* FeedPostCellHeader.swift in Sources */,
 				759912C523DD446200B415EB /* PushNotificationSender.swift in Sources */,
+				7521C74E24BD428E003FCFB4 /* ForceUpdateController.swift in Sources */,
 				AD3164D421152D00001F5DA7 /* Comment.swift in Sources */,
 				7521D0482434506A0028FC9C /* SearchHeader.swift in Sources */,
 				7578BB1E23D27CEE00AF9BFB /* GroupProfileHeader.swift in Sources */,
@@ -864,7 +864,7 @@
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				INFOPLIST_FILE = GroupRoots/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots;
 				PRODUCT_NAME = GroupRoots;
 				SWIFT_VERSION = 4.2;
@@ -883,7 +883,7 @@
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				INFOPLIST_FILE = GroupRoots/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots;
 				PRODUCT_NAME = GroupRoots;
 				SWIFT_VERSION = 4.2;
