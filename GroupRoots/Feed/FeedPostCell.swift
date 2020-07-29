@@ -26,7 +26,6 @@ protocol InnerPostCellDelegate {
 
 class FeedPostCell: UICollectionViewCell {
     
-    
     var delegate: InnerPostCellDelegate?
     var timer = Timer()
     
@@ -86,6 +85,7 @@ class FeedPostCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
+            
         self.groupPost = nil
         self.numComments = nil
         self.firstComment = nil
@@ -100,7 +100,6 @@ class FeedPostCell: UICollectionViewCell {
         self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
         self.player.pause()
         self.player.url = URL(string: "")
-//        self.player.playerDelegate = self
         self.activityIndicatorView.isHidden = true
     }
     
@@ -110,12 +109,8 @@ class FeedPostCell: UICollectionViewCell {
         label.layer.zPosition = 4;
         label.numberOfLines = 0
         label.isUserInteractionEnabled = true
-//        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleDidTapPostGroup))
-//        label.addGestureRecognizer(gestureRecognizer)
-        
         let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)])
         label.attributedText = attributedText
-        
         return label
     }()
     
@@ -223,7 +218,7 @@ class FeedPostCell: UICollectionViewCell {
 
     let padding: CGFloat = 12
     
-    private let photoImageView: CustomImageView = {
+    let photoImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
@@ -300,13 +295,13 @@ class FeedPostCell: UICollectionViewCell {
     private func sharedInit() {
         
         addSubview(postedByLabel)
-        postedByLabel.anchor(bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding + 55, paddingRight: padding)
+        postedByLabel.anchor(bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: UIScreen.main.bounds.height/8, paddingRight: padding)
         
         addSubview(newCommentButton)
-        newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: 0, paddingBottom: padding + 65)
+        newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: 0, paddingBottom: UIScreen.main.bounds.height/8)
         
         addSubview(commentsButton)
-        commentsButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding, paddingBottom: padding + 65)
+        commentsButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding, paddingBottom: UIScreen.main.bounds.height/8)
         
         addSubview(timeLabel)
         timeLabel.anchor(bottom: postedByLabel.topAnchor, right: rightAnchor, paddingBottom: padding - 10, paddingRight: padding)
@@ -319,13 +314,13 @@ class FeedPostCell: UICollectionViewCell {
         captionLabel.anchor(left: leftAnchor, bottom: commentsLabel.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding, paddingRight: padding - 8)
         
         addSubview(viewButton)
-        viewButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: padding + 65, paddingLeft: padding)
+        viewButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: UIScreen.main.bounds.height/16 + 45, paddingLeft: padding)
         
         addSubview(viewCountLabel)
-        viewCountLabel.anchor(top: topAnchor, left: viewButton.rightAnchor, paddingTop: padding + 80)
+        viewCountLabel.anchor(top: topAnchor, left: viewButton.rightAnchor, paddingTop: UIScreen.main.bounds.height/16 + 60)
 
         addSubview(optionsButton)
-        optionsButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: padding + 10, paddingLeft: padding)
+        optionsButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: UIScreen.main.bounds.height/16 - 10, paddingLeft: padding)
         
         insertSubview(playButton, at: 11)
         
@@ -402,7 +397,21 @@ class FeedPostCell: UICollectionViewCell {
         playButton.isHidden = true
         player.view.isHidden = true
         
-        // is a picture
+        if let image = SGImageCache.image(forURL: groupPost.imageUrl) {
+            photoImageView.image = image   // image loaded immediately from cache
+            self.setImageDimensions()
+            self.imageBackground.backgroundColor = UIColor(red: CGFloat(groupPost.avgRed), green: CGFloat(groupPost.avgGreen), blue: CGFloat(groupPost.avgBlue), alpha: CGFloat(groupPost.avgAlpha))
+            
+            
+        } else {
+            self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
+            SGImageCache.getImage(url: groupPost.imageUrl) { [weak self] image in
+                self?.photoImageView.image = image   // image loaded async
+                self?.setImageDimensions()
+                self?.imageBackground.backgroundColor = UIColor(red: CGFloat(groupPost.avgRed), green: CGFloat(groupPost.avgGreen), blue: CGFloat(groupPost.avgBlue), alpha: CGFloat(groupPost.avgAlpha))
+            }
+        }
+        
         if groupPost.videoUrl == "" {
             self.player.url = URL(string: "")
             self.player.pause()
@@ -413,43 +422,30 @@ class FeedPostCell: UICollectionViewCell {
             self.player.view.isHidden = true
             self.activityIndicatorView.isHidden = true
             self.playButton.isHidden = true
-
-            if let image = SGImageCache.image(forURL: groupPost.imageUrl) {
-                photoImageView.image = image   // image loaded immediately from cache
-                self.setImageDimensions()
-                self.imageBackground.backgroundColor = UIColor(red: CGFloat(groupPost.avgRed), green: CGFloat(groupPost.avgGreen), blue: CGFloat(groupPost.avgBlue), alpha: CGFloat(groupPost.avgAlpha))
-                
-            } else {
-                self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
-                SGImageCache.getImage(url: groupPost.imageUrl) { [weak self] image in
-                    self?.photoImageView.image = image   // image loaded async
-                    self?.setImageDimensions()
-                    self?.imageBackground.backgroundColor = UIColor(red: CGFloat(groupPost.avgRed), green: CGFloat(groupPost.avgGreen), blue: CGFloat(groupPost.avgBlue), alpha: CGFloat(groupPost.avgAlpha))
-                }
-            }
+            
             
         }
-        else {
+        else {            
             self.player.url = URL(string: groupPost.videoUrl)
             self.player.playbackLoops = true
             self.player.muted = false
             self.player.playerView.playerBackgroundColor = .black
-            
-//            self.player.view.isHidden = false
+            self.setVideoDimensions()
+
             self.player.view.isHidden = true
             self.activityIndicatorView.isHidden = false
             self.playButton.isHidden = true
             self.imageBackground.isHidden = true
             self.photoImageView.isHidden = true
+
             self.backgroundColor = UIColor.black
-            
+
             do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
-            
+
             let seconds = 2.0
             DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
                 self.delegate?.requestPlay(for: self)
             }
-//            self.player.playFromCurrentTime()
         }
     }
 
@@ -467,14 +463,25 @@ class FeedPostCell: UICollectionViewCell {
             }
             else {
                 self.photoImageView.contentMode = .scaleAspectFill
-//                self.photoImageView.frame.size.height = UIScreen.main.bounds.height * 0.99
-//                self.photoImageView.frame.origin.y = (UIScreen.main.bounds.height - (UIScreen.main.bounds.height * 0.99))
-//                self.photoImageView.frame.size.width = UIScreen.main.bounds.width * 0.97
-//                self.photoImageView.frame.origin.x = (UIScreen.main.bounds.width - (UIScreen.main.bounds.width * 0.97))/2
                 self.photoImageView.frame.size.height = UIScreen.main.bounds.height
                 self.photoImageView.frame.origin.y = 0
                 self.photoImageView.frame.size.width = UIScreen.main.bounds.width
                 self.photoImageView.frame.origin.x = 0
+            }
+        }
+    }
+    
+    private func setVideoDimensions(){
+        let width = self.photoImageView.image?.size.width
+        let height = self.photoImageView.image?.size.height
+        if width != nil && height != nil {
+            if width! >= height! {
+                print("wide")
+                self.player.fillMode = .resizeAspect
+            }
+            else {
+                print("tall")
+                self.player.fillMode = .resizeAspectFill
             }
         }
     }
@@ -529,6 +536,11 @@ class FeedPostCell: UICollectionViewCell {
     }
     
     private func setupAttributedCaption(groupPost: GroupPost) {
+        if groupPost.caption == "" {
+            let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 1)])
+            captionLabel.attributedText = attributedText
+            return
+        }
         var groupname = "Group"
         if groupPost.group.groupname != "" { // if groupname is not empty
             groupname =  groupPost.group.groupname
@@ -539,7 +551,6 @@ class FeedPostCell: UICollectionViewCell {
         let attributedText = NSMutableAttributedString(string: groupname, attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
         attributedText.append(NSAttributedString(string: " \(groupPost.caption)", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)]))
         attributedText.append(NSAttributedString(string: "", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 4)]))
-        
         captionLabel.attributedText = attributedText
     }
 

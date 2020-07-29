@@ -473,6 +473,36 @@ extension Database {
         }
     }
     
+    func searchForUsers(username: String, completion: @escaping ([User]) -> ()) {
+        Database.database().reference().child("usernames").queryOrderedByKey().queryStarting(atValue: username).queryEnding(atValue:username+"\u{f8ff}").queryLimited(toFirst: 30).observeSingleEvent(of: .value, with: { (snapshot) in
+            var users = [User]()
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                sync.enter()
+                let userId = child.value as! String
+                self.userExists(withUID: userId, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchUser(withUID: userId, completion: { (user) in
+                            users.append(user)
+                            sync.leave()
+                        })
+                    }
+                    else{
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                users.sort(by: { (p1, p2) -> Bool in
+                    return p1.username < p2.username
+                })
+                completion(users)
+                return
+            }
+        }) { (err) in
+            print("Failed to fetch user from database:", err)
+        }
+    }
 
     func setUserfcmToken(token: String, completion: @escaping (Error?) -> ()) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
@@ -1534,6 +1564,27 @@ extension Database {
         }
     }
     
+    func searchForGroupWithInviteCode(invite_code: String, completion: @escaping (Group) -> ()) {
+        Database.database().reference().child("inviteCodes").child(invite_code).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard let dictionaries = snapshot.value as? [String: Any] else {
+                return
+            }
+            dictionaries.forEach({ (key, value) in
+                let groupid = key
+                Database.database().reference().child("groups").child(groupid).observeSingleEvent(of: .value, with: { (snapshot) in
+                    guard let groupDictionary = snapshot.value as? [String: Any] else { return }
+                    let group = Group(groupId: groupid, dictionary: groupDictionary)
+                    completion(group)
+                }) { (err) in
+                    print("Failed to fetch group from database:", err)
+                }
+                return
+            })
+        }) { (err) in
+            print("Failed to fetch invite code from database:", err)
+        }
+    }
+    
     func searchForGroup(groupname: String, completion: @escaping (Group) -> ()) {
         Database.database().reference().child("groupnames").child(groupname).observeSingleEvent(of: .value, with: { (snapshot) in
             guard let groupid = snapshot.value as? String else { return }
@@ -1542,10 +1593,41 @@ extension Database {
                 let group = Group(groupId: groupid, dictionary: groupDictionary)
                 completion(group)
             }) { (err) in
-                print("Failed to fetch user from database:", err)
+                print("Failed to fetch group from database:", err)
             }
         }) { (err) in
-            print("Failed to fetch user from database:", err)
+            print("Failed to fetch groupname from database:", err)
+        }
+    }
+    
+    func searchForGroups(groupname: String, completion: @escaping ([Group]) -> ()) {
+        Database.database().reference().child("groupnames").queryOrderedByKey().queryStarting(atValue: groupname).queryEnding(atValue: groupname + "\u{f8ff}").queryLimited(toFirst: 30).observeSingleEvent(of: .value, with: { (snapshot) in
+            var groups = [Group]()
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                sync.enter()
+                let groupId = child.value as! String
+                self.groupExists(groupId: groupId, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                            groups.append(group)
+                            sync.leave()
+                        })
+                    }
+                    else{
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                groups.sort(by: { (p1, p2) -> Bool in
+                    return p1.groupname < p2.groupname
+                })
+                completion(groups)
+                return
+            }
+        }) { (err) in
+            print("Failed to fetch groupname from database:", err)
         }
     }
     
@@ -4004,9 +4086,7 @@ extension Database {
                 sync.enter()
                 self.notificationIsValid(notificationId: notificationId, completion: { (valid) in
                     if valid {
-                        print("fetching")
                         Database.database().fetchNotification(notificationId: notificationId, completion: { (notification) in
-                            print("fetched")
                             notifications.append(notification)
                             sync.leave()
                         })
@@ -4259,6 +4339,22 @@ extension Database {
         Database.database().reference().child("link_to_app").observeSingleEvent(of: .value) { (snapshot) in
             if let link_to_app = snapshot.value as? String {
                 completion(link_to_app)
+            }
+        }
+    }
+    
+    func fetch_link_to_terms(completion: @escaping (String) -> ()) {
+        Database.database().reference().child("link_to_terms").observeSingleEvent(of: .value) { (snapshot) in
+            if let link_to_terms = snapshot.value as? String {
+                completion(link_to_terms)
+            }
+        }
+    }
+    
+    func fetch_link_to_policy(completion: @escaping (String) -> ()) {
+        Database.database().reference().child("link_to_policy").observeSingleEvent(of: .value) { (snapshot) in
+            if let link_to_policy = snapshot.value as? String {
+                completion(link_to_policy)
             }
         }
     }

@@ -90,10 +90,13 @@ class InviteToGroupController: UICollectionViewController {
 //    }
     
     private func searchForUser(username: String){
+        if username.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil || username == "" {
+            return
+        }
         collectionView?.refreshControl?.beginRefreshing()
         self.filteredUsers = []
-        Database.database().searchForUser(username: username, completion: { (user) in
-            self.filteredUsers.append(user)
+        Database.database().searchForUsers(username: username, completion: { (users) in
+            self.filteredUsers = users
             self.collectionView?.reloadData()
             self.collectionView?.refreshControl?.endRefreshing()
         })
@@ -130,9 +133,6 @@ extension InviteToGroupController: UISearchBarDelegate {
             self.collectionView?.reloadData()
         } else {
             searchForUser(username: searchText)
-//            filteredUsers = users.filter { (user) -> Bool in
-//                return user.username.lowercased().contains(searchText.lowercased())
-//            }
         }
         self.collectionView?.reloadData()
     }

@@ -155,7 +155,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         textView.anchor(top: containerView.topAnchor, left: imageView.rightAnchor, bottom: containerView.bottomAnchor, right: containerView.rightAnchor, paddingTop: 10, paddingLeft: 10)
         
         containerView.addSubview(selectGroupLabel)
-        selectGroupLabel.anchor(top: textView.bottomAnchor, left: containerView.leftAnchor, right: containerView.rightAnchor, paddingTop: 10)
+        selectGroupLabel.anchor(top: textView.bottomAnchor, left: containerView.leftAnchor, right: containerView.rightAnchor, paddingTop: UIScreen.main.bounds.height/50)
         
         fetchAllGroups()
     }
@@ -203,7 +203,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
             let layout = UICollectionViewFlowLayout()
             layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
             
-            self.collectionView = UICollectionView(frame: CGRect(x: 0, y: 240, width: displayWidth, height: displayHeight - barHeight - 240), collectionViewLayout: layout)
+            self.collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/3 + 10, width: displayWidth, height: displayHeight - barHeight - UIScreen.main.bounds.height/3), collectionViewLayout: layout)
             self.collectionView.delegate = self
             self.collectionView.dataSource = self
             self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")

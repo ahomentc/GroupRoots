@@ -97,6 +97,53 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         return button
     }()
     
+    private lazy var TermsOfUseLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "By continuing, you agree to GroupRoot's ", attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 11)])
+        attributedText.append(NSAttributedString(string: "Terms of Use", attributes: [NSAttributedString.Key.foregroundColor: UIColor.black, NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 11), NSAttributedString.Key.underlineStyle: NSUnderlineStyle.single.rawValue]))
+        attributedText.append(NSMutableAttributedString(string: ",", attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 11)]))
+        label.attributedText = attributedText
+        
+        label.isUserInteractionEnabled = true
+        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(send_to_terms))
+        label.addGestureRecognizer(gestureRecognizer)
+        
+        return label
+    }()
+    
+    private lazy var PrivacyPolicyLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "confirm that you have read GroupRoot's ", attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 11)])
+        attributedText.append(NSAttributedString(string: "Privacy Policy", attributes: [NSAttributedString.Key.foregroundColor: UIColor.black, NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 11), NSAttributedString.Key.underlineStyle: NSUnderlineStyle.single.rawValue]))
+        attributedText.append(NSMutableAttributedString(string: ",", attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 11)]))
+        label.attributedText = attributedText
+        
+        label.isUserInteractionEnabled = true
+        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(send_to_policy))
+        label.addGestureRecognizer(gestureRecognizer)
+
+        return label
+    }()
+    
+    private let Over16Label: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "and are 16 years or older.", attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 11)])
+        label.attributedText = attributedText
+        return label
+    }()
+    
     private var profileImage: UIImage?
     
     override func viewDidLoad() {
@@ -110,6 +157,15 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         
         view.addSubview(alreadyHaveAccountButton)
         alreadyHaveAccountButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 50)
+        
+        view.addSubview(Over16Label)
+        Over16Label.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: alreadyHaveAccountButton.topAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 16)
+        
+        view.addSubview(PrivacyPolicyLabel)
+        PrivacyPolicyLabel.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: Over16Label.topAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 16)
+        
+        view.addSubview(TermsOfUseLabel)
+        TermsOfUseLabel.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: PrivacyPolicyLabel.topAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 16)
         
         view.addSubview(plusPhotoButton)
         plusPhotoButton.anchor(top: view.safeAreaLayoutGuide.topAnchor, paddingTop: 60, width: 140, height: 140)
@@ -224,6 +280,20 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
                     }
                 })
             }
+        })
+    }
+    
+    @objc func send_to_terms() {
+        Database.database().fetch_link_to_terms(completion: { (link_to_terms) in
+            guard let url = URL(string: link_to_terms) else { return }
+            UIApplication.shared.open(url)
+        })
+    }
+    
+    @objc func send_to_policy() {
+        Database.database().fetch_link_to_policy(completion: { (link_to_policy) in
+            guard let url = URL(string: link_to_policy) else { return }
+            UIApplication.shared.open(url)
         })
     }
 }

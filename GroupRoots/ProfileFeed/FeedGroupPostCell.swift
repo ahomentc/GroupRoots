@@ -16,13 +16,18 @@ class FeedGroupPostCell: UICollectionViewCell {
     var groupPost: GroupPost? {
         didSet {
             guard let imageUrl = self.groupPost?.imageUrl else { return }
-            if let image = SGImageCache.image(forURL: imageUrl) {
-                self.photoImageView.image = image   // image loaded immediately from cache
-            } else {
-                self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
-                SGImageCache.getImage(url: imageUrl) { [weak self] image in
-                    self?.photoImageView.image = image   // image loaded async
-                }
+//            if let image = SGImageCache.image(forURL: imageUrl) {
+//                self.photoImageView.image = image   // image loaded immediately from cache
+//            } else {
+//                self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
+//                SGImageCache.getImage(url: imageUrl) { [weak self] image in
+//                    self?.photoImageView.image = image   // image loaded async
+//                }
+//            }
+
+            self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
+            SGImageCache.getImage(url: imageUrl) { [weak self] image in
+                self?.photoImageView.image = image   // image loaded async
             }
             
             // set a playButton (not clickable) for video previews
@@ -61,17 +66,6 @@ class FeedGroupPostCell: UICollectionViewCell {
         return button
     }()
     
-//    let newDot: UILabel = {
-//        let view = UILabel()
-//        view.backgroundColor = UIColor(white: 0, alpha: 0.4)
-//        view.textColor = .white
-//        view.text = "new"
-//        view.textAlignment = .center
-//        view.layer.cornerRadius = 5
-//        view.clipsToBounds = true
-//        return view
-//    }()
-    
     let newDot: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.white
@@ -93,11 +87,6 @@ class FeedGroupPostCell: UICollectionViewCell {
     }
     
     private func sharedInit() {
-//        activityIndicatorView.isHidden = false
-//        activityIndicatorView.color = .black
-//        insertSubview(activityIndicatorView, at: 20)
-//        activityIndicatorView.startAnimating()
-        
         insertSubview(photoImageView, at: 4)
         photoImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: CGFloat(1), paddingLeft: CGFloat(1), paddingBottom: CGFloat(1), paddingRight: CGFloat(1), width: 0, height: 0)
         photoImageView.layer.cornerRadius = 10
@@ -108,10 +97,6 @@ class FeedGroupPostCell: UICollectionViewCell {
         
         insertSubview(playButton, at: 5)
         playButton.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor)
-        
-//        insertSubview(newDot, at: 5)
-//        newDot.widthAnchor.constraint(greaterThanOrEqualToConstant: 40).isActive = true
-//        newDot.anchor(bottom: bottomAnchor, right: rightAnchor, paddingBottom: 10, paddingRight: 10)
         
         insertSubview(newDot, at: 5)
         newDot.heightAnchor.constraint(greaterThanOrEqualToConstant: 10).isActive = true
@@ -131,7 +116,5 @@ class FeedGroupPostCell: UICollectionViewCell {
         playButton.isHidden = true
         newDot.isHidden = true
         groupPost = nil
-        
-//        activityIndicatorView.isHidden = false
     }
 }

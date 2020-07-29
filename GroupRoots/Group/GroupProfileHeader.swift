@@ -20,6 +20,7 @@ protocol GroupProfileHeaderDelegate {
     func handleDidJoinGroupFromInvite()
     func handleShowAddMember()
     func didTapUser(user: User)
+    func setNavigationTitle(title: String)
 }
 
 //MARK: - GroupProfileHeader
@@ -176,7 +177,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
     private func sharedInit() {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: 5, width: UIScreen.main.bounds.width, height: 90), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 5, width: UIScreen.main.bounds.width, height: 110), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.backgroundColor = .black
@@ -295,6 +296,25 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         
         Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (users) in
             self.users = users
+            
+            // set the navigation title
+            if group.groupname == "" {
+                var usernames = ""
+                if users.count == 1 {
+                    usernames = users[0].username
+                }
+                else if users.count == 2 {
+                    usernames = users[0].username + " & " + users[1].username
+                }
+                else {
+                    usernames = users[0].username + " & " + users[1].username + " & " + users[2].username
+                }
+                if usernames.count > 20 {
+                    usernames = String(usernames.prefix(20)) // keep only the first 16 characters
+                    usernames = usernames + "..."
+                }
+                self.delegate?.setNavigationTitle(title: usernames)
+            }
             self.collectionView?.reloadData()
             self.collectionView?.refreshControl?.endRefreshing()
         }) { (_) in
@@ -804,18 +824,7 @@ private class GroupJoinButton: UIButton {
 
 extension GroupProfileHeader: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
-            if indexPath.item == 0 {
-//                return CGSize(width: 112, height: 100)
-                return CGSize(width: 92, height: 90)
-            }
-            else {
-                return CGSize(width: 80, height: 80)
-            }
-        }
-        else {
-            return CGSize(width: 90, height: 80)
-        }
+        return CGSize(width: 75, height: 75)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {

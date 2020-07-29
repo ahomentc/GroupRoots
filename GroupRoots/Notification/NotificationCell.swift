@@ -24,7 +24,14 @@ class NotificationCell: UICollectionViewCell {
             reloadActionButton()
         }
     }
-        
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        groupImageView.isHidden = true
+        userOneImageView.isHidden = true
+        userTwoImageView.isHidden = true
+    }
+
     private lazy var profileImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
@@ -36,6 +43,38 @@ class NotificationCell: UICollectionViewCell {
         iv.isUserInteractionEnabled = true
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleDidTapFromUser))
         iv.addGestureRecognizer(gestureRecognizer)
+        return iv
+    }()
+    
+    private let groupImageView: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.image = #imageLiteral(resourceName: "user")
+        iv.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        iv.layer.borderWidth = 0.5
+        return iv
+    }()
+    
+    private let userOneImageView: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.image = #imageLiteral(resourceName: "user")
+        iv.isHidden = true
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderWidth = 2
+        return iv
+    }()
+    
+    private let userTwoImageView: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.image = #imageLiteral(resourceName: "user")
+        iv.isHidden = true
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderWidth = 2
         return iv
     }()
     
@@ -107,6 +146,26 @@ class NotificationCell: UICollectionViewCell {
         postImageView.layer.cornerRadius = 5
         postImageView.image = UIImage()
         postImageView.layer.borderWidth = 0
+        
+        addSubview(groupImageView)
+        groupImageView.anchor(right: rightAnchor, paddingRight: 8, width: 50, height: 50)
+        groupImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        groupImageView.layer.cornerRadius = 50 / 2
+        groupImageView.isHidden = true
+        
+        addSubview(userOneImageView)
+        userOneImageView.anchor(right: rightAnchor, paddingTop: 10, paddingRight: 8, width: 44, height: 44)
+        userOneImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        userOneImageView.layer.cornerRadius = 44/2
+        userOneImageView.isHidden = true
+        userOneImageView.image = UIImage()
+        
+        addSubview(userTwoImageView)
+        userTwoImageView.anchor(right: rightAnchor, paddingTop: 0, paddingRight: 28, width: 44, height: 44)
+        userTwoImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        userTwoImageView.layer.cornerRadius = 44/2
+        userTwoImageView.isHidden = true
+        userOneImageView.image = UIImage()
         
         addSubview(usernameLabel)
         usernameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, paddingTop: 16, paddingLeft: 12)
@@ -265,6 +324,41 @@ class NotificationCell: UICollectionViewCell {
         })
     }
     
+    private func loadGroupMembersIcon(group: Group?){
+        guard let group = group else { return }
+        Database.database().fetchFirstNGroupMembers(groupId: group.groupId, n: 3, completion: { (first_n_users) in
+            if let groupProfileImageUrl = group.groupProfileImageUrl {
+                self.groupImageView.loadImage(urlString: groupProfileImageUrl)
+                self.groupImageView.isHidden = false
+                self.userOneImageView.isHidden = true
+                self.userTwoImageView.isHidden = true
+            } else {
+                self.groupImageView.isHidden = true
+                self.userOneImageView.isHidden = false
+                self.userTwoImageView.isHidden = true
+                
+                if let userOneImageUrl = first_n_users[0].profileImageUrl {
+                    self.userOneImageView.loadImage(urlString: userOneImageUrl)
+                } else {
+                    self.userOneImageView.image = #imageLiteral(resourceName: "user")
+                    self.userOneImageView.backgroundColor = .white
+                }
+                // set the second user (only if it exists)
+                if first_n_users.count > 1 {
+                    self.userTwoImageView.isHidden = false
+                    if let userTwoImageUrl = first_n_users[1].profileImageUrl {
+                        self.userTwoImageView.loadImage(urlString: userTwoImageUrl)
+                        self.userTwoImageView.layer.borderWidth = 2
+                    } else {
+                        self.userTwoImageView.image = #imageLiteral(resourceName: "user")
+                        self.userTwoImageView.backgroundColor = .white
+                        self.userTwoImageView.layer.borderWidth = 2
+                    }
+                }
+            }
+        }) { (_) in }
+    }
+    
     private func reloadActionButton() {
         guard let userId = self.notification?.from.uid else { return }
         
@@ -314,6 +408,7 @@ class NotificationCell: UICollectionViewCell {
             Database.database().isInGroup(groupId: (self.notification?.group!.groupId)!, completion: { (inGroup) in
                 if inGroup{
                     self.actionButton.group = self.notification?.group
+                    self.loadGroupMembersIcon(group: self.notification?.group)
                 }
             }) { (err) in
                 return
@@ -650,20 +745,21 @@ private class ActionButton: UIButton {
     }
     
     private func setupGroupStyle() {
-        if self.group?.groupname != ""{
-            setTitle(String(self.group?.groupname.first?.description ?? ""), for: .normal)
-        }
-        else {
-            setTitle("G", for: .normal)
-        }
+//        if self.group?.groupname != ""{
+//            setTitle(String(self.group?.groupname.first?.description ?? ""), for: .normal)
+//        }
+//        else {
+//            setTitle("G", for: .normal)
+//        }
+        setTitle("", for: .normal)
         titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         setTitleColor(.black, for: .normal)
         backgroundColor = .clear
         setImage(UIImage(), for: .normal)
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 25, bottom: 0, right: 25)
-        layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+//        layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        layer.borderColor = UIColor(white: 0, alpha: 0).cgColor
         layer.cornerRadius = 5
-//        layer.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 5, width: 50, height: 50)
         isUserInteractionEnabled = true
     }
     

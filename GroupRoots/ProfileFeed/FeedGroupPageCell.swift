@@ -49,7 +49,7 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         layout.minimumLineSpacing = CGFloat(0)
 
         // obviously not good cuz would be different on different screens but just for visual purposes
-        collectionView = UICollectionView(frame: CGRect(x: 15, y: 120, width: self.frame.width - 30, height: self.frame.height), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 15, y: UIScreen.main.bounds.height - UIScreen.main.bounds.height/5*4, width: self.frame.width - 30, height: self.frame.height), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")

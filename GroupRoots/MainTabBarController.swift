@@ -131,7 +131,8 @@ class MainTabBarController: UITabBarController {
     }
     
     @objc private func makeTabBarClear(){
-        tabBar.backgroundColor = UIColor(red: 0/255, green: 0/255, blue: 0/255, alpha: 0.1)
+//        tabBar.backgroundColor = UIColor(red: 0/255, green: 0/255, blue: 0/255, alpha: 0.1)
+        tabBar.backgroundColor = UIColor(red: 0/255, green: 0/255, blue: 0/255, alpha: 0)
         tabBar.unselectedItemTintColor = UIColor.white
     }
     

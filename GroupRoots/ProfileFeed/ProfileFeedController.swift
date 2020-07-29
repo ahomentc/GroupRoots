@@ -112,7 +112,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         self.configureNavBar()
         
         // check if fullscreen and set tabBar color accordingly
-        collectionView.visibleCells.forEach { cell in
+        for cell in collectionView.visibleCells {
             if cell is FeedGroupCell {
                 let visible_cell = cell as! FeedGroupCell
                 if visible_cell.isFullScreen {
@@ -121,6 +121,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 else {
                     NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
                 }
+                break
             }
         }
     }
@@ -219,7 +220,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
 //        loadGroupPosts()
         configureNavigationBar()
         
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true, block: { timer in
+        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false, block: { timer in
             self.loadingScreenView.isHidden = true
         })
         
@@ -238,7 +239,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             
             self.loadGroupPosts()
             
-        }else{
+        } else{
             print("Internet Connection not Available!")
             self.reloadButton.isHidden = false
             self.noInternetLabel.isHidden = false
@@ -296,7 +297,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.reloadButton.isHidden = true
             self.noInternetLabel.isHidden = true
             self.noInternetBackground.isHidden = true
-            print(groups)
             if groups.last == nil {
                 self.collectionView?.refreshControl?.endRefreshing()
                 sync.leave()
@@ -465,29 +465,29 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 self.usingCachedData = false
 
                 // save all in storage
-                if let groupPosts2DEncodedData = try? JSONEncoder().encode(self.groupPosts2D) {
-                    UserDefaults.standard.set(groupPosts2DEncodedData, forKey: "groupPosts2D")
-                }
-
-                if let groupMembersEncodedData = try? JSONEncoder().encode(self.groupMembers) {
-                    UserDefaults.standard.set(groupMembersEncodedData, forKey: "groupMembers")
-                }
-
-                if let groupPostsTotalViewersDictEncodedData = try? JSONEncoder().encode(self.groupPostsTotalViewersDict) {
-                    UserDefaults.standard.set(groupPostsTotalViewersDictEncodedData, forKey: "groupPostsTotalViewersDict")
-                }
-
-                if let groupPostsVisibleViewersDictEncodedData = try? JSONEncoder().encode(self.groupPostsVisibleViewersDict) {
-                    UserDefaults.standard.set(groupPostsVisibleViewersDictEncodedData, forKey: "groupPostsVisibleViewersDict")
-                }
-
-                if let groupPostsFirstCommentDictEncodedData = try? JSONEncoder().encode(self.groupPostsFirstCommentDict) {
-                    UserDefaults.standard.set(groupPostsFirstCommentDictEncodedData, forKey: "groupPostsFirstCommentDict")
-                }
-
-                if let groupPostsNumCommentsDictEncodedData = try? JSONEncoder().encode(self.groupPostsNumCommentsDict) {
-                    UserDefaults.standard.set(groupPostsNumCommentsDictEncodedData, forKey: "groupPostsNumCommentsDict")
-                }
+//                if let groupPosts2DEncodedData = try? JSONEncoder().encode(self.groupPosts2D) {
+//                    UserDefaults.standard.set(groupPosts2DEncodedData, forKey: "groupPosts2D")
+//                }
+//
+//                if let groupMembersEncodedData = try? JSONEncoder().encode(self.groupMembers) {
+//                    UserDefaults.standard.set(groupMembersEncodedData, forKey: "groupMembers")
+//                }
+//
+//                if let groupPostsTotalViewersDictEncodedData = try? JSONEncoder().encode(self.groupPostsTotalViewersDict) {
+//                    UserDefaults.standard.set(groupPostsTotalViewersDictEncodedData, forKey: "groupPostsTotalViewersDict")
+//                }
+//
+//                if let groupPostsVisibleViewersDictEncodedData = try? JSONEncoder().encode(self.groupPostsVisibleViewersDict) {
+//                    UserDefaults.standard.set(groupPostsVisibleViewersDictEncodedData, forKey: "groupPostsVisibleViewersDict")
+//                }
+//
+//                if let groupPostsFirstCommentDictEncodedData = try? JSONEncoder().encode(self.groupPostsFirstCommentDict) {
+//                    UserDefaults.standard.set(groupPostsFirstCommentDictEncodedData, forKey: "groupPostsFirstCommentDict")
+//                }
+//
+//                if let groupPostsNumCommentsDictEncodedData = try? JSONEncoder().encode(self.groupPostsNumCommentsDict) {
+//                    UserDefaults.standard.set(groupPostsNumCommentsDictEncodedData, forKey: "groupPostsNumCommentsDict")
+//                }
                 
                 // add refresh capability only after posts have been loaded
                 let refreshControl = UIRefreshControl()
@@ -704,7 +704,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     func didSelectUser(selectedUser: User) {
-        
+        let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+        userProfileController.user = selectedUser
+        navigationController?.pushViewController(userProfileController, animated: true)
     }
     
     func showMoreMembers(group: Group) {

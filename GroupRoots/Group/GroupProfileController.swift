@@ -191,7 +191,7 @@ class GroupProfileController: HomePostCellViewController {
             return
         }
         if group.groupname == "" {
-            navigationItem.title = "Group"
+            // moved this to GroupProfileHeader and then with delegate calls setNavigationTitle
         }
         else {
             navigationItem.title = group.groupname
@@ -304,13 +304,6 @@ class GroupProfileController: HomePostCellViewController {
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         layout.minimumLineSpacing = CGFloat(0)
-
-//        let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
-//        largeImageViewController.group = group
-//        largeImageViewController.indexPath = indexPath
-//        self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
-//        self.navigationItem.backBarButtonItem?.tintColor = .white
-//        navigationController?.pushViewController(largeImageViewController, animated: true)
         
         let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
         largeImageViewController.group = group
@@ -405,23 +398,19 @@ extension GroupProfileController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
         // adjust height based on group's bio
         guard let group = group else { return CGSize(width: view.frame.width, height: 250) }
-//        let bio = group.bio
-//        let bio = "this is the bio. this is the second sentence. this is the second sentence. this is the second sentence"
-//        let bio = "this is the bio. this is the second sentence. this is the second sentence"
-//        let bio = "this is the bio. this is the second sentence."
         let bio = group.bio
         if bio == "" {
-            return CGSize(width: view.frame.width, height: 250)
+            return CGSize(width: view.frame.width, height: 260)
         }
         else {
             if bio.count < 50 {
-                return CGSize(width: view.frame.width, height: 270)
-            }
-            else if bio.count < 100 {
                 return CGSize(width: view.frame.width, height: 290)
             }
-            else {
+            else if bio.count < 100 {
                 return CGSize(width: view.frame.width, height: 310)
+            }
+            else {
+                return CGSize(width: view.frame.width, height: 330)
             }
         }
     }
@@ -430,6 +419,10 @@ extension GroupProfileController: UICollectionViewDelegateFlowLayout {
 //MARK: - GroupProfileHeaderDelegate
 
 extension GroupProfileController: GroupProfileHeaderDelegate {
+    
+    func setNavigationTitle(title: String) {
+        self.navigationItem.title = title
+    }
 
     func didChangeToGridView() {
         isGridView = true

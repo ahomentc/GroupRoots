@@ -116,7 +116,6 @@ class GroupFollowersController: UICollectionViewController, loadMoreSubscribersC
     }
     
     @objc private func handleRefresh() {
-        print("handling refresh")
         users.removeAll()
         oldestRetrievedDate = 10000000000000.0
         fetchSubscribers()
@@ -126,12 +125,7 @@ class GroupFollowersController: UICollectionViewController, loadMoreSubscribersC
         if let dict = notification.userInfo as NSDictionary? {
             if let user_id = dict["id"] as? String{
                 // remove user_id from self.users
-                print("user_id: ", user_id)
-                print(users)
                 users.removeAll { $0.uid == user_id }
-                print("----***----")
-                print(users)
-                
                 self.collectionView?.refreshControl?.beginRefreshing()
                 self.collectionView?.reloadData()
                 self.collectionView?.refreshControl?.endRefreshing()

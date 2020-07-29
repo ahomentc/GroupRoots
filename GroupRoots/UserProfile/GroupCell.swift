@@ -99,7 +99,7 @@ class GroupCell: UICollectionViewCell {
         userTwoImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         userTwoImageView.layer.cornerRadius = 44/2
         userTwoImageView.isHidden = true
-        userOneImageView.image = UIImage()
+        userTwoImageView.image = UIImage()
         
         addSubview(hiddenIcon)
         hiddenIcon.anchor(top: topAnchor, bottom: bottomAnchor, right: rightAnchor, paddingRight: 12)

@@ -28,6 +28,15 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     var numViewsForPost = [String: Int]()
     var numCommentsForPosts = [String: Int]()
     
+    
+    // extremely ugly and bad bandaid solution so will explain in detail
+    // PLEASE FIX. running out of time and just want to release already
+    // have a variable called "safeToScroll" that is set true after 2 seconds
+    // when clicking an image to go to fullscreen view
+    // if scroll while "safeToScroll" is false, it will do a collectionview reload
+    // "safeToScroll" is reset when exit fullScreen or on reuse
+    var safeToScroll = false
+    
     var groupPosts: [GroupPost]? {
         didSet {
             self.reloadGroupData()
@@ -56,6 +65,8 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         pageControlSwipe.isHidden = false
         headerCollectionView.isHidden = false
         usernameButton.setTitleColor(.black, for: .normal)
+        
+        safeToScroll = false
     }
     
     // this might be bad but to clarify. FeedController sets groupPostsViewers for this cell. That in turn sets viewersForPosts
@@ -163,8 +174,8 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             else {
                 usernames = groupMembers[0].username + " & " + groupMembers[1].username + " & " + groupMembers[2].username
             }
-            if usernames.count > 21 {
-                usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+            if usernames.count > 16 {
+                usernames = String(usernames.prefix(16)) // keep only the first 16 characters
                 usernames = usernames + "..."
             }
             usernameButton.setTitle(usernames, for: .normal)
@@ -173,32 +184,15 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             usernameButton.setTitle(group.groupname, for: .normal)
         }
         usernameButton.setTitleColor(.black, for: .normal)
-        
-//        if groupPosts.count > 0 { // need to check if in group, else viewers will be nil and always return
-//            Database.database().isInGroup(groupId: groupPosts[0].group.groupId, completion: { (inGroup) in
-//                if inGroup{
-//                    self.collectionView.reloadData()
-//                    self.collectionView.layoutIfNeeded()
-//                }
-//                else {
-//                    self.collectionView.reloadData()
-//                    self.collectionView.layoutIfNeeded()
-//                }
-//            }) { (err) in return }
-//        }
-//        else {
-//            self.collectionView.reloadData()
-//            self.collectionView.layoutIfNeeded()
-//        }
     }
     
     func setupViews() {
         let header_layout = UICollectionViewFlowLayout()
         header_layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
-        header_layout.itemSize = CGSize(width: 90, height: 90)
-        header_layout.minimumLineSpacing = CGFloat(0)
+        header_layout.itemSize = CGSize(width: 75, height: 75)
+        header_layout.minimumLineSpacing = CGFloat(10)
         
-        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: 75, width: UIScreen.main.bounds.width, height: 90), collectionViewLayout: header_layout)
+        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height - UIScreen.main.bounds.height/8*7, width: UIScreen.main.bounds.width, height: 120), collectionViewLayout: header_layout)
         headerCollectionView.delegate = self
         headerCollectionView.dataSource = self
         headerCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -230,19 +224,30 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         insertSubview(collectionView, at: 5)
         
         insertSubview(usernameButton, at: 6)
-        usernameButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 32, paddingLeft: 100, paddingRight: 100)
+        usernameButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingLeft: 100, paddingRight: 100)
         usernameButton.backgroundColor = .clear
         usernameButton.isUserInteractionEnabled = true
         
         insertSubview(closeButton, at: 7)
-        closeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 30, paddingRight: 20)
+        closeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingRight: 20)
         
-        pageControlSwipe = UIPageControl(frame: CGRect(x: 0, y: UIScreen.main.bounds.height - 100, width: UIScreen.main.bounds.width, height: 10))
+        pageControlSwipe = UIPageControl(frame: CGRect(x: 0, y: UIScreen.main.bounds.height - UIScreen.main.bounds.height/8, width: UIScreen.main.bounds.width, height: 10))
         pageControlSwipe.pageIndicatorTintColor = UIColor.lightGray
         pageControlSwipe.currentPageIndicatorTintColor = UIColor.darkGray
         self.addSubview(pageControlSwipe)
         
         self.backgroundColor = .white
+        
+        // just debugging stuff, its being hidden
+//        Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true, block: { timer in
+//            self.collectionView.visibleCells.forEach { cell in
+//                if cell is FeedPostCell {
+//                    print((cell as! FeedPostCell).photoImageView.isHidden)
+//                    (cell as! FeedPostCell).photoImageView.isHidden = false
+//                    print("-----")
+//                }
+//            }
+//        })
     }
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
@@ -419,10 +424,21 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     func didTapPostCell(for_cell cell: FeedGroupPageCell, cell_number: Int) {
         let cell_tapped_index = (4 * cell.tag) + cell_number
         if isFullScreen == false {
+            // still doesn't work... but if this isn't here then for fullscreen it would just be at the index of the page.
+            // so rn it just loads full screen of index 0 first, which is a video which breaks it.
+            collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
             isFullScreen = true
             reloadGroupData()
             NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
-            collectionView.scrollToItem(at: IndexPath(item: cell_tapped_index, section: 0), at: .centeredHorizontally, animated: false)
+            self.collectionView.scrollToItem(at: IndexPath(item: cell_tapped_index, section: 0), at: .centeredHorizontally, animated: false)
+        
+            // band aid solution to videourl still being there problem which causes picture to disappear
+            // only do this if not a video
+            
+            Timer.scheduledTimer(withTimeInterval: 2, repeats: false, block: { timer in
+                self.safeToScroll = true
+            })
+            
             closeButton.isHidden = false
             pageControlSwipe.isHidden = true
             headerCollectionView.isHidden = true
@@ -458,6 +474,13 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     func stoppedScrolling() {
         // set current post as viewed
         if isFullScreen {
+            if !safeToScroll {
+                Timer.scheduledTimer(withTimeInterval: 1, repeats: false, block: { timer in
+                    self.collectionView.reloadData()
+                    self.usernameButton.setTitleColor(.white, for: .normal)
+                })
+            }
+            
             collectionView.visibleCells.forEach { cell in
                 if cell is FeedPostCell {
                     let groupPost = (cell as! FeedPostCell).groupPost
@@ -491,6 +514,8 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             usernameButton.setTitleColor(.black, for: .normal)
             NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
             
+            safeToScroll = false
+            
             // scroll to the page containing the visible cell
             if indexPath != nil {
                 let page = Int(floor(Double(indexPath!.row) / 4))
@@ -513,12 +538,13 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
 }
 
 extension FeedGroupCell: UICollectionViewDelegateFlowLayout {
+    
     private func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewFlowLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if collectionView == self.collectionView {
             return CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 175)
         }
         else {
-            return CGSize(width: 80, height: 80)
+            return CGSize(width: 75, height: 75)
         }
     }
 

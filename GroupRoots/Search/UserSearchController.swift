@@ -66,23 +66,37 @@ class UserSearchController: UICollectionViewController {
         }
         collectionView?.refreshControl?.beginRefreshing()
         self.filteredUsers = []
-        Database.database().searchForUser(username: username, completion: { (user) in
-            self.filteredUsers.append(user)
+        Database.database().searchForUsers(username: username, completion: { (users) in
+            self.filteredUsers = users
             self.collectionView?.reloadData()
             self.collectionView?.refreshControl?.endRefreshing()
         })
     }
     
-    private func searchForGroup(groupname: String){
-        if groupname.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil || groupname == "" {
+    private func searchForGroup(search_word: String){
+        if search_word.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil || search_word == "" {
             return
         }
         collectionView?.refreshControl?.beginRefreshing()
         self.filteredGroups = []
-        Database.database().searchForGroup(groupname: groupname, completion: { (group) in
-            self.filteredGroups.append(group)
-            self.collectionView?.reloadData()
-            self.collectionView?.refreshControl?.endRefreshing()
+
+        Database.database().inviteCodeExists(code: search_word, completion: { (exists) in
+            if exists {
+                // search by invite code
+                Database.database().searchForGroupWithInviteCode(invite_code: search_word, completion: { (groups) in
+                    self.filteredGroups.append(groups)
+                    self.collectionView?.reloadData()
+                    self.collectionView?.refreshControl?.endRefreshing()
+                })
+            }
+            else {
+                // search by group name
+                Database.database().searchForGroups(groupname: search_word, completion: { (groups) in
+                    self.filteredGroups = groups
+                    self.collectionView?.reloadData()
+                    self.collectionView?.refreshControl?.endRefreshing()
+                })
+            }
         })
     }
     
@@ -161,7 +175,7 @@ extension UserSearchController: UISearchBarDelegate {
                 searchForUser(username: searchText)
             }
             else {
-                searchForGroup(groupname: searchText)
+                searchForGroup(search_word: searchText)
             }
         }
         self.collectionView?.reloadData()
@@ -180,12 +194,14 @@ extension UserSearchController: SearchHeaderDelegate {
         self.filteredUsers = []
         collectionView?.reloadData()
         self.searchForUser(username: self.searchBar.text ?? "")
+        self.searchBar.placeholder = "Enter username"
     }
 
     func didChangeToGroupsView() {
         isUsersView = false
         self.filteredUsers = []
         collectionView?.reloadData()
-        self.searchForGroup(groupname: self.searchBar.text ?? "")
+        self.searchForGroup(search_word: self.searchBar.text ?? "")
+        self.searchBar.placeholder = "Enter group name or invite code"
     }
 }
