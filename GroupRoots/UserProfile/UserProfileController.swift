@@ -145,9 +145,9 @@ class UserProfileController: HomePostCellViewController {
                 self.alertController.addAction(edit_profile)
                 self.alertController.addAction(toggleIncognitoAction)
                 self.alertController.addAction(logOutAction)
-                self.alertController.addAction(deleteAccountAction)
+//                self.alertController.addAction(deleteAccountAction)
             } else {
-                let toggleIncognitoAction = UIAlertAction(title: "Hide me from views", style: .default) { (_) in
+                let toggleIncognitoAction = UIAlertAction(title: "Hide me from views (Incognito)", style: .default) { (_) in
                     do {
                         Database.database().enableIncognitoMode() { (err) in
                             if err != nil {
@@ -160,7 +160,7 @@ class UserProfileController: HomePostCellViewController {
                 self.alertController.addAction(edit_profile) 
                 self.alertController.addAction(toggleIncognitoAction)
                 self.alertController.addAction(logOutAction)
-                self.alertController.addAction(deleteAccountAction)
+//                self.alertController.addAction(deleteAccountAction)
             }
         })
     }
