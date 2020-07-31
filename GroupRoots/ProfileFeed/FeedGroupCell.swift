@@ -66,6 +66,9 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         headerCollectionView.isHidden = false
         usernameButton.setTitleColor(.black, for: .normal)
         
+        // scroll to first page
+        collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
+        
         safeToScroll = false
     }
     
@@ -237,16 +240,10 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         self.addSubview(pageControlSwipe)
         
         self.backgroundColor = .white
-        
-        // just debugging stuff, its being hidden
-//        Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true, block: { timer in
-//            self.collectionView.visibleCells.forEach { cell in
-//                if cell is FeedPostCell {
-//                    print((cell as! FeedPostCell).photoImageView.isHidden)
-//                    (cell as! FeedPostCell).photoImageView.isHidden = false
-//                    print("-----")
-//                }
-//            }
+  
+//        Last resort
+//        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false, block: { timer in
+//            self.reloadGroupData()
 //        })
     }
     

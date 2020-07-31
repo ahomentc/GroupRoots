@@ -166,58 +166,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         
         // what happens here if there's been paging... more specifically, what happens when refresh and had paging occur?
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateUserProfileFeed, object: nil)
-        
-//        // get data from cache if there
-//        if let groupPosts2DRetrieved = UserDefaults.standard.object(forKey: "groupPosts2D") as? Data {
-//            guard let groupPosts2D = try? JSONDecoder().decode([[GroupPost]].self, from: groupPosts2DRetrieved) else {
-//                print("Error: Couldn't decode data into Blog")
-//                return
-//            }
-//            self.groupPosts2D = groupPosts2D
-//        }
-//
-//        if let groupMembersRetrieved = UserDefaults.standard.object(forKey: "groupMembers") as? Data {
-//            guard let groupMembers = try? JSONDecoder().decode([String: [User]].self, from: groupMembersRetrieved) else {
-//                print("Error: Couldn't decode data into Blog")
-//                return
-//            }
-//            self.groupMembers = groupMembers
-//        }
-//
-//        if let groupPostsTotalViewersDictRetrieved = UserDefaults.standard.object(forKey: "groupPostsTotalViewersDict") as? Data {
-//            guard let groupPostsTotalViewersDict = try? JSONDecoder().decode([String: [String: Int]].self, from: groupPostsTotalViewersDictRetrieved) else {
-//                print("Error: Couldn't decode data into Blog")
-//                return
-//            }
-//            self.groupPostsTotalViewersDict = groupPostsTotalViewersDict
-//        }
-//
-//        if let groupPostsVisibleViewersDictRetrieved = UserDefaults.standard.object(forKey: "groupPostsVisibleViewersDict") as? Data {
-//            guard let groupPostsVisibleViewersDict = try? JSONDecoder().decode([String: [String: [User]]].self, from: groupPostsVisibleViewersDictRetrieved) else {
-//                print("Error: Couldn't decode data into Blog")
-//                return
-//            }
-//            self.groupPostsVisibleViewersDict = groupPostsVisibleViewersDict
-//        }
-//
-//        if let groupPostsFirstCommentDictRetrieved = UserDefaults.standard.object(forKey: "groupPostsFirstCommentDict") as? Data {
-//            guard let groupPostsFirstCommentDict = try? JSONDecoder().decode([String: [String: Comment]].self, from: groupPostsFirstCommentDictRetrieved) else {
-//                print("Error: Couldn't decode data into Blog")
-//                return
-//            }
-//            self.groupPostsFirstCommentDict = groupPostsFirstCommentDict
-//        }
-//
-//        if let groupPostsNumCommentsDictRetrieved = UserDefaults.standard.object(forKey: "groupPostsNumCommentsDict") as? Data {
-//            guard let groupPostsNumCommentsDict = try? JSONDecoder().decode([String: [String: Int]].self, from: groupPostsNumCommentsDictRetrieved) else {
-//                print("Error: Couldn't decode data into Blog")
-//                return
-//            }
-//            self.groupPostsNumCommentsDict = groupPostsNumCommentsDict
-//        }
-        
-//        print("loading group posts")
-//        loadGroupPosts()
         configureNavigationBar()
         
         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false, block: { timer in
@@ -238,8 +186,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             activityIndicatorView.startAnimating()
             
             self.loadGroupPosts()
-            
-        } else{
+        } else {
             print("Internet Connection not Available!")
             self.reloadButton.isHidden = false
             self.noInternetLabel.isHidden = false
@@ -455,39 +402,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.fetchedAllGroups = true
                 }
 
-//                if self.usingCachedData {
-//                    self.groupMembers = [String: [User]]()
-//                    self.numGroupsInFeed = 3
-//                    self.oldestRetrievedDate = 10000000000000.0
-//                }
-
                 self.groupPosts2D += Array(tempGroupPosts2D.suffix(3))
                 self.usingCachedData = false
-
-                // save all in storage
-//                if let groupPosts2DEncodedData = try? JSONEncoder().encode(self.groupPosts2D) {
-//                    UserDefaults.standard.set(groupPosts2DEncodedData, forKey: "groupPosts2D")
-//                }
-//
-//                if let groupMembersEncodedData = try? JSONEncoder().encode(self.groupMembers) {
-//                    UserDefaults.standard.set(groupMembersEncodedData, forKey: "groupMembers")
-//                }
-//
-//                if let groupPostsTotalViewersDictEncodedData = try? JSONEncoder().encode(self.groupPostsTotalViewersDict) {
-//                    UserDefaults.standard.set(groupPostsTotalViewersDictEncodedData, forKey: "groupPostsTotalViewersDict")
-//                }
-//
-//                if let groupPostsVisibleViewersDictEncodedData = try? JSONEncoder().encode(self.groupPostsVisibleViewersDict) {
-//                    UserDefaults.standard.set(groupPostsVisibleViewersDictEncodedData, forKey: "groupPostsVisibleViewersDict")
-//                }
-//
-//                if let groupPostsFirstCommentDictEncodedData = try? JSONEncoder().encode(self.groupPostsFirstCommentDict) {
-//                    UserDefaults.standard.set(groupPostsFirstCommentDictEncodedData, forKey: "groupPostsFirstCommentDict")
-//                }
-//
-//                if let groupPostsNumCommentsDictEncodedData = try? JSONEncoder().encode(self.groupPostsNumCommentsDict) {
-//                    UserDefaults.standard.set(groupPostsNumCommentsDictEncodedData, forKey: "groupPostsNumCommentsDict")
-//                }
                 
                 // add refresh capability only after posts have been loaded
                 let refreshControl = UIRefreshControl()
@@ -497,7 +413,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 self.loadingScreenView.isHidden = true
                 self.activityIndicatorView.isHidden = true
  
-                DispatchQueue.main.async{
+                DispatchQueue.main.async {
                     self.collectionView?.reloadData()
                     self.collectionView?.refreshControl?.endRefreshing()
                 }
@@ -540,7 +456,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         else if indexPath.row < groupPosts2D.count {
             let posts = groupPosts2D[indexPath.row]
             let groupId = posts[0].group.groupId
-            feedCell.groupMembers = []
             feedCell.groupPosts = posts
             feedCell.usingCachedData = self.usingCachedData
             feedCell.groupMembers = groupMembers[groupId]
@@ -600,7 +515,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     func stoppedScrolling(endPos: CGFloat) {
         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { timer in
             if let indexPath = self.collectionView.indexPathsForVisibleItems.last {
-                if indexPath.row ==  self.numGroupsInFeed {
+                if indexPath.row == self.numGroupsInFeed {
                     self.numGroupsInFeed += 3
                     self.loadGroupPosts()
                 }

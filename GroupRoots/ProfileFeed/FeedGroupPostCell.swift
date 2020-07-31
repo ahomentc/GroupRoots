@@ -13,22 +13,42 @@ import NVActivityIndicatorView
 
 class FeedGroupPostCell: UICollectionViewCell {
     
+    var readyToSetPicture = false
+    
     var groupPost: GroupPost? {
         didSet {
+//            print("setting groupPost 0 ", groupPost?.id, " for tag ", self.tag)
             guard let imageUrl = self.groupPost?.imageUrl else { return }
-//            if let image = SGImageCache.image(forURL: imageUrl) {
-//                self.photoImageView.image = image   // image loaded immediately from cache
-//            } else {
+            if let image = SGImageCache.image(forURL: imageUrl) {
+                self.photoImageView.image = image   // image loaded immediately from cache
+            } else {
 //                self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
 //                SGImageCache.getImage(url: imageUrl) { [weak self] image in
 //                    self?.photoImageView.image = image   // image loaded async
 //                }
-//            }
-
-            self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
-            SGImageCache.getImage(url: imageUrl) { [weak self] image in
-                self?.photoImageView.image = image   // image loaded async
+                self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
+                self.readyToSetPicture = true
+                
+                // using a timer here to fix diagonal issue. Bandaid solution
+                Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false, block: { timer in
+                    SGImageCache.getImage(url: self.groupPost?.imageUrl ?? "") { [weak self] image in
+//                        self?.photoImageView.image = image   // image loaded async
+                        if self?.readyToSetPicture ?? false {
+                            self?.photoImageView.image = image   // image loaded async
+//                            print("setting image ", imageUrl, " for tag ", self?.tag)
+//                            print("setting groupPost 1 ", self?.groupPost?.id, " for tag ", self?.tag)
+                        }
+                    }
+                })
             }
+
+//            self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
+//            self.readyToSetPicture = true
+//            SGImageCache.getImage(url: imageUrl) { [weak self] image in
+//                if self?.readyToSetPicture ?? false {
+//                    self?.photoImageView.image = image   // image loaded async
+//                }
+//            }
             
             // set a playButton (not clickable) for video previews
             guard let videoUrl = self.groupPost?.videoUrl else { return }
@@ -102,11 +122,13 @@ class FeedGroupPostCell: UICollectionViewCell {
         newDot.heightAnchor.constraint(greaterThanOrEqualToConstant: 10).isActive = true
         newDot.widthAnchor.constraint(greaterThanOrEqualToConstant: 10).isActive = true
         newDot.anchor(bottom: bottomAnchor, right: rightAnchor, paddingBottom: 10, paddingRight: 10)
+        
+        self.readyToSetPicture = false
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        
+                
         photoImageView.image = CustomImageView.imageWithColor(color: .white)
         photoImageView.layer.borderColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1).cgColor
         photoImageView.layer.borderWidth = 1
@@ -116,5 +138,7 @@ class FeedGroupPostCell: UICollectionViewCell {
         playButton.isHidden = true
         newDot.isHidden = true
         groupPost = nil
+        
+        self.readyToSetPicture = false
     }
 }
