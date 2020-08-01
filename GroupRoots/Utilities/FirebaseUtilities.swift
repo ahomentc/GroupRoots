@@ -1441,7 +1441,7 @@ extension Database {
 
     func fetchNextGroupsFollowing(withUID uid: String, endAt: Double, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-        var batch_size = 4
+        var batch_size = 6
         if endAt == 10000000000000 { // only get 3 posts if first batch because we remove the first of batch of the rest of the batches
             batch_size -= 1
         }

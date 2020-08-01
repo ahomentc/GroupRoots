@@ -22,7 +22,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     var groupPostsVisibleViewersDict = [String: [String: [User]]]()     //    same   ^
     var groupPostsFirstCommentDict = [String: [String: Comment]]()      //    same   |
     var groupPostsNumCommentsDict = [String: [String: Int]]()           // -- same --|
-    var numGroupsInFeed = 3
+    var numGroupsInFeed = 5
     var usingCachedData = true
     var fetchedAllGroups = false
     var oldestRetrievedDate = 10000000000000.0
@@ -209,7 +209,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         groupPostsFirstCommentDict = [String: [String: Comment]]()
         groupPostsNumCommentsDict = [String: [String: Int]]()
         oldestRetrievedDate = 10000000000000.0
-        self.numGroupsInFeed = 3
+        self.numGroupsInFeed = 5
         self.fetchedAllGroups = false
         
         loadGroupPosts()
@@ -235,7 +235,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         var tempGroupPosts2D = [[GroupPost]]()
         // get all the userIds of the people user is following
         let sync = DispatchGroup()
-        var batch_size = 4
+        var batch_size = 6
         batch_size = batch_size - 1
 
         // we don't need to show posts of groups that are member of but not following.
@@ -521,7 +521,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { timer in
             if let indexPath = self.collectionView.indexPathsForVisibleItems.last {
                 if indexPath.row == self.numGroupsInFeed {
-                    self.numGroupsInFeed += 3
+                    self.numGroupsInFeed += 5
                     self.loadGroupPosts()
                 }
             }
