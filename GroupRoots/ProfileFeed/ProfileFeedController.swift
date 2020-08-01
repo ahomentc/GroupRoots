@@ -476,7 +476,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         }
         return feedCell
     }
-    
+
     @objc private func loadFromNoInternet() {
         self.loadingScreenView.isHidden = false
         Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false, block: { timer in

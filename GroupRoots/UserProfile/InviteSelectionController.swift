@@ -40,6 +40,8 @@ class InviteSelectionController: UIViewController, UICollectionViewDataSource, U
         let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(doneSelected))
+        
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
         self.collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height), collectionViewLayout: layout)
@@ -51,6 +53,10 @@ class InviteSelectionController: UIViewController, UICollectionViewDataSource, U
         view.addSubview(self.collectionView)
         
         fetchAllGroups()
+    }
+    
+    @objc private func doneSelected(){
+        self.dismiss(animated: true, completion: nil)
     }
     
     private func fetchAllGroups() {

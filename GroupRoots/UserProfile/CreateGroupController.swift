@@ -98,6 +98,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         navigationItem.title = "Create Group"
         let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(doneSelected))
         
         view.backgroundColor = .white
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTapOnView)))
@@ -108,6 +109,10 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         plusPhotoButton.layer.cornerRadius = 140 / 2
         
         setupInputFields()
+    }
+    
+    @objc private func doneSelected(){
+        self.dismiss(animated: true, completion: nil)
     }
     
     private func setupInputFields() {

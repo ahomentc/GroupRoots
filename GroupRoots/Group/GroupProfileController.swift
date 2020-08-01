@@ -494,6 +494,7 @@ extension GroupProfileController: GroupProfileHeaderDelegate {
         inviteToGroupController.group = self.group
         let navController = UINavigationController(rootViewController: inviteToGroupController)
 //        navController.modalPresentationStyle = .fullScreen
+        navController.modalPresentationStyle = .popover
         self.present(navController, animated: true, completion: nil)
     }
     

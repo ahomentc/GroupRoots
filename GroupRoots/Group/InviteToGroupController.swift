@@ -47,6 +47,7 @@ class InviteToGroupController: UICollectionViewController {
         navigationItem.titleView = searchBar
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneSelected))
         self.navigationController?.navigationBar.shadowImage = UIColor.white.as1ptImage()
         
         collectionView?.backgroundColor = .white
@@ -54,13 +55,7 @@ class InviteToGroupController: UICollectionViewController {
         collectionView?.keyboardDismissMode = .onDrag
         collectionView?.register(InviteToGroupCell.self, forCellWithReuseIdentifier: InviteToGroupCell.cellId)
         
-//        let refreshControl = UIRefreshControl()
-//        refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
-//        collectionView?.refreshControl = refreshControl
-        
         searchBar.delegate = self
-        
-//        fetchAllUsers()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -75,19 +70,9 @@ class InviteToGroupController: UICollectionViewController {
         self.collectionView?.refreshControl?.endRefreshing()
     }
     
-//    private func fetchAllUsers() {
-//        collectionView?.refreshControl?.beginRefreshing()
-//
-//        Database.database().fetchAllUsers(includeCurrentUser: false, completion: { (users) in
-//            self.users = users
-//            self.filteredUsers = users
-//            self.searchBar.text = ""
-//            self.collectionView?.reloadData()
-//            self.collectionView?.refreshControl?.endRefreshing()
-//        }) { (_) in
-//            self.collectionView?.refreshControl?.endRefreshing()
-//        }
-//    }
+    @objc private func doneSelected(){
+        self.dismiss(animated: true, completion: nil)
+    }
     
     private func searchForUser(username: String){
         if username.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil || username == "" {
