@@ -1440,18 +1440,10 @@ extension Database {
     }
 
     func fetchNextGroupsFollowing(withUID uid: String, endAt: Double, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
-        print("fetching")
-        let end_at = Int(endAt)
-//        M9RnGGUt0Qqe02jBBrY  177  test5
-//        M9RnHMLj_-R2YZ5F2DH  199  test6
-//        M9RnCTsDTdvWPI_Jc_G  244  test2
-//        M9RnFASWW1TVVBGE7Wb  330  test4
-//        M9RnDyvRrFgDORlbiKM  413  test3
-//        M9Rn6RCqVEiFr13UWOF  454  test1
-
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         var batch_size = 4
         if endAt == 10000000000000 { // only get 3 posts if first batch because we remove the first of batch of the rest of the batches
-            batch_size = 3
+            batch_size -= 1
         }
 
         var groupUser = uid
@@ -1459,7 +1451,7 @@ extension Database {
             groupUser = (Auth.auth().currentUser?.uid)!
         }
         let ref = Database.database().reference().child("groupsFollowing").child(groupUser)
-        ref.queryOrdered(byChild: "lastPostedDate").queryEnding(atValue: end_at).queryLimited(toLast: UInt(batch_size)).observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrdered(byChild: "lastPostedDate").queryEnding(atValue: endAt).queryLimited(toLast: UInt(batch_size)).observeSingleEvent(of: .value, with: { (snapshot) in
             var groups = [Group]()
             let sync = DispatchGroup()
             sync.enter()
@@ -1480,6 +1472,15 @@ extension Database {
             }
             sync.leave()
             sync.notify(queue: .main) {
+                // sort the groups
+                groups.sort(by: { (p1, p2) -> Bool in
+                    return p1.lastPostedDate < p2.lastPostedDate
+                })
+//                for group in groups{
+//                    Database.database().fetchGroupsFollowingGroupLastPostedDate(withUID: currentLoggedInUserId, groupId: group.groupId) { (date) in
+//                        print(group.groupId, ", ", group.groupname, ", ", date)
+//                    }
+//                }
                 if endAt != 10000000000000 && groups.count > 0 {
                     groups.remove(at: groups.count-1)
                 }
@@ -1488,6 +1489,17 @@ extension Database {
         }) { (err) in
             print("Failed to fetch posts:", err)
             cancel?(err)
+        }
+    }
+    
+    func fetchGroupsFollowingGroupLastPostedDate(withUID uid: String, groupId: String, completion: @escaping (Double) -> ()) {
+        Database.database().reference().child("groupsFollowing").child(uid).child(groupId).child("lastPostedDate").observeSingleEvent(of: .value) { (snapshot) in
+            if let val = snapshot.value as? Double {
+                completion(val)
+            }
+            else {
+                completion(0)
+            }
         }
     }
      

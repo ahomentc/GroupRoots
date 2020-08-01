@@ -235,6 +235,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         var tempGroupPosts2D = [[GroupPost]]()
         // get all the userIds of the people user is following
         let sync = DispatchGroup()
+        var batch_size = 4
+        batch_size = batch_size - 1
 
         // we don't need to show posts of groups that are member of but not following.
         // They auto follow it so they'd have to unfollow to not be in following, which means they
@@ -249,13 +251,16 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 sync.leave()
                 return
             }
-            self.oldestRetrievedDate = groups.first!.lastPostedDate
-            groups.forEach({ (group) in
-                if group_ids.contains(group.groupId) == false && group.groupId != "" {
-                    group_ids.insert(group.groupId)
-                }
-            })
-            sync.leave()
+//            self.oldestRetrievedDate = groups.first!.lastPostedDate
+            Database.database().fetchGroupsFollowingGroupLastPostedDate(withUID: currentLoggedInUserId, groupId: groups.first!.groupId) { (date) in
+                self.oldestRetrievedDate = date
+                groups.forEach({ (group) in
+                    if group_ids.contains(group.groupId) == false && group.groupId != "" {
+                        group_ids.insert(group.groupId)
+                    }
+                })
+                sync.leave()
+            }
         }, withCancel: { (err) in
             print("Failed to fetch posts:", err)
             self.loadingScreenView.isHidden = true
@@ -398,11 +403,11 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     return p1[0].creationDate.compare(p2[0].creationDate) == .orderedDescending
                 })
 
-                if tempGroupPosts2D.count < 3 {
+                if tempGroupPosts2D.count < batch_size {
                     self.fetchedAllGroups = true
                 }
 
-                self.groupPosts2D += Array(tempGroupPosts2D.suffix(3))
+                self.groupPosts2D += Array(tempGroupPosts2D.suffix(batch_size))
                 self.usingCachedData = false
                 
                 // add refresh capability only after posts have been loaded
