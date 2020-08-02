@@ -92,16 +92,22 @@ class FollowPageCell: UICollectionViewCell {
     
     private func reloadFollowButton() {
         guard let uid = user?.uid else { return }
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         let previousButtonType = followButton.type
         followButton.type = .loading
-        Database.database().isFollowingUser(withUID: uid, completion: { (is_following) in
-            if is_following {
-                self.followButton.type = .unfollow
-            } else {
-                self.followButton.type = .follow
+        if uid == currentLoggedInUserId {
+            self.followButton.type = .hide
+        }
+        else {
+            Database.database().isFollowingUser(withUID: uid, completion: { (is_following) in
+                if is_following {
+                    self.followButton.type = .unfollow
+                } else {
+                    self.followButton.type = .follow
+                }
+            }) { (err) in
+                self.followButton.type = previousButtonType
             }
-        }) { (err) in
-            self.followButton.type = previousButtonType
         }
     }
     

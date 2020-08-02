@@ -48,6 +48,7 @@ class InviteToGroupController: UICollectionViewController {
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneSelected))
+        navigationItem.rightBarButtonItem?.tintColor = .black
         self.navigationController?.navigationBar.shadowImage = UIColor.white.as1ptImage()
         
         collectionView?.backgroundColor = .white

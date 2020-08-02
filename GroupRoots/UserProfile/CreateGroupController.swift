@@ -9,8 +9,13 @@
 import UIKit
 import Firebase
 
+protocol CreateGroupControllerDelegate {
+    func shouldOpenGroup(groupId: String)
+}
+
 class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     
+    var delegate: CreateGroupControllerDelegate?
     private var isPrivate: Bool = false
     
     private let plusPhotoButton: UIButton = {
@@ -96,9 +101,10 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         }
         
         navigationItem.title = "Create Group"
-        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
+        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(doneSelected))
+        navigationItem.leftBarButtonItem?.tintColor = .black
         
         view.backgroundColor = .white
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTapOnView)))
@@ -190,7 +196,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
             }
         }
 
-        Database.database().createGroup(groupname: groupname ?? "", bio: bio ?? "", image: profileImage, isPrivate: isPrivate) { (err) in
+        Database.database().createGroup(groupname: groupname ?? "", bio: bio ?? "", image: profileImage, isPrivate: isPrivate) { (err, groupId) in
             if err != nil {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
                 guard let error = err else { self.resetInputFields(); return }
@@ -202,7 +208,10 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
                 self.resetInputFields()
                 return
             }
-            self.dismiss(animated: true, completion: nil)
+//            self.dismiss(animated: true, completion: nil)
+            self.dismiss(animated: true, completion: {
+                self.delegate?.shouldOpenGroup(groupId: groupId)
+            })
             NotificationCenter.default.post(name: NSNotification.Name("createdGroup"), object: nil)
         }
     }

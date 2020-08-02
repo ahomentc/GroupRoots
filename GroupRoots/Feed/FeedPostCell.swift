@@ -24,7 +24,7 @@ protocol InnerPostCellDelegate {
     func requestPlay(for cell: FeedPostCell)
 }
 
-class FeedPostCell: UICollectionViewCell {
+class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
     
     var delegate: InnerPostCellDelegate?
     var timer = Timer()
@@ -226,6 +226,8 @@ class FeedPostCell: UICollectionViewCell {
         return iv
     }()
     
+    var scrollV : UIScrollView!
+    
     var player = Player()
     
     private let imageBackground: UIView = {
@@ -340,6 +342,23 @@ class FeedPostCell: UICollectionViewCell {
         photoImageView.center = CGPoint(x: UIScreen.main.bounds.width  / 2, y: UIScreen.main.bounds.height / 2)
         insertSubview(photoImageView, at: 2)
         photoImageView.isHidden = false
+  
+        // attempt at zoom.
+//        scrollV = UIScrollView()
+//        scrollV.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+//        scrollV.minimumZoomScale=1
+//        scrollV.maximumZoomScale=3
+//        scrollV.bounces=false
+//        scrollV.delegate=self
+//        scrollV.center = CGPoint(x: UIScreen.main.bounds.width  / 2, y: UIScreen.main.bounds.height / 2)
+//        insertSubview((scrollV), at: 2)
+//
+//        photoImageView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
+//        photoImageView.layer.cornerRadius = 5
+//        photoImageView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height:  UIScreen.main.bounds.height)
+//        photoImageView.contentMode = .scaleToFill
+//        photoImageView.isHidden = false
+//        scrollV.addSubview(photoImageView)
         
         insertSubview(player.view, at: 0)
         player.view.isHidden = true
@@ -363,6 +382,11 @@ class FeedPostCell: UICollectionViewCell {
         activityIndicatorView.startAnimating()
         
         timer = Timer.scheduledTimer(timeInterval: 0.3, target: self, selector: #selector(updatePlayButton), userInfo: nil, repeats: true)
+    }
+    
+    func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView?
+    {
+         return photoImageView
     }
     
 //    delegate?.didView(groupPost: groupPost)

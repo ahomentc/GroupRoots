@@ -1440,7 +1440,6 @@ extension Database {
     }
 
     func fetchNextGroupsFollowing(withUID uid: String, endAt: Double, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
-        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         var batch_size = 6
         if endAt == 10000000000000 { // only get 3 posts if first batch because we remove the first of batch of the rest of the batches
             batch_size -= 1
@@ -1748,20 +1747,22 @@ extension Database {
             }
         })
     }
-    
-    func createGroup(groupname: String?, bio: String?, image: UIImage?, isPrivate: Bool, completion: @escaping (Error?) -> ()) {
+    func createGroup(groupname: String?, bio: String?, image: UIImage?, isPrivate: Bool, completion: @escaping (Error?,String) -> ()) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let userGroupRef = Database.database().reference().child("groups").childByAutoId()
-        guard let groupId = userGroupRef.key else { return }
+        var userGroupRef: DatabaseReference?
         let isPrivateString = isPrivate ? "true" : "false"
         
-        var values = ["id": groupId, "creationDate": Date().timeIntervalSince1970, "private": isPrivateString, "lastPostedDate": 0] as [String : Any]
+        var values = ["creationDate": Date().timeIntervalSince1970, "private": isPrivateString, "lastPostedDate": 0] as [String : Any]
         let sync = DispatchGroup()
         // set the groupname if it exists
         if groupname != nil && groupname != "" {
             sync.enter()
             Database.database().groupnameExists(groupname: groupname!, completion: { (exists) in
                 if !exists{
+                    userGroupRef = Database.database().reference().child("groups").childByAutoId()
+                    guard let groupId = userGroupRef?.key else { return }
+                    
+                    values["id"] = groupId
                     values["groupname"] = groupname!
                     
                     // create the entree in database for groupnames
@@ -1776,7 +1777,7 @@ extension Database {
                 }
                 else {
                     let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Groupname Taken"])
-                    completion(error)
+                    completion(error, "")
                     sync.leave()
                     return
                 }
@@ -1801,10 +1802,12 @@ extension Database {
         }
                 
         sync.notify(queue: .main) {
+            guard let userGroupRef = userGroupRef else { return }
+            guard let groupId = userGroupRef.key else { return }
             userGroupRef.updateChildValues(values) { (err, ref) in
                 if let err = err {
                     print("Failed to save post to database", err)
-                    completion(err)
+                    completion(err, "")
                     return
                 }
                 
@@ -1816,14 +1819,14 @@ extension Database {
                 let values = [uid: 1]
                 Database.database().reference().child("groups").child(groupId).child("members").updateChildValues(values) { (err, ref) in
                     if let err = err {
-                        completion(err)
+                        completion(err, "")
                         return
                     }
                     // add groupId to user
                     let values = [groupId: 1]
                     Database.database().reference().child("users").child(uid).child("groups").updateChildValues(values) { (err, ref) in
                         if let err = err {
-                            completion(err)
+                            completion(err, "")
                             return
                         }
                         // add invitation code with groupId as value
@@ -1836,10 +1839,10 @@ extension Database {
                         let invitationRef = Database.database().reference().child("inviteCodes").child(stripped_code2)
                         invitationRef.updateChildValues(values) { (err, ref) in
                             if let err = err {
-                                completion(err)
+                                completion(err, "")
                                 return
                             }
-                            completion(nil)
+                            completion(nil,groupId)
 //                            Don't need this anymore because of cloud function
 //                            // auto subscribe user to group
 //                            Database.database().addToGroupFollowers(groupId: groupId, withUID: uid) { (err) in

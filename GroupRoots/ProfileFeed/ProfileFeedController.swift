@@ -10,8 +10,8 @@ import UIKit
 import Firebase
 import NVActivityIndicatorView
 
-// add "GroupCellDelegate" here v
-class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate {
+class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate {
+    
     override var prefersStatusBarHidden: Bool { return false }
     
     // 2d representation of the dict, same as dict but with no values
@@ -71,6 +71,26 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         return button
     }()
     
+    private lazy var newGroupButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(handleShowNewGroup), for: .touchUpInside)
+        button.layer.zPosition = 4;
+        button.isHidden = true
+        button.layer.borderWidth = 2
+        button.layer.borderColor = UIColor.black.cgColor
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        button.setTitle("Create a Group", for: .normal)
+        return button
+    }()
+    
+    let logoImageView: UIImageView = {
+        let img = UIImageView()
+        img.image = #imageLiteral(resourceName: "icon_login_4")
+        img.isHidden = true
+        return img
+    }()
+    
     let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
     
     func showEmptyStateViewIfNeeded() {
@@ -78,7 +98,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         Database.database().numberOfSubscriptionsForUser(withUID: currentLoggedInUserId) { (followingCount) in
             Database.database().numberOfGroupsForUser(withUID: currentLoggedInUserId, completion: { (groupsCount) in
                 if followingCount == 0 && groupsCount == 0 {
-                    TableViewHelper.EmptyMessage(message: "Welcome to GroupRoots!\nFollow friends to view group posts", viewController: self)
+                    self.newGroupButton.isHidden = false
+                    self.logoImageView.isHidden = false
+                    
+                    TableViewHelper.EmptyMessage(message: "Welcome to GroupRoots!\n\nFollow friends and Subscribe\nto groups to view posts", viewController: self)
                     UIView.animate(withDuration: 0.5, delay: 0.5, options: .curveEaseOut, animations: {
                         self.collectionView?.backgroundView?.alpha = 1
                     }, completion: nil)
@@ -89,7 +112,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             })
         }
     }
-    
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.navigationController?.isNavigationBarHidden = false
@@ -152,6 +175,13 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         
         noInternetBackground.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-100, width: 300, height: 200)
         self.view.insertSubview(noInternetBackground, at: 3)
+        
+        newGroupButton.frame = CGRect(x: UIScreen.main.bounds.width/2-75, y: UIScreen.main.bounds.height/4 * 3, width: 150, height: 50)
+        newGroupButton.layer.cornerRadius = 14
+        self.view.insertSubview(newGroupButton, at: 4)
+        
+        logoImageView.frame = CGRect(x: view.frame.width/2 - 100, y: 80, width: 200, height: 200)
+        self.view.addSubview(logoImageView)
         
         collectionView?.register(FeedGroupCell.self, forCellWithReuseIdentifier: "cellId")
         collectionView?.register(EmptyFeedPostCell.self, forCellWithReuseIdentifier: EmptyFeedPostCell.cellId)
@@ -244,6 +274,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         sync.enter()
         Database.database().fetchNextGroupsFollowing(withUID: currentLoggedInUserId, endAt: oldestRetrievedDate, completion: { (groups) in
             self.reloadButton.isHidden = true
+            self.newGroupButton.isHidden = true
+            self.logoImageView.isHidden = true
             self.noInternetLabel.isHidden = true
             self.noInternetBackground.isHidden = true
             if groups.last == nil {
@@ -425,7 +457,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             }
         }
     }
-    
+
     func configureNavBar(){
         self.navigationController?.navigationBar.height(CGFloat(0))
         self.navigationController?.isNavigationBarHidden = true
@@ -649,6 +681,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         viewersController.viewsCount = viewsCount
         viewersController.delegate = self
         let navController = UINavigationController(rootViewController: viewersController)
+        navController.modalPresentationStyle = .popover
         self.present(navController, animated: true, completion: nil)
     }
     
@@ -661,5 +694,30 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         userProfileController.user = user
         userProfileController.modalPresentationCapturesStatusBarAppearance = true
         navigationController?.pushViewController(userProfileController, animated: true)
+    }
+    
+    @objc internal func handleShowNewGroup() {
+        let createGroupController = CreateGroupController()
+        createGroupController.delegate = self
+        let nacController = UINavigationController(rootViewController: createGroupController)
+        present(nacController, animated: true, completion: nil)
+    }
+    
+    func shouldOpenGroup(groupId: String) {
+        Database.database().groupExists(groupId: groupId, completion: { (exists) in
+            if exists {
+                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                    self.handleRefresh()
+                    
+                    let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+                    groupProfileController.group = group
+                    groupProfileController.modalPresentationCapturesStatusBarAppearance = true
+                    self.navigationController?.pushViewController(groupProfileController, animated: true)
+                })
+            }
+            else {
+                return
+            }
+        })
     }
 }

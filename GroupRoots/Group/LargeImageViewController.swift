@@ -404,6 +404,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         viewersController.viewers = viewers
         viewersController.viewsCount = numViews
         let navController = UINavigationController(rootViewController: viewersController)
+        navController.modalPresentationStyle = .popover
         self.present(navController, animated: true, completion: nil)
     }
     

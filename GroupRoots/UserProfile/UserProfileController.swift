@@ -1,7 +1,7 @@
 import UIKit
 import Firebase
 
-class UserProfileController: HomePostCellViewController {
+class UserProfileController: HomePostCellViewController, CreateGroupControllerDelegate {
     
     var user: User? {
         didSet {
@@ -295,7 +295,27 @@ class UserProfileController: HomePostCellViewController {
             }
         }
     }
-
+    
+    func shouldOpenGroup(groupId: String) {
+        print("0")
+        Database.database().groupExists(groupId: groupId, completion: { (exists) in
+            print("1")
+            if exists {
+                print("2")
+                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                    print("3")
+                    let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+                    groupProfileController.group = group
+                    groupProfileController.modalPresentationCapturesStatusBarAppearance = true
+                    self.navigationController?.pushViewController(groupProfileController, animated: true)
+                })
+            }
+            else {
+                print("ehhh")
+                return
+            }
+        })
+    }
 }
 
 extension UserProfileController: UICollectionViewDelegateFlowLayout {
@@ -327,6 +347,7 @@ extension UserProfileController: UserProfileHeaderDelegate {
 
     @objc internal func handleShowNewGroup() {
         let createGroupController = CreateGroupController()
+        createGroupController.delegate = self
         let nacController = UINavigationController(rootViewController: createGroupController)
 //        nacController.modalPresentationStyle = .fullScreen
         present(nacController, animated: true, completion: nil)

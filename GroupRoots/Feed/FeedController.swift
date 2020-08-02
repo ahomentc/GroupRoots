@@ -954,15 +954,14 @@ class TableViewHelper {
         let messageLabel = UILabel(frame: rect)
         messageLabel.text = message
         messageLabel.textColor = UIColor.black
-        messageLabel.numberOfLines = 0;
-        messageLabel.textAlignment = .center;
-        messageLabel.font = UIFont(name: "Avenir", size: 20)
+        messageLabel.numberOfLines = 0
+        messageLabel.textAlignment = .center
+        messageLabel.font = UIFont.systemFont(ofSize: 18.0)
         messageLabel.sizeToFit()
 
         viewController.collectionView.backgroundView = messageLabel;
     }
 }
-
 
 extension UICollectionView {
     func scrollToNearestVisibleCollectionViewCell() {

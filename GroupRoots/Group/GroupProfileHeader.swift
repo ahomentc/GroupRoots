@@ -429,8 +429,10 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                 self.addMemberButton.isHidden = false // also just update the edit profile button here out of laziness
                 
                 let code = String(groupId.suffix(6))
+                let stripped_code = code.replacingOccurrences(of: "_", with: "a", options: .literal, range: nil)
+                let stripped_code2 = stripped_code.replacingOccurrences(of: "-", with: "b", options: .literal, range: nil)
 //                self.inviteCodeButton.setTitle("Invite Code: " + code, for: .normal)
-                let attributedText = NSMutableAttributedString(string: "\(code)\n", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 16)])
+                let attributedText = NSMutableAttributedString(string: "\(stripped_code2)\n", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 16)])
                 attributedText.append(NSAttributedString(string: "Invite", attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 16)]))
                 self.inviteCodeButton.setAttributedTitle(attributedText, for: .normal)
                 return
@@ -652,8 +654,10 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
     @objc private func handleInviteTap(){
         guard let groupId = group?.groupId else { return }
         let code = String(groupId.suffix(6))
+        let stripped_code = code.replacingOccurrences(of: "_", with: "a", options: .literal, range: nil)
+        let stripped_code2 = stripped_code.replacingOccurrences(of: "-", with: "b", options: .literal, range: nil)
         let pasteboard = UIPasteboard.general
-        pasteboard.string = code
+        pasteboard.string = stripped_code2
         delegate?.showInviteCopyAlert()
     }
 }

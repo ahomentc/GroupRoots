@@ -37,8 +37,8 @@ class ViewersController: UIViewController, UICollectionViewDataSource, UICollect
             overrideUserInterfaceStyle = .light
         }
                 
-        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
-        navigationItem.backBarButtonItem?.tintColor = .black
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Close", style: .plain, target: self, action: #selector(doneSelected))
+        navigationItem.leftBarButtonItem?.tintColor = .black
         navigationItem.title = "Viewers"
         
         let layout = UICollectionViewFlowLayout()
@@ -65,6 +65,10 @@ class ViewersController: UIViewController, UICollectionViewDataSource, UICollect
         navigationController?.view.setNeedsLayout()
         navigationController?.view.layoutIfNeeded()
         self.collectionView?.refreshControl?.endRefreshing()
+    }
+    
+    @objc private func doneSelected(){
+        self.dismiss(animated: true, completion: nil)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {

@@ -116,6 +116,8 @@ extension CommentsController: CommentInputAccessoryViewDelegate {
             if err != nil {
                 return
             }
+//            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+            
             // send the notification each each user in the group
             Database.database().fetchGroupMembers(groupId: self.groupPost!.group.groupId, completion: { (users) in
                 users.forEach({ (user) in
