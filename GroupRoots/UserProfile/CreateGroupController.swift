@@ -178,6 +178,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     @objc private func handleCreateGroup() {
         let groupname = groupnameTextField.text
         let bio = bioTextField.text
+        var formatedGroupname = ""
         
         groupnameTextField.isUserInteractionEnabled = false
         bioTextField.isUserInteractionEnabled = false
@@ -187,16 +188,17 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         
         
         if groupname != nil && groupname != "" {
-            if groupname!.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
-                let alert = UIAlertController(title: "Group name invalid", message: "Please enter a Group name with no symbols or spaces (underscore is okay)", preferredStyle: .alert)
+            if groupname!.range(of: #"^[a-zA-Z0-9_ -]*$"#, options: .regularExpression) == nil {
+                let alert = UIAlertController(title: "Group name invalid", message: "Please enter a Group name with no symbols", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 self.present(alert, animated: true)
                 self.resetInputFields()
                 return
             }
+            formatedGroupname = groupname!.replacingOccurrences(of: " ", with: "_-a-_")
         }
 
-        Database.database().createGroup(groupname: groupname ?? "", bio: bio ?? "", image: profileImage, isPrivate: isPrivate) { (err, groupId) in
+        Database.database().createGroup(groupname: formatedGroupname, bio: bio ?? "", image: profileImage, isPrivate: isPrivate) { (err, groupId) in
             if err != nil {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
                 guard let error = err else { self.resetInputFields(); return }

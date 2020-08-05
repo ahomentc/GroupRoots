@@ -184,7 +184,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             usernameButton.setTitle(usernames, for: .normal)
         }
         else {
-            usernameButton.setTitle(group.groupname, for: .normal)
+            usernameButton.setTitle(group.groupname.replacingOccurrences(of: "_-a-_", with: " "), for: .normal)
         }
         usernameButton.setTitleColor(.black, for: .normal)
     }

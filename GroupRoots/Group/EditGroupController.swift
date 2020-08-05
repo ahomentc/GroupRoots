@@ -144,7 +144,7 @@ class EditGroupController: UIViewController, UINavigationControllerDelegate {
     
     private func setupInputFields() {
         guard let group = group else { return }
-        groupnameTextField.text = group.groupname
+        groupnameTextField.text = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
         bioTextField.text = group.bio
         
         if group.isPrivate! {
@@ -232,6 +232,7 @@ class EditGroupController: UIViewController, UINavigationControllerDelegate {
     @objc private func handleSave() {
         guard let group = group else { return }
         let groupname = groupnameTextField.text
+        var groupnameFormatted = ""
         groupnameTextField.isUserInteractionEnabled = false
         let bio = bioTextField.text
         bioTextField.isUserInteractionEnabled = false
@@ -239,17 +240,18 @@ class EditGroupController: UIViewController, UINavigationControllerDelegate {
                 
 //     username regex:   ^[a-zA-Z0-9_-]*$   must match
         if groupname != nil && groupname != "" {
-            if groupname!.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
-                let alert = UIAlertController(title: "Group Name invalid", message: "Please enter a group name with no symbols (underscore is okay)", preferredStyle: .alert)
+            if groupname!.range(of: #"^[a-zA-Z0-9_ -]*$"#, options: .regularExpression) == nil {
+                let alert = UIAlertController(title: "Group Name invalid", message: "Please enter a group name with no symbols", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 self.present(alert, animated: true)
                 self.resetInputFields()
                 return
             }
+            groupnameFormatted = groupname!.replacingOccurrences(of: " ", with: "_-a-_")
         }
         
         // notifications sent from updateGroup too
-        Database.database().updateGroup(groupId: group.groupId, changedPrivacy: changedPrivacy, groupname: groupname, bio: bio, isPrivate: isPrivate, image: self.profileImage) { (err) in
+        Database.database().updateGroup(groupId: group.groupId, changedPrivacy: changedPrivacy, groupname: groupnameFormatted, bio: bio, isPrivate: isPrivate, image: self.profileImage) { (err) in
             if err != nil {
                 guard let error = err else { self.resetInputFields(); return }
                 if error.localizedDescription == "Groupname Taken" {

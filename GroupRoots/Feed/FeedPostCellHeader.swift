@@ -172,7 +172,7 @@ class FeedPostCellHeader: UIView {
         if groupMembers.count == 0 { return }
         
         // set groupname
-        usernameButton.setTitle(group.groupname, for: .normal)
+        usernameButton.setTitle(group.groupname.replacingOccurrences(of: "_-a-_", with: " "), for: .normal)
         usernameButton.setTitleColor(.white, for: .normal)
                 
         // set group and profile images

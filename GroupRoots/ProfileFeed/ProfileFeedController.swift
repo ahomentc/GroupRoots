@@ -453,6 +453,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 DispatchQueue.main.async {
                     self.collectionView?.reloadData()
                     self.collectionView?.refreshControl?.endRefreshing()
+                    self.collectionView.scrollToNearestVisibleCollectionViewCell()
                 }
             }
         }
@@ -529,8 +530,17 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         collectionView.visibleCells.forEach { cell in
             if cell is FeedGroupCell {
-                // TODO: write logic to stop the video before it begins scrolling
-                (cell as! FeedGroupCell).pauseVisibleVideo()
+                let visible_cell = cell as! FeedGroupCell
+                visible_cell.pauseVisibleVideo()
+                
+                let original_pos = scrollView.contentOffset.y
+                Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false, block: { timer in
+                    let new_pos = scrollView.contentOffset.y
+                    if abs(new_pos - original_pos) > 100 {
+                        visible_cell.handleCloseFullscreen()
+                        NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+                    }
+                })
             }
         }
     }
@@ -562,6 +572,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.collectionView.visibleCells.forEach { cell in
                 if cell is FeedGroupCell {
                     let visible_cell = cell as! FeedGroupCell
+                    
                     if visible_cell.isFullScreen {
                         NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
                     }

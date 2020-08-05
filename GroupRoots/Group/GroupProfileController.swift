@@ -194,7 +194,7 @@ class GroupProfileController: HomePostCellViewController {
             // moved this to GroupProfileHeader and then with delegate calls setNavigationTitle
         }
         else {
-            navigationItem.title = group.groupname
+            navigationItem.title = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
         }
         header?.group = group
         handleRefresh()
@@ -442,7 +442,7 @@ extension GroupProfileController: GroupProfileHeaderDelegate {
         guard let group = group else { return }
         self.acceptInviteButton.isHidden = true
         
-        var groupname = group.groupname
+        var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
         if group.groupname == "" {
             groupname = " a group"
         }

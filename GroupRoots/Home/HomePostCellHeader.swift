@@ -71,7 +71,7 @@ class HomePostCellHeader: UIView {
     
     private func configureUser() {
         guard let group = group else { return }
-        usernameButton.setTitle(group.groupname, for: .normal)
+        usernameButton.setTitle(group.groupname.replacingOccurrences(of: "_-a-_", with: " "), for: .normal)
         if let profileImageUrl = group.groupProfileImageUrl {
             userProfileImageView.loadImage(urlString: profileImageUrl)
         } else {

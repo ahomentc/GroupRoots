@@ -96,7 +96,7 @@ class ProfileFeedCellHeader: UICollectionViewCell, UICollectionViewDataSource, U
         if groupMembers.count == 0 { return }
         
         // set groupname
-        usernameButton.setTitle(group.groupname, for: .normal)
+        usernameButton.setTitle(group.groupname.replacingOccurrences(of: "_-a-_", with: " "), for: .normal)
         usernameButton.setTitleColor(.black, for: .normal)
         
         Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (users) in

@@ -194,7 +194,7 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
     }
     
     func groupJoinAlert(group: Group) {
-        var groupname = group.groupname
+        var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
         if groupname == "" {
             groupname = "a group"
         }

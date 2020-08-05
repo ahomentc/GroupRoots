@@ -1596,6 +1596,7 @@ extension Database {
         }
     }
     
+    // Not used anymore
     func searchForGroup(groupname: String, completion: @escaping (Group) -> ()) {
         Database.database().reference().child("groupnames").child(groupname).observeSingleEvent(of: .value, with: { (snapshot) in
             guard let groupid = snapshot.value as? String else { return }
@@ -3492,7 +3493,7 @@ extension Database {
                 }
             case .groupJoinRequest:
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    let pushMessage = user.username + " requested to join your group " + group!.groupname
+                    let pushMessage = user.username + " requested to join your group " + group!.groupname.replacingOccurrences(of: "_-a-_", with: " ")
                     PushNotificationSender().sendPushNotification(to: token, title: "Group Join Request", body: pushMessage)
                     
                     // Save the notification
@@ -3518,7 +3519,7 @@ extension Database {
                 
                 guard let group = group else { return }
                 Database.database().fetchUser(withUID: subjectUser!.uid) { (user) in
-                    let pushMessage = user.username + " joined your group " + group.groupname
+                    let pushMessage = user.username + " joined your group " + group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
                     PushNotificationSender().sendPushNotification(to: token, title: "Group Join", body: pushMessage)
                     
                     // Save the notification
@@ -3535,7 +3536,7 @@ extension Database {
             case .newGroupSubscribe:
                 guard let group = group else { return }
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    let pushMessage = user.username + " subscribed to your group " + group.groupname
+                    let pushMessage = user.username + " subscribed to your group " + group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
                     PushNotificationSender().sendPushNotification(to: token, title: "New Subscription", body: pushMessage)
                     
                     // Save the notification
@@ -3552,7 +3553,7 @@ extension Database {
             case .groupSubscribeRequest:
                 guard let group = group else { return }
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    let pushMessage = user.username + " requested subscription to your group " + group.groupname
+                    let pushMessage = user.username + " requested subscription to your group " + group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
                     PushNotificationSender().sendPushNotification(to: token, title: "New Subscription Request", body: pushMessage)
                     
                     // Save the notification
@@ -3575,7 +3576,7 @@ extension Database {
                         pushMessage = user.username + " removed your group's name"
                     }
                     else {
-                        pushMessage = user.username + " changed group name to " + groupname
+                        pushMessage = user.username + " changed group name to " + groupname.replacingOccurrences(of: "_-a-_", with: " ")
                     }
                     
                     PushNotificationSender().sendPushNotification(to: token, title: "Group Name Edit", body: pushMessage)
@@ -3595,7 +3596,7 @@ extension Database {
                 guard let group = group else { return }
                 guard let isPrivate = group.isPrivate else { return }
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    var groupname = group.groupname
+                    var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
                     if groupname == "" { groupname = "your group" }
                     var pushMessage = ""
                     if isPrivate {
@@ -3621,7 +3622,7 @@ extension Database {
             case .groupProfilePicEdit:
                 guard let group = group else { return }
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    var groupname = group.groupname
+                    var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
                     if groupname == "" { groupname = "your group" }
                     let pushMessage = user.username + " edited " + groupname + "'s profile picture"
                     PushNotificationSender().sendPushNotification(to: token, title: "Group Profile Picture Edit", body: pushMessage)
@@ -3645,7 +3646,7 @@ extension Database {
                     // if not following, then could not send a notification for them.
                     // could add this here, before this function is called, + have default and change from settings
                     
-                    var groupname = group.groupname
+                    var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
                     if groupname == "" { groupname = "your group" }
                     let pushMessage = user.username + " commented on " + groupname + "'s post"
                     PushNotificationSender().sendPushNotification(to: token, title: "Comment", body: pushMessage)
@@ -3669,7 +3670,7 @@ extension Database {
                     // if not following, then could not send a notification for them.
                     // could add this here, before this function is called, + have default and change from settings
                     
-                    var groupname = group.groupname
+                    var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
                     if groupname == "" { groupname = "your group" }
                     let pushMessage = user.username + " posted in " + groupname
                     PushNotificationSender().sendPushNotification(to: token, title: "Group Post", body: pushMessage)
@@ -3692,7 +3693,7 @@ extension Database {
                 guard let group = group else { return }
                 // someone in the group is inviting a user
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in                    
-                    var groupname = group.groupname
+                    var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
                     if groupname == "" { groupname = "a group" }
                     let pushMessage = user.username + " invited you to join " + groupname
                     PushNotificationSender().sendPushNotification(to: token, title: "Group Invitation", body: pushMessage)

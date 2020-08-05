@@ -175,7 +175,7 @@ extension UserSearchController: UISearchBarDelegate {
                 searchForUser(username: searchText)
             }
             else {
-                searchForGroup(search_word: searchText)
+                searchForGroup(search_word: searchText.replacingOccurrences(of: " ", with: "_-a-_"))
             }
         }
         self.collectionView?.reloadData()
