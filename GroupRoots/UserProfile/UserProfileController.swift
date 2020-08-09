@@ -21,6 +21,8 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
     
     private var isGridView: Bool = true
     
+    private var isBlockedByThisUser = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         if #available(iOS 13.0, *) {
@@ -97,72 +99,117 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         alertController.addAction(cancelAction)
         
-        let logOutAction = UIAlertAction(title: "Log Out", style: .default) { (_) in
-            do {
-                try Auth.auth().signOut()
-                
-                // remove all local storage
-                let defaults = UserDefaults.standard
-                let dictionary = defaults.dictionaryRepresentation()
-                dictionary.keys.forEach { key in
-                    defaults.removeObject(forKey: key)
+        if user.uid == Auth.auth().currentUser?.uid {
+            let logOutAction = UIAlertAction(title: "Log Out", style: .default) { (_) in
+                do {
+                    try Auth.auth().signOut()
+                    
+                    // remove all local storage
+                    let defaults = UserDefaults.standard
+                    let dictionary = defaults.dictionaryRepresentation()
+                    dictionary.keys.forEach { key in
+                        defaults.removeObject(forKey: key)
+                    }
+                    
+                    let loginController = LoginController()
+                    let navController = UINavigationController(rootViewController: loginController)
+                    navController.modalPresentationStyle = .fullScreen
+                    self.present(navController, animated: true, completion: nil)
+                } catch let err {
+                    print("Failed to sign out:", err)
                 }
-                
-                let loginController = LoginController()
-                let navController = UINavigationController(rootViewController: loginController)
-                navController.modalPresentationStyle = .fullScreen
-                self.present(navController, animated: true, completion: nil)
-            } catch let err {
-                print("Failed to sign out:", err)
             }
-        }
-        
-        let edit_profile = UIAlertAction(title: "Edit Profile", style: .default) { (_) in
-            do {
-                let editProfileController = EditProfileController()
-                editProfileController.user = user
-                let navController = UINavigationController(rootViewController: editProfileController)
-                navController.modalPresentationStyle = .fullScreen
-                self.present(navController, animated: true, completion: nil)
+            
+            let edit_profile = UIAlertAction(title: "Edit Profile", style: .default) { (_) in
+                do {
+                    let editProfileController = EditProfileController()
+                    editProfileController.user = user
+                    let navController = UINavigationController(rootViewController: editProfileController)
+                    navController.modalPresentationStyle = .fullScreen
+                    self.present(navController, animated: true, completion: nil)
+                }
             }
-        }
-        
-        let deleteAccountAction = UIAlertAction(title: "Delete Account", style: .destructive, handler: nil)
-        
-        // if want to add more database fetches use DispatchGroup... this is okay for now
-        Database.database().isInIncognitoMode(completion: { (isIncognito) in
-            if isIncognito {
-                let toggleIncognitoAction = UIAlertAction(title: "Show me in views", style: .default) { (_) in
-                    do {
-                        Database.database().disableIncognitoMode() { (err) in
-                            if err != nil {
-                                return
+            
+    //        let deleteAccountAction = UIAlertAction(title: "Delete Account", style: .destructive, handler: nil)
+            
+            // if want to add more database fetches use DispatchGroup... this is okay for now
+            Database.database().isInIncognitoMode(completion: { (isIncognito) in
+                if isIncognito {
+                    let toggleIncognitoAction = UIAlertAction(title: "Show me in views", style: .default) { (_) in
+                        do {
+                            Database.database().disableIncognitoMode() { (err) in
+                                if err != nil {
+                                    return
+                                }
+                                self.configureAlertController()
                             }
-                            self.configureAlertController()
                         }
                     }
-                }
-                self.alertController.addAction(edit_profile)
-                self.alertController.addAction(toggleIncognitoAction)
-                self.alertController.addAction(logOutAction)
-//                self.alertController.addAction(deleteAccountAction)
-            } else {
-                let toggleIncognitoAction = UIAlertAction(title: "Hide me from views (Incognito)", style: .default) { (_) in
-                    do {
-                        Database.database().enableIncognitoMode() { (err) in
-                            if err != nil {
-                                return
+                    self.alertController.addAction(edit_profile)
+                    self.alertController.addAction(toggleIncognitoAction)
+                    self.alertController.addAction(logOutAction)
+    //                self.alertController.addAction(deleteAccountAction)
+                } else {
+                    let toggleIncognitoAction = UIAlertAction(title: "Hide me from views (Incognito)", style: .default) { (_) in
+                        do {
+                            Database.database().enableIncognitoMode() { (err) in
+                                if err != nil {
+                                    return
+                                }
+                                self.configureAlertController()
                             }
-                            self.configureAlertController()
                         }
                     }
+                    self.alertController.addAction(edit_profile)
+                    self.alertController.addAction(toggleIncognitoAction)
+                    self.alertController.addAction(logOutAction)
+    //                self.alertController.addAction(deleteAccountAction)
                 }
-                self.alertController.addAction(edit_profile) 
-                self.alertController.addAction(toggleIncognitoAction)
-                self.alertController.addAction(logOutAction)
-//                self.alertController.addAction(deleteAccountAction)
+            })
+        }
+        else {
+            if let reportAction = self.reportAction(forUser: user) {
+                alertController.addAction(reportAction)
             }
+            
+            if let blockAction = self.blockAction(forUser: user) {
+                alertController.addAction(blockAction)
+            }
+        }
+    }
+    
+    private func reportAction(forUser user: User) -> UIAlertAction? {
+        let action = UIAlertAction(title: "Report", style: .destructive, handler: { (_) in
+            
+            let alert = UIAlertController(title: "Report User?", message: nil, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { (_) in
+                Database.database().reportUser(withUID: user.uid) { (err) in
+                    if err != nil {
+                        return
+                    }
+                }
+            }))
+            self.present(alert, animated: true, completion: nil)
         })
+        return action
+    }
+    
+    private func blockAction(forUser user: User) -> UIAlertAction? {
+        let action = UIAlertAction(title: "Block", style: .destructive, handler: { (_) in
+            
+            let alert = UIAlertController(title: "Block User?", message: nil, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "Block", style: .default, handler: { (_) in
+                Database.database().blockUser(withUID: user.uid) { (err) in
+                    if err != nil {
+                        return
+                    }
+                }
+            }))
+            self.present(alert, animated: true, completion: nil)
+        })
+        return action
     }
     
     private func fetchAllGroups() {
@@ -170,38 +217,46 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         collectionView?.refreshControl?.beginRefreshing()
 
         guard let user = user else { return }
-        Database.database().fetchAllGroups(withUID: user.uid, completion: { (groups) in
-            if user.uid == currentLoggedInUserId { // show all groups
-                self.groups = groups
-                self.fetchedGroups = true
-                self.collectionView?.reloadData()
-                self.collectionView?.refreshControl?.endRefreshing()
-            }
-            else {
-                var visibleGroups = [Group]()
-                let sync = DispatchGroup()
-                groups.forEach { group in  // check if cell is still visible
-                    sync.enter()
-                    Database.database().isGroupHiddenForUser(withUID: user.uid, groupId: group.groupId, completion: { (isHidden) in
-                        // only allow this if is in group
-                        if !isHidden {
-                            visibleGroups.append(group)
-                        }
-                        sync.leave()
-                    }) { (err) in
-                        return
+        Database.database().isUserBlocked(withUID: user.uid, completion: { (isBlocked) in
+            self.isBlockedByThisUser = isBlocked
+            if !isBlocked{
+                Database.database().fetchAllGroups(withUID: user.uid, completion: { (groups) in
+                    if user.uid == currentLoggedInUserId { // show all groups
+                        self.groups = groups
+                        self.fetchedGroups = true
+                        self.collectionView?.reloadData()
+                        self.collectionView?.refreshControl?.endRefreshing()
                     }
-                }
-                sync.notify(queue: .main) {
-                    self.groups = visibleGroups
-                    self.fetchedGroups = true
-                    self.collectionView?.reloadData()
+                    else {
+                        var visibleGroups = [Group]()
+                        let sync = DispatchGroup()
+                        groups.forEach { group in  // check if cell is still visible
+                            sync.enter()
+                            Database.database().isGroupHiddenForUser(withUID: user.uid, groupId: group.groupId, completion: { (isHidden) in
+                                // only allow this if is in group
+                                if !isHidden {
+                                    visibleGroups.append(group)
+                                }
+                                sync.leave()
+                            }) { (err) in
+                                return
+                            }
+                        }
+                        sync.notify(queue: .main) {
+                            self.groups = visibleGroups
+                            self.fetchedGroups = true
+                            self.collectionView?.reloadData()
+                            self.collectionView?.refreshControl?.endRefreshing()
+                        }
+                    }
+                }) { (_) in
                     self.collectionView?.refreshControl?.endRefreshing()
                 }
             }
-        }) { (_) in
-            self.collectionView?.refreshControl?.endRefreshing()
-        }
+            else {
+                self.collectionView?.refreshControl?.endRefreshing()
+            }
+        })
     }
     
     @objc private func reloadUser(){
@@ -218,9 +273,16 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         if user.uid == Auth.auth().currentUser?.uid {
             navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "gear").withRenderingMode(.alwaysOriginal), style: .plain, target: self, action: #selector(handleSettings))
         }
+        else {
+            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "•••", style: .plain, target: self, action: #selector(handleSettings))
+            navigationItem.rightBarButtonItem?.tintColor = .black
+        }
         
         navigationItem.title = user.username
         header?.user = user
+        Database.database().isUserBlocked(withUID: user.uid, completion: { (isBlocked) in
+            self.header?.isBlocked = isBlocked
+        })
     }
     
     @objc private func handleSettings() {
@@ -228,7 +290,6 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
     }
     
     @objc private func handleRefresh() {
-//        groupPosts.removeAll()
         fetchAllGroups()
         configureUser()
         configureAlertController()
@@ -297,13 +358,9 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
     }
     
     func shouldOpenGroup(groupId: String) {
-        print("0")
         Database.database().groupExists(groupId: groupId, completion: { (exists) in
-            print("1")
             if exists {
-                print("2")
                 Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                    print("3")
                     let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
                     groupProfileController.group = group
                     groupProfileController.modalPresentationCapturesStatusBarAppearance = true
@@ -311,7 +368,6 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
                 })
             }
             else {
-                print("ehhh")
                 return
             }
         })
@@ -349,28 +405,36 @@ extension UserProfileController: UserProfileHeaderDelegate {
         let createGroupController = CreateGroupController()
         createGroupController.delegate = self
         let nacController = UINavigationController(rootViewController: createGroupController)
-//        nacController.modalPresentationStyle = .fullScreen
         present(nacController, animated: true, completion: nil)
     }
     
     @objc internal func handleInviteGroup() {
+        guard let user = user else { return }
         let inviteSelectionController = InviteSelectionController()
         inviteSelectionController.user = user
         let navController = UINavigationController(rootViewController: inviteSelectionController)
-        self.present(navController, animated: true, completion: nil)
+        if !isBlockedByThisUser{
+            self.present(navController, animated: true, completion: nil)
+        }
     }
     
     @objc internal func didSelectFollowPage(showFollowers: Bool){
+        guard let user = user else { return }
         let followPage = FollowPageController(collectionViewLayout: UICollectionViewFlowLayout())
         followPage.user = user
         followPage.isFollowerView = showFollowers
-        navigationController?.pushViewController(followPage, animated: true)
+        if !isBlockedByThisUser{
+            self.navigationController?.pushViewController(followPage, animated: true)
+        }
     }
     
     func didSelectSubscriptionsPage() {
+        guard let user = user else { return }
         let subscriptionsPage = SubscriptionsController(collectionViewLayout: UICollectionViewFlowLayout())
         subscriptionsPage.user = user
-        navigationController?.pushViewController(subscriptionsPage, animated: true)
+        if !isBlockedByThisUser{
+            self.navigationController?.pushViewController(subscriptionsPage, animated: true)
+        }
     }
 }
 

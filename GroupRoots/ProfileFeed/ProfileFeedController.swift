@@ -615,6 +615,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         alertController.addAction(cancelAction)
         
+        if let reportAction = self.reportAction(forPost: groupPost) {
+            alertController.addAction(reportAction)
+        }
+        
         Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
             if inGroup {
                 if let deleteAction = self.deleteAction(forPost: groupPost) {
@@ -650,15 +654,26 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     private func unsubscribeAction(forPost groupPost: GroupPost, uid: String) -> UIAlertAction? {
         let action = UIAlertAction(title: "Unsubscribe", style: .destructive, handler: { (_) in
-            
             let alert = UIAlertController(title: "Unsubscribe?", message: nil, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
             alert.addAction(UIAlertAction(title: "Unsubscribe", style: .default, handler: { (_) in
-                
-                Database.database().deleteGroupPost(groupId: groupPost.group.groupId, postId: groupPost.id) { (_) in
-                }
-                Database.database().removeGroupFromUserFollowing(withUID: uid, groupId: groupPost.group.groupId) { (err) in
-                    
+                Database.database().removeGroupFromUserFollowing(withUID: uid, groupId: groupPost.group.groupId) { (err) in }
+            }))
+            self.present(alert, animated: true, completion: nil)
+        })
+        return action
+    }
+    
+    private func reportAction(forPost groupPost: GroupPost) -> UIAlertAction? {
+        let action = UIAlertAction(title: "Report", style: .destructive, handler: { (_) in
+            
+            let alert = UIAlertController(title: "Report Post?", message: nil, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "Report", style: .default, handler: { (_) in
+                Database.database().reportPost(withId: groupPost.id, groupId: groupPost.group.groupId) { (err) in
+                    if err != nil {
+                        return
+                    }
                 }
             }))
             self.present(alert, animated: true, completion: nil)

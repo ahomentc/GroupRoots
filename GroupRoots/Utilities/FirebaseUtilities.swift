@@ -968,6 +968,51 @@ extension Database {
         }
     }
     
+    func reportUser(withUID uid: String, completion: @escaping (Error?) -> ()) {
+        guard let current_uid = Auth.auth().currentUser?.uid else { return }
+        
+        let values = ["uid": uid, "reportDate": Date().timeIntervalSince1970, "userReported": current_uid] as [String: Any]
+        
+        let userReportRef = Database.database().reference().child("reportedUsers").child(uid)
+        userReportRef.updateChildValues(values) { (err, _) in
+            if let err = err {
+                print("Failed to report post:", err)
+                completion(err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
+    func blockUser(withUID uid: String, completion: @escaping (Error?) -> ()) {
+        guard let current_uid = Auth.auth().currentUser?.uid else { return }
+        
+        let values = ["blockDate": Date().timeIntervalSince1970] as [String: Any]
+        
+        let userReportRef = Database.database().reference().child("blockedUsers").child(current_uid).child(uid)
+        userReportRef.updateChildValues(values) { (err, _) in
+            if let err = err {
+                print("Failed to report post:", err)
+                completion(err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
+    func isUserBlocked(withUID blockedBy: String, completion: @escaping (Bool) -> ()) {
+        guard let current_uid = Auth.auth().currentUser?.uid else { return }
+        Database.database().reference().child("blockedUsers").child(blockedBy).child(current_uid).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard (snapshot.value as? [String: Any]) != nil else {
+                completion(false)
+                return
+            }
+            completion(true)
+        }) { (err) in
+            print("Failed to fetch group from database:", err)
+        }
+    }
+    
 //--------------------------------------------------------
 //------------------------ Groups ------------------------
 //--------------------------------------------------------
@@ -3219,10 +3264,25 @@ extension Database {
                             return
                         }
                     })
-                    
                     completion?(nil)
                 })
             })
+        }
+    }
+    
+    func reportPost(withId postId: String, groupId: String, completion: @escaping (Error?) -> ()) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        let values = ["groupId": groupId, "reportDate": Date().timeIntervalSince1970, "userReported": uid] as [String: Any]
+        
+        let postReportRef = Database.database().reference().child("reportedPosts").child(postId)
+        postReportRef.updateChildValues(values) { (err, _) in
+            if let err = err {
+                print("Failed to report post:", err)
+                completion(err)
+                return
+            }
+            completion(nil)
         }
     }
     

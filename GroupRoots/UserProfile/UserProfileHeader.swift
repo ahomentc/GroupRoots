@@ -23,6 +23,8 @@ class UserProfileHeader: UICollectionViewCell {
             setFirstData()
         }
     }
+    
+    var isBlocked: Bool?
 
     private let profileImageView: CustomImageView = {
         let iv = CustomImageView()
@@ -239,6 +241,12 @@ class UserProfileHeader: UICollectionViewCell {
     // needs to be renamed
     @objc private func handleTap() {
         guard let userId = user?.uid else { return }
+        guard let isBlocked = isBlocked else { return }
+        
+        if isBlocked {
+            return
+        }
+        
         if followButton.type == .edit { return }
         
         let previousButtonType = followButton.type

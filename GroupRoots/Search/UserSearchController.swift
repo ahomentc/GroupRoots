@@ -39,10 +39,6 @@ class UserSearchController: UICollectionViewController {
         collectionView?.register(GroupSearchCell.self, forCellWithReuseIdentifier: GroupSearchCell.cellId)
         collectionView?.register(SearchHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: SearchHeader.headerId)
         
-//        let refreshControl = UIRefreshControl()
-//        refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
-//        collectionView?.refreshControl = refreshControl
-        
         searchBar.delegate = self
         
 //        fetchAllUsers()
@@ -192,6 +188,7 @@ extension UserSearchController: SearchHeaderDelegate {
     func didChangeToUsersView() {
         isUsersView = true
         self.filteredUsers = []
+        self.filteredGroups = []
         collectionView?.reloadData()
         self.searchForUser(username: self.searchBar.text ?? "")
         self.searchBar.placeholder = "Enter username"
@@ -200,6 +197,7 @@ extension UserSearchController: SearchHeaderDelegate {
     func didChangeToGroupsView() {
         isUsersView = false
         self.filteredUsers = []
+        self.filteredGroups = []
         collectionView?.reloadData()
         self.searchForGroup(search_word: self.searchBar.text ?? "")
         self.searchBar.placeholder = "Enter group name or invite code"

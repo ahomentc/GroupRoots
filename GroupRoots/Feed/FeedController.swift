@@ -857,10 +857,12 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
                 }
             }
             else{
+                
                 if let unsubscribeAction = self.unsubscribeAction(forPost: groupPost, uid: currentLoggedInUserId) {
                     alertController.addAction(unsubscribeAction)
                     self.present(alertController, animated: true, completion: nil)
                 }
+                
             }
         }) { (err) in
             return
@@ -893,12 +895,7 @@ class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollec
             let alert = UIAlertController(title: "Unsubscribe?", message: nil, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
             alert.addAction(UIAlertAction(title: "Unsubscribe", style: .default, handler: { (_) in
-                
-                Database.database().deleteGroupPost(groupId: groupPost.group.groupId, postId: groupPost.id) { (_) in
-                }
-                Database.database().removeGroupFromUserFollowing(withUID: uid, groupId: groupPost.group.groupId) { (err) in
-                    
-                }
+                Database.database().removeGroupFromUserFollowing(withUID: uid, groupId: groupPost.group.groupId) { (err) in }
             }))
             self.present(alert, animated: true, completion: nil)
         })
