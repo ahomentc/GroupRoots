@@ -152,6 +152,7 @@ class SubscriptionCell: UICollectionViewCell {
                 self.userOneImageView.isHidden = false
                 self.userTwoImageView.isHidden = true
                 
+                
                 if let userOneImageUrl = first_n_users[0].profileImageUrl {
                     self.userOneImageView.loadImage(urlString: userOneImageUrl)
                 } else {

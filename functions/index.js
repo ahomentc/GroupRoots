@@ -672,7 +672,52 @@ exports.updateNumNotificationsCountOnNew = functions.database.ref('/notification
 	}).catch(() => {return null});
 })
 
+// NOT TESTED
+exports.deleteGroupOnNoMembers = functions.database.ref('/groupMembersCount/{group_id}').onUpdate((snapshot, context) => {
+	const group_id = context.params.group_id;
+	const subscribers_path = '/groupFollowers/' + group_id
+	return snapshot.after.ref.root.child('/groupMembersCount/' + group_id).once('value', counter_value => {
+		if (parseInt(counter_value.val()) < 1) {
+			return snapshot.after.ref.root.child(subscribers_path).once('value', subscribers_snapshot => {
+				return snapshot.after.ref.root.child('/groups/' + group_id + '/groupname').once('value', groupname_snapshot => {
+					var groupname = "";
+					if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
+						groupname = groupname_snapshot.val().toString();
+					}
 
+					const promises = []
+
+					// for each subscriber, remove group from subscribing
+					subscribers_snapshot.forEach(function(subscriber) {
+			        	var uid = subscriber.key;
+						promises.push(snapshot.after.ref.root.child('/groupsFollowing/' + uid + '/' + group_id).remove());
+						promises.push(snapshot.after.ref.root.child('/userRemovedGroups/' + uid + '/' + group_id).remove());
+			    	});
+
+			    	promises.push(snapshot.after.ref.root.child('/groupFollowers/' + group_id).remove());
+			    	promises.push(snapshot.after.ref.root.child('/groupFollowPending/' + group_id).remove());
+			    	promises.push(snapshot.after.ref.root.child('/groupFollowersCount/' + group_id).remove());
+			    	promises.push(snapshot.after.ref.root.child('/groupMembersCount/' + group_id).remove());
+
+			    	if (groupname !== "") {
+			    		promises.push(snapshot.after.ref.root.child('/groupnames/' + groupname).remove());
+			    	}
+
+					// delete the group
+					promises.push(snapshot.after.ref.root.child('/groups/' + group_id).remove());
+
+					if (promises.length === 0) {
+						return null;
+					}
+					return Promise.all(promises);
+				}).catch(() => {return null});
+		  	}).catch(() => {return null});
+		}
+		else {
+			return null;
+		}
+	}).catch(() => {return null});
+})
 
 
 
