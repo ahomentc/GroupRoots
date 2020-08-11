@@ -61,6 +61,15 @@ class LoginController: UIViewController {
         return button
     }()
     
+    private let resetButton: UIButton = {
+        let button = UIButton(type: .system)
+        let attributedTitle = NSAttributedString(string: "Forgot Password?", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
+        ])
+        button.setAttributedTitle(attributedTitle, for: .normal)
+        button.addTarget(self, action: #selector(handleShowReset), for: .touchUpInside)
+        return button
+    }()
+    
     override var preferredStatusBarStyle: UIStatusBarStyle { return .lightContent }
     
     override func viewDidLoad() {
@@ -77,8 +86,11 @@ class LoginController: UIViewController {
         view.addSubview(logoImageView)
         logoImageView.frame = CGRect(x: view.frame.width/2 - 115, y: 50, width: 230, height: 230)
         
+        view.addSubview(resetButton)
+        resetButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingBottom: 10, height: 50)
+        
         view.addSubview(dontHaveAccountButton)
-        dontHaveAccountButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 50)
+        dontHaveAccountButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: resetButton.topAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 50)
         
         setupInputFields()
     }
@@ -144,6 +156,10 @@ class LoginController: UIViewController {
     
     @objc private func handleShowSignUp() {
         navigationController?.pushViewController(SignUpController(), animated: true)
+    }
+    
+    @objc private func handleShowReset() {
+        navigationController?.pushViewController(ResetController(), animated: true)
     }
 }
 
