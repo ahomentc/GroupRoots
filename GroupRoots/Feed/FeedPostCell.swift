@@ -12,6 +12,8 @@ import Player
 import AVFoundation
 import SGImageCache
 import NVActivityIndicatorView
+import FirebaseAuth
+import FirebaseDatabase
 
 protocol InnerPostCellDelegate {
     func didTapComment(groupPost: GroupPost)

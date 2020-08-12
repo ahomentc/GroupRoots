@@ -8,7 +8,9 @@
 
 import UIKit
 import Firebase
+import FirebaseAuth
 import YPImagePicker
+import FirebaseDatabase
 
 class EditProfileController: UIViewController, UINavigationControllerDelegate {
         

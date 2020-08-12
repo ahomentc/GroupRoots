@@ -8,6 +8,8 @@
 
 import UIKit
 import Firebase
+import FirebaseAuth
+import FirebaseDatabase
 import NVActivityIndicatorView
 
 class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate {
@@ -26,6 +28,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     var usingCachedData = true
     var fetchedAllGroups = false
     var oldestRetrievedDate = 10000000000000.0
+    
+    var isFirstView = true
     
     private let loadingScreenView: CustomImageView = {
         let iv = CustomImageView()
@@ -58,6 +62,20 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         return view
     }()
     
+    private let welcomeLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.init(white: 0.4, alpha: 1)
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+        label.isHidden = true
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
+        attributedText.append(NSMutableAttributedString(string: "Follow friends to automatically get\nsubscribed to their public groups\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "Posts from groups you're subscribed\nto or a member of will appear here", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        label.attributedText = attributedText
+        return label
+    }()
+
     private lazy var reloadButton: UIButton = {
         let button = UIButton()
         button.addTarget(self, action: #selector(loadFromNoInternet), for: .touchUpInside)
@@ -76,11 +94,34 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         button.addTarget(self, action: #selector(handleShowNewGroup), for: .touchUpInside)
         button.layer.zPosition = 4;
         button.isHidden = true
-        button.layer.borderWidth = 2
-        button.layer.borderColor = UIColor.black.cgColor
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitle("Create a Group", for: .normal)
+        return button
+    }()
+    
+    private lazy var goButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(handleFirstGo), for: .touchUpInside)
+        button.layer.zPosition = 4;
+        button.isHidden = true
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        button.setTitle("Got it", for: .normal)
+        return button
+    }()
+    
+    private lazy var inviteButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(handleShowInviteCode), for: .touchUpInside)
+        button.layer.zPosition = 4;
+        button.isHidden = false
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        button.setTitle("Enter a Group Invite Code", for: .normal)
         return button
     }()
     
@@ -99,9 +140,12 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             Database.database().numberOfGroupsForUser(withUID: currentLoggedInUserId, completion: { (groupsCount) in
                 if followingCount == 0 && groupsCount == 0 {
                     self.newGroupButton.isHidden = false
+                    self.goButton.isHidden = true
+                    self.inviteButton.isHidden = false
+                    self.welcomeLabel.isHidden = false
                     self.logoImageView.isHidden = false
                     
-                    TableViewHelper.EmptyMessage(message: "Welcome to GroupRoots!\n\nFollow friends and Subscribe\nto groups to view posts", viewController: self)
+//                    TableViewHelper.EmptyMessage(message: "Welcome to GroupRoots!\n\nFollow friends to see their\ngroups in your feed", viewController: self)
                     UIView.animate(withDuration: 0.5, delay: 0.5, options: .curveEaseOut, animations: {
                         self.collectionView?.backgroundView?.alpha = 1
                     }, completion: nil)
@@ -155,6 +199,14 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             overrideUserInterfaceStyle = .light
         }
         
+        if let hasOpenedAppRetrieved = UserDefaults.standard.object(forKey: "hasOpenedApp") as? Data {
+            guard let hasOpenedApp = try? JSONDecoder().decode(Bool.self, from: hasOpenedAppRetrieved) else {
+                print("Error: Couldn't decode data into Blog")
+                return
+            }
+            self.isFirstView = !hasOpenedApp
+        }
+        
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
         
         let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor.black]
@@ -176,9 +228,20 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         noInternetBackground.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-100, width: 300, height: 200)
         self.view.insertSubview(noInternetBackground, at: 3)
         
-        newGroupButton.frame = CGRect(x: UIScreen.main.bounds.width/2-75, y: UIScreen.main.bounds.height/4 * 3, width: 150, height: 50)
+        welcomeLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-150, width: 300, height: 300)
+        self.view.insertSubview(welcomeLabel, at: 4)
+        
+        inviteButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 - 30, width: 300, height: 50)
+        inviteButton.layer.cornerRadius = 14
+        self.view.insertSubview(inviteButton, at: 4)
+        
+        newGroupButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
         newGroupButton.layer.cornerRadius = 14
         self.view.insertSubview(newGroupButton, at: 4)
+        
+        goButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
+        goButton.layer.cornerRadius = 14
+        self.view.insertSubview(goButton, at: 4)
         
         logoImageView.frame = CGRect(x: view.frame.width/2 - 100, y: 80, width: 200, height: 200)
         self.view.addSubview(logoImageView)
@@ -254,8 +317,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     private func loadGroupPosts(){
-        showEmptyStateViewIfNeeded()
         addGroupPosts()
+        showEmptyStateViewIfNeeded()
     }
     
     private func addGroupPosts() {
@@ -275,6 +338,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         Database.database().fetchNextGroupsFollowing(withUID: currentLoggedInUserId, endAt: oldestRetrievedDate, completion: { (groups) in
             self.reloadButton.isHidden = true
             self.newGroupButton.isHidden = true
+            self.goButton.isHidden = true
+            self.inviteButton.isHidden = true
+            self.welcomeLabel.isHidden = true
             self.logoImageView.isHidden = true
             self.noInternetLabel.isHidden = true
             self.noInternetBackground.isHidden = true
@@ -417,7 +483,12 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                         let seconds = 1.0
                         DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
                             if self.groupPosts2D.count == 0 {
-                                TableViewHelper.EmptyMessage(message: "No posts to show\nClick the plus to post to a group", viewController: self)
+//                                TableViewHelper.EmptyMessage(message: "No posts to show\nClick the plus to post to a group", viewController: self)
+//                                self.newGroupButton.isHidden = false
+//                                self.goButton.isHidden = true
+//                                self.inviteButton.isHidden = false
+//                                self.welcomeLabel.isHidden = false
+//                                self.logoImageView.isHidden = false
                                 UIView.animate(withDuration: 0.5, delay: 0.5, options: .curveEaseOut, animations: {
                                     self.collectionView?.backgroundView?.alpha = 1
                                 }, completion: nil)
@@ -438,22 +509,48 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 if tempGroupPosts2D.count < batch_size {
                     self.fetchedAllGroups = true
                 }
-
+                
+                self.loadingScreenView.isHidden = true
+                self.activityIndicatorView.isHidden = true
+                
                 self.groupPosts2D += Array(tempGroupPosts2D.suffix(batch_size))
                 self.usingCachedData = false
-                
+
                 // add refresh capability only after posts have been loaded
                 let refreshControl = UIRefreshControl()
                 refreshControl.addTarget(self, action: #selector(self.handleRefresh), for: .valueChanged)
                 self.collectionView?.refreshControl = refreshControl
-
-                self.loadingScreenView.isHidden = true
-                self.activityIndicatorView.isHidden = true
- 
+                
                 DispatchQueue.main.async {
                     self.collectionView?.reloadData()
                     self.collectionView?.refreshControl?.endRefreshing()
                     self.collectionView.scrollToNearestVisibleCollectionViewCell()
+                }
+                
+                if self.isFirstView && tempGroupPosts2D.count > 0 {
+                    self.newGroupButton.isHidden = true
+                    self.inviteButton.isHidden = true
+                    self.goButton.isHidden = false
+                    self.welcomeLabel.isHidden = false
+                    self.logoImageView.isHidden = false
+                    self.collectionView.isHidden = true
+                }
+                else if tempGroupPosts2D.count > 0 {
+                    self.activityIndicatorView.isHidden = true
+                    self.newGroupButton.isHidden = true
+                    self.goButton.isHidden = true
+                    self.inviteButton.isHidden = true
+                    self.welcomeLabel.isHidden = true
+                    self.logoImageView.isHidden = true
+                    self.collectionView.isHidden = false
+                }
+                else {
+                    self.newGroupButton.isHidden = false
+                    self.goButton.isHidden = true
+                    self.inviteButton.isHidden = false
+                    self.welcomeLabel.isHidden = false
+                    self.logoImageView.isHidden = false
+                    self.collectionView.isHidden = true
                 }
             }
         }
@@ -727,6 +824,27 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         createGroupController.delegate = self
         let nacController = UINavigationController(rootViewController: createGroupController)
         present(nacController, animated: true, completion: nil)
+    }
+    
+    @objc internal func handleShowInviteCode() {
+        let introCodeController = IntroCodeController()
+        let nacController = UINavigationController(rootViewController: introCodeController)
+        present(nacController, animated: true, completion: nil)
+    }
+    
+    @objc internal func handleFirstGo() {
+        self.isFirstView = false
+        if let hasOpenedApp = try? JSONEncoder().encode(true) {
+            UserDefaults.standard.set(hasOpenedApp, forKey: "hasOpenedApp")
+        }
+        
+        self.activityIndicatorView.isHidden = false
+        self.newGroupButton.isHidden = true
+        self.goButton.isHidden = true
+        self.inviteButton.isHidden = true
+        self.welcomeLabel.isHidden = true
+        self.logoImageView.isHidden = true
+        self.handleRefresh()
     }
     
     func shouldOpenGroup(groupId: String) {

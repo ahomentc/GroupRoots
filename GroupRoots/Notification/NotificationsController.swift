@@ -9,6 +9,8 @@
 import UIKit
 import Firebase
 import UPCarouselFlowLayout
+import FirebaseAuth
+import FirebaseDatabase
 
 class NotificationsController: HomePostCellViewController, NotificationCellDelegate, loadMoreNotificationsCellDelegate {
     func handleLoadMoreNotifications() {

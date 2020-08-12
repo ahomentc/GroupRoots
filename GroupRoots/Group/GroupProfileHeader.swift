@@ -7,6 +7,8 @@
 
 import UIKit
 import Firebase
+import FirebaseAuth
+import FirebaseDatabase
 
 //MARK: - GroupProfileHeaderDelegate
 

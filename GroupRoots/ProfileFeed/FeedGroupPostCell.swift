@@ -9,6 +9,8 @@
 import UIKit
 import SGImageCache
 import Firebase
+import FirebaseAuth
+import FirebaseDatabase
 import NVActivityIndicatorView
 
 class FeedGroupPostCell: UICollectionViewCell {

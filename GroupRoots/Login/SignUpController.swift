@@ -9,6 +9,8 @@
 import UIKit
 import Firebase
 import GoogleSignIn
+import FirebaseAuth
+import FirebaseDatabase
 
 class SignUpController: UIViewController, UINavigationControllerDelegate {
 
@@ -51,7 +53,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     
     private lazy var nameTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "Full Name"
+        tf.placeholder = "Name"
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
         tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
@@ -64,7 +66,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     
     private lazy var bioTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "Bio"
+        tf.placeholder = "Bio (optional)"
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
         tf.backgroundColor = UIColor(white: 0, alpha: 0.03)

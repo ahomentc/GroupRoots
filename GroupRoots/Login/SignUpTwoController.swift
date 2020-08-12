@@ -9,6 +9,8 @@
 import UIKit
 import Firebase
 import GoogleSignIn
+import FirebaseAuth
+import FirebaseDatabase
 
 class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
     
@@ -54,7 +56,7 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
     
     private let invitationTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "Group Invite Code"
+        tf.placeholder = "Group Invite Code (optional)"
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
         tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
@@ -190,7 +192,7 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
         
         sync.notify(queue: .main) {
             if code != "" && groupId == "" {
-                let alert = UIAlertController(title: "Invalid Invitation", message: "Your invitation code is no longer valid", preferredStyle: .alert)
+                let alert = UIAlertController(title: "Invalid Invitation", message: "The invitation code is no longer valid", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 self.present(alert, animated: true)
                 self.resetInputFields()
@@ -226,7 +228,14 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
                             guard let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController else { return }
                             mainTabBarController.setupViewControllers()
                             mainTabBarController.selectedIndex = 0
-                            self.dismiss(animated: true, completion: nil)
+//                            self.dismiss(animated: true, completion: nil)
+                            let alert = UIAlertController(title: "Membership Requested", message: "Someone in the group needs to approve your membership", preferredStyle: .alert)
+                            self.present(alert, animated: true, completion: nil)
+                            let when = DispatchTime.now() + 5
+                            DispatchQueue.main.asyncAfter(deadline: when){
+                                alert.dismiss(animated: true, completion: nil)
+                                self.dismiss(animated: true, completion: nil)
+                            }
                         }
                     }
                 }

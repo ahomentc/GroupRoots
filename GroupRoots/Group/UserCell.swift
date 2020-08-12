@@ -8,6 +8,8 @@
 
 import UIKit
 import Firebase
+import FirebaseAuth
+import FirebaseDatabase
 
 protocol UserDecisionCellDelegate {
     func acceptUserRequest()

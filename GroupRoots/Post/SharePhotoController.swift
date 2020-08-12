@@ -10,6 +10,8 @@ import UIKit
 import Firebase
 import Photos
 import YPImagePicker
+import FirebaseAuth
+import FirebaseDatabase
 
 class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
     

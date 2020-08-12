@@ -9,6 +9,8 @@
 import UIKit
 import Firebase
 import YPImagePicker
+import FirebaseAuth
+import FirebaseDatabase
 
 class EditGroupController: UIViewController, UINavigationControllerDelegate {
     

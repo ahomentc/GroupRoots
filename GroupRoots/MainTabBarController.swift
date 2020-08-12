@@ -1,6 +1,8 @@
 import UIKit
 import Firebase
 import UPCarouselFlowLayout
+import FirebaseAuth
+import FirebaseDatabase
 
 class MainTabBarController: UITabBarController {
     

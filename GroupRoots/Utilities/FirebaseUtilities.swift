@@ -1,5 +1,8 @@
 import Foundation
 import Firebase
+import FirebaseAuth
+import FirebaseDatabase
+import FirebaseStorage
 
 extension Auth {
     func createUser(withEmail email: String, username: String, name: String, bio: String, password: String, image: UIImage?, completion: @escaping (Error?) -> ()) {
@@ -1828,6 +1831,9 @@ extension Database {
                     return
                 }
             })
+        }
+        else {
+            userGroupRef = Database.database().reference().child("groups").childByAutoId()
         }
             
         if bio != nil && bio != "" {

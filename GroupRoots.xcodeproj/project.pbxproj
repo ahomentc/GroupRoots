@@ -59,6 +59,7 @@
 		75BB489323DACF2000CF008F /* FeedPostCellHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BB489223DACF2000CF008F /* FeedPostCellHeader.swift */; };
 		75BB489523DB00E800CF008F /* MembersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BB489423DB00E800CF008F /* MembersCell.swift */; };
 		75BE32DC24E22E1800310BA4 /* ResetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DB24E22E1800310BA4 /* ResetController.swift */; };
+		75BE32DE24E29A4200310BA4 /* IntroCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */; };
 		75CAD5FC243C527E006941B2 /* MemberHeaderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */; };
 		75DD552924A2F89800FE9E7D /* LoadMoreNotificationsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */; };
 		75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */; };
@@ -157,6 +158,7 @@
 		75BB489223DACF2000CF008F /* FeedPostCellHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedPostCellHeader.swift; sourceTree = "<group>"; };
 		75BB489423DB00E800CF008F /* MembersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersCell.swift; sourceTree = "<group>"; };
 		75BE32DB24E22E1800310BA4 /* ResetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetController.swift; sourceTree = "<group>"; };
+		75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroCodeController.swift; sourceTree = "<group>"; };
 		75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberHeaderCell.swift; sourceTree = "<group>"; };
 		75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadMoreNotificationsCell.swift; sourceTree = "<group>"; };
 		75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpTwoController.swift; sourceTree = "<group>"; };
@@ -265,6 +267,7 @@
 				756D72C8242B2D2D008B6F42 /* InviteToGroupController.swift */,
 				756D72CA242B3247008B6F42 /* InviteToGroupCell.swift */,
 				755D9EE7243AB0C500915999 /* EditGroupController.swift */,
+				7578BB0D23D248F500AF9BFB /* CreateGroupController.swift */,
 			);
 			path = Group;
 			sourceTree = "<group>";
@@ -277,6 +280,7 @@
 				757B35CC24724A3300C9AFE1 /* FeedGroupPageCell.swift */,
 				757B35CE24724A4300C9AFE1 /* FeedGroupPostCell.swift */,
 				757B35D02474DBB200C9AFE1 /* ProfileFeedCellHeader.swift */,
+				75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */,
 			);
 			path = ProfileFeed;
 			sourceTree = "<group>";
@@ -407,7 +411,6 @@
 				AD2CC6D5211FA0C40091E7D9 /* UserProfileEmptyStateCell.swift */,
 				7578BB1123D2694F00AF9BFB /* GroupCell.swift */,
 				754295C323E162F600893EFD /* InviteSelectionController.swift */,
-				7578BB0D23D248F500AF9BFB /* CreateGroupController.swift */,
 				75ACAFC423F6768A00DAE747 /* FollowPageController.swift */,
 				75ACAFC623F677BD00DAE747 /* FollowPageHeader.swift */,
 				75ACAFC823F7DE8700DAE747 /* FollowPageCell.swift */,
@@ -595,7 +598,7 @@
 				"${BUILT_PRODUCTS_DIR}/Player/Player.framework",
 				"${BUILT_PRODUCTS_DIR}/PromiseKit/PromiseKit.framework",
 				"${BUILT_PRODUCTS_DIR}/PromisesObjC/FBLPromises.framework",
-				"${BUILT_PRODUCTS_DIR}/Protobuf/protobuf.framework",
+				"${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework",
 				"${BUILT_PRODUCTS_DIR}/PryntTrimmerView/PryntTrimmerView.framework",
 				"${BUILT_PRODUCTS_DIR}/SGHTTPRequest/SGHTTPRequest.framework",
 				"${BUILT_PRODUCTS_DIR}/SGImageCache/SGImageCache.framework",
@@ -620,7 +623,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Player.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PromiseKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBLPromises.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/protobuf.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Protobuf.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PryntTrimmerView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SGHTTPRequest.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SGImageCache.framework",
@@ -657,6 +660,7 @@
 				AD2A2CB3205C88DE0023D5C8 /* SignUpController.swift in Sources */,
 				AD32DEC7210C0995002F4973 /* PhotoSelectorCell.swift in Sources */,
 				7578BB0E23D248F500AF9BFB /* CreateGroupController.swift in Sources */,
+				75BE32DE24E29A4200310BA4 /* IntroCodeController.swift in Sources */,
 				7578BB1A23D27CC900AF9BFB /* GroupProfileController.swift in Sources */,
 				75B65DE32408F8E8006CBA0B /* ViewersController.swift in Sources */,
 				ADE95AF9210D4539003D9A54 /* CustomImageView.swift in Sources */,

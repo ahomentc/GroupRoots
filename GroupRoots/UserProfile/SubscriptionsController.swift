@@ -8,7 +8,8 @@
 
 import UIKit
 import Firebase
-
+import FirebaseAuth
+import FirebaseDatabase
 
  // This will be the basis of group profile controller
 

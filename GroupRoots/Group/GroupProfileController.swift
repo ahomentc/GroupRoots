@@ -10,6 +10,8 @@
 import UIKit
 import Firebase
 import UPCarouselFlowLayout
+import FirebaseAuth
+import FirebaseDatabase
 
  // This will be the basis of group profile controller
 

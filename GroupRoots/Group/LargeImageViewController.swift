@@ -8,6 +8,8 @@
 
 import UIKit
 import Firebase
+import FirebaseAuth
+import FirebaseDatabase
 import UPCarouselFlowLayout
 
 class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate {

@@ -1,5 +1,6 @@
 import UIKit
 import Firebase
+import FirebaseDatabase
 
 class GroupSearchCell: UICollectionViewCell {
     

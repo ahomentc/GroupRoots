@@ -9,6 +9,8 @@
 import UIKit
 import UPCarouselFlowLayout
 import Firebase
+import FirebaseAuth
+import FirebaseDatabase
 
 protocol FeedPostCellDelegate {
     func didTapComment(groupPost: GroupPost)

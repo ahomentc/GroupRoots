@@ -1,5 +1,7 @@
 import UIKit
 import Firebase
+import FirebaseAuth
+import FirebaseDatabase
 
 class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate {
     
@@ -950,7 +952,7 @@ class TableViewHelper {
         let rect = CGRect(origin: CGPoint(x: 0,y :0), size: CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
         let messageLabel = UILabel(frame: rect)
         messageLabel.text = message
-        messageLabel.textColor = UIColor.black
+        messageLabel.textColor = UIColor.init(white: 0.3, alpha: 1)
         messageLabel.numberOfLines = 0
         messageLabel.textAlignment = .center
         messageLabel.font = UIFont.systemFont(ofSize: 18.0)
