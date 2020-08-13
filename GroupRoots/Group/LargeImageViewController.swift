@@ -12,7 +12,7 @@ import FirebaseAuth
 import FirebaseDatabase
 import UPCarouselFlowLayout
 
-class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate {
+class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate, ViewersControllerDelegate {
     override var prefersStatusBarHidden: Bool { return true }
     // the group posts loaded so far
     // When calling to fetch posts, we pass the last post in this set
@@ -344,9 +344,12 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                
                Database.database().deleteGroupPost(groupId: groupPost.group.groupId, postId: groupPost.id) { (_) in
                    if let postIndex = self.groupPosts.index(where: {$0.id == groupPost.id}) {
-                       self.groupPosts.remove(at: postIndex)
-                       self.collectionView?.reloadData()
+                        NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                        NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+                        self.groupPosts.remove(at: postIndex)
+                        self.collectionView?.reloadData()
 //                           self.showEmptyStateViewIfNeeded()
+                    
                    }
                }
            }))
@@ -405,6 +408,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         let viewersController = ViewersController()
         viewersController.viewers = viewers
         viewersController.viewsCount = numViews
+        viewersController.delegate = self
         let navController = UINavigationController(rootViewController: viewersController)
         navController.modalPresentationStyle = .popover
         self.present(navController, animated: true, completion: nil)

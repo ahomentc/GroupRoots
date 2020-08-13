@@ -165,26 +165,28 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             self.collectionView.frame = CGRect(x: 0, y: 175, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 175)
         }
         
-        let group = groupPosts[0].group
-        if group.groupname == "" {
-            var usernames = ""
-            if groupMembers.count == 1 {
-                usernames = groupMembers[0].username
-            }
-            else if groupMembers.count == 2 {
-                usernames = groupMembers[0].username + " & " + groupMembers[1].username
+        if groupPosts.count > 0 {
+            let group = groupPosts[0].group
+            if group.groupname == "" {
+                var usernames = ""
+                if groupMembers.count == 1 {
+                    usernames = groupMembers[0].username
+                }
+                else if groupMembers.count == 2 {
+                    usernames = groupMembers[0].username + " & " + groupMembers[1].username
+                }
+                else {
+                    usernames = groupMembers[0].username + " & " + groupMembers[1].username + " & " + groupMembers[2].username
+                }
+                if usernames.count > 16 {
+                    usernames = String(usernames.prefix(16)) // keep only the first 16 characters
+                    usernames = usernames + "..."
+                }
+                usernameButton.setTitle(usernames, for: .normal)
             }
             else {
-                usernames = groupMembers[0].username + " & " + groupMembers[1].username + " & " + groupMembers[2].username
+                usernameButton.setTitle(group.groupname.replacingOccurrences(of: "_-a-_", with: " "), for: .normal)
             }
-            if usernames.count > 16 {
-                usernames = String(usernames.prefix(16)) // keep only the first 16 characters
-                usernames = usernames + "..."
-            }
-            usernameButton.setTitle(usernames, for: .normal)
-        }
-        else {
-            usernameButton.setTitle(group.groupname.replacingOccurrences(of: "_-a-_", with: " "), for: .normal)
         }
         usernameButton.setTitleColor(.black, for: .normal)
     }

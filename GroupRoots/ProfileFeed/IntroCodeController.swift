@@ -119,6 +119,8 @@ class IntroCodeController: UIViewController, UINavigationControllerDelegate {
                     
                     Database.database().subscribeToGroup(groupId: groupId) { (err) in
                         NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
+                        NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                        NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
                         
                         let alert = UIAlertController(title: "Membership Requested", message: "Someone in the group needs to approve your membership", preferredStyle: .alert)
                         self.present(alert, animated: true, completion: nil)

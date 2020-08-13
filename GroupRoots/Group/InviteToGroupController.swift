@@ -22,7 +22,7 @@ class InviteToGroupController: UICollectionViewController {
     
     private let searchBar: UISearchBar = {
         let sb = UISearchBar()
-        sb.placeholder = "Search for user to add"
+        sb.placeholder = "Search for username to add"
         sb.autocorrectionType = .no
         sb.autocapitalizationType = .none
         sb.barTintColor = .gray

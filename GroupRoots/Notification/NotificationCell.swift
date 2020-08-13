@@ -394,6 +394,7 @@ class NotificationCell: UICollectionViewCell {
         }
         // unsubscribe button
         else if notification?.type == NotificationType.unsubscribeRequest {
+            actionButton.type = .loading
             Database.database().isFollowingGroup(groupId: (self.notification?.group!.groupId)!, completion: { (following) in
                 if following {
                     self.actionButton.type = .unsubscribe
@@ -424,6 +425,7 @@ class NotificationCell: UICollectionViewCell {
             postImageView.isUserInteractionEnabled = true
         }
         else if notification?.type == NotificationType.groupJoinInvitation {
+            actionButton.type = .loading
             Database.database().isInGroup(groupId: (self.notification?.group!.groupId)!, completion: { (inGroup) in
                 if inGroup{
                     self.actionButton.type = .hidden
@@ -435,7 +437,6 @@ class NotificationCell: UICollectionViewCell {
             }) { (err) in
                 return
             }
-            
         }
     }
     
@@ -474,6 +475,7 @@ class NotificationCell: UICollectionViewCell {
                 }
             }
             else if notification.type == NotificationType.unsubscribeRequest {
+                self.actionButton.type = .loading
                 Database.database().removeGroupFromUserFollowing(withUID: currentLoggedInUser, groupId: (self.notification?.group!.groupId)!) { (err) in
                     if err != nil {
                         self.actionButton.type = .hidden
@@ -483,50 +485,44 @@ class NotificationCell: UICollectionViewCell {
                 }
             }
             else if notification.type == NotificationType.groupJoinInvitation {
-                Database.database().isInGroup(groupId: (self.notification?.group!.groupId)!, completion: { (inGroup) in
+                self.actionButton.type = .loading
+                guard let group = self.notification?.group else { return }
+                Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
                     if inGroup{
                         // leave the group action here
                     }
                     else {
                         // join the group action
-                        Database.database().acceptIntoGroup(withUID: currentLoggedInUser, groupId: (self.notification?.group!.groupId)!){ (err) in
+                        Database.database().acceptIntoGroup(withUID: currentLoggedInUser, groupId: group.groupId){ (err) in
                             if err != nil {
                                 return
                             }
-                            Database.database().removeFromGroupInvited(withUID: currentLoggedInUser, groupId: (self.notification?.group!.groupId)!) { (err) in
+                            Database.database().removeFromGroupInvited(withUID: currentLoggedInUser, groupId: group.groupId) { (err) in
                                 if err != nil {
                                     return
                                 }
                                 // notification that member is now in group
                                 Database.database().fetchUser(withUID: currentLoggedInUser, completion: { (user) in
-                                    let groupId = (self.notification?.group!.groupId)!
-                                    Database.database().groupExists(groupId: groupId, completion: { (exists) in
-                                        if exists {
-                                            Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                                                Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
-                                                    members.forEach({ (member) in
-                                                        if user.uid != member.uid {
-                                                            Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
-                                                                if err != nil {
-                                                                    return
-                                                                }
-                                                                self.reloadActionButton()
-                                                                self.delegate?.groupJoinAlert(group: group)
-                                                                self.delegate?.handleShowGroup(group: group)
-                                                            }
-                                                        }
-                                                    })
-                                                }) { (_) in}
-                                            })
-                                        }
-                                        else {
-                                            return
-                                        }
-                                    })
+                                    Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
+                                        members.forEach({ (member) in
+                                            if user.uid != member.uid {
+                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
+                                                    if err != nil {
+                                                        return
+                                                    }
+                                                }
+                                            }
+                                        })
+                                    }) { (_) in}
                                 })
+                                
+                                self.reloadActionButton()
+                                self.delegate?.groupJoinAlert(group: group)
+                                self.delegate?.handleShowGroup(group: group)
 
                                 // notification to refresh
                                 NotificationCenter.default.post(name: NSNotification.Name("updateMembers"), object: nil)
+                                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
                             }
                         }
                     }
@@ -543,7 +539,9 @@ class NotificationCell: UICollectionViewCell {
             else if notification.type == NotificationType.newGroupJoin || notification.type == NotificationType.newGroupPost || notification.type == NotificationType.groupPrivacyChange || notification.type == NotificationType.groupProfileNameEdit || notification.type == NotificationType.groupProfilePicEdit || notification.type == NotificationType.newGroupSubscribe {
                 self.handleShowGroup()
             }
-            NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
         }
     }
     

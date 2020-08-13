@@ -154,10 +154,15 @@ class SubscriptionCell: UICollectionViewCell {
                 self.userOneImageView.isHidden = false
                 self.userTwoImageView.isHidden = true
                 
-                
-                if let userOneImageUrl = first_n_users[0].profileImageUrl {
-                    self.userOneImageView.loadImage(urlString: userOneImageUrl)
-                } else {
+                if first_n_users.count > 0 {
+                    if let userOneImageUrl = first_n_users[0].profileImageUrl {
+                        self.userOneImageView.loadImage(urlString: userOneImageUrl)
+                    } else {
+                        self.userOneImageView.image = #imageLiteral(resourceName: "user")
+                        self.userOneImageView.backgroundColor = .white
+                    }
+                }
+                else {
                     self.userOneImageView.image = #imageLiteral(resourceName: "user")
                     self.userOneImageView.backgroundColor = .white
                 }
@@ -214,6 +219,8 @@ class SubscriptionCell: UICollectionViewCell {
                 }
                 self.reloadSubscriptionsButton() // put this in callback
                 NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
             }
             
             

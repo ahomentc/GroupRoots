@@ -580,6 +580,8 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                 }
                 self.reloadSubscribeButton() // put this in callback
                 NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
                 
                 // sending notification
                 Database.database().groupExists(groupId: groupId, completion: { (exists) in

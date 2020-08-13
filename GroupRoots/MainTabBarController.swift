@@ -66,6 +66,39 @@ class MainTabBarController: UITabBarController {
             }
         }
         
+        // this will continuously listen for refreshes in notifications and then refresh the notifications button
+        if let current_user = Auth.auth().currentUser {
+            // update when receive update notifications
+            let uid = current_user.uid
+            let ref = Database.database().reference().child("notifications").child(uid)
+            ref.observe(.value) { snapshot in
+                Database.database().hasLatestNotificationBeenSeen(completion: { (seen) in
+                    if !seen {
+                        let likeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "bell_2_unread"), selectedImage: #imageLiteral(resourceName: "bell_2"), rootViewController: NotificationsController(collectionViewLayout: UICollectionViewFlowLayout()))
+                        if self.viewControllers != nil && self.viewControllers!.count > 3 {
+                            self.viewControllers![3] = likeNavController
+                            NotificationCenter.default.post(name: NSNotification.Name.updateNotifications, object: nil)
+                        }
+                        
+                    }
+                })
+            }
+            
+            // update when recieve update for membership
+            let membership_ref = Database.database().reference().child("users").child(uid).child("groups")
+            membership_ref.observe(.value) { snapshot in
+                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+            }
+            
+            // update when recieve update for subscription
+            let subscription_ref = Database.database().reference().child("groupsFollowing").child(uid)
+            subscription_ref.observe(.value) { snapshot in
+                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+            }
+        }
+        
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarClear), name: NSNotification.Name(rawValue: "tabBarClear"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarColor), name: NSNotification.Name(rawValue: "tabBarColor"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(makeNotificationIconRead), name: NSNotification.Name(rawValue: "notification_icon_read"), object: nil)

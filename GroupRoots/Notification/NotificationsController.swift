@@ -45,8 +45,9 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         collectionView?.refreshControl = refreshControl
-                
-//        fetchAllNotifications()
+    
+        NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateNotifications, object: nil)
+    
         fetchMoreNotifications()
     }
 

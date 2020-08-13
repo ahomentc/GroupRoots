@@ -119,7 +119,8 @@ extension Date {
 extension NSNotification.Name {
     static var updateHomeFeed = NSNotification.Name(rawValue: "updateFeed")
     static var updateUserProfileFeed = NSNotification.Name(rawValue: "updateUserProfileFeed")
-    static var updateGroupProfileFeed = NSNotification.Name(rawValue: "updateGroupProfileFeed")
+    static var updateNotifications = NSNotification.Name(rawValue: "updateNotifications")
+    static var updateGroupProfile = NSNotification.Name(rawValue: "updateGroupProfile")
     static var updateUserProfile = NSNotification.Name(rawValue: "updateUserProfile")
 }
 

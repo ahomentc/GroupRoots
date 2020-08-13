@@ -79,6 +79,10 @@ class GroupCell: UICollectionViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         self.backgroundColor = UIColor.clear
+        self.group = nil
+        self.userOneImageView.image = CustomImageView.imageWithColor(color: .white)
+        self.userTwoImageView.image = CustomImageView.imageWithColor(color: .white)
+        self.groupnameLabel.text = ""
     }
     
     private func sharedInit() {

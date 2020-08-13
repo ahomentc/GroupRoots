@@ -742,6 +742,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             alert.addAction(UIAlertAction(title: "Delete", style: .default, handler: { (_) in
                 
                 Database.database().deleteGroupPost(groupId: groupPost.group.groupId, postId: groupPost.id) { (_) in
+                    NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                    NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
                 }
             }))
             self.present(alert, animated: true, completion: nil)
@@ -754,7 +756,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             let alert = UIAlertController(title: "Unsubscribe?", message: nil, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
             alert.addAction(UIAlertAction(title: "Unsubscribe", style: .default, handler: { (_) in
-                Database.database().removeGroupFromUserFollowing(withUID: uid, groupId: groupPost.group.groupId) { (err) in }
+                Database.database().removeGroupFromUserFollowing(withUID: uid, groupId: groupPost.group.groupId) { (err) in
+                    NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                    NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+                }
             }))
             self.present(alert, animated: true, completion: nil)
         })

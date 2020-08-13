@@ -17,13 +17,7 @@ class InviteSelectionController: UIViewController, UICollectionViewDataSource, U
     
     override var preferredStatusBarStyle: UIStatusBarStyle { return .lightContent }
     
-    var groups : [Group]? {
-        didSet {
-            DispatchQueue.main.async{
-                self.collectionView.reloadData()
-            }
-        }
-    }
+    var groups : [Group]?
     
     var user: User?
 

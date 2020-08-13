@@ -237,6 +237,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                 self.textView.isUserInteractionEnabled = true
                 
                 NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
                 self.dismiss(animated: true, completion: nil)
                 return
             }
@@ -264,6 +265,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                 }
             })
             NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
             self.dismiss(animated: true, completion: nil)
         })
     }
