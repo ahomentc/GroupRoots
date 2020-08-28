@@ -3,6 +3,7 @@ import Firebase
 import FirebaseAuth
 import FirebaseDatabase
 import FirebaseCore
+import UserNotifications
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -13,6 +14,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         FirebaseApp.configure()
         let pushManager = PushNotificationManager()
         pushManager.registerForPushNotifications()
+        
+        UNUserNotificationCenter.current().requestAuthorization(options: .badge) { (granted, error) in
+            if error != nil {
+                // success!
+            }
+        }
         
         window = UIWindow()
         window?.makeKeyAndVisible()

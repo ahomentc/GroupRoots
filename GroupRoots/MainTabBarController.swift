@@ -70,33 +70,48 @@ class MainTabBarController: UITabBarController {
         if let current_user = Auth.auth().currentUser {
             // update when receive update notifications
             let uid = current_user.uid
-            let ref = Database.database().reference().child("notifications").child(uid)
-            ref.observe(.value) { snapshot in
+            let notification_ref = Database.database().reference().child("notifications").child(uid)
+            notification_ref.observe(.value) { snapshot in
                 Database.database().hasLatestNotificationBeenSeen(completion: { (seen) in
                     if !seen {
                         let likeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "bell_2_unread"), selectedImage: #imageLiteral(resourceName: "bell_2"), rootViewController: NotificationsController(collectionViewLayout: UICollectionViewFlowLayout()))
                         if self.viewControllers != nil && self.viewControllers!.count > 3 {
                             self.viewControllers![3] = likeNavController
-                            NotificationCenter.default.post(name: NSNotification.Name.updateNotifications, object: nil)
                         }
-                        
+                        Database.database().numberOfUnseenNotificationInLast20(completion: { (numUnseen) in
+                            UIApplication.shared.applicationIconBadgeNumber = numUnseen
+                        })
                     }
                 })
             }
             
-            // update when recieve update for membership
-            let membership_ref = Database.database().reference().child("users").child(uid).child("groups")
-            membership_ref.observe(.value) { snapshot in
-                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-            }
-            
-            // update when recieve update for subscription
-            let subscription_ref = Database.database().reference().child("groupsFollowing").child(uid)
-            subscription_ref.observe(.value) { snapshot in
-                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-            }
+//            // update when recieve addition for membership
+//            let membership_ref_add = Database.database().reference().child("users").child(uid).child("groups")
+//            membership_ref_add.observe(.childAdded, with: { (snapshot) -> Void in
+//                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+//                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+//            })
+//
+//            // update when recieve addition for subscription
+//            let subscription_ref_add = Database.database().reference().child("groupsFollowing").child(uid)
+//            subscription_ref_add.observe(.childAdded, with: { (snapshot) -> Void in
+//                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+//                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+//            })
+//
+//            // update when recieve removal for membership
+//            let membership_ref_remove = Database.database().reference().child("users").child(uid).child("groups")
+//            membership_ref_remove.observe(.childRemoved, with: { (snapshot) -> Void in
+//                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+//                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+//            })
+//
+//            // update when recieve removal for subscription
+//            let subscription_ref_remove = Database.database().reference().child("groupsFollowing").child(uid)
+//            subscription_ref_remove.observe(.childRemoved, with: { (snapshot) -> Void in
+//                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+//                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+//            })
         }
         
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarClear), name: NSNotification.Name(rawValue: "tabBarClear"), object: nil)

@@ -192,12 +192,38 @@ class GroupProfileController: HomePostCellViewController {
         }) { (err) in
             return
         }
+        
         if group.groupname == "" {
             // moved this to GroupProfileHeader and then with delegate calls setNavigationTitle
         }
         else {
-            navigationItem.title = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
+            let lockImage = #imageLiteral(resourceName: "lock")
+            let lockIcon = NSTextAttachment()
+            lockIcon.image = lockImage
+            let lockIconString = NSAttributedString(attachment: lockIcon)
+
+            let balanceFontSize: CGFloat = 18
+            let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
+
+            //Setting up font and the baseline offset of the string, so that it will be centered
+            let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
+            let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
+            
+            if group.isPrivate ?? false {
+                balanceString.append(lockIconString)
+            }
+            
+            let navLabel = UILabel()
+            navLabel.attributedText = balanceString
+            self.navigationItem.titleView = navLabel
         }
+        
+//        if group.groupname == "" {
+//            // moved this to GroupProfileHeader and then with delegate calls setNavigationTitle
+//        }
+//        else {
+//            navigationItem.title = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
+//        }
         header?.group = group
         handleRefresh()
     }
@@ -423,7 +449,29 @@ extension GroupProfileController: UICollectionViewDelegateFlowLayout {
 extension GroupProfileController: GroupProfileHeaderDelegate {
     
     func setNavigationTitle(title: String) {
-        self.navigationItem.title = title
+//        self.navigationItem.title = title
+        
+        guard let group = group else { return }
+        
+        let lockImage = #imageLiteral(resourceName: "lock")
+        let lockIcon = NSTextAttachment()
+        lockIcon.image = lockImage
+        let lockIconString = NSAttributedString(attachment: lockIcon)
+
+        let balanceFontSize: CGFloat = 18
+        let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
+
+        //Setting up font and the baseline offset of the string, so that it will be centered
+        let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
+        let balanceString = NSMutableAttributedString(string: title + " ", attributes: balanceAttr)
+
+        if group.isPrivate ?? false {
+            balanceString.append(lockIconString)
+        }
+        
+        let navLabel = UILabel()
+        navLabel.attributedText = balanceString
+        self.navigationItem.titleView = navLabel
     }
 
     func didChangeToGridView() {

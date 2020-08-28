@@ -1610,6 +1610,14 @@ extension Database {
             cancel?(err)
         }
     }
+
+    func hasGroupRequestUsers(groupId: String, completion: @escaping (Bool) -> ()) {
+        Database.database().reference().child("groups").child(groupId).child("requestedMembers").queryLimited(toFirst: 1).observeSingleEvent(of: .value, with: { (snapshot) in
+            completion((snapshot.children.allObjects as! [DataSnapshot]).count > 0)
+        }) { (err) in
+            print("Failed to check if group has requesting members in database:", err)
+        }
+    }
     
     func groupnameExists(groupname: String, completion: @escaping (Bool) -> ()) {
         Database.database().reference().child("groupnames").child(groupname).observeSingleEvent(of: .value, with: { (snapshot) in
@@ -2784,6 +2792,14 @@ extension Database {
         }) { (err) in
             print("Failed to fetch all users from database:", (err))
             cancel?(err)
+        }
+    }
+    
+    func hasGroupSubscriptionRequestUsers(groupId: String, completion: @escaping (Bool) -> ()) {
+        Database.database().reference().child("groupFollowPending").child(groupId).queryLimited(toFirst: 1).observeSingleEvent(of: .value, with: { (snapshot) in
+            completion((snapshot.children.allObjects as! [DataSnapshot]).count > 0)
+        }) { (err) in
+            print("Failed to check if group has requesting members in database:", err)
         }
     }
     
@@ -4159,7 +4175,8 @@ extension Database {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         let ref = Database.database().reference().child("notifications").child(currentLoggedInUserId)
         // endAt gets included in the next one but it shouldn't
-        ref.queryOrdered(byChild: "creationDate").queryEnding(atValue: endAt).queryLimited(toLast: 10).observeSingleEvent(of: .value, with: { (snapshot) in
+        print("end at is: ", endAt)
+        ref.queryOrdered(byChild: "creationDate").queryEnding(atValue: endAt).queryLimited(toLast: 15).observeSingleEvent(of: .value, with: { (snapshot) in
             var notifications = [Notification]()
 
             let sync = DispatchGroup()
@@ -4183,6 +4200,10 @@ extension Database {
                     return not1.creationDate.compare(not2.creationDate) == .orderedDescending
                 })
                 print(notifications.count)
+                for notification in notifications {
+                    print(notification.id)
+                }
+                print("-----")
                 // queryEnding keeps the oldest entree of the last batch so remove it here if not the first batch
                 if endAt != 10000000000000.0 && notifications.count > 0 {
                     notifications.remove(at: 0)
@@ -4258,6 +4279,32 @@ extension Database {
                     completion(false)
                 }
             })
+        }) { (err) in
+            print("Failed to fetch notification from database:", err)
+        }
+    }
+    
+    // gets the last 20 notifications and checks to see how many user has not seen
+    // only get the last 20 since those are really the only relevent notifications and don't
+    // want to retrieve too much
+    func numberOfUnseenNotificationInLast20(completion: @escaping (Int) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let notificationsRef = Database.database().reference().child("notifications").child(currentLoggedInUserId)
+        notificationsRef.queryOrderedByKey().queryLimited(toLast: 20).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard let dictionaries = snapshot.value as? [String: Any] else {
+                completion(0)
+                return
+            }
+            var count = 0
+            dictionaries.forEach({ (arg) in
+                let (_, value) = arg
+                guard let dict_values = value as? [String: Any] else { return }
+                let seen = dict_values["seen"] as? Int ?? 0
+                if seen != 1 {
+                    count += 1
+                }
+            })
+            completion(count)
         }) { (err) in
             print("Failed to fetch notification from database:", err)
         }

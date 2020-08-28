@@ -132,7 +132,7 @@ class HomeController: HomePostCellViewController {
     }
     
     override func showEmptyStateViewIfNeeded() {
-        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+//        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
 //        Database.database().numberOfFollowingForUser(withUID: currentLoggedInUserId) { (followingCount) in
 //            Database.database().numberOfPostsForUser(withUID: currentLoggedInUserId, completion: { (postCount) in
 //                

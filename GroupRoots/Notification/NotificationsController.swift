@@ -26,6 +26,8 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
             overrideUserInterfaceStyle = .light
         }
         
+        UIApplication.shared.applicationIconBadgeNumber = 0
+        
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
         navigationItem.title = "Notifications"

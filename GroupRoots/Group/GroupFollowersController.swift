@@ -21,7 +21,16 @@ class GroupFollowersController: UICollectionViewController, loadMoreSubscribersC
             configureGroup()
         }
     }
+    
     private var header: GroupFollowersHeader?
+    
+    var hasSubscriptionRequestors: Bool? {
+        didSet {
+            if self.header != nil {
+                self.header?.hasSubscriptionRequestors = hasSubscriptionRequestors
+            }
+        }
+    }
     
     var isInGroup: Bool? {
         didSet {
@@ -109,6 +118,19 @@ class GroupFollowersController: UICollectionViewController, loadMoreSubscribersC
     func handleLoadMoreSubscribers() {
         fetchSubscribers()
     }
+    
+    func setIfHasSubscriptionRequestors() {
+        guard let group = group else { return }
+        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+            if inGroup {
+                Database.database().hasGroupSubscriptionRequestUsers(groupId: group.groupId, completion: { (has_sub_requestors) in
+                    self.hasSubscriptionRequestors = has_sub_requestors
+                })
+            }
+        }) { (err) in
+            return
+        }
+    }
 
     private func configureGroup() {
         guard group != nil else { return }
@@ -121,6 +143,7 @@ class GroupFollowersController: UICollectionViewController, loadMoreSubscribersC
         users.removeAll()
         oldestRetrievedDate = 10000000000000.0
         fetchSubscribers()
+        setIfHasSubscriptionRequestors()
     }
     
     @objc private func removeASubscribeRequestor(_ notification: NSNotification){

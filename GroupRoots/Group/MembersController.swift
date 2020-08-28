@@ -20,6 +20,14 @@ class MembersController: UICollectionViewController {
         }
     }
     private var header: MembersHeader?
+    
+    var hasGroupMemberRequestors: Bool? {
+        didSet {
+            if self.header != nil {
+                self.header?.hasGroupMemberRequestors = hasGroupMemberRequestors
+            }
+        }
+    }
 
     var isMembersView: Bool? {
         didSet {
@@ -114,6 +122,20 @@ class MembersController: UICollectionViewController {
     
     @objc private func handleRefresh() {
         fetchAllMembers()
+        setIfHasGroupMemberRequestors()
+    }
+    
+    private func setIfHasGroupMemberRequestors() {
+        guard let group = group else { return }
+        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+            if inGroup {
+                Database.database().hasGroupRequestUsers(groupId: group.groupId, completion: { (has_member_requestors) in
+                    self.hasGroupMemberRequestors = has_member_requestors
+                })
+            }
+        }) { (err) in
+            return
+        }
     }
     
     // when an item is selected, go to that view controller

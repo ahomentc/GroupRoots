@@ -368,6 +368,9 @@ class NotificationCell: UICollectionViewCell {
         
         if notification!.type == NotificationType.newFollow {
             actionButton.type = .loading
+            self.groupImageView.isHidden = true
+            self.userOneImageView.isHidden = true
+            self.userTwoImageView.isHidden = true
             Database.database().isFollowingUser(withUID: userId, completion: { (following) in
                 if following {
                     self.actionButton.type = .unfollow
@@ -380,6 +383,9 @@ class NotificationCell: UICollectionViewCell {
         }
         // decision icon
         else if notification?.type == NotificationType.groupSubscribeRequest || notification?.type == NotificationType.groupJoinRequest {
+            self.groupImageView.isHidden = true
+            self.userOneImageView.isHidden = true
+            self.userTwoImageView.isHidden = true
             Database.database().isInGroup(groupId: (self.notification?.group!.groupId)!, completion: { (inGroup) in
                 if inGroup{
                     self.actionButton.group = self.notification?.group
@@ -394,6 +400,9 @@ class NotificationCell: UICollectionViewCell {
         }
         // unsubscribe button
         else if notification?.type == NotificationType.unsubscribeRequest {
+            self.groupImageView.isHidden = true
+            self.userOneImageView.isHidden = true
+            self.userTwoImageView.isHidden = true
             actionButton.type = .loading
             Database.database().isFollowingGroup(groupId: (self.notification?.group!.groupId)!, completion: { (following) in
                 if following {
@@ -425,6 +434,9 @@ class NotificationCell: UICollectionViewCell {
             postImageView.isUserInteractionEnabled = true
         }
         else if notification?.type == NotificationType.groupJoinInvitation {
+            self.groupImageView.isHidden = true
+            self.userOneImageView.isHidden = true
+            self.userTwoImageView.isHidden = true
             actionButton.type = .loading
             Database.database().isInGroup(groupId: (self.notification?.group!.groupId)!, completion: { (inGroup) in
                 if inGroup{

@@ -51,6 +51,7 @@ class LoadMoreNotificationsCell: UICollectionViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         loadMoreButton.isHidden = true
+        self.loadMoreButton.text("Load More")
     }
     
     private func sharedInit() {
@@ -75,6 +76,7 @@ class LoadMoreNotificationsCell: UICollectionViewCell {
     }
     
     @objc private func handleLoadMore(){
+        self.loadMoreButton.text("")
         self.delegate?.handleLoadMoreNotifications()
     }
 }

@@ -322,6 +322,19 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         }) { (_) in
             self.collectionView?.refreshControl?.endRefreshing()
         }
+        
+        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+            if inGroup {
+                Database.database().hasGroupRequestUsers(groupId: group.groupId, completion: { (has_member_requestors) in
+                    Database.database().hasGroupSubscriptionRequestUsers(groupId: group.groupId, completion: { (has_subscription_requestors) in
+                        self.membersLabel.setAttributedTextWithDot(has_requestors: has_member_requestors)
+                        self.totalFollowersLabel.setAttributedTextWithDot(has_requestors: has_subscription_requestors)
+                    })
+                })
+            }
+        }) { (err) in
+            return
+        }
     }
     
     private func reloadJoinButton() {
@@ -699,6 +712,31 @@ private class GroupProfileStatsLabel: UILabel {
     func setValue(_ value: Int) {
         self.value = value
         setAttributedText()
+    }
+    
+    public func setAttributedTextWithDot(has_requestors: Bool) {
+        if !has_requestors {
+            return
+        }
+        
+        let dotImage = #imageLiteral(resourceName: "dot")
+        let dotIcon = NSTextAttachment()
+        dotIcon.image = dotImage
+        let dotIconString = NSAttributedString(attachment: dotIcon)
+
+        let balanceFontSize: CGFloat = 16
+        let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
+
+        //Setting up font and the baseline offset of the string, so that it will be centered
+        let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .baselineOffset: (dotImage.size.height - balanceFontSize + 2) / 2 - balanceFont.descender / 2]
+        let bottom = value == 1 ? String(self.title.dropLast()) : self.title
+        let attributedText = NSMutableAttributedString(string: "\(value)\n", attributes: balanceAttr)
+        
+        attributedText.insert(NSAttributedString(string: "  ", attributes: [ NSAttributedString.Key.font: UIFont.systemFont(ofSize: 16)]), at: 0)
+        attributedText.insert(dotIconString, at: 0)
+        
+        attributedText.append(NSAttributedString(string: bottom, attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 16)]))
+        self.attributedText = attributedText
     }
 
     private func setAttributedText() {

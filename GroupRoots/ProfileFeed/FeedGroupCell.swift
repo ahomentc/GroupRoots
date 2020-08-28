@@ -182,10 +182,43 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     usernames = String(usernames.prefix(16)) // keep only the first 16 characters
                     usernames = usernames + "..."
                 }
-                usernameButton.setTitle(usernames, for: .normal)
+//                usernameButton.setTitle(usernames, for: .normal)
+                let lockImage = #imageLiteral(resourceName: "lock")
+                let lockIcon = NSTextAttachment()
+                lockIcon.image = lockImage
+                let lockIconString = NSAttributedString(attachment: lockIcon)
+
+                let balanceFontSize: CGFloat = 20
+                let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
+
+                //Setting up font and the baseline offset of the string, so that it will be centered
+                let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.black, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
+                let balanceString = NSMutableAttributedString(string: usernames + " ", attributes: balanceAttr)
+
+                if group.isPrivate ?? false {
+                    balanceString.append(lockIconString)
+                }
+                self.usernameButton.setAttributedTitle(balanceString, for: .normal)
             }
             else {
-                usernameButton.setTitle(group.groupname.replacingOccurrences(of: "_-a-_", with: " "), for: .normal)
+//                usernameButton.setTitle(group.groupname.replacingOccurrences(of: "_-a-_", with: " "), for: .normal)
+                
+                let lockImage = #imageLiteral(resourceName: "lock")
+                let lockIcon = NSTextAttachment()
+                lockIcon.image = lockImage
+                let lockIconString = NSAttributedString(attachment: lockIcon)
+
+                let balanceFontSize: CGFloat = 20
+                let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
+
+                //Setting up font and the baseline offset of the string, so that it will be centered
+                let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.black, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
+                let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
+
+                if group.isPrivate ?? false {
+                    balanceString.append(lockIconString)
+                }
+                self.usernameButton.setAttributedTitle(balanceString, for: .normal)
             }
         }
         usernameButton.setTitleColor(.black, for: .normal)
@@ -229,7 +262,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         insertSubview(collectionView, at: 5)
         
         insertSubview(usernameButton, at: 6)
-        usernameButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingLeft: 100, paddingRight: 100)
+        usernameButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingLeft: 50, paddingRight: 50)
         usernameButton.backgroundColor = .clear
         usernameButton.isUserInteractionEnabled = true
         
@@ -441,7 +474,13 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             closeButton.isHidden = false
             pageControlSwipe.isHidden = true
             headerCollectionView.isHidden = true
-            usernameButton.setTitleColor(.white, for: .normal)
+//            usernameButton.setTitleColor(.white, for: .normal)
+            let lockImage = #imageLiteral(resourceName: "lock")
+            let balanceFontSize: CGFloat = 20
+            let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
+            let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.white, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
+            let balanceString = NSMutableAttributedString(string: self.usernameButton.titleLabel?.attributedText?.string ?? "", attributes: balanceAttr)
+            self.usernameButton.setAttributedTitle(balanceString, for: .normal)
         }
     }
     
@@ -476,7 +515,14 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             if !safeToScroll {
                 Timer.scheduledTimer(withTimeInterval: 1, repeats: false, block: { timer in
                     self.collectionView.reloadData()
-                    self.usernameButton.setTitleColor(.white, for: .normal)
+//                    self.usernameButton.setTitleColor(.white, for: .normal)
+
+                    let lockImage = #imageLiteral(resourceName: "lock")
+                    let balanceFontSize: CGFloat = 20
+                    let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
+                    let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.white, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
+                    let balanceString = NSMutableAttributedString(string: self.usernameButton.titleLabel?.attributedText?.string ?? "", attributes: balanceAttr)
+                    self.usernameButton.setAttributedTitle(balanceString, for: .normal)
                 })
             }
             
@@ -510,7 +556,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             closeButton.isHidden = true
             pageControlSwipe.isHidden = false
             headerCollectionView.isHidden = false
-            usernameButton.setTitleColor(.black, for: .normal)
+//            usernameButton.setTitleColor(.black, for: .normal)
             NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
             
             safeToScroll = false

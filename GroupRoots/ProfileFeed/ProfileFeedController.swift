@@ -117,7 +117,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         let button = UIButton()
         button.addTarget(self, action: #selector(handleShowInviteCode), for: .touchUpInside)
         button.layer.zPosition = 4;
-        button.isHidden = false
+        button.isHidden = true
         button.backgroundColor = UIColor(white: 0.9, alpha: 1)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
@@ -544,7 +544,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.logoImageView.isHidden = true
                     self.collectionView.isHidden = false
                 }
-                else {
+                else if self.groupPosts2D.count == 0 {
                     self.newGroupButton.isHidden = false
                     self.goButton.isHidden = true
                     self.inviteButton.isHidden = false

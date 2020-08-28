@@ -23,6 +23,12 @@ protocol GroupFollowersHeaderDelegate {
 class GroupFollowersHeader: UICollectionViewCell {
 
     var delegate: GroupFollowersHeaderDelegate?
+    
+    var hasSubscriptionRequestors: Bool? {
+        didSet {
+            setButtonColors()
+        }
+    }
 
     var showPendingButton: Bool? {
         didSet {
@@ -34,14 +40,7 @@ class GroupFollowersHeader: UICollectionViewCell {
     
     var isFollowersView: Bool? {
         didSet{
-            if isFollowersView! {
-                followersButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-                pendingFollowersButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
-            }
-            else {
-                pendingFollowersButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-                followersButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
-            }
+            setButtonColors()
         }
     }
 
@@ -82,7 +81,9 @@ class GroupFollowersHeader: UICollectionViewCell {
     }
 
     private func sharedInit() {
-        followersButton.setTitleColor(UIColor.mainBlue, for: .normal)
+//        followersButton.setTitleColor(UIColor.mainBlue, for: .normal)
+        setAttributedTextBasicForSubscribers(color: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1))
+        setAttributedTextBasicForRequests(color: UIColor(white: 0, alpha: 0.2))
     }
 
     private func layoutBottomToolbar() {
@@ -103,17 +104,94 @@ class GroupFollowersHeader: UICollectionViewCell {
         bottomDividerView.anchor(top: stackView.bottomAnchor, left: leftAnchor, right: rightAnchor, height: 0.5)
         stackView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 44)
     }
-
-    @objc private func handleChangeToPendingFollowersView() {
-        pendingFollowersButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-        followersButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
-        delegate?.didChangeToPendingFollowersView()
+    
+    @objc private func handleChangeToFollowersView() {
+        delegate?.didChangeToFollowersView()
+        setAttributedTextBasicForSubscribers(color: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1))
+        self.isFollowersView = true
+        guard hasSubscriptionRequestors != nil else {
+            setAttributedTextBasicForRequests(color: UIColor(white: 0, alpha: 0.2))
+            return
+        }
+        setAttributedTextWithDotForRequests(color: UIColor(white: 0, alpha: 0.2))
     }
 
-    @objc private func handleChangeToFollowersView() {
-        followersButton.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-        pendingFollowersButton.setTitleColor(UIColor(white: 0, alpha: 0.2), for: .normal)
-        delegate?.didChangeToFollowersView()
+    @objc private func handleChangeToPendingFollowersView() {
+        delegate?.didChangeToPendingFollowersView()
+        self.isFollowersView = false
+        setAttributedTextBasicForSubscribers(color: UIColor(white: 0, alpha: 0.2))
+        guard hasSubscriptionRequestors != nil else {
+            setAttributedTextBasicForRequests(color: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1))
+            return
+        }
+        setAttributedTextWithDotForRequests(color: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1))
+    }
+    
+    private func setButtonColors(){
+        guard let isFollowersView = isFollowersView else { return }
+        guard let hasSubscriptionRequestors = hasSubscriptionRequestors else { return }
+        
+        if isFollowersView {
+            setAttributedTextBasicForSubscribers(color: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1))
+            if hasSubscriptionRequestors {
+                setAttributedTextWithDotForRequests(color: UIColor(white: 0, alpha: 0.2))
+            }
+            else {
+                setAttributedTextBasicForRequests(color: UIColor(white: 0, alpha: 0.2))
+            }
+        }
+        else {
+            setAttributedTextBasicForSubscribers(color: UIColor(white: 0, alpha: 0.2))
+            if hasSubscriptionRequestors {
+                setAttributedTextWithDotForRequests(color: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1))
+            }
+            else {
+                setAttributedTextBasicForRequests(color: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1))
+            }
+        }
+    }
+    
+    private func setAttributedTextBasicForSubscribers(color: UIColor){
+        let balanceFontSize: CGFloat = 15
+        let balanceFont = UIFont.systemFont(ofSize: balanceFontSize)
+        let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, NSAttributedString.Key.foregroundColor : color]
+        let attributedText = NSMutableAttributedString(string: "Subscribers", attributes: balanceAttr)
+        self.followersButton.setAttributedTitle(attributedText, for: .normal)
+    }
+    
+    // this loads first while we wait to see if has members requesting in database
+    private func setAttributedTextBasicForRequests(color: UIColor){
+        let balanceFontSize: CGFloat = 15
+        let balanceFont = UIFont.systemFont(ofSize: balanceFontSize)
+        let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, NSAttributedString.Key.foregroundColor : color]
+        let attributedText = NSMutableAttributedString(string: "Pending Subscribers", attributes: balanceAttr)
+        self.pendingFollowersButton.setAttributedTitle(attributedText, for: .normal)
+    }
+    
+    private func setAttributedTextWithDotForRequests(color: UIColor) {
+        guard let hasSubscriptionRequestors = hasSubscriptionRequestors else { return }
+        
+        let balanceFontSize: CGFloat = 15
+        let balanceFont = UIFont.systemFont(ofSize: balanceFontSize)
+        
+        if hasSubscriptionRequestors {
+            let dotImage = #imageLiteral(resourceName: "dot")
+            let dotIcon = NSTextAttachment()
+            dotIcon.image = dotImage
+            let dotIconString = NSAttributedString(attachment: dotIcon)
+
+            //Setting up font and the baseline offset of the string, so that it will be centered
+            let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .baselineOffset: (dotImage.size.height - balanceFontSize + 2) / 2 - balanceFont.descender / 2, NSAttributedString.Key.foregroundColor : color]
+            let attributedText = NSMutableAttributedString(string: "Pending Subscribers", attributes: balanceAttr)
+            attributedText.insert(NSAttributedString(string: "  ", attributes: [ NSAttributedString.Key.font: UIFont.systemFont(ofSize: 15)]), at: 0)
+            attributedText.insert(dotIconString, at: 0)
+            self.pendingFollowersButton.setAttributedTitle(attributedText, for: .normal)
+        }
+        else {
+            let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, NSAttributedString.Key.foregroundColor : color]
+            let attributedText = NSMutableAttributedString(string: "Pending Subscribers", attributes: balanceAttr)
+            self.pendingFollowersButton.setAttributedTitle(attributedText, for: .normal)
+        }
     }
 }
 
