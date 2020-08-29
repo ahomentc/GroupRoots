@@ -106,6 +106,9 @@ class GroupFollowersHeader: UICollectionViewCell {
     }
     
     @objc private func handleChangeToFollowersView() {
+        if self.isFollowersView ?? false {
+            return
+        }
         delegate?.didChangeToFollowersView()
         setAttributedTextBasicForSubscribers(color: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1))
         self.isFollowersView = true
@@ -117,6 +120,9 @@ class GroupFollowersHeader: UICollectionViewCell {
     }
 
     @objc private func handleChangeToPendingFollowersView() {
+        if !(self.isFollowersView ?? true) {
+            return
+        }
         delegate?.didChangeToPendingFollowersView()
         self.isFollowersView = false
         setAttributedTextBasicForSubscribers(color: UIColor(white: 0, alpha: 0.2))

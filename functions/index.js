@@ -572,6 +572,76 @@ exports.transferToMembersFollowingOnSubscribe = functions.database.ref('/groupsF
 	}).catch(() => {return null});
 })
 
+exports.updateGroupsLastPostedWhenPostDeleted = functions.database.ref('/posts/{groupId}/{postId}/creationDate').onDelete((post_snapshot, context) => {
+	const group_id = context.params.groupId;
+	const followers_path = '/groupFollowers/' + group_id
+
+	// get the groups current lastPostedDate
+	// get the deleted post's post date
+	// compare them and if not equal return
+	var creationDate = parseInt(post_snapshot.val())
+	return post_snapshot.ref.root.child('/groups/' + group_id + '/lastPostedDate').once('value', group_last_post_date => {
+		var groups_post_date = group_last_post_date.val();
+		if(groups_post_date === "0" || groups_post_date === 0){
+			groups_post_date = 1;
+		}
+		groups_post_date = parseInt(groups_post_date)
+
+		// need to do this instead of not equal since lastPostedDate could be different
+		// example:
+		// in group: 1598129142 (no decimal)
+		// in deleted post: 1598129142.026304 (decimals)
+		// in following: 1598129143.26 (decimals)
+		if (creationDate < groups_post_date - 10 || creationDate > groups_post_date + 10){
+			return null
+		}
+
+		// get the sorted posts of the group and get second last posted as post_time, or 0 if empty.
+		// could make it limitTOLast(2) if the one being deleted is still there
+		return post_snapshot.ref.root.child('/posts/' + group_id).orderByChild('creationDate').limitToLast(1).once('value', posts_snapshot => {
+			var new_post_date = 0;
+
+			var sync = new DispatchGroup();
+			var token_0 = sync.enter();
+			var found_follower = false
+
+			posts_snapshot.forEach(function(post) {
+				if (found_follower === false) {
+					found_follower = true
+		        	var post_id = post.key;
+		        	var token = sync.enter()
+		        	return post_snapshot.ref.root.child('/posts/' + group_id + "/" + post_id + "/creationDate").once('value', post_date_snapshot => {
+		        		new_post_date = post_date_snapshot.val();
+						new_post_date = parseFloat(new_post_date)
+						sync.leave(token);
+						sync.leave(token_0);
+				  	}).catch(() => {return null});
+				}
+			})
+			if (!found_follower) {
+				sync.leave(token_0);
+			}
+
+			sync.notify(function() {
+				return post_snapshot.ref.root.child(followers_path).once('value', follower_snapshot => {
+					const promises = [];
+					promises.push(post_snapshot.ref.root.child('/groups/' + group_id + '/lastPostedDate').set(new_post_date));
+					// snapshot contains all the subscribers
+					follower_snapshot.forEach(function(follower) {
+			        	var uid = follower.key;
+						let promise = post_snapshot.ref.root.child('/groupsFollowing/' + uid + '/' + group_id + '/lastPostedDate').set(new_post_date);
+						promises.push(promise);
+			    	});
+					if (promises.length === 0) {
+						return null;
+					}
+					return Promise.all(promises);
+			  	}).catch(() => {return null});
+			})
+	  	}).catch(() => {return null});
+	}).catch(() => {return null});
+});
+
 // ---------------- Updating counts ----------------
 
 exports.updateGroupFollowersCountOnSubscribe = functions.database.ref('/groupFollowers/{group_id}/{subscribing_user_id}').onCreate((snapshot, context) => {

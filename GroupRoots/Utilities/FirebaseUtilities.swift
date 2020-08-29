@@ -1523,11 +1523,15 @@ extension Database {
                 groups.sort(by: { (p1, p2) -> Bool in
                     return p1.lastPostedDate < p2.lastPostedDate
                 })
+                
+                // for debugging
+//                guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
 //                for group in groups{
 //                    Database.database().fetchGroupsFollowingGroupLastPostedDate(withUID: currentLoggedInUserId, groupId: group.groupId) { (date) in
 //                        print(group.groupId, ", ", group.groupname, ", ", date)
 //                    }
 //                }
+                
                 if endAt != 10000000000000 && groups.count > 0 {
                     groups.remove(at: groups.count-1)
                 }

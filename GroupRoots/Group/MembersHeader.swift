@@ -133,6 +133,9 @@ class MembersHeader: UICollectionViewCell {
     }
     
     @objc func handleChangeToMembersView() {
+        if self.isMembersView ?? false {
+            return
+        }
         setAttributedTextBasicForMembers(color: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1))
         delegate?.didChangeToMembersView()
         self.isMembersView = true
@@ -144,6 +147,9 @@ class MembersHeader: UICollectionViewCell {
     }
 
     @objc func handleChangeToRequestsView() {
+        if !(self.isMembersView ?? true) {
+            return
+        }
         setAttributedTextBasicForMembers(color: UIColor(white: 0, alpha: 0.2))
         delegate?.didChangeToRequestsView()
         self.isMembersView = false

@@ -19,6 +19,7 @@ protocol FeedGroupCellDelegate {
     func didView(groupPost: GroupPost)
     func showViewers(viewers: [User], viewsCount: Int)
     func requestPlay(for_lower cell1: FeedPostCell, for_upper cell2: MyCell)
+    func didChangeViewType(isFullscreen: Bool)
 }
 
 class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, FeedGroupPageCellDelegate, InnerPostCellDelegate {
@@ -159,9 +160,11 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         
         // set the layout according to isFullScreen
         if isFullScreen {
+            self.delegate?.didChangeViewType(isFullscreen: true)
             self.collectionView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         }
         else {
+            self.delegate?.didChangeViewType(isFullscreen: false)
             self.collectionView.frame = CGRect(x: 0, y: 175, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 175)
         }
         
@@ -460,6 +463,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             // so rn it just loads full screen of index 0 first, which is a video which breaks it.
             collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
             isFullScreen = true
+            self.delegate?.didChangeViewType(isFullscreen: true)
             reloadGroupData()
             NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
             self.collectionView.scrollToItem(at: IndexPath(item: cell_tapped_index, section: 0), at: .centeredHorizontally, animated: false)
@@ -552,6 +556,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             }
             
             isFullScreen = false
+            self.delegate?.didChangeViewType(isFullscreen: false)
             reloadGroupData()
             closeButton.isHidden = true
             pageControlSwipe.isHidden = false

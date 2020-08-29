@@ -125,6 +125,14 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         return button
     }()
     
+    private lazy var createGroupIconButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(handleShowNewGroup), for: .touchUpInside)
+        button.layer.zPosition = 10;
+        button.setImage(#imageLiteral(resourceName: "group_plus"), for: .normal)
+        return button
+    }()
+    
     let logoImageView: UIImageView = {
         let img = UIImageView()
         img.image = #imageLiteral(resourceName: "icon_login_4")
@@ -183,9 +191,11 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             if cell is FeedGroupCell {
                 let visible_cell = cell as! FeedGroupCell
                 if visible_cell.isFullScreen {
+                    self.createGroupIconButton.isHidden = true
                     NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
                 }
                 else {
+                    self.createGroupIconButton.isHidden = false
                     NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
                 }
                 break
@@ -245,6 +255,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         
         logoImageView.frame = CGRect(x: view.frame.width/2 - 100, y: 80, width: 200, height: 200)
         self.view.addSubview(logoImageView)
+        
+        createGroupIconButton.frame = CGRect(x: UIScreen.main.bounds.width-50, y: 30, width: 40, height: 40)
+        createGroupIconButton.layer.cornerRadius = 14
+        self.view.insertSubview(createGroupIconButton, at: 10)
         
         collectionView?.register(FeedGroupCell.self, forCellWithReuseIdentifier: "cellId")
         collectionView?.register(EmptyFeedPostCell.self, forCellWithReuseIdentifier: EmptyFeedPostCell.cellId)
@@ -671,13 +685,16 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     let visible_cell = cell as! FeedGroupCell
                     
                     if visible_cell.isFullScreen {
+                        self.createGroupIconButton.isHidden = true
                         NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
                     }
                     else {
+                        self.createGroupIconButton.isHidden = false
                         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
                     }
                 }
                 else {
+                    self.createGroupIconButton.isHidden = false
                     NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
                 }
             }
@@ -791,6 +808,15 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     func showMoreMembers(group: Group) {
         
+    }
+    
+    func didChangeViewType(isFullscreen: Bool) {
+        if isFullscreen {
+            self.createGroupIconButton.isHidden = true
+        }
+        else {
+            self.createGroupIconButton.isHidden = false
+        }
     }
     
     func didView(groupPost: GroupPost) {
