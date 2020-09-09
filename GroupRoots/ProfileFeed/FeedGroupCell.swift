@@ -8,6 +8,7 @@
 
 import UIKit
 import Firebase
+import Zoomy
 
 protocol FeedGroupCellDelegate {
     func didTapComment(groupPost: GroupPost)
@@ -20,6 +21,7 @@ protocol FeedGroupCellDelegate {
     func showViewers(viewers: [User], viewsCount: Int)
     func requestPlay(for_lower cell1: FeedPostCell, for_upper cell2: MyCell)
     func didChangeViewType(isFullscreen: Bool)
+    func requestZoomCapability(for cell: FeedPostCell)
 }
 
 class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, FeedGroupPageCellDelegate, InnerPostCellDelegate {
@@ -65,7 +67,10 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         closeButton.isHidden = true
         pageControlSwipe.isHidden = false
         headerCollectionView.isHidden = false
-        usernameButton.setTitleColor(.black, for: .normal)
+        groupnameButton.setTitleColor(.black, for: .normal)
+        
+        self.groupnameButton.isHidden = false
+        self.closeButton.isHidden = false
         
         // scroll to first page
         collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
@@ -118,7 +123,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     
     var delegate: FeedGroupCellDelegate?
     
-    private lazy var usernameButton: UIButton = {
+    private lazy var groupnameButton: UIButton = {
         let label = UIButton(type: .system)
         label.setTitleColor(.black, for: .normal)
         label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 20)
@@ -158,6 +163,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         self.collectionView.layoutIfNeeded()
         self.headerCollectionView.reloadData()
         
+        
         // set the layout according to isFullScreen
         if isFullScreen {
             self.delegate?.didChangeViewType(isFullscreen: true)
@@ -185,7 +191,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     usernames = String(usernames.prefix(16)) // keep only the first 16 characters
                     usernames = usernames + "..."
                 }
-//                usernameButton.setTitle(usernames, for: .normal)
+//                groupnameButton.setTitle(usernames, for: .normal)
                 let lockImage = #imageLiteral(resourceName: "lock")
                 let lockIcon = NSTextAttachment()
                 lockIcon.image = lockImage
@@ -201,10 +207,10 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 if group.isPrivate ?? false {
                     balanceString.append(lockIconString)
                 }
-                self.usernameButton.setAttributedTitle(balanceString, for: .normal)
+                self.groupnameButton.setAttributedTitle(balanceString, for: .normal)
             }
             else {
-//                usernameButton.setTitle(group.groupname.replacingOccurrences(of: "_-a-_", with: " "), for: .normal)
+//                groupnameButton.setTitle(group.groupname.replacingOccurrences(of: "_-a-_", with: " "), for: .normal)
                 
                 let lockImage = #imageLiteral(resourceName: "lock")
                 let lockIcon = NSTextAttachment()
@@ -221,10 +227,10 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 if group.isPrivate ?? false {
                     balanceString.append(lockIconString)
                 }
-                self.usernameButton.setAttributedTitle(balanceString, for: .normal)
+                self.groupnameButton.setAttributedTitle(balanceString, for: .normal)
             }
         }
-        usernameButton.setTitleColor(.black, for: .normal)
+        groupnameButton.setTitleColor(.black, for: .normal)
     }
     
     func setupViews() {
@@ -264,10 +270,10 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         collectionView.isPagingEnabled = true
         insertSubview(collectionView, at: 5)
         
-        insertSubview(usernameButton, at: 6)
-        usernameButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingLeft: 50, paddingRight: 50)
-        usernameButton.backgroundColor = .clear
-        usernameButton.isUserInteractionEnabled = true
+        insertSubview(groupnameButton, at: 6)
+        groupnameButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingLeft: 50, paddingRight: 50)
+        groupnameButton.backgroundColor = .clear
+        groupnameButton.isUserInteractionEnabled = true
         
         insertSubview(closeButton, at: 7)
         closeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingRight: 20)
@@ -276,6 +282,9 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         pageControlSwipe.pageIndicatorTintColor = UIColor.lightGray
         pageControlSwipe.currentPageIndicatorTintColor = UIColor.darkGray
         self.addSubview(pageControlSwipe)
+        
+        self.groupnameButton.isHidden = false
+        self.closeButton.isHidden = false
         
         self.backgroundColor = .white
   
@@ -408,6 +417,10 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         }
     }
     
+    func requestZoomCapability(for cell: FeedPostCell) {
+        self.delegate?.requestZoomCapability(for: cell)
+    }
+    
     func scrollViewDidScroll(_ scrollView: UIScrollView)
     {
         let pageWidth = scrollView.frame.width
@@ -478,13 +491,13 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             closeButton.isHidden = false
             pageControlSwipe.isHidden = true
             headerCollectionView.isHidden = true
-//            usernameButton.setTitleColor(.white, for: .normal)
+//            groupnameButton.setTitleColor(.white, for: .normal)
             let lockImage = #imageLiteral(resourceName: "lock")
             let balanceFontSize: CGFloat = 20
             let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
             let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.white, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
-            let balanceString = NSMutableAttributedString(string: self.usernameButton.titleLabel?.attributedText?.string ?? "", attributes: balanceAttr)
-            self.usernameButton.setAttributedTitle(balanceString, for: .normal)
+            let balanceString = NSMutableAttributedString(string: self.groupnameButton.titleLabel?.attributedText?.string ?? "", attributes: balanceAttr)
+            self.groupnameButton.setAttributedTitle(balanceString, for: .normal)
         }
     }
     
@@ -519,14 +532,14 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             if !safeToScroll {
                 Timer.scheduledTimer(withTimeInterval: 1, repeats: false, block: { timer in
                     self.collectionView.reloadData()
-//                    self.usernameButton.setTitleColor(.white, for: .normal)
+//                    self.groupnameButton.setTitleColor(.white, for: .normal)
 
                     let lockImage = #imageLiteral(resourceName: "lock")
                     let balanceFontSize: CGFloat = 20
                     let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
                     let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.white, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
-                    let balanceString = NSMutableAttributedString(string: self.usernameButton.titleLabel?.attributedText?.string ?? "", attributes: balanceAttr)
-                    self.usernameButton.setAttributedTitle(balanceString, for: .normal)
+                    let balanceString = NSMutableAttributedString(string: self.groupnameButton.titleLabel?.attributedText?.string ?? "", attributes: balanceAttr)
+                    self.groupnameButton.setAttributedTitle(balanceString, for: .normal)
                 })
             }
             
@@ -561,7 +574,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             closeButton.isHidden = true
             pageControlSwipe.isHidden = false
             headerCollectionView.isHidden = false
-//            usernameButton.setTitleColor(.black, for: .normal)
+//            groupnameButton.setTitleColor(.black, for: .normal)
             NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
             
             safeToScroll = false

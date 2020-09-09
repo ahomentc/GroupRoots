@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct User: Codable {
+struct User: Equatable, Codable {
     
     let uid: String
     let username: String
@@ -22,5 +22,9 @@ struct User: Codable {
         self.name = dictionary["name"] as? String ?? ""
         self.bio = dictionary["bio"] as? String ?? ""
         self.profileImageUrl = dictionary["profileImageUrl"] as? String ?? nil
+    }
+    
+    static func ==(lhs: User, rhs: User) -> Bool {
+        return lhs.uid == rhs.uid
     }
 }

@@ -3,6 +3,8 @@ import Firebase
 import FirebaseAuth
 import FirebaseDatabase
 import FirebaseStorage
+import ContactsUI
+import PhoneNumberKit
 
 extension Auth {
     func createUser(withEmail email: String, username: String, name: String, bio: String, password: String, image: UIImage?, completion: @escaping (Error?) -> ()) {
@@ -15,6 +17,16 @@ extension Auth {
                         return
                     }
                     guard let uid = user?.user.uid else { return }
+                    
+                    // some sort of weird bug where username isn't added to usernames so add it here too
+                    let username_values = [username: uid]
+                    Database.database().reference().child("usernames").updateChildValues(username_values, withCompletionBlock: { (err, ref) in
+                        if let err = err {
+                            print("Failed to upload user to database:", err)
+                            return
+                        }
+                    })
+                    
                     if let image = image {
                         Storage.storage().uploadUserProfileImage(image: image, completion: { (profileImageUrl) in
                             self.uploadUser(withUID: uid, username: username, name: name, bio: bio, profileImageUrl: profileImageUrl) {
@@ -105,9 +117,54 @@ extension Storage {
         })
     }
     
+    // distributes into folders
+    fileprivate func uploadPostImageDistributed(image: UIImage, groupId: String, filename: String, completion: @escaping (String) -> ()) {
+        guard let uploadData = image.jpegData(compressionQuality: 0.7) else { return } //changed from 0.5
+        
+        let storageRef = Storage.storage().reference().child("group_post_images").child(groupId).child(filename + ".jpeg")
+        storageRef.putData(uploadData, metadata: nil, completion: { (_, err) in
+            if let err = err {
+                print("Failed to upload post image:", err)
+                return
+            }
+            
+            storageRef.downloadURL(completion: { (downloadURL, err) in
+                if let err = err {
+                    print("Failed to obtain download url for post image:", err)
+                    return
+                }
+                guard let postImageUrl = downloadURL?.absoluteString else { return }
+                completion(postImageUrl)
+            })
+        })
+    }
+    
     func uploadPostVideo(filePath: URL, filename: String, fileExtension: String, completion: @escaping (String) -> ()) {
         // Create a reference to the file you want to upload
         let storageRef = Storage.storage().reference().child("post_videos").child("\(filename).\(fileExtension)")
+
+        // Upload the file to the path "images/fileName.fileExtension"
+        storageRef.putFile(from: filePath, metadata: nil, completion: { (_, err) in
+            if let err = err {
+                print("Failed to upload post image:", err)
+                return
+            }
+            
+            // The upload succeeded
+            storageRef.downloadURL(completion: { (downloadURL, err) in
+            if let err = err {
+                print("Failed to obtain download url for post image:", err)
+                return
+            }
+            guard let postVideoUrl = downloadURL?.absoluteString else { return }
+            completion(postVideoUrl)
+          })
+        })
+    }
+    
+    func uploadPostVideoDistributed(filePath: URL, groupId: String, filename: String, completion: @escaping (String) -> ()) {
+        // Create a reference to the file you want to upload
+        let storageRef = Storage.storage().reference().child("group_post_videos").child(groupId).child("\(filename)")
 
         // Upload the file to the path "images/fileName.fileExtension"
         storageRef.putFile(from: filePath, metadata: nil, completion: { (_, err) in
@@ -197,7 +254,7 @@ extension Database {
     
     
     // make sure to do Username exists
-    func updateUser(withUID uid: String, username: String? = nil, name: String? = nil, bio: String? = nil, image: UIImage? = nil, completion: @escaping (Error?) -> ()){
+    func updateUser(withUID uid: String, username: String? = nil, name: String? = nil, bio: String? = nil, image: UIImage? = nil, phone: String? = nil, completion: @escaping (Error?) -> ()){
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         var profileImageUrl = ""
         
@@ -229,6 +286,7 @@ extension Database {
                 
                 // update the username if not nil
                 if username != nil && username != "" {
+                    print("1")
                     updates_sync.enter()
                     Database.database().usernameExists(username: username!, completion: { (exists) in
                         if !exists || username! == old_username {
@@ -322,6 +380,18 @@ extension Database {
                         updates_sync.leave()
                     })
                 }
+                
+                if phone != nil && phone != "" {
+                    updates_sync.enter()
+                    Database.database().reference().child("users").child(currentLoggedInUserId).updateChildValues(["phoneNumber": phone!], withCompletionBlock: { (err, ref) in
+                        if let err = err {
+                            print("Failed to update name in database:", err)
+                            return
+                        }
+                        updates_sync.leave()
+                    })
+                }
+                
                 updates_sync.notify(queue: .main){
                     completion(nil)
                 }
@@ -1966,6 +2036,214 @@ extension Database {
             completion(nil)
         }
     }
+    
+    // add contacts to invitedContactsForGroup and invitedContacts
+    // invitedContactsForGroup is group: number
+    // invitedContacts is number: groups invited to
+    func inviteContact(contact: Contact, group: Group, completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        guard let number = contact.selected_phone_number else { return }
+        
+        let phoneNumberKit = PhoneNumberKit()
+        do {
+            let phoneNumber = try phoneNumberKit.parse(number.value.stringValue)
+            let numberString = phoneNumberKit.format(phoneNumber, toType: .e164)
+            
+            let invitedContactsForGroupValue = [numberString: 1] as [String : Any]
+            let invitedContactsValue = ["invitedBy": currentLoggedInUserId, "twilioNumber": "0"] as [String : Any]
+            Database.database().doesNumberExist(number: numberString, completion: { (exists) in
+                if exists {
+                    Database.database().fetchUserIdFromNumber(number: numberString, completion: { (userId) in
+                        Database.database().acceptIntoGroup(withUID: userId, groupId: group.groupId){ (err) in
+                            if err != nil {
+                                return
+                            }
+
+                            // notification that member is now in group
+                            Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+                                Database.database().fetchGroup(groupId: group.groupId, completion: { (group) in
+                                    Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
+                                        members.forEach({ (member) in
+                                            if member.uid != currentLoggedInUserId {
+                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
+                                                    if err != nil {
+                                                        return
+                                                    }
+                                                }
+                                            }
+                                        })
+                                    }) { (_) in}
+                                })
+                            })
+                            completion(nil)
+                        }
+                    })
+                }
+                else {
+                    Database.database().reference().child("invitedContactsForGroup").child(group.groupId).updateChildValues(invitedContactsForGroupValue) { (err, ref) in
+                        if let err = err {
+                            completion(err)
+                            return
+                        }
+                        Database.database().reference().child("invitedContacts").child(numberString).child(group.groupId).updateChildValues(invitedContactsValue) { (err, ref) in
+                            if let err = err {
+                                completion(err)
+                                return
+                            }
+                            completion(nil)
+                        }
+                    }
+                }
+            }) { (err) in return}
+            
+        }
+        catch {
+            let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Phone number not valid"])
+            completion(error)
+            return
+        }
+    }
+    
+    func removeNumberFromInvited(number: String, completion: @escaping (Error?) -> ()) {
+        // first fetch all of the groups from invitedContacts, and remove user from them
+        let ref = Database.database().reference().child("invitedContacts").child(number)
+        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+            let sync = DispatchGroup()
+            sync.enter()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let groupId = child.key
+                sync.enter()
+                Database.database().removeNumberFromInvitedContactsForGroup(number: number, groupId: groupId) { (err) in
+                    if err != nil {
+                        return
+                    }
+                    sync.leave()
+                }
+            }
+            sync.leave()
+            sync.notify(queue: .main) {
+                Database.database().removeNumberFromInvitedContacts(number: number) { (err) in
+                    if err != nil {
+                        return
+                    }
+                    completion(nil)
+                }
+            }
+        })
+    }
+    
+    func doesNumberExist(number: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+        Database.database().reference().child("numbers").child(number).observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(true)
+                }
+            } else {
+                completion(false)
+            }
+            
+        }) { (err) in
+            print("Failed to check if following:", err)
+            cancel?(err)
+        }
+    }
+    
+    func fetchUserIdFromNumber(number: String, completion: @escaping (String) -> (), withCancel cancel: ((Error) -> ())? = nil) {
+        let ref = Database.database().reference().child("numbers").child(number)
+        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+            guard let uid = snapshot.value as? String else { return }
+            completion(uid)
+        })
+    }
+    
+    //  number should already be formatted when it gets here
+    func addNumberToNumbers(number: String, completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        
+        let values = [number: currentLoggedInUserId] as [String : Any]
+        Database.database().reference().child("numbers").updateChildValues(values) { (err, ref) in
+            if let err = err {
+                completion(err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
+    //  number should already be formatted when it gets here
+    func addNumberToGroupsInvited(number: String, completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        
+        // first fetch all of the groups from invitedContacts, and remove user from them
+        let ref = Database.database().reference().child("invitedContacts").child(number)
+        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+            let sync = DispatchGroup()
+            sync.enter()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let groupId = child.key
+                sync.enter()
+                
+                // check if user is already in group (through group invite code)
+                Database.database().isInGroup(groupId: groupId, completion: { (inGroup) in
+                    // check if user is a member of the group, if so then auto accept follow
+                    if inGroup {
+                        sync.leave()
+                    }
+                    else {
+                        Database.database().acceptIntoGroup(withUID: currentLoggedInUserId, groupId: groupId){ (err) in
+                            if err != nil {
+                                return
+                            }
+                            sync.leave()
+                            
+                            // notification that member is now in group
+                            Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+                                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                                    Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                        members.forEach({ (member) in
+                                            if member.uid != currentLoggedInUserId {
+                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
+                                                    if err != nil {
+                                                        return
+                                                    }
+                                                }
+                                            }
+                                        })
+                                    }) { (_) in}
+                                })
+                            })
+                            
+                        }
+                    }
+                }) { (err) in
+                    return
+                }
+            }
+            sync.leave()
+            sync.notify(queue: .main) {
+                completion(nil)
+            }
+        })
+    }
+    
+//    let invitedContactsForGroupValue = [numberString: 1] as [String : Any]
+//    let invitedContactsValue = ["invitedBy": currentLoggedInUserId, "twilioNumber": "0"] as [String : Any]
+//    Database.database().reference().child("invitedContactsForGroup").child(group.groupId).updateChildValues(invitedContactsForGroupValue) { (err, ref) in
+//        if let err = err {
+//            completion(err)
+//            return
+//        }
+//        Database.database().reference().child("invitedContacts").child(numberString).child(group.groupId).updateChildValues(invitedContactsValue) { (err, ref) in
+//            if let err = err {
+//                completion(err)
+//                return
+//            }
+//            completion(nil)
+//        }
+//    }
         
     func isUserInvitedToGroup(withUID uid: String, groupId: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
@@ -1991,6 +2269,28 @@ extension Database {
         Database.database().reference().child("groupInvitationsForUsers").child(uid).child(groupId).removeValue { (err, _) in
             if let err = err {
                 print("Failed to remove user from following:", err)
+                completion(err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
+    func removeNumberFromInvitedContactsForGroup(number: String, groupId: String, completion: @escaping (Error?) -> ()) {
+        Database.database().reference().child("invitedContactsForGroup").child(groupId).child(number).removeValue { (err, _) in
+            if let err = err {
+                print("Failed to remove number from following:", err)
+                completion(err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
+    func removeNumberFromInvitedContacts(number: String, completion: @escaping (Error?) -> ()) {
+        Database.database().reference().child("invitedContacts").child(number).removeValue { (err, _) in
+            if let err = err {
+                print("Failed to remove number from following:", err)
                 completion(err)
                 return
             }
@@ -2922,6 +3222,90 @@ extension Database {
             }
         }
     }
+
+//    func createGroupPost(withImage image: UIImage?, withVideo video_url: URL?, caption: String, groupId: String, completion: @escaping (String) -> (), withCancel cancel: ((Error) -> ())? = nil) {
+//        guard let uid = Auth.auth().currentUser?.uid else { return }
+//
+//        let groupPostRef = Database.database().reference().child("posts").child(groupId).childByAutoId()
+//
+//        guard let postId = groupPostRef.key else { return }
+//
+//        // if video_url is empty then its a picture
+//        if video_url == nil {
+//            guard let image = image else { return }
+//            Storage.storage().uploadPostImage(image: image, filename: postId) { (postImageUrl) in
+//
+//                // get the average color of the image
+//                guard let inputImage = CIImage(image: image) else { return }
+//                let extentVector = CIVector(x: inputImage.extent.origin.x, y: inputImage.extent.origin.y, z: inputImage.extent.size.width, w: inputImage.extent.size.height)
+//                guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: inputImage, kCIInputExtentKey: extentVector]) else { return }
+//                guard let outputImage = filter.outputImage else { return }
+//                var bitmap = [UInt8](repeating: 0, count: 4)
+//                let context = CIContext(options: [.workingColorSpace: kCFNull])
+//                context.render(outputImage, toBitmap: &bitmap, rowBytes: 4, bounds: CGRect(x: 0, y: 0, width: 1, height: 1), format: .RGBA8, colorSpace: nil)
+//                let avgRed = CGFloat(bitmap[0]) / 255
+//                let avgGreen = CGFloat(bitmap[1]) / 255
+//                let avgBlue = CGFloat(bitmap[2]) / 255
+//                let avgAlpha = CGFloat(bitmap[3]) / 255
+//
+//                let values = ["imageUrl": postImageUrl, "caption": caption, "imageWidth": image.size.width, "imageHeight": image.size.height, "avgRed": avgRed, "avgGreen": avgGreen, "avgBlue": avgBlue, "avgAlpha": avgAlpha, "creationDate": Date().timeIntervalSince1970, "id": postId, "userUploaded": uid] as [String : Any]
+//                groupPostRef.updateChildValues(values) { (err, ref) in
+//                    if let err = err {
+//                        print("Failed to save post to database", err)
+//                        completion("")
+//                    }
+//                    // update lastPostedDate for group
+//                    // if wanted to skip the date and just do ordering but in reverse, could do 10000000000000 - Date().timeIntervalSince1970
+//                    let lastPostedValue = ["lastPostedDate": Int(Date().timeIntervalSince1970)] as [String : Int]
+//                    Database.database().reference().child("groups").child(groupId).updateChildValues(lastPostedValue) { (err, ref) in
+//                        if let err = err {
+//                            print("Failed to save post to database", err)
+//                            completion("")
+//                        }
+//                        // also update lastPostedDate for groupsFollowing for the user uploading since it takes time for cloud function
+//                        // also check if following group though
+//                        Database.database().isFollowingGroup(groupId: groupId, completion: { (following) in
+//                            if following {
+//                                Database.database().reference().child("groupsFollowing").child(uid).child(groupId).updateChildValues(lastPostedValue) { (err, ref) in
+//                                    if let err = err {
+//                                        print("Failed to save post to database", err)
+//                                        completion("")
+//                                    }
+//                                    completion(postId)
+//                                }
+//                            }
+//                            else {
+//                                completion(postId)
+//                            }
+//                        }){ (err) in }
+//                    }
+//                }
+//            }
+//        }
+//        else {
+//            guard let video_url = video_url else { return }
+//            guard let video_thumbnail = image else { return }
+//            Storage.storage().uploadPostImage(image: video_thumbnail, filename: postId) { (postImageUrl) in
+//                Storage.storage().uploadPostVideo(filePath: video_url, filename: String(postId), fileExtension: "mp4") { (postVideoUrl) in
+//                    let values = ["imageUrl": postImageUrl, "videoUrl": postVideoUrl, "caption": caption, "videoWidth": video_thumbnail.size.width, "videoHeight": video_thumbnail.size.height, "creationDate": Date().timeIntervalSince1970, "id": postId, "userUploaded": uid] as [String : Any]
+//                    groupPostRef.updateChildValues(values) { (err, ref) in
+//                        if let err = err {
+//                            print("Failed to save post to database", err)
+//                            completion("")
+//                        }
+//                        let lastPostedValue = ["lastPostedDate": Int(Date().timeIntervalSince1970)] as [String : Int]
+//                        Database.database().reference().child("groups").child(groupId).updateChildValues(lastPostedValue) { (err, ref) in
+//                            if let err = err {
+//                                print("Failed to save post to database", err)
+//                                completion("")
+//                            }
+//                            completion(postId)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
     
     func createGroupPost(withImage image: UIImage?, withVideo video_url: URL?, caption: String, groupId: String, completion: @escaping (String) -> (), withCancel cancel: ((Error) -> ())? = nil) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -2933,7 +3317,7 @@ extension Database {
         // if video_url is empty then its a picture
         if video_url == nil {
             guard let image = image else { return }
-            Storage.storage().uploadPostImage(image: image, filename: postId) { (postImageUrl) in
+            Storage.storage().uploadPostImageDistributed(image: image, groupId: groupId, filename: postId) { (postImageUrl) in
                 
                 // get the average color of the image
                 guard let inputImage = CIImage(image: image) else { return }
@@ -2985,8 +3369,8 @@ extension Database {
         else {
             guard let video_url = video_url else { return }
             guard let video_thumbnail = image else { return }
-            Storage.storage().uploadPostImage(image: video_thumbnail, filename: postId) { (postImageUrl) in
-                Storage.storage().uploadPostVideo(filePath: video_url, filename: String(postId), fileExtension: "mp4") { (postVideoUrl) in
+            Storage.storage().uploadPostImageDistributed(image: video_thumbnail, groupId: groupId, filename: postId) { (postImageUrl) in
+                Storage.storage().uploadPostVideoDistributed(filePath: video_url, groupId: groupId, filename: String(postId)) { (postVideoUrl) in
                     let values = ["imageUrl": postImageUrl, "videoUrl": postVideoUrl, "caption": caption, "videoWidth": video_thumbnail.size.width, "videoHeight": video_thumbnail.size.height, "creationDate": Date().timeIntervalSince1970, "id": postId, "userUploaded": uid] as [String : Any]
                     groupPostRef.updateChildValues(values) { (err, ref) in
                         if let err = err {
@@ -3000,7 +3384,7 @@ extension Database {
                                 completion("")
                             }
                             completion(postId)
-                        } 
+                        }
                     }
                 }
             }
@@ -3129,8 +3513,6 @@ extension Database {
             }
             
             var posts = [GroupPost]()
-            
-            
             
             let sync = DispatchGroup()
             dictionaries.forEach({ (postId, value) in
@@ -4448,6 +4830,17 @@ extension Database {
                 completion(val)
             }
             else {
+                completion(0)
+            }
+        }
+    }
+    
+    // MAKE THIS BE LIKE THE OTHERS
+    func numberOfCommentsForPost(postId: String, completion: @escaping (Int) -> ()) {
+        Database.database().reference().child("comments").child(postId).observeSingleEvent(of: .value) { (snapshot) in
+            if let dictionaries = snapshot.value as? [String: Any] {
+                completion(dictionaries.count)
+            } else {
                 completion(0)
             }
         }

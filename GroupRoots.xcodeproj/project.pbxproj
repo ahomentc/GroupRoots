@@ -63,6 +63,16 @@
 		75CAD5FC243C527E006941B2 /* MemberHeaderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */; };
 		75DD552924A2F89800FE9E7D /* LoadMoreNotificationsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */; };
 		75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */; };
+		75E5CBB324FACC4B0080F815 /* ContactsInviteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */; };
+		75E5CBB524FACF550080F815 /* Contact.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBB424FACF550080F815 /* Contact.swift */; };
+		75E5CBB724FAD5240080F815 /* ContactCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBB624FAD5240080F815 /* ContactCell.swift */; };
+		75E5CBB924FB6F280080F815 /* SearchUserForInvitationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBB824FB6F280080F815 /* SearchUserForInvitationController.swift */; };
+		75E5CBBB24FB84800080F815 /* AddedUserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBBA24FB84800080F815 /* AddedUserCell.swift */; };
+		75E5CBBD24FF895C0080F815 /* InviteToGroupWhenCreateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBBC24FF895C0080F815 /* InviteToGroupWhenCreateController.swift */; };
+		75E5CBC125036ACE0080F815 /* LoginPhoneController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBC025036ACE0080F815 /* LoginPhoneController.swift */; };
+		75E5CBC32503793F0080F815 /* SignUpPhoneController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBC22503793F0080F815 /* SignUpPhoneController.swift */; };
+		75E5CBC52504B67A0080F815 /* SignUpPhoneVerifyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBC42504B67A0080F815 /* SignUpPhoneVerifyController.swift */; };
+		75E5CBC72504CE950080F815 /* LoginPhoneVerifyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBC62504CE950080F815 /* LoginPhoneVerifyController.swift */; };
 		75EFCCFA23F11D9D00B7580D /* EmtpyFeedCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */; };
 		75F2C2A923DD220C0037C76D /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */; };
 		9D7187601A438FC40FBC4D15 /* Pods_GroupRoots.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F29BE71F40760917CD1E06D5 /* Pods_GroupRoots.framework */; };
@@ -162,6 +172,16 @@
 		75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberHeaderCell.swift; sourceTree = "<group>"; };
 		75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadMoreNotificationsCell.swift; sourceTree = "<group>"; };
 		75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpTwoController.swift; sourceTree = "<group>"; };
+		75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsInviteController.swift; sourceTree = "<group>"; };
+		75E5CBB424FACF550080F815 /* Contact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Contact.swift; sourceTree = "<group>"; };
+		75E5CBB624FAD5240080F815 /* ContactCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactCell.swift; sourceTree = "<group>"; };
+		75E5CBB824FB6F280080F815 /* SearchUserForInvitationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchUserForInvitationController.swift; sourceTree = "<group>"; };
+		75E5CBBA24FB84800080F815 /* AddedUserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddedUserCell.swift; sourceTree = "<group>"; };
+		75E5CBBC24FF895C0080F815 /* InviteToGroupWhenCreateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteToGroupWhenCreateController.swift; sourceTree = "<group>"; };
+		75E5CBC025036ACE0080F815 /* LoginPhoneController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginPhoneController.swift; sourceTree = "<group>"; };
+		75E5CBC22503793F0080F815 /* SignUpPhoneController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpPhoneController.swift; sourceTree = "<group>"; };
+		75E5CBC42504B67A0080F815 /* SignUpPhoneVerifyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpPhoneVerifyController.swift; sourceTree = "<group>"; };
+		75E5CBC62504CE950080F815 /* LoginPhoneVerifyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginPhoneVerifyController.swift; sourceTree = "<group>"; };
 		75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmtpyFeedCell.swift; sourceTree = "<group>"; };
 		75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationManager.swift; sourceTree = "<group>"; };
 		813799D4A56F45A1373EAB69 /* Pods-GroupRoots.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GroupRoots.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GroupRoots/Pods-GroupRoots.debug.xcconfig"; sourceTree = "<group>"; };
@@ -264,10 +284,15 @@
 				75B65DEA240A5594006CBA0B /* GroupFollowersHeader.swift */,
 				75B65DE8240A51A4006CBA0B /* GroupFollowerCell.swift */,
 				7522E43B24B07A500013A351 /* LoadMoreGroupFollowersCell.swift */,
+				75E5CBBC24FF895C0080F815 /* InviteToGroupWhenCreateController.swift */,
 				756D72C8242B2D2D008B6F42 /* InviteToGroupController.swift */,
 				756D72CA242B3247008B6F42 /* InviteToGroupCell.swift */,
 				755D9EE7243AB0C500915999 /* EditGroupController.swift */,
 				7578BB0D23D248F500AF9BFB /* CreateGroupController.swift */,
+				75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */,
+				75E5CBB624FAD5240080F815 /* ContactCell.swift */,
+				75E5CBB824FB6F280080F815 /* SearchUserForInvitationController.swift */,
+				75E5CBBA24FB84800080F815 /* AddedUserCell.swift */,
 			);
 			path = Group;
 			sourceTree = "<group>";
@@ -426,8 +451,12 @@
 			isa = PBXGroup;
 			children = (
 				AD4D8CF32060A70E00A49BA4 /* LoginController.swift */,
+				75E5CBC025036ACE0080F815 /* LoginPhoneController.swift */,
+				75E5CBC62504CE950080F815 /* LoginPhoneVerifyController.swift */,
 				AD2A2CB2205C88DE0023D5C8 /* SignUpController.swift */,
 				75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */,
+				75E5CBC22503793F0080F815 /* SignUpPhoneController.swift */,
+				75E5CBC42504B67A0080F815 /* SignUpPhoneVerifyController.swift */,
 				75BE32DB24E22E1800310BA4 /* ResetController.swift */,
 			);
 			path = Login;
@@ -453,6 +482,7 @@
 				AD3164D321152D00001F5DA7 /* Comment.swift */,
 				7578BB2123D28F4B00AF9BFB /* GroupPost.swift */,
 				7582758E23DD65BC00D64D4C /* Notification.swift */,
+				75E5CBB424FACF550080F815 /* Contact.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -593,8 +623,11 @@
 				"${BUILT_PRODUCTS_DIR}/GTMAppAuth/GTMAppAuth.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
 				"${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework",
+				"${BUILT_PRODUCTS_DIR}/ImageScrollView/ImageScrollView.framework",
+				"${BUILT_PRODUCTS_DIR}/InjectableLoggers/InjectableLoggers.framework",
 				"${BUILT_PRODUCTS_DIR}/MGEvents/MGEvents.framework",
 				"${BUILT_PRODUCTS_DIR}/NVActivityIndicatorView/NVActivityIndicatorView.framework",
+				"${BUILT_PRODUCTS_DIR}/PhoneNumberKit/PhoneNumberKit.framework",
 				"${BUILT_PRODUCTS_DIR}/Player/Player.framework",
 				"${BUILT_PRODUCTS_DIR}/PromiseKit/PromiseKit.framework",
 				"${BUILT_PRODUCTS_DIR}/PromisesObjC/FBLPromises.framework",
@@ -605,6 +638,7 @@
 				"${BUILT_PRODUCTS_DIR}/SteviaLayout/Stevia.framework",
 				"${BUILT_PRODUCTS_DIR}/UPCarouselFlowLayout/UPCarouselFlowLayout.framework",
 				"${BUILT_PRODUCTS_DIR}/YPImagePicker/YPImagePicker.framework",
+				"${BUILT_PRODUCTS_DIR}/Zoomy/Zoomy.framework",
 				"${BUILT_PRODUCTS_DIR}/leveldb-library/leveldb.framework",
 				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
 			);
@@ -618,8 +652,11 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMAppAuth.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ImageScrollView.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/InjectableLoggers.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MGEvents.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NVActivityIndicatorView.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PhoneNumberKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Player.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PromiseKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBLPromises.framework",
@@ -630,6 +667,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Stevia.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/UPCarouselFlowLayout.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/YPImagePicker.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Zoomy.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/leveldb.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework",
 			);
@@ -652,9 +690,12 @@
 				75B65DF1241442FF006CBA0B /* SubscriptionCell.swift in Sources */,
 				75BB488F23DAB1CD00CF008F /* FeedCell.swift in Sources */,
 				AD32EF792114E4B200BB7B56 /* CustomAnimationDismissor.swift in Sources */,
+				75E5CBB324FACC4B0080F815 /* ContactsInviteController.swift in Sources */,
 				75F2C2A923DD220C0037C76D /* PushNotificationManager.swift in Sources */,
 				75ACAFCB23FBADD000DAE747 /* FeedMemberCell.swift in Sources */,
+				75E5CBC32503793F0080F815 /* SignUpPhoneController.swift in Sources */,
 				AD32DECB210C18E6002F4973 /* SharePhotoController.swift in Sources */,
+				75E5CBC72504CE950080F815 /* LoginPhoneVerifyController.swift in Sources */,
 				AD392753212526DC00D99FE1 /* HomePostCellViewController.swift in Sources */,
 				756D72C9242B2D2D008B6F42 /* InviteToGroupController.swift in Sources */,
 				AD2A2CB3205C88DE0023D5C8 /* SignUpController.swift in Sources */,
@@ -682,15 +723,18 @@
 				75BB489523DB00E800CF008F /* MembersCell.swift in Sources */,
 				AD2CC6D6211FA0C40091E7D9 /* UserProfileEmptyStateCell.swift in Sources */,
 				75B65DEF24144284006CBA0B /* SubscriptionsController.swift in Sources */,
+				75E5CBBB24FB84800080F815 /* AddedUserCell.swift in Sources */,
 				759CB61323D62CE100178673 /* MembersHeader.swift in Sources */,
 				759CB61123D593E000178673 /* LargeImageViewController.swift in Sources */,
 				7522E43A24A937F60013A351 /* LoadMoreFollowersCell.swift in Sources */,
 				AD32EF732114189400BB7B56 /* CameraController.swift in Sources */,
 				757B35C92472336500C9AFE1 /* ProfileFeedController.swift in Sources */,
+				75E5CBC125036ACE0080F815 /* LoginPhoneController.swift in Sources */,
 				757B35CF24724A4300C9AFE1 /* FeedGroupPostCell.swift in Sources */,
 				75B65DE52408FB32006CBA0B /* ViewerCell.swift in Sources */,
 				75ACAFC723F677BD00DAE747 /* FollowPageHeader.swift in Sources */,
 				75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */,
+				75E5CBB924FB6F280080F815 /* SearchUserForInvitationController.swift in Sources */,
 				750FA44A23D3055900D33CF8 /* NotificationsController.swift in Sources */,
 				7578BB2223D28F4B00AF9BFB /* GroupPost.swift in Sources */,
 				ADAC0808210FD4C900615E62 /* FirebaseUtilities.swift in Sources */,
@@ -712,21 +756,25 @@
 				755D9EE8243AB0C500915999 /* EditGroupController.swift in Sources */,
 				AD4D8CF42060A70E00A49BA4 /* LoginController.swift in Sources */,
 				7582758F23DD65BC00D64D4C /* Notification.swift in Sources */,
+				75E5CBB724FAD5240080F815 /* ContactCell.swift in Sources */,
 				75B65DED241364CC006CBA0B /* LargeImageViewHeader.swift in Sources */,
 				ADE95AFE210D6F34003D9A54 /* HomePostCell.swift in Sources */,
 				757B35CD24724A3300C9AFE1 /* FeedGroupPageCell.swift in Sources */,
 				7578BB1223D2694F00AF9BFB /* GroupCell.swift in Sources */,
+				75E5CBB524FACF550080F815 /* Contact.swift in Sources */,
 				AD32DEC9210C10A0002F4973 /* PhotoSelectorHeader.swift in Sources */,
 				AD1F3158211B98D100262BF1 /* HomePostCellHeader.swift in Sources */,
 				75B65DEB240A5594006CBA0B /* GroupFollowersHeader.swift in Sources */,
 				AD3164D02114F0A1001F5DA7 /* CommentsController.swift in Sources */,
 				AD32DEC5210BEF6F002F4973 /* PhotoSelectorController.swift in Sources */,
+				75E5CBBD24FF895C0080F815 /* InviteToGroupWhenCreateController.swift in Sources */,
 				757B35D12474DBB200C9AFE1 /* ProfileFeedCellHeader.swift in Sources */,
 				754295C223DFFB6E00893EFD /* NotificationCell.swift in Sources */,
 				7522E43C24B07A520013A351 /* LoadMoreGroupFollowersCell.swift in Sources */,
 				75B65DE7240A506C006CBA0B /* GroupFollowersController.swift in Sources */,
 				75BB489323DACF2000CF008F /* FeedPostCellHeader.swift in Sources */,
 				759912C523DD446200B415EB /* PushNotificationSender.swift in Sources */,
+				75E5CBC52504B67A0080F815 /* SignUpPhoneVerifyController.swift in Sources */,
 				7521C74E24BD428E003FCFB4 /* ForceUpdateController.swift in Sources */,
 				AD3164D421152D00001F5DA7 /* Comment.swift in Sources */,
 				7521D0482434506A0028FC9C /* SearchHeader.swift in Sources */,

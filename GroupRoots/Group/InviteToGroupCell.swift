@@ -12,6 +12,7 @@ import FirebaseDatabase
 
 protocol InviteToGroupCellDelegate {
     func inviteSentMessage()
+    func addUser(user: User)
 }
 
 class InviteToGroupCell: UICollectionViewCell {
@@ -44,7 +45,7 @@ class InviteToGroupCell: UICollectionViewCell {
     
     private lazy var inviteButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Invite", for: .normal)
+        button.setTitle("Add", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 14)
         button.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         button.backgroundColor = UIColor.white
@@ -98,18 +99,19 @@ class InviteToGroupCell: UICollectionViewCell {
     
     @objc func handleInviteTap() {
         guard let user = user else { return }
-        guard let group = group else { return }
-        Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinInvitation, group: group) { (err) in
-            if err != nil {
-                return
-            }
-            Database.database().addUserToGroupInvited(withUID: user.uid, groupId: group.groupId) { (err) in
-                if err != nil {
-                    return
-                }
-            }
-            self.delegate?.inviteSentMessage()
-        }
+        self.delegate?.addUser(user: user)
+//        guard let group = group else { return }
+//        Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinInvitation, group: group) { (err) in
+//            if err != nil {
+//                return
+//            }
+//            Database.database().addUserToGroupInvited(withUID: user.uid, groupId: group.groupId) { (err) in
+//                if err != nil {
+//                    return
+//                }
+//            }
+//            self.delegate?.inviteSentMessage()
+//        }
     }
 }
 

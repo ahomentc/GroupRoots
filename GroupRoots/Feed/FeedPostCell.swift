@@ -14,6 +14,8 @@ import SGImageCache
 import NVActivityIndicatorView
 import FirebaseAuth
 import FirebaseDatabase
+import FirebaseStorage
+import Zoomy
 
 protocol InnerPostCellDelegate {
     func didTapComment(groupPost: GroupPost)
@@ -24,6 +26,7 @@ protocol InnerPostCellDelegate {
     func didTapViewers(groupPost: GroupPost)
     func goToImage(for cell: FeedPostCell, isRight: Bool)
     func requestPlay(for cell: FeedPostCell)
+    func requestZoomCapability(for cell: FeedPostCell)
 }
 
 class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
@@ -220,16 +223,14 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
 
     let padding: CGFloat = 12
     
-    let photoImageView: CustomImageView = {
+    public let photoImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
         iv.backgroundColor = UIColor(white: 0, alpha: 1)
         return iv
     }()
-    
-    var scrollV : UIScrollView!
-    
+            
     var player = Player()
     
     private let imageBackground: UIView = {
@@ -250,10 +251,11 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
     }()
     
     private let upperCoverView: UIView = {
-        let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 350))
+//        let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 350))
+        let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 300))
         let gradient = CAGradientLayer()
         gradient.frame = backgroundView.bounds
-        let startColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.7).cgColor
+        let startColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.4).cgColor
         let endColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0).cgColor
         gradient.colors = [startColor, endColor]
         backgroundView.layer.insertSublayer(gradient, at: 3)
@@ -270,17 +272,6 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         button.contentEdgeInsets = UIEdgeInsets(top: 20, left: 15, bottom: 15, right: 15)
         return button
     }()
-    
-    
-//    let loadingLabel: UILabel = {
-//        let label = UILabel()
-//        label.text = "Loading"
-//        label.textColor = UIColor.white
-//        label.numberOfLines = 0
-//        label.textAlignment = .center
-//        label.isHidden = true
-//        return label
-//    }()
     
     let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
     
@@ -299,23 +290,19 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
     private func sharedInit() {
         
         addSubview(postedByLabel)
-        postedByLabel.anchor(bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: UIScreen.main.bounds.height/8, paddingRight: padding)
+        postedByLabel.anchor(bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: UIScreen.main.bounds.height/9, paddingRight: padding + 6)
         
         addSubview(newCommentButton)
-        newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: 0, paddingBottom: UIScreen.main.bounds.height/8)
+        newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: 0, paddingBottom: UIScreen.main.bounds.height/9)
         
         addSubview(commentsButton)
-        commentsButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding, paddingBottom: UIScreen.main.bounds.height/8)
+        commentsButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding + 3, paddingBottom: UIScreen.main.bounds.height/9)
         
         addSubview(timeLabel)
-        timeLabel.anchor(bottom: postedByLabel.topAnchor, right: rightAnchor, paddingBottom: padding - 10, paddingRight: padding)
-        
-        addSubview(commentsLabel)
-        commentsLabel.anchor(left: leftAnchor, bottom: commentsButton.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding, paddingRight: padding)
-        commentsLabel.isHidden = true
+        timeLabel.anchor(bottom: postedByLabel.topAnchor, right: rightAnchor, paddingBottom: padding - 10, paddingRight: padding + 6)
          
         addSubview(captionLabel)
-        captionLabel.anchor(left: leftAnchor, bottom: commentsLabel.topAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: padding, paddingRight: padding - 8)
+        captionLabel.anchor(left: leftAnchor, bottom: commentsButton.topAnchor, right: rightAnchor, paddingLeft: padding + 3, paddingBottom: padding - 2, paddingRight: padding - 5)
         
         addSubview(viewButton)
         viewButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: UIScreen.main.bounds.height/16 + 45, paddingLeft: padding)
@@ -331,11 +318,14 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         coverView.heightAnchor.constraint(equalToConstant: 250).isActive = true
         coverView.layer.cornerRadius = 0
         coverView.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 210, width: UIScreen.main.bounds.width, height: 250)
+        coverView.isUserInteractionEnabled = false
         insertSubview(coverView, at: 3)
         
-        upperCoverView.heightAnchor.constraint(equalToConstant: 350).isActive = true
+        // was 350
+        upperCoverView.heightAnchor.constraint(equalToConstant: 300).isActive = true
         upperCoverView.layer.cornerRadius = 0
-        upperCoverView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 350)
+        upperCoverView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 300)
+        upperCoverView.isUserInteractionEnabled = false
         insertSubview(upperCoverView, at: 3)
         
         photoImageView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
@@ -344,23 +334,6 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         photoImageView.center = CGPoint(x: UIScreen.main.bounds.width  / 2, y: UIScreen.main.bounds.height / 2)
         insertSubview(photoImageView, at: 2)
         photoImageView.isHidden = false
-  
-        // attempt at zoom.
-//        scrollV = UIScrollView()
-//        scrollV.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-//        scrollV.minimumZoomScale=1
-//        scrollV.maximumZoomScale=3
-//        scrollV.bounces=false
-//        scrollV.delegate=self
-//        scrollV.center = CGPoint(x: UIScreen.main.bounds.width  / 2, y: UIScreen.main.bounds.height / 2)
-//        insertSubview((scrollV), at: 2)
-//
-//        photoImageView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
-//        photoImageView.layer.cornerRadius = 5
-//        photoImageView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height:  UIScreen.main.bounds.height)
-//        photoImageView.contentMode = .scaleToFill
-//        photoImageView.isHidden = false
-//        scrollV.addSubview(photoImageView)
         
         insertSubview(player.view, at: 0)
         player.view.isHidden = true
@@ -384,15 +357,9 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         activityIndicatorView.startAnimating()
         
         timer = Timer.scheduledTimer(timeInterval: 0.3, target: self, selector: #selector(updatePlayButton), userInfo: nil, repeats: true)
+        
     }
-    
-    func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView?
-    {
-         return photoImageView
-    }
-    
-//    delegate?.didView(groupPost: groupPost)
-    
+        
     @objc private func updatePlayButton(){
         guard let groupPost = groupPost else { return }
         if self.player.playbackState == .playing {
@@ -423,54 +390,101 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         playButton.isHidden = true
         player.view.isHidden = true
         
-        if let image = SGImageCache.image(forURL: groupPost.imageUrl) {
-            photoImageView.image = image   // image loaded immediately from cache
-            self.setImageDimensions()
-            self.imageBackground.backgroundColor = UIColor(red: CGFloat(groupPost.avgRed), green: CGFloat(groupPost.avgGreen), blue: CGFloat(groupPost.avgBlue), alpha: CGFloat(groupPost.avgAlpha))
+        var imageUrl = groupPost.imageUrl
+        var videoUrl = groupPost.videoUrl
+        
+        let sync = DispatchGroup()
+        sync.enter()
+        if groupPost.imageUrl == "" {
+            // need to use new folder system for this instead
+            let storageRef = Storage.storage().reference()
+            let imagesRef = storageRef.child("group_post_images")
+            let videosRef = storageRef.child("group_post_videos")
+            let groupId = groupPost.group.groupId
+            let fileName = groupPost.id
+            let postImageRef = imagesRef.child(groupId).child(fileName + ".jpeg")
+            let postVideoRef = videosRef.child(groupId).child(fileName)
             
-            
-        } else {
-            self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
-            SGImageCache.getImage(url: groupPost.imageUrl) { [weak self] image in
-                self?.photoImageView.image = image   // image loaded async
-                self?.setImageDimensions()
-                self?.imageBackground.backgroundColor = UIColor(red: CGFloat(groupPost.avgRed), green: CGFloat(groupPost.avgGreen), blue: CGFloat(groupPost.avgBlue), alpha: CGFloat(groupPost.avgAlpha))
+            // generate a download url for the image
+            sync.enter()
+            postImageRef.downloadURL { url, error in
+                print(url!.absoluteString)
+                if let error = error {
+                    print(error)
+                } else {
+                    imageUrl = url!.absoluteString
+                }
+                sync.leave()
             }
+            
+            // generate a download url for the video
+            // there is an inefficiency here
+            // videoURL could be "" because there is no video, not bc its in a folder instead
+            // so unneessarily trying and failing to retrieve video url a lot
+            sync.enter()
+            postVideoRef.downloadURL { url, error in
+                if let error = error {
+                    print(error)
+                } else {
+                    videoUrl = url!.absoluteString
+                }
+                sync.leave()
+            }
+            sync.leave()
+        }
+        else {
+            sync.leave()
         }
         
-        if groupPost.videoUrl == "" {
-            self.player.url = URL(string: "")
-            self.player.pause()
-            self.player.muted = true
+        sync.notify(queue: .main) {
+            self.delegate?.requestZoomCapability(for: self)
+            if let image = SGImageCache.image(forURL: imageUrl) {
+                self.photoImageView.image = image   // image loaded immediately from cache
+                self.setImageDimensions()
+                self.imageBackground.backgroundColor = UIColor(red: CGFloat(groupPost.avgRed), green: CGFloat(groupPost.avgGreen), blue: CGFloat(groupPost.avgBlue), alpha: CGFloat(groupPost.avgAlpha))
+                
+            } else {
+                self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
+                SGImageCache.getImage(url: imageUrl) { [weak self] image in
+                    self?.photoImageView.image = image   // image loaded async
+                    self?.setImageDimensions()
+                    self?.imageBackground.backgroundColor = UIColor(red: CGFloat(groupPost.avgRed), green: CGFloat(groupPost.avgGreen), blue: CGFloat(groupPost.avgBlue), alpha: CGFloat(groupPost.avgAlpha))
+                }
+            }
             
-            self.photoImageView.isHidden = false
-            self.imageBackground.isHidden = false
-            self.player.view.isHidden = true
-            self.activityIndicatorView.isHidden = true
-            self.playButton.isHidden = true
-            
-            
-        }
-        else {            
-            self.player.url = URL(string: groupPost.videoUrl)
-            self.player.playbackLoops = true
-            self.player.muted = false
-            self.player.playerView.playerBackgroundColor = .black
-            self.setVideoDimensions()
+            if videoUrl == "" {
+                self.player.url = URL(string: "")
+                self.player.pause()
+                self.player.muted = true
+                
+                self.photoImageView.isHidden = false
+                self.imageBackground.isHidden = false
+                self.player.view.isHidden = true
+                self.activityIndicatorView.isHidden = true
+                self.playButton.isHidden = true
+                
+                
+            }
+            else {
+                self.player.url = URL(string: videoUrl)
+                self.player.playbackLoops = true
+                self.player.muted = false
+                self.player.playerView.playerBackgroundColor = .black
+                self.setVideoDimensions()
 
-            self.player.view.isHidden = true
-            self.activityIndicatorView.isHidden = false
-            self.playButton.isHidden = true
-            self.imageBackground.isHidden = true
-            self.photoImageView.isHidden = true
+                self.player.view.isHidden = true
+                self.activityIndicatorView.isHidden = false
+                self.playButton.isHidden = true
+                self.imageBackground.isHidden = true
 
-            self.backgroundColor = UIColor.black
+                self.backgroundColor = UIColor.black
 
-            do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
+                do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
 
-            let seconds = 2.0
-            DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
-                self.delegate?.requestPlay(for: self)
+                let seconds = 2.0
+                DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+                    self.delegate?.requestPlay(for: self)
+                }
             }
         }
     }
@@ -488,11 +502,16 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
                 self.photoImageView.frame.origin.x = 10
             }
             else {
-                self.photoImageView.contentMode = .scaleAspectFill
-                self.photoImageView.frame.size.height = UIScreen.main.bounds.height
-                self.photoImageView.frame.origin.y = 0
-                self.photoImageView.frame.size.width = UIScreen.main.bounds.width
-                self.photoImageView.frame.origin.x = 0
+                self.photoImageView.contentMode = .scaleToFill
+                self.photoImageView.frame.size.width = UIScreen.main.bounds.width - 20
+                self.photoImageView.frame.size.height = self.photoImageView.frame.size.width * (height!/width!)
+                
+                var y_offset = UIScreen.main.bounds.height - self.photoImageView.frame.size.height - UIScreen.main.bounds.height/9 - 100
+                if y_offset < 30 {
+                    y_offset = 28 + self.photoImageView.frame.size.height/100
+                }
+                self.photoImageView.frame.origin.y = y_offset
+                self.photoImageView.frame.origin.x = 10
             }
         }
     }
@@ -512,6 +531,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         }
     }
     
+
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         if touches.first != nil && self.player.url?.absoluteString ?? "" != "" {
             do { try AVAudioSession.sharedInstance().setCategory(.playback) } catch( _) { }
@@ -595,32 +615,20 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
     }
     
     private func configureCommentButton(numComments: Int){
-        self.commentsButton.setTitle("Comments", for: .normal)
+        if numComments == 0 {
+            self.commentsButton.setTitle("Add a comment", for: .normal)
+        }
+        else if numComments == 1 {
+            self.commentsButton.setTitle("View 1 comment", for: .normal)
+        }
+        else {
+            self.commentsButton.setTitle("View " + String(numComments) + " comments", for: .normal)
+        }
+        
         self.commentsButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         self.commentsButton.setTitleColor(.white, for: .normal)
         self.newCommentButton.isUserInteractionEnabled = true
         self.newCommentButton.isHidden = false
-//        if numComments < 1{
-//            self.commentsButton.setTitle("Comment", for: .normal)
-//            self.commentsButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: UIFont.Weight.medium)
-//            self.commentsButton.setTitleColor(.white, for: .normal)
-//            self.newCommentButton.isUserInteractionEnabled = false
-//            self.newCommentButton.isHidden = true
-//        }
-//        else if numComments == 1{
-//            self.commentsButton.setTitle("Comment", for: .normal)
-//            self.commentsButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: UIFont.Weight.medium)
-//            self.commentsButton.setTitleColor(.white, for: .normal)
-//            self.newCommentButton.isUserInteractionEnabled = false
-//            self.newCommentButton.isHidden = true
-//        }
-//        else if numComments > 1{
-//            self.commentsButton.setTitle("Show More", for: .normal)
-//            self.commentsButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
-//            self.commentsButton.setTitleColor(.white, for: .normal)
-//            self.newCommentButton.isUserInteractionEnabled = true
-//            self.newCommentButton.isHidden = false
-//        }
     }
     
     private func setupTimeLabel(groupPost: GroupPost) {
@@ -683,6 +691,4 @@ extension FeedPostCell: PlayerDelegate {
     func player(_ player: Player, didFailWithError error: Error?) {
         
     }
-    
-    
 }

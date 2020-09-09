@@ -178,11 +178,13 @@ class GroupCell: UICollectionViewCell {
                 self.userOneImageView.isHidden = false
                 self.userTwoImageView.isHidden = true
                 
-                if let userOneImageUrl = first_n_users[0].profileImageUrl {
-                    self.userOneImageView.loadImage(urlString: userOneImageUrl)
-                } else {
-                    self.userOneImageView.image = #imageLiteral(resourceName: "user")
-                    self.userOneImageView.backgroundColor = .white
+                if first_n_users.count > 0 {
+                    if let userOneImageUrl = first_n_users[0].profileImageUrl {
+                        self.userOneImageView.loadImage(urlString: userOneImageUrl)
+                    } else {
+                        self.userOneImageView.image = #imageLiteral(resourceName: "user")
+                        self.userOneImageView.backgroundColor = .white
+                    }
                 }
                 
                 // set the second user (only if it exists)

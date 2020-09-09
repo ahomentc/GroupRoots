@@ -11,10 +11,19 @@ import Firebase
 import FirebaseAuth
 import FirebaseDatabase
 import NVActivityIndicatorView
+import Zoomy
 
-class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate {
+class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate, InviteToGroupWhenCreateControllerDelegate {
+        
+    override var prefersStatusBarHidden: Bool {
+      return statusBarHidden
+    }
     
-    override var prefersStatusBarHidden: Bool { return false }
+    var statusBarHidden = false {
+      didSet(newValue) {
+        setNeedsStatusBarAppearanceUpdate()
+      }
+    }
     
     // 2d representation of the dict, same as dict but with no values
     // later, just use the dict but convert it to this after all data is loaded in
@@ -193,10 +202,12 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 if visible_cell.isFullScreen {
                     self.createGroupIconButton.isHidden = true
                     NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
+//                    self.statusBarHidden = true
                 }
                 else {
                     self.createGroupIconButton.isHidden = false
                     NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+//                    self.statusBarHidden = false
                 }
                 break
             }
@@ -330,6 +341,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         navigationItem.backBarButtonItem?.tintColor = .black
     }
     
+    func requestZoomCapability(for cell: FeedPostCell) {
+        addZoombehavior(for: cell.photoImageView, settings: .instaZoomSettings)
+    }
+    
     private func loadGroupPosts(){
         addGroupPosts()
         showEmptyStateViewIfNeeded()
@@ -424,14 +439,17 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                                             self.groupPostsFirstCommentDict[groupId]![groupPost.id] = comments[0] // it is def not nil so safe to unwrap
                                         }
                                     }
-                                    let existingPostsForNumCommentInGroup = self.groupPostsNumCommentsDict[groupId]
-                                    if existingPostsForNumCommentInGroup == nil {
-                                        self.groupPostsNumCommentsDict[groupId] = [groupPost.id: comments.count]
+                                    
+                                    Database.database().numberOfCommentsForPost(postId: groupPost.id) { (commentsCount) in
+                                        let existingPostsForNumCommentInGroup = self.groupPostsNumCommentsDict[groupId]
+                                        if existingPostsForNumCommentInGroup == nil {
+                                            self.groupPostsNumCommentsDict[groupId] = [groupPost.id: commentsCount]
+                                        }
+                                        else {
+                                            self.groupPostsNumCommentsDict[groupId]![groupPost.id] = commentsCount // it is def not nil so safe to unwrap
+                                        }
+                                        lower_sync.leave()
                                     }
-                                    else {
-                                        self.groupPostsNumCommentsDict[groupId]![groupPost.id] = comments.count // it is def not nil so safe to unwrap
-                                    }
-                                    lower_sync.leave()
                                 }) { (err) in }
 
                                 // the following is only if the user is in a gorup
@@ -548,6 +566,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.welcomeLabel.isHidden = false
                     self.logoImageView.isHidden = false
                     self.collectionView.isHidden = true
+                    self.createGroupIconButton.isHidden = true
                 }
                 else if tempGroupPosts2D.count > 0 {
                     self.activityIndicatorView.isHidden = true
@@ -557,6 +576,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.welcomeLabel.isHidden = true
                     self.logoImageView.isHidden = true
                     self.collectionView.isHidden = false
+                    self.createGroupIconButton.isHidden = false
                 }
                 else if self.groupPosts2D.count == 0 {
                     self.newGroupButton.isHidden = false
@@ -565,6 +585,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.welcomeLabel.isHidden = false
                     self.logoImageView.isHidden = false
                     self.collectionView.isHidden = true
+                    self.createGroupIconButton.isHidden = true
                 }
             }
         }
@@ -687,15 +708,18 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     if visible_cell.isFullScreen {
                         self.createGroupIconButton.isHidden = true
                         NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
+//                        self.statusBarHidden = true
                     }
                     else {
                         self.createGroupIconButton.isHidden = false
                         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+//                        self.statusBarHidden = false
                     }
                 }
                 else {
                     self.createGroupIconButton.isHidden = false
                     NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+//                    self.statusBarHidden = false
                 }
             }
         })
@@ -812,10 +836,15 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     func didChangeViewType(isFullscreen: Bool) {
         if isFullscreen {
+            print("---------")
+            print("create group icon is: ", createGroupIconButton.isHidden)
             self.createGroupIconButton.isHidden = true
+            print("create group icon is: ", createGroupIconButton.isHidden)
+//            self.statusBarHidden = true
         }
         else {
             self.createGroupIconButton.isHidden = false
+//            self.statusBarHidden = false
         }
     }
     
@@ -853,8 +882,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     @objc internal func handleShowNewGroup() {
         let createGroupController = CreateGroupController()
         createGroupController.delegate = self
-        let nacController = UINavigationController(rootViewController: createGroupController)
-        present(nacController, animated: true, completion: nil)
+        createGroupController.delegateForInvite = self
+        let navController = UINavigationController(rootViewController: createGroupController)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true, completion: nil)
     }
     
     @objc internal func handleShowInviteCode() {
@@ -894,5 +925,28 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 return
             }
         })
+    }
+}
+
+extension ProfileFeedController: Zoomy.Delegate {
+    
+    func didBeginPresentingOverlay(for imageView: Zoomable) {
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarDisappear"), object: nil)
+        collectionView.isScrollEnabled = false
+        collectionView.visibleCells.forEach { cell in
+            if cell is FeedGroupCell {
+                (cell as! FeedGroupCell).collectionView.isScrollEnabled = false
+            }
+        }
+    }
+    
+    func didEndPresentingOverlay(for imageView: Zoomable) {
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
+        collectionView.isScrollEnabled = true
+        collectionView.visibleCells.forEach { cell in
+            if cell is FeedGroupCell {
+                (cell as! FeedGroupCell).collectionView.isScrollEnabled = true
+            }
+        }
     }
 }

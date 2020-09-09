@@ -11,6 +11,7 @@ import SGImageCache
 import Firebase
 import FirebaseAuth
 import FirebaseDatabase
+import FirebaseStorage
 import NVActivityIndicatorView
 
 class FeedGroupPostCell: UICollectionViewCell {
@@ -19,55 +20,85 @@ class FeedGroupPostCell: UICollectionViewCell {
     
     var groupPost: GroupPost? {
         didSet {
-//            print("setting groupPost 0 ", groupPost?.id, " for tag ", self.tag)
-            guard let imageUrl = self.groupPost?.imageUrl else { return }
-            if let image = SGImageCache.image(forURL: imageUrl) {
-                self.photoImageView.image = image   // image loaded immediately from cache
-            } else {
-//                self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
-//                SGImageCache.getImage(url: imageUrl) { [weak self] image in
-//                    self?.photoImageView.image = image   // image loaded async
-//                }
-                self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
-                self.readyToSetPicture = true
+            guard var imageUrl = self.groupPost?.imageUrl else { return }
+            guard var videoUrl = self.groupPost?.videoUrl else { return }
+            guard let groupId = self.groupPost?.group.groupId else { return }
+            guard let postId = self.groupPost?.id else { return }
+            
+            let sync = DispatchGroup()
+            sync.enter()
+            if imageUrl == "" {
+                // need to use new folder system for this instead
+                let storageRef = Storage.storage().reference()
+                let imagesRef = storageRef.child("group_post_images")
+                let videosRef = storageRef.child("group_post_videos")
+                let groupId = groupId
+                let fileName = postId
+                let postImageRef = imagesRef.child(groupId).child(fileName + ".jpeg")
+                let postVideoRef = videosRef.child(groupId).child(fileName)
                 
-                // using a timer here to fix diagonal issue. Bandaid solution
-                Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false, block: { timer in
-                    SGImageCache.getImage(url: self.groupPost?.imageUrl ?? "") { [weak self] image in
-//                        self?.photoImageView.image = image   // image loaded async
-                        if self?.readyToSetPicture ?? false {
-                            self?.photoImageView.image = image   // image loaded async
-//                            print("setting image ", imageUrl, " for tag ", self?.tag)
-//                            print("setting groupPost 1 ", self?.groupPost?.id, " for tag ", self?.tag)
-                        }
+                sync.enter()
+                postImageRef.downloadURL { url, error in
+                    if let error = error {
+                        print(error)
+                    } else {
+                        imageUrl = url!.absoluteString
                     }
-                })
-            }
-
-//            self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
-//            self.readyToSetPicture = true
-//            SGImageCache.getImage(url: imageUrl) { [weak self] image in
-//                if self?.readyToSetPicture ?? false {
-//                    self?.photoImageView.image = image   // image loaded async
-//                }
-//            }
-            
-            // set a playButton (not clickable) for video previews
-            guard let videoUrl = self.groupPost?.videoUrl else { return }
-            if videoUrl != "" {
-                self.playButton.isHidden = false
-            }
-            
-            // set newDot as visible or not
-            guard let post_id = self.groupPost?.id else { return }
-            Database.database().hasViewedPost(postId: post_id, completion: { (hasViewed) in
-                if hasViewed{
-                    self.newDot.isHidden = true
+                    sync.leave()
                 }
-                else {
-                    self.newDot.isHidden = false
+                
+                sync.enter()
+                postVideoRef.downloadURL { url, error in
+                    if let error = error {
+                        print(error)
+                    } else {
+                        videoUrl = url!.absoluteString
+                    }
+                    sync.leave()
                 }
-            }) { (err) in return }
+                sync.leave()
+            }
+            else {
+                sync.leave()
+            }
+            
+            sync.notify(queue: .main) {
+                if let image = SGImageCache.image(forURL: imageUrl) {
+                    self.photoImageView.image = image   // image loaded immediately from cache
+                } else {
+                    self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
+                    self.readyToSetPicture = true
+                    
+                    // using a timer here to fix diagonal issue. Bandaid solution
+                    Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { timer in
+                        if self.groupPost != nil {
+                            SGImageCache.getImage(url: self.groupPost!.imageUrl) { [weak self] image in
+                                if self?.readyToSetPicture ?? false {
+                                    self?.photoImageView.image = image   // image loaded async
+                                }
+                            }
+                        }
+                    })
+                }
+                
+                // set a playButton (not clickable) for video previews
+                if self.groupPost != nil {
+                    if self.groupPost!.videoUrl != "" {
+                        self.playButton.isHidden = false
+                    }
+                }
+                
+                // set newDot as visible or not
+                guard let post_id = self.groupPost?.id else { return }
+                Database.database().hasViewedPost(postId: post_id, completion: { (hasViewed) in
+                    if hasViewed{
+                        self.newDot.isHidden = true
+                    }
+                    else {
+                        self.newDot.isHidden = false
+                    }
+                }) { (err) in return }
+            }
         }
     }
 
@@ -126,6 +157,7 @@ class FeedGroupPostCell: UICollectionViewCell {
         newDot.anchor(bottom: bottomAnchor, right: rightAnchor, paddingBottom: 10, paddingRight: 10)
         
         self.readyToSetPicture = false
+        
     }
     
     override func prepareForReuse() {

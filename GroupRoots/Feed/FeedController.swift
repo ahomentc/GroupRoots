@@ -4,6 +4,10 @@ import FirebaseAuth
 import FirebaseDatabase
 
 class FeedController: UICollectionViewController, FeedPostCellDelegate, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate {
+    func requestZoomCapability(for cell: FeedPostCell) {
+//        addZoombehavior(for: cell.photoImageView, settings: .instaZoomSettings)
+    }
+    
     
     override var prefersStatusBarHidden: Bool { return true }
 //    override var prefersStatusBarHidden: Bool { return false }

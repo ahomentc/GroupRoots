@@ -406,8 +406,9 @@ extension UserProfileController: UserProfileHeaderDelegate {
     @objc internal func handleShowNewGroup() {
         let createGroupController = CreateGroupController()
         createGroupController.delegate = self
-        let nacController = UINavigationController(rootViewController: createGroupController)
-        present(nacController, animated: true, completion: nil)
+        let navController = UINavigationController(rootViewController: createGroupController)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true, completion: nil)
     }
     
     @objc internal func handleInviteGroup() {

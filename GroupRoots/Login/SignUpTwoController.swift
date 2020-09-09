@@ -34,9 +34,9 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
         let tf = UITextField()
         tf.placeholder = "Password"
         tf.isSecureTextEntry = true
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = UIFont.systemFont(ofSize: 16)
         tf.delegate = self
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -46,9 +46,9 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
         let tf = UITextField()
         tf.placeholder = "Confirm Password"
         tf.isSecureTextEntry = true
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = UIFont.systemFont(ofSize: 16)
         tf.delegate = self
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -59,9 +59,9 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
         tf.placeholder = "Group Invite Code (optional)"
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = UIFont.systemFont(ofSize: 16)
 //        tf.delegate = self
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -72,7 +72,7 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
         button.setTitle("Sign Up", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         button.layer.cornerRadius = 5
-        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(handleSignUp), for: .touchUpInside)
         button.isEnabled = false
@@ -222,28 +222,30 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
                         })
                         
                         Database.database().subscribeToGroup(groupId: groupId) { (err) in
-                            print("subscribed")
                             NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
                             
-                            guard let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController else { return }
-                            mainTabBarController.setupViewControllers()
-                            mainTabBarController.selectedIndex = 0
-//                            self.dismiss(animated: true, completion: nil)
+//                            guard let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController else { return }
+//                            mainTabBarController.setupViewControllers()
+//                            mainTabBarController.selectedIndex = 0
                             let alert = UIAlertController(title: "Membership Requested", message: "Someone in the group needs to approve your membership", preferredStyle: .alert)
                             self.present(alert, animated: true, completion: nil)
                             let when = DispatchTime.now() + 5
                             DispatchQueue.main.asyncAfter(deadline: when){
                                 alert.dismiss(animated: true, completion: nil)
-                                self.dismiss(animated: true, completion: nil)
+//                                self.dismiss(animated: true, completion: nil)
+                                let signUpPhoneController = SignUpPhoneController()
+                                self.navigationController?.pushViewController(signUpPhoneController, animated: true)
                             }
                         }
                     }
                 }
                 else {
-                    guard let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController else { return }
-                    mainTabBarController.setupViewControllers()
-                    mainTabBarController.selectedIndex = 0
-                    self.dismiss(animated: true, completion: nil)
+                    let signUpPhoneController = SignUpPhoneController()
+                    self.navigationController?.pushViewController(signUpPhoneController, animated: true)
+//                    guard let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController else { return }
+//                    mainTabBarController.setupViewControllers()
+//                    mainTabBarController.selectedIndex = 0
+//                    self.dismiss(animated: true, completion: nil)
                 }
             }
         }

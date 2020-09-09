@@ -21,9 +21,9 @@ class LoginController: UIViewController {
         tf.autocapitalizationType = .none
         tf.keyboardType = .emailAddress
         tf.placeholder = "Email"
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = UIFont.systemFont(ofSize: 16)
         tf.delegate = self
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -33,9 +33,9 @@ class LoginController: UIViewController {
         let tf = UITextField()
         tf.placeholder = "Password"
         tf.isSecureTextEntry = true
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = UIFont.systemFont(ofSize: 16)
         tf.delegate = self
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -46,7 +46,7 @@ class LoginController: UIViewController {
         button.setTitle("Login", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         button.layer.cornerRadius = 5
-        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
         button.isEnabled = false

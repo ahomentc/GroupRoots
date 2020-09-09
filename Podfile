@@ -24,5 +24,8 @@ target 'GroupRoots' do
   pod 'SGImageCache'
   pod "UPCarouselFlowLayout"
   pod 'NVActivityIndicatorView'
+  pod 'PhoneNumberKit', '~> 3.1'
+  pod 'ImageScrollView'
+  pod 'Zoomy'
 
 end

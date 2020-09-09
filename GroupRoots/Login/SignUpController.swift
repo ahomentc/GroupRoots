@@ -30,9 +30,9 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         tf.autocapitalizationType = .none
         tf.keyboardType = .emailAddress
         tf.placeholder = "Email"
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = UIFont.systemFont(ofSize: 16)
         tf.delegate = self
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -43,9 +43,9 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         tf.placeholder = "Username"
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = UIFont.systemFont(ofSize: 16)
         tf.delegate = self
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -56,9 +56,9 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         tf.placeholder = "Name"
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = UIFont.systemFont(ofSize: 16)
         tf.delegate = self
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -69,9 +69,9 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         tf.placeholder = "Bio (optional)"
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
-        tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
+        tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = UIFont.systemFont(ofSize: 16)
         tf.delegate = self
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -82,7 +82,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         button.setTitle("Next", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         button.layer.cornerRadius = 5
-        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(handleNext), for: .touchUpInside)
         button.isEnabled = false
@@ -269,6 +269,8 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
                         signUpTwoController.profileImage = self.profileImage
                         signUpTwoController.bio = bio
                         self.navigationController?.pushViewController(signUpTwoController, animated: true)
+//                        let signUpPhoneController = SignUpPhoneController()
+//                        self.navigationController?.pushViewController(signUpPhoneController, animated: true)
                     }
                     else {
                         // email already exists, send to login

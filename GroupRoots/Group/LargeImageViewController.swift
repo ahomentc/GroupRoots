@@ -11,8 +11,10 @@ import Firebase
 import FirebaseAuth
 import FirebaseDatabase
 import UPCarouselFlowLayout
+import Zoomy
 
 class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate, ViewersControllerDelegate {
+    
     override var prefersStatusBarHidden: Bool { return true }
     // the group posts loaded so far
     // When calling to fetch posts, we pass the last post in this set
@@ -121,50 +123,48 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
             posts.forEach({ (groupPost) in
                 sync.enter()
                 Database.database().fetchFirstCommentForPost(withId: groupPost.id, completion: { (comments) in
-                    self.numCommentsForPosts[groupPost.id] = comments.count
-                    if comments.count > 0 {
-                        self.firstCommentForPosts[groupPost.id] = comments[0]
-                    }
-                    Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
-                        sync.leave()
-                        if inGroup {
-                            sync.enter()
-                            Database.database().fetchPostVisibleViewers(postId: groupPost.id, completion: { (viewer_ids) in
-                                Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
-                                    sync.leave()
-                                    self.numViewsForPost[groupPost.id] = views_count
-//                                    self.reloadGroupData()
-                                    if viewer_ids.count > 0 {
-                                        var viewers = [User]()
-                                        let viewersSync = DispatchGroup()
-                                        sync.enter()
-                                        viewer_ids.forEach({ (viewer_id) in
-                                            viewersSync.enter()
-                                            Database.database().userExists(withUID: viewer_id, completion: { (exists) in
-                                                if exists{
-                                                    Database.database().fetchUser(withUID: viewer_id, completion: { (user) in
-                                                        viewers.append(user)
+                    Database.database().numberOfCommentsForPost(postId: groupPost.id) { (commentsCount) in
+                        self.numCommentsForPosts[groupPost.id] = commentsCount
+                        Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
+                            sync.leave()
+                            if inGroup {
+                                sync.enter()
+                                Database.database().fetchPostVisibleViewers(postId: groupPost.id, completion: { (viewer_ids) in
+                                    Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
+                                        sync.leave()
+                                        self.numViewsForPost[groupPost.id] = views_count
+    //                                    self.reloadGroupData()
+                                        if viewer_ids.count > 0 {
+                                            var viewers = [User]()
+                                            let viewersSync = DispatchGroup()
+                                            sync.enter()
+                                            viewer_ids.forEach({ (viewer_id) in
+                                                viewersSync.enter()
+                                                Database.database().userExists(withUID: viewer_id, completion: { (exists) in
+                                                    if exists{
+                                                        Database.database().fetchUser(withUID: viewer_id, completion: { (user) in
+                                                            viewers.append(user)
+                                                            viewersSync.leave()
+                                                        })
+                                                    }
+                                                    else {
                                                         viewersSync.leave()
-                                                    })
-                                                }
-                                                else {
-                                                    viewersSync.leave()
-                                                }
+                                                    }
+                                                })
                                             })
-                                        })
-                                        viewersSync.notify(queue: .main) {
-                                            self.viewersForPosts[groupPost.id] = viewers
-                                            sync.leave()
+                                            viewersSync.notify(queue: .main) {
+                                                self.viewersForPosts[groupPost.id] = viewers
+                                                sync.leave()
+                                            }
                                         }
-                                    }
-                                }) { (err) in }
-                            }) { (err) in
+                                    }) { (err) in }
+                                }) { (err) in
+                                }
                             }
+                        }) { (err) in
+                            return
                         }
-                    }) { (err) in
-                        return
                     }
-                    
                 }) { (err) in
                 }
             })
@@ -287,6 +287,10 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                 }
             }
         }
+    }
+    
+    func requestZoomCapability(for cell: FeedPostCell) {
+        addZoombehavior(for: cell.photoImageView, settings: .instaZoomSettings)
     }
     
     override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -473,9 +477,19 @@ extension LargeImageViewController: LargeImageViewHeaderDelegate {
     }
     
     func didTapOptions() {
-//        if groupPosts.count == 0 { return }
-//        let groupPost = groupPosts[0]
-//        delegate?.didTapOptions(groupPost: groupPost)
     }
     
+}
+
+extension LargeImageViewController: Zoomy.Delegate {
+    
+    func didBeginPresentingOverlay(for imageView: Zoomable) {
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarDisappear"), object: nil)
+        collectionView.isScrollEnabled = false
+    }
+    
+    func didEndPresentingOverlay(for imageView: Zoomable) {
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
+        collectionView.isScrollEnabled = true
+    }
 }

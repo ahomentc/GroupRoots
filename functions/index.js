@@ -572,6 +572,13 @@ exports.transferToMembersFollowingOnSubscribe = functions.database.ref('/groupsF
 	}).catch(() => {return null});
 })
 
+exports.addToUsernamesOnCreate = functions.database.ref('/users/{user_id}/{username}').onCreate((snapshot, context) => {
+	const user_id = context.params.user_id;
+	const username = context.params.username;
+
+	return snapshot.ref.root.child('/usernames/' + username).set(user_id);
+})
+
 exports.updateGroupsLastPostedWhenPostDeleted = functions.database.ref('/posts/{groupId}/{postId}/creationDate').onDelete((post_snapshot, context) => {
 	const group_id = context.params.groupId;
 	const followers_path = '/groupFollowers/' + group_id
@@ -788,6 +795,305 @@ exports.deleteGroupOnNoMembers = functions.database.ref('/groupMembersCount/{gro
 		}
 	}).catch(() => {return null});
 })
+
+
+// ----------- Invite text messages ----------
+
+// Twilio Phone numbers:
+// +13232501061
+// +19252814881
+// +12023041217
+
+/// Validate E164 format
+function validE164(num) {
+    return /^\+?[1-9]\d{1,14}$/.test(num)
+}
+
+exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id}').onCreate((snapshot, context) => {
+	const number = context.params.number;
+	const group_id = context.params.group_id;
+
+	const twilio = require('twilio');
+	const accountSid = functions.config().twilio.sid
+	const authToken  = functions.config().twilio.token
+	const client = new twilio(accountSid, authToken);
+	var twilioNumber = '+13232501061'
+
+	// TODO
+	// get group name
+	// get the name of the person who invited
+	return snapshot.ref.root.child('/groups/' + group_id + '/groupname').once('value', groupname_snapshot => {
+		var groupname = "";
+		if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
+			groupname = groupname_snapshot.val().toString();
+		}
+
+		return snapshot.ref.root.child('/invitedContacts/' + number + "/" + group_id + "/invitedBy").once('value', invited_by_snapshot => {
+			var invited_by_id = "";
+			if (invited_by_snapshot !== null && invited_by_snapshot.val() !== null) {
+				invited_by_id = invited_by_snapshot.val().toString();
+			}
+
+			return snapshot.ref.root.child('/invitedContacts/' + number).once('value', groups_for_contact => {
+				var sync = new DispatchGroup();
+				var token_0 = sync.enter();
+				var found_group = false
+				let used_twilio_numbers = []
+
+				groups_for_contact.forEach(function(post) {
+					found_group = true
+		        	var post_id = post.key;
+		        	var token = sync.enter()
+		        	return snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').once('value', twilio_number_snapshot => {
+		        		if (twilio_number_snapshot !== null && twilio_number_snapshot.val() !== null && twilio_number_snapshot.val() !== "0") {
+							twilio_number = twilio_number_snapshot.val().toString();
+			        		used_twilio_numbers.push(twilio_number);
+						}
+						sync.leave(token);
+						sync.leave(token_0);
+				  	}).catch(() => {return null});
+				})
+				if (!found_group) {
+					sync.leave(token_0);
+				}
+
+				sync.notify(function() {
+					var promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+13232501061");
+					if (used_twilio_numbers.indexOf("+13232501061") < 0) { // number not used yet
+						twilioNumber = "+13232501061"
+						promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+13232501061");
+					}
+					else if (used_twilio_numbers.indexOf("+19252814881") < 0) { // number not used yet
+						twilioNumber = "+19252814881"
+						promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+19252814881");
+					}
+					else if (used_twilio_numbers.indexOf("+12023041217") < 0) { // number not used yet
+						twilioNumber = "+12023041217"
+						promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+12023041217");
+					}
+
+					return snapshot.ref.root.child('/users/' + invited_by_id + '/name').once('value', name_snapshot => {
+						var name = "";
+						if (name_snapshot !== null && name_snapshot.val() !== null) {
+							name = name_snapshot.val().toString();
+						}
+
+						return snapshot.ref.root.child('/users/' + invited_by_id + '/username').once('value', username_snapshot => {
+							var username = "";
+							if (username_snapshot !== null && username_snapshot.val() !== null) {
+								username = username_snapshot.val().toString();
+							}
+
+							if ( !validE164(number) ) {
+						        throw new Error('number must be E164 format!')
+						    }
+
+						    var message = ""
+						    if (groupname === "") {
+						    	message = 'You\'ve been added to a group with '
+						    }
+						    else {
+						    	message = 'You\'ve been added to "' + groupname.replace("_-a-_", " ") + '" with '
+						    }
+						    
+						    if (name !== "") {
+						    	message += name
+						    }
+						    else {
+						    	message += username
+						    }
+						    message += " on GroupRoots! Download the app from https://apps.apple.com/us/app/id1525863510"
+
+						    const textMessageFirst = {
+						        body: message,
+						        to: number,  // Text to this number
+						        from: twilioNumber // From a valid Twilio number
+						    }
+						    const textMessageSecond = {
+						        body: "Share your best group moments collectively and see what groups your friends belong to... GroupRoots!",
+						        to: number,  // Text to this number
+						        from: twilioNumber // From a valid Twilio number
+						    }
+						    const stopMessage = {
+						        body: 'Group post messaging by GroupRoots. Message and data rates may apply. Reply STOP to stop receiving group post messages',
+						        to: number,  // Text to this number
+						        from: twilioNumber // From a valid Twilio number
+						    }
+
+						    client.messages.create(textMessageFirst)
+						    setTimeout(function(){ 
+						    	client.messages.create(textMessageSecond);
+						    	setTimeout(function(){ 
+							    	client.messages.create(stopMessage)
+							    }, 2000);
+						    }, 2000);
+
+						    return promise;
+						}).catch(() => {return null});
+					}).catch(() => {return null});
+				})
+			}).catch(() => {return null});
+		}).catch(() => {return null});
+	}).catch(() => {return null});
+    
+	// check to see which phone number hasn't been used for user
+	// afterwards, set invitedContacts/contact_number/group_id/twilio_number
+	// also need to set invitedContacts/contact_number/group_id/invited_by
+	// these will the [group_id: 1] thing
+});
+
+// whenever a new post is created
+// get the contacts that are invited (and that haven't done STOP)
+// send them a message with the post and an image
+
+// LATER TODO: Use storage to get the url with: storageRef.child(path).getDownloadURL().then(function(url) { ... instead of hardcoded
+
+	// fix for loop problem
+exports.sendPostToInvited = functions.database.ref('/posts/{group_id}/{post_id}').onCreate((snapshot, context) => {
+	// var imagesRef = functions.storage.bucket('group_post_images');
+	
+	const post_id = context.params.post_id;
+	const group_id = context.params.group_id;
+	const twilio = require('twilio');
+	const accountSid = functions.config().twilio.sid
+	const authToken  = functions.config().twilio.token
+	const client = new twilio(accountSid, authToken);
+	// var imageRef = imagesRef.child(group_id).child(post_id);
+	// var path = imageRef.fullPath
+
+	return snapshot.ref.root.child('/invitedContactsForGroup/' + group_id).once('value', invited_numbers => {
+
+		var sync = new DispatchGroup();
+		var token_0 = sync.enter();
+		invited_numbers.forEach(function(number_obj) {
+			var token = sync.enter();
+        	var number = number_obj.key;
+
+        	// get the number that was used to send the first message
+        	snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').once('value', twilio_number_snapshot => {
+        		if (twilio_number_snapshot !== null && twilio_number_snapshot.val() !== null && twilio_number_snapshot.val() !== "0") {
+					let twilio_number = twilio_number_snapshot.val().toString();
+
+					// get the id of the user that invited the user
+					snapshot.ref.root.child('/invitedContacts/' + number + "/" + group_id + "/invitedBy").once('value', invited_by_snapshot => {
+						var invited_by_id = "";
+						if (invited_by_snapshot !== null && invited_by_snapshot.val() !== null) {
+							invited_by_id = invited_by_snapshot.val().toString();
+						}
+
+						snapshot.ref.root.child('/users/' + invited_by_id + '/name').once('value', name_snapshot => {
+							var name = "";
+							if (name_snapshot !== null && name_snapshot.val() !== null) {
+								name = name_snapshot.val().toString();
+							}
+
+							snapshot.ref.root.child('/users/' + invited_by_id + '/username').once('value', username_snapshot => {
+								var username = "";
+								if (username_snapshot !== null && username_snapshot.val() !== null) {
+									username = username_snapshot.val().toString();
+								}
+
+								snapshot.ref.root.child('/groups/' + group_id + '/groupname').once('value', groupname_snapshot => {
+									var groupname = "";
+									if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
+										groupname = groupname_snapshot.val().toString();
+									}
+
+									snapshot.ref.root.child('/posts/' + group_id + "/" + post_id + '/videoUrl').once('value', videoUrl_snapshot => {
+										var vidUrl = "";
+										if (videoUrl_snapshot !== null && videoUrl_snapshot.val() !== null) {
+											vidUrl = videoUrl_snapshot.val().toString();
+										}
+
+										snapshot.ref.root.child('/posts/' + group_id + "/" + post_id + '/caption').once('value', caption_snapshot => {
+											var caption = "";
+											if (caption_snapshot !== null && caption_snapshot.val() !== null) {
+												caption = caption_snapshot.val().toString();
+											}
+
+											snapshot.ref.root.child('/posts/' + group_id + "/" + post_id + '/imageUrl').once('value', url_snapshot => {
+												var url = "";
+												if (url_snapshot !== null && url_snapshot.val() !== null) {
+													url = url_snapshot.val().toString();
+												}
+											// storageRef.child(path).getDownloadURL().then(function(url) {
+												if ( !validE164(number) ) {
+											        throw new Error('number must be E164 format!')
+											    }
+
+											    // create the message
+											    var message1 = ""
+
+											    if (name === "") { message1 += username }
+											    else { message1 += name }
+
+											    if (vidUrl === "") { message1 += " posted a picture in " }
+											    else { message1 += " posted a video in " }
+											    
+											    if (groupname === "") { message1 += 'the group' }
+											    else { message1 += groupname.replace("_-a-_", " ") }
+
+											    if (caption !== ""){
+											    	message1 += ': "' + caption + '"'
+											    }
+												message1 += '... view more with GroupRoots: https://apps.apple.com/us/app/id1525863510'
+
+											    const postedMessage = {
+											        body: message1,
+											        to: number,  // Text to this number
+											        from: twilio_number, // From a valid Twilio number
+											        mediaUrl: url
+											    }
+											    client.messages.create(postedMessage)
+											    sync.leave(token)
+
+											}).catch(() => {return null});
+										}).catch(() => {return null});
+									}).catch(() => {return null});
+								}).catch(() => {return null});
+							}).catch(() => {return null});
+						}).catch(() => {return null});
+					}).catch(() => {return null});
+				}
+				else {
+					return null;
+				}
+			}).catch(() => {return null});
+		})
+		sync.leave(token_0)
+		sync.notify(function() {
+			return null;
+		})
+	}).catch(() => {return null});
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

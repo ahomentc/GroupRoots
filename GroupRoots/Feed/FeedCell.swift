@@ -22,9 +22,21 @@ protocol FeedPostCellDelegate {
     func didView(groupPost: GroupPost)
     func showViewers(viewers: [User], viewsCount: Int)
     func requestPlay(for_lower cell1: FeedPostCell, for_upper cell2: MyCell)
+    func requestZoomCapability(for cell: FeedPostCell)
 }
 
 class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, InnerPostCellDelegate, FeedMembersCellDelegate {
+    func requestZoomCapability(for cell: FeedPostCell) {
+        delegate?.requestZoomCapability(for: cell)
+    }
+    
+    func didStartZoom() {
+        
+    }
+    
+    func didEndZoom() {
+        
+    }
     
     // the group posts loaded so far
     // When calling to fetch posts, we pass the last post in this set

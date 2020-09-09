@@ -116,6 +116,7 @@ class MainTabBarController: UITabBarController {
         
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarClear), name: NSNotification.Name(rawValue: "tabBarClear"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarColor), name: NSNotification.Name(rawValue: "tabBarColor"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarDisappear), name: NSNotification.Name(rawValue: "tabBarDisappear"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(makeNotificationIconRead), name: NSNotification.Name(rawValue: "notification_icon_read"), object: nil)
     }
     
@@ -155,7 +156,7 @@ class MainTabBarController: UITabBarController {
     
     private func presentLoginController() {
         DispatchQueue.main.async { // wait until MainTabBarController is inside UI
-            let loginController = LoginController()
+            let loginController = LoginPhoneController()
             let navController = UINavigationController(rootViewController: loginController)
             navController.modalPresentationStyle = .fullScreen
             self.present(navController, animated: true, completion: nil)
@@ -180,14 +181,21 @@ class MainTabBarController: UITabBarController {
         return navController
     }
     
-    @objc private func makeTabBarClear(){
-//        tabBar.backgroundColor = UIColor(red: 0/255, green: 0/255, blue: 0/255, alpha: 0.1)
+    @objc private func makeTabBarDisappear(){
         tabBar.backgroundColor = UIColor(red: 0/255, green: 0/255, blue: 0/255, alpha: 0)
+        tabBar.tintColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.5)
+        tabBar.unselectedItemTintColor = UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 0.5)
+    }
+    
+    @objc private func makeTabBarClear(){
+        tabBar.backgroundColor = UIColor(red: 0/255, green: 0/255, blue: 0/255, alpha: 0)
+        tabBar.tintColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         tabBar.unselectedItemTintColor = UIColor.white
     }
     
     @objc private func makeTabBarColor(){
         tabBar.backgroundColor = UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1)
+        tabBar.tintColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         tabBar.unselectedItemTintColor = UIColor.gray
     }
     

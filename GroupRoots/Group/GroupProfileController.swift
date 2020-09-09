@@ -543,9 +543,14 @@ extension GroupProfileController: GroupProfileHeaderDelegate {
         let inviteToGroupController = InviteToGroupController(collectionViewLayout: layout)
         inviteToGroupController.group = self.group
         let navController = UINavigationController(rootViewController: inviteToGroupController)
-//        navController.modalPresentationStyle = .fullScreen
-        navController.modalPresentationStyle = .popover
+//        navController.modalPresentationStyle = .popover
+        navController.modalPresentationStyle = .fullScreen
         self.present(navController, animated: true, completion: nil)
+        
+//        let contactsInviteController = ContactsInviteController(collectionViewLayout: layout)
+//        let navController = UINavigationController(rootViewController: contactsInviteController)
+//        navController.modalPresentationStyle = .popover
+//        self.present(navController, animated: true, completion: nil)
     }
     
     @objc internal func showInviteCopyAlert() {
