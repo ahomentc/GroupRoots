@@ -15,6 +15,8 @@
 		7521D04A243463480028FC9C /* GroupSearchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521D049243463480028FC9C /* GroupSearchCell.swift */; };
 		7522E43A24A937F60013A351 /* LoadMoreFollowersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7522E43924A937F60013A351 /* LoadMoreFollowersCell.swift */; };
 		7522E43C24B07A520013A351 /* LoadMoreGroupFollowersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7522E43B24B07A500013A351 /* LoadMoreGroupFollowersCell.swift */; };
+		752B5DB8250DEB8A00693A04 /* horiz.gif in Resources */ = {isa = PBXBuildFile; fileRef = 752B5DB7250DEB8A00693A04 /* horiz.gif */; };
+		752B5DBC250E074700693A04 /* vert.gif in Resources */ = {isa = PBXBuildFile; fileRef = 752B5DBB250E074700693A04 /* vert.gif */; };
 		754295C223DFFB6E00893EFD /* NotificationCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754295C123DFFB6E00893EFD /* NotificationCell.swift */; };
 		754295C423E162F600893EFD /* InviteSelectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754295C323E162F600893EFD /* InviteSelectionController.swift */; };
 		754295C623E3E3AE00893EFD /* check.png in Resources */ = {isa = PBXBuildFile; fileRef = 754295C523E3E3AD00893EFD /* check.png */; };
@@ -124,6 +126,8 @@
 		7521D049243463480028FC9C /* GroupSearchCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSearchCell.swift; sourceTree = "<group>"; };
 		7522E43924A937F60013A351 /* LoadMoreFollowersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadMoreFollowersCell.swift; sourceTree = "<group>"; };
 		7522E43B24B07A500013A351 /* LoadMoreGroupFollowersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadMoreGroupFollowersCell.swift; sourceTree = "<group>"; };
+		752B5DB7250DEB8A00693A04 /* horiz.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = horiz.gif; path = ../Desktop/horiz.gif; sourceTree = "<group>"; };
+		752B5DBB250E074700693A04 /* vert.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = vert.gif; path = ../Desktop/vert.gif; sourceTree = "<group>"; };
 		754295C123DFFB6E00893EFD /* NotificationCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCell.swift; sourceTree = "<group>"; };
 		754295C323E162F600893EFD /* InviteSelectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteSelectionController.swift; sourceTree = "<group>"; };
 		754295C523E3E3AD00893EFD /* check.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = check.png; path = Assets.xcassets/check.png; sourceTree = "<group>"; };
@@ -353,6 +357,8 @@
 		AD2A2CA4205C88DE0023D5C8 = {
 			isa = PBXGroup;
 			children = (
+				752B5DBB250E074700693A04 /* vert.gif */,
+				752B5DB7250DEB8A00693A04 /* horiz.gif */,
 				75914803244592E600285546 /* GoogleService-Info.plist */,
 				AD2A2CAF205C88DE0023D5C8 /* GroupRoots */,
 				AD2A2CAE205C88DE0023D5C8 /* Products */,
@@ -565,7 +571,9 @@
 				754295C623E3E3AE00893EFD /* check.png in Resources */,
 				75914804244592E600285546 /* GoogleService-Info.plist in Resources */,
 				AD2A2CBB205C88DE0023D5C8 /* LaunchScreen.storyboard in Resources */,
+				752B5DBC250E074700693A04 /* vert.gif in Resources */,
 				AD2A2CB8205C88DE0023D5C8 /* Assets.xcassets in Resources */,
+				752B5DB8250DEB8A00693A04 /* horiz.gif in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -623,7 +631,6 @@
 				"${BUILT_PRODUCTS_DIR}/GTMAppAuth/GTMAppAuth.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
 				"${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework",
-				"${BUILT_PRODUCTS_DIR}/ImageScrollView/ImageScrollView.framework",
 				"${BUILT_PRODUCTS_DIR}/InjectableLoggers/InjectableLoggers.framework",
 				"${BUILT_PRODUCTS_DIR}/MGEvents/MGEvents.framework",
 				"${BUILT_PRODUCTS_DIR}/NVActivityIndicatorView/NVActivityIndicatorView.framework",
@@ -636,6 +643,7 @@
 				"${BUILT_PRODUCTS_DIR}/SGHTTPRequest/SGHTTPRequest.framework",
 				"${BUILT_PRODUCTS_DIR}/SGImageCache/SGImageCache.framework",
 				"${BUILT_PRODUCTS_DIR}/SteviaLayout/Stevia.framework",
+				"${BUILT_PRODUCTS_DIR}/SwiftGifOrigin/SwiftGifOrigin.framework",
 				"${BUILT_PRODUCTS_DIR}/UPCarouselFlowLayout/UPCarouselFlowLayout.framework",
 				"${BUILT_PRODUCTS_DIR}/YPImagePicker/YPImagePicker.framework",
 				"${BUILT_PRODUCTS_DIR}/Zoomy/Zoomy.framework",
@@ -652,7 +660,6 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMAppAuth.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ImageScrollView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/InjectableLoggers.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MGEvents.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NVActivityIndicatorView.framework",
@@ -665,6 +672,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SGHTTPRequest.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SGImageCache.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Stevia.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftGifOrigin.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/UPCarouselFlowLayout.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/YPImagePicker.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Zoomy.framework",

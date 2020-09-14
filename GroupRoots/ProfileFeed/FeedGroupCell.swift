@@ -372,10 +372,12 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         }
         else { // collectionview with group members
             let group = groupPosts?[0].group
-            if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
+            if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != "" {
                 if indexPath.item == 0 {
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
                     cell.profileImageUrl = group?.groupProfileImageUrl
+                    cell.groupname = group?.groupname
+//                    cell.group = group
                     return cell
                 }
                 else {
@@ -387,7 +389,32 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             }
             else {
                 if indexPath.item == 0 {
+                    // modify this to be two small user cells
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
+                    cell.groupname = group?.groupname
+//                    cell.group = group
+                    if groupMembers?.count ?? 0 > 0 {
+                        if groupMembers?[0].profileImageUrl != nil {
+                            cell.userOneImageUrl = groupMembers?[0].profileImageUrl
+                        }
+                        else {
+                            cell.userOneImageUrl = ""
+                        }
+                    }
+                    else {
+                        cell.userOneImageUrl = ""
+                    }
+                    if groupMembers?.count ?? 0 > 1 {
+                        if groupMembers?[1].profileImageUrl != nil {
+                            cell.userTwoImageUrl = groupMembers?[1].profileImageUrl
+                        }
+                        else {
+                            cell.userTwoImageUrl = ""
+                        }
+                    }
+                    else {
+                        cell.userTwoImageUrl = ""
+                    }
                     return cell
                 }
                 else {

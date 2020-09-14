@@ -3,6 +3,8 @@ import Firebase
 import UPCarouselFlowLayout
 import FirebaseAuth
 import FirebaseDatabase
+import YPImagePicker
+import Photos
 
 class MainTabBarController: UITabBarController {
     
@@ -131,6 +133,7 @@ class MainTabBarController: UITabBarController {
         let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_5"), selectedImage: #imageLiteral(resourceName: "home_5"), rootViewController: ProfileFeedController(collectionViewLayout: layout))
         
         let searchNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "search_2"), selectedImage: #imageLiteral(resourceName: "search_2"), rootViewController: UserSearchController(collectionViewLayout: UICollectionViewFlowLayout()))
+        
         let plusNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "plus"), selectedImage: #imageLiteral(resourceName: "plus"))
         
         var likeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "bell_2"), selectedImage: #imageLiteral(resourceName: "bell_2"), rootViewController: NotificationsController(collectionViewLayout: UICollectionViewFlowLayout()))
@@ -215,17 +218,62 @@ extension MainTabBarController: UITabBarControllerDelegate {
             tabBar.unselectedItemTintColor = UIColor.gray
         }
         if index == 2 {
-            let sharePhotoController = SharePhotoController()
+//            let sharePhotoController = SharePhotoController()
+//            if let topController = UIApplication.topViewController() {
+//                if type(of: topController) == GroupProfileController.self {
+//                    let groupProfile = topController as? GroupProfileController
+//                    sharePhotoController.preSelectedGroup = groupProfile?.group
+//                }
+//            }
+//
+//            let nacController = UINavigationController(rootViewController: sharePhotoController)
+//            nacController.modalPresentationStyle = .fullScreen
+//            present(nacController, animated: true, completion: nil)
+            
+            var config = YPImagePickerConfiguration()
+            config.library.isSquareByDefault = false
+            config.shouldSaveNewPicturesToAlbum = false
+            config.library.mediaType = .photoAndVideo
+            config.hidesStatusBar = false
+            config.startOnScreen = YPPickerScreen.library
+            config.targetImageSize = .cappedTo(size: 600)
+            config.video.compression = AVAssetExportPresetMediumQuality
+            let picker = YPImagePicker(configuration: config)
+            
+            var preSelectedGroup: Group?
             if let topController = UIApplication.topViewController() {
                 if type(of: topController) == GroupProfileController.self {
                     let groupProfile = topController as? GroupProfileController
-                    sharePhotoController.preSelectedGroup = groupProfile?.group
+                    preSelectedGroup = groupProfile?.group
                 }
             }
             
-            let nacController = UINavigationController(rootViewController: sharePhotoController)
-            nacController.modalPresentationStyle = .fullScreen
-            present(nacController, animated: true, completion: nil)
+            picker.didFinishPicking { [unowned picker] items, cancelled in
+                if cancelled {
+                    print("Picker was canceled")
+                    picker.dismiss(animated: true, completion: nil)
+                    return
+                }
+                _ = items.map { print("🧀 \($0)") }
+                if let firstItem = items.first {
+                    switch firstItem {
+                    case .photo(let photo):
+                        // need to do self.scrollToPreSelected() too
+                        let sharePhotoController = SharePhotoController()
+                        sharePhotoController.preSelectedGroup = preSelectedGroup
+                        sharePhotoController.selectedImage = photo.image
+                        picker.pushViewController(sharePhotoController, animated: true)
+                        
+                    case .video(let video):
+                        let sharePhotoController = SharePhotoController()
+                        sharePhotoController.preSelectedGroup = preSelectedGroup
+                        sharePhotoController.selectedVideoURL = video.url
+                        sharePhotoController.selectedImage = video.thumbnail
+                        picker.pushViewController(sharePhotoController, animated: true)
+                    }
+                }
+            }
+            present(picker, animated: true, completion: nil)
             return false
         }
         return true

@@ -12,6 +12,7 @@ import FirebaseAuth
 import FirebaseDatabase
 import NVActivityIndicatorView
 import Zoomy
+import SwiftGifOrigin
 
 class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate, InviteToGroupWhenCreateControllerDelegate {
         
@@ -79,8 +80,23 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.isHidden = true
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
-        attributedText.append(NSMutableAttributedString(string: "Follow friends to automatically get\nsubscribed to their public groups\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSMutableAttributedString(string: "Posts from groups you're subscribed\nto or a member of will appear here", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "When you subscribe to groups, you'll\nsee photos and videos they post here\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "When you join a group, you’ll\nbe able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+//        attributedText.append(NSMutableAttributedString(string: "Following friends automatically\n subscribes you to their public groups", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        label.attributedText = attributedText
+        return label
+    }()
+    
+    private let noSubscriptionsLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.init(white: 0.4, alpha: 1)
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+        label.isHidden = true
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "No group posts yet\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
+        attributedText.append(NSMutableAttributedString(string: "When you subscribe to groups, you'll\nsee photos and videos they post here\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "When you join a group, you’ll\nbe able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
     }()
@@ -118,7 +134,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         button.backgroundColor = UIColor(white: 0.9, alpha: 1)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        button.setTitle("Got it", for: .normal)
+        button.setTitle("Next", for: .normal)
         return button
     }()
     
@@ -149,6 +165,66 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         return img
     }()
     
+    let horizontalGifView: UIImageView = {
+        let img = UIImageView()
+        img.isHidden = true
+        return img
+    }()
+    
+    let verticalGifView: UIImageView = {
+        let img = UIImageView()
+        img.isHidden = true
+        return img
+    }()
+    
+    private lazy var animationsButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(showSecondAnim), for: .touchUpInside)
+        button.layer.zPosition = 4;
+        button.isHidden = true
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        button.setTitle("Next", for: .normal)
+        return button
+    }()
+    
+    private lazy var animationsButton2: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(endIntro), for: .touchUpInside)
+        button.layer.zPosition = 4;
+        button.isHidden = true
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        button.setTitle("Got it", for: .normal)
+        return button
+    }()
+    
+    private let animationsTitleLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.init(white: 0.4, alpha: 1)
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+        label.isHidden = true
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "Group Profile Feed", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
+        label.attributedText = attributedText
+        return label
+    }()
+    
+    private let animationsLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.init(white: 0.4, alpha: 1)
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+        label.isHidden = true
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "Swipe up to cycle through groups.\nGroups appear by the last time they posted.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)])
+        label.attributedText = attributedText
+        return label
+    }()
+    
     let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
     
     func showEmptyStateViewIfNeeded() {
@@ -159,7 +235,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.newGroupButton.isHidden = false
                     self.goButton.isHidden = true
                     self.inviteButton.isHidden = false
-                    self.welcomeLabel.isHidden = false
+//                    self.welcomeLabel.isHidden = false
+                    self.noSubscriptionsLabel.isHidden = false
                     self.logoImageView.isHidden = false
                     
 //                    TableViewHelper.EmptyMessage(message: "Welcome to GroupRoots!\n\nFollow friends to see their\ngroups in your feed", viewController: self)
@@ -252,6 +329,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         welcomeLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-150, width: 300, height: 300)
         self.view.insertSubview(welcomeLabel, at: 4)
         
+        noSubscriptionsLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-150, width: 300, height: 300)
+        self.view.insertSubview(noSubscriptionsLabel, at: 4)
+        
         inviteButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 - 30, width: 300, height: 50)
         inviteButton.layer.cornerRadius = 14
         self.view.insertSubview(inviteButton, at: 4)
@@ -266,6 +346,28 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         
         logoImageView.frame = CGRect(x: view.frame.width/2 - 100, y: 80, width: 200, height: 200)
         self.view.addSubview(logoImageView)
+        
+        horizontalGifView.frame = CGRect(x: view.frame.width/2 - 101.25, y: UIScreen.main.bounds.height/3 - 70, width: 202.5, height: 360)
+        horizontalGifView.loadGif(name: "horiz")
+        self.view.addSubview(horizontalGifView)
+        
+        verticalGifView.frame = CGRect(x: view.frame.width/2 - 101.25, y: UIScreen.main.bounds.height/3 - 50, width: 202.5, height: 300.15)
+        verticalGifView.loadGif(name: "vert")
+        self.view.addSubview(verticalGifView)
+        
+        animationsTitleLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/3-300, width: 300, height: 300)
+        self.view.addSubview(animationsTitleLabel)
+        
+        animationsLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-200, y: UIScreen.main.bounds.height/3-250, width: 400, height: 300)
+        self.view.addSubview(animationsLabel)
+        
+        animationsButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
+        animationsButton.layer.cornerRadius = 14
+        self.view.insertSubview(animationsButton, at: 4)
+        
+        animationsButton2.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
+        animationsButton2.layer.cornerRadius = 14
+        self.view.insertSubview(animationsButton2, at: 4)
         
         createGroupIconButton.frame = CGRect(x: UIScreen.main.bounds.width-50, y: 30, width: 40, height: 40)
         createGroupIconButton.layer.cornerRadius = 14
@@ -370,6 +472,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.goButton.isHidden = true
             self.inviteButton.isHidden = true
             self.welcomeLabel.isHidden = true
+            self.noSubscriptionsLabel.isHidden = true
             self.logoImageView.isHidden = true
             self.noInternetLabel.isHidden = true
             self.noInternetBackground.isHidden = true
@@ -558,8 +661,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.collectionView?.refreshControl?.endRefreshing()
                     self.collectionView.scrollToNearestVisibleCollectionViewCell()
                 }
-                
-                if self.isFirstView && tempGroupPosts2D.count > 0 {
+
+//                if self.isFirstView && tempGroupPosts2D.count > 0 {
+                if self.isFirstView {
                     self.newGroupButton.isHidden = true
                     self.inviteButton.isHidden = true
                     self.goButton.isHidden = false
@@ -574,6 +678,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.goButton.isHidden = true
                     self.inviteButton.isHidden = true
                     self.welcomeLabel.isHidden = true
+                    self.noSubscriptionsLabel.isHidden = true
                     self.logoImageView.isHidden = true
                     self.collectionView.isHidden = false
                     self.createGroupIconButton.isHidden = false
@@ -582,7 +687,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.newGroupButton.isHidden = false
                     self.goButton.isHidden = true
                     self.inviteButton.isHidden = false
-                    self.welcomeLabel.isHidden = false
+                    self.noSubscriptionsLabel.isHidden = false
+                    self.welcomeLabel.isHidden = true
                     self.logoImageView.isHidden = false
                     self.collectionView.isHidden = true
                     self.createGroupIconButton.isHidden = true
@@ -591,7 +697,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         }
     }
 
-    func configureNavBar(){
+    func configureNavBar() {
         self.navigationController?.navigationBar.height(CGFloat(0))
         self.navigationController?.isNavigationBarHidden = true
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
@@ -651,7 +757,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 self.noInternetLabel.isHidden = true
                 self.noInternetBackground.isHidden = true
                 self.loadGroupPosts()
-            }else{
+            } else{
                 self.reloadButton.isHidden = false
                 self.noInternetLabel.isHidden = false
                 self.noInternetBackground.isHidden = false
@@ -895,17 +1001,44 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     @objc internal func handleFirstGo() {
+        // uncomment when done laying out
         self.isFirstView = false
         if let hasOpenedApp = try? JSONEncoder().encode(true) {
             UserDefaults.standard.set(hasOpenedApp, forKey: "hasOpenedApp")
         }
-        
-        self.activityIndicatorView.isHidden = false
+
         self.newGroupButton.isHidden = true
         self.goButton.isHidden = true
         self.inviteButton.isHidden = true
         self.welcomeLabel.isHidden = true
         self.logoImageView.isHidden = true
+        
+        self.verticalGifView.isHidden = false
+        self.animationsTitleLabel.isHidden = false
+        self.animationsButton.isHidden = false
+        self.animationsLabel.isHidden = false
+        
+//        self.activityIndicatorView.isHidden = false
+//        self.handleRefresh()
+    }
+    
+    @objc internal func showSecondAnim() {
+        self.animationsButton.isHidden = true
+        self.animationsButton2.isHidden = false
+        self.horizontalGifView.isHidden = false
+        self.verticalGifView.isHidden = true
+        
+        self.animationsLabel.attributedText = NSMutableAttributedString(string: "Swipe left to see all of a group’s posts.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)])
+    }
+    
+    @objc internal func endIntro() {
+        self.animationsButton2.isHidden = true
+        self.horizontalGifView.isHidden = true
+        self.animationsTitleLabel.isHidden = true
+        self.animationsButton.isHidden = true
+        self.animationsLabel.isHidden = true
+        
+        self.activityIndicatorView.isHidden = false
         self.handleRefresh()
     }
     

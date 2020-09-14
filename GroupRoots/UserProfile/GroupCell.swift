@@ -19,6 +19,12 @@ class GroupCell: UICollectionViewCell {
         }
     }
     
+    var user: User? {
+        didSet {
+            configureCell()
+        }
+    }
+    
     private let hiddenIcon: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(#imageLiteral(resourceName: "hide_eye").withRenderingMode(.alwaysOriginal), for: .normal)
@@ -122,12 +128,14 @@ class GroupCell: UICollectionViewCell {
     
     private func configureCell() {
         guard let group = group else { return }
+        guard let user = user else { return }
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         self.userTwoImageView.layer.borderWidth = 0
         
         // then actually hide it, but can't use "isGroupHiddenOnProfile" because current user will be different
         Database.database().isGroupHiddenOnProfile(groupId: group.groupId, completion: { (isHidden) in
             // only allow this if is in group
-            if isHidden {
+            if isHidden && currentLoggedInUserId == user.uid {
                 self.hiddenIcon.isHidden = false
             }
             else {

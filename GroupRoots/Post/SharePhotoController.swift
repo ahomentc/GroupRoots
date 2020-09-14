@@ -70,9 +70,6 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Share", style: .plain, target: self, action: #selector(handleShare))
         
         layoutViews()
-        
-        selectImage()
-        
     }
 
     @objc private func selectImage(){
@@ -205,13 +202,16 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
             let layout = UICollectionViewFlowLayout()
             layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
             
-            self.collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/3 + 10, width: displayWidth, height: displayHeight - barHeight - UIScreen.main.bounds.height/3), collectionViewLayout: layout)
+            self.collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/4, width: displayWidth, height: displayHeight - barHeight - UIScreen.main.bounds.height/4 + 10), collectionViewLayout: layout)
             self.collectionView.delegate = self
             self.collectionView.dataSource = self
             self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
             self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
             self.collectionView.backgroundColor = UIColor.white
             self.view.addSubview(self.collectionView)
+            
+            self.collectionView.layoutIfNeeded()
+            self.scrollToPreSelected()
             
         }) { (_) in
         }

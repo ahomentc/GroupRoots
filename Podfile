@@ -25,7 +25,7 @@ target 'GroupRoots' do
   pod "UPCarouselFlowLayout"
   pod 'NVActivityIndicatorView'
   pod 'PhoneNumberKit', '~> 3.1'
-  pod 'ImageScrollView'
   pod 'Zoomy'
+  pod 'SwiftGifOrigin', '~> 1.7.0'
 
 end

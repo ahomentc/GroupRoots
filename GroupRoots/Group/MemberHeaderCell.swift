@@ -7,6 +7,9 @@
 //
 
 import UIKit
+import Firebase
+import FirebaseAuth
+import FirebaseDatabase
 
 class MemberHeaderCell: UICollectionViewCell {
     
@@ -92,18 +95,66 @@ class GroupProfileHeaderCell: UICollectionViewCell {
     
     var profileImageUrl: String? {
         didSet {
-            configureCell()
+            configureCellForGroupImage()
         }
     }
+    
+    var userOneImageUrl: String? {
+        didSet {
+            configureCellForUserImage()
+        }
+    }
+    
+    var userTwoImageUrl: String? {
+        didSet {
+            configureCellForUserImage()
+        }
+    }
+    
+    var groupname: String? {
+        didSet {
+            setGroupname()
+        }
+    }
+    
+    private let groupLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.text = "Group"
+        label.textAlignment = .center
+        return label
+    }()
     
     private let profileImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
-        iv.image = #imageLiteral(resourceName: "group_profile_3")
+        iv.image = CustomImageView.imageWithColor(color: .white)
         iv.layer.borderColor = UIColor.white.cgColor
         iv.layer.borderWidth = 0
         iv.backgroundColor = .white
+        return iv
+    }()
+    
+    private let userOneImageView: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.image = #imageLiteral(resourceName: "user")
+        iv.isHidden = true
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderWidth = 0
+        return iv
+    }()
+    
+    private let userTwoImageView: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.image = #imageLiteral(resourceName: "user")
+        iv.isHidden = true
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderWidth = 2
         return iv
     }()
     
@@ -121,7 +172,9 @@ class GroupProfileHeaderCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        profileImageView.image = #imageLiteral(resourceName: "group_profile_3")
+        profileImageView.image = CustomImageView.imageWithColor(color: .white)
+        self.userOneImageView.image = CustomImageView.imageWithColor(color: .white)
+        self.userTwoImageView.image = CustomImageView.imageWithColor(color: .white)
     }
     
     private func sharedInit() {
@@ -129,13 +182,72 @@ class GroupProfileHeaderCell: UICollectionViewCell {
         profileImageView.anchor(left: leftAnchor, paddingLeft: 0, width: 75, height: 75)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         profileImageView.layer.cornerRadius = 75 / 2
+        
+        addSubview(userOneImageView)
+        userOneImageView.anchor(left: leftAnchor, paddingTop: 10, paddingLeft: 20, width: 56, height: 56)
+        userOneImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        userOneImageView.layer.cornerRadius = 56/2
+        userOneImageView.isHidden = true
+        userOneImageView.image = UIImage()
+        
+        addSubview(userTwoImageView)
+        userTwoImageView.anchor(left: leftAnchor, paddingTop: 0, paddingLeft: -5, width: 60, height: 60)
+        userTwoImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        userTwoImageView.layer.cornerRadius = 60/2
+        userTwoImageView.isHidden = true
+        userTwoImageView.image = UIImage()
+        
+        addSubview(groupLabel)
+        groupLabel.anchor(top: profileImageView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 5, paddingRight: 0)
     }
     
-    private func configureCell() {
-        if let profileImageUrl = profileImageUrl {
+    private func setGroupname() {
+        guard var groupname = groupname else { return }
+        
+        if groupname == "" {
+            groupLabel.text = "Group"
+        }
+        else {
+            groupname = groupname.replacingOccurrences(of: "_-a-_", with: " ")
+            if groupname.count > 10 { // change to 10
+                groupname = String(groupname.prefix(10)) // keep only the first 10 characters
+                groupname = groupname + "..."
+            }
+            groupLabel.text = groupname
+        }
+    }
+    
+    private func configureCellForGroupImage() {
+        guard let profileImageUrl = profileImageUrl else { return }
+        self.profileImageView.isHidden = false
+        self.userOneImageView.isHidden = true
+        self.userTwoImageView.isHidden = true
+        if profileImageUrl != "" {
             profileImageView.loadImage(urlString: profileImageUrl)
-        } else {
-            profileImageView.image = #imageLiteral(resourceName: "user")
+        }
+    }
+    
+    private func configureCellForUserImage() {
+        guard let userOneImageUrl = userOneImageUrl else { return }
+        guard let userTwoImageUrl = userTwoImageUrl else { return }
+        self.profileImageView.isHidden = true
+        self.userOneImageView.isHidden = false
+        self.userTwoImageView.isHidden = false
+        
+        if userOneImageUrl != "" {
+            self.userOneImageView.loadImage(urlString: userOneImageUrl)
+        }
+        else {
+            self.userOneImageView.image = #imageLiteral(resourceName: "user")
+            self.userOneImageView.backgroundColor = .white
+        }
+        
+        if userTwoImageUrl != "" {
+            self.userTwoImageView.loadImage(urlString: userTwoImageUrl)
+        }
+        else {
+            self.userTwoImageView.image = #imageLiteral(resourceName: "user")
+            self.userTwoImageView.backgroundColor = .white
         }
     }
 }

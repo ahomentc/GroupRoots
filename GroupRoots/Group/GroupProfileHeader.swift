@@ -179,7 +179,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
     private func sharedInit() {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: 5, width: UIScreen.main.bounds.width, height: 110), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 5, width: UIScreen.main.bounds.width, height: 120), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.backgroundColor = .black
@@ -207,6 +207,8 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
             if indexPath.item == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
                 cell.profileImageUrl = group?.groupProfileImageUrl
+                cell.groupname = group?.groupname
+//                cell.group = group
                 return cell
             }
             else {

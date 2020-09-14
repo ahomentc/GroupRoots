@@ -117,7 +117,9 @@ class ProfileFeedCellHeader: UICollectionViewCell, UICollectionViewDataSource, U
         if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
             if indexPath.item == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
+                cell.groupname = group?.groupname
                 cell.profileImageUrl = group?.groupProfileImageUrl
+//                cell.group = group
                 return cell
             }
             else {
@@ -130,6 +132,20 @@ class ProfileFeedCellHeader: UICollectionViewCell, UICollectionViewDataSource, U
         else {
             if indexPath.item == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
+//                cell.group = group
+                cell.groupname = group?.groupname
+                if users.count > 0 {
+                    cell.userOneImageUrl = users[0].profileImageUrl
+                }
+                else {
+                    cell.userOneImageUrl = ""
+                }
+                if users.count > 1 {
+                    cell.userTwoImageUrl = users[1].profileImageUrl
+                }
+                else {
+                    cell.userTwoImageUrl = ""
+                }
                 return cell
             }
             else {

@@ -328,6 +328,7 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         }
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
         cell.group = groups[indexPath.item - 1]
+        cell.user = user
         return cell
     }
     

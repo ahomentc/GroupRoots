@@ -428,17 +428,17 @@ extension GroupProfileController: UICollectionViewDelegateFlowLayout {
         guard let group = group else { return CGSize(width: view.frame.width, height: 250) }
         let bio = group.bio
         if bio == "" {
-            return CGSize(width: view.frame.width, height: 260)
+            return CGSize(width: view.frame.width, height: 270)
         }
         else {
             if bio.count < 50 {
-                return CGSize(width: view.frame.width, height: 290)
+                return CGSize(width: view.frame.width, height: 300)
             }
             else if bio.count < 100 {
-                return CGSize(width: view.frame.width, height: 310)
+                return CGSize(width: view.frame.width, height: 320)
             }
             else {
-                return CGSize(width: view.frame.width, height: 330)
+                return CGSize(width: view.frame.width, height: 340)
             }
         }
     }

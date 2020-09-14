@@ -1,11 +1,3 @@
-//
-//  PushNotificationSender.swift
-//  InstagramClone
-//
-//  Created by Andrei Homentcovschi on 1/25/20.
-//  Copyright © 2020 Andrei Homentcovschi. All rights reserved.
-//
-
 import UIKit
 
 class PushNotificationSender {
@@ -13,9 +5,7 @@ class PushNotificationSender {
         let urlString = "https://fcm.googleapis.com/fcm/send"
         let url = NSURL(string: urlString)!
         let paramString: [String : Any] = ["to" : token,
-                                           "notification" : ["title" : title, "body" : body],
-                                           "data" : ["user" : "test_id"],
-                                           "apns" : ["header": ["apns-priority": "5"], "payload": ["aps" : ["badge": 1]] ]
+                                           "notification" : ["title" : title, "body" : body, "badge": 1]
         ]
 
         let request = NSMutableURLRequest(url: url as URL)

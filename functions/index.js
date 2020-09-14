@@ -16,7 +16,6 @@ var DispatchGroup = (function() {
             if(!tokens.size) {
                 if(onCompleted) {
                     onCompleted()
-                    console.log('group ' + id + ' completed')
                 }
             }
         }
@@ -649,6 +648,179 @@ exports.updateGroupsLastPostedWhenPostDeleted = functions.database.ref('/posts/{
 	}).catch(() => {return null});
 });
 
+// NOT TESTED
+exports.deleteGroupOnNoMembers = functions.database.ref('/groupMembersCount/{group_id}').onUpdate((snapshot, context) => {
+	const group_id = context.params.group_id;
+	const subscribers_path = '/groupFollowers/' + group_id
+	return snapshot.after.ref.root.child('/groupMembersCount/' + group_id).once('value', counter_value => {
+		if (parseInt(counter_value.val()) < 1) {
+			return snapshot.after.ref.root.child(subscribers_path).once('value', subscribers_snapshot => {
+				return snapshot.after.ref.root.child('/groups/' + group_id + '/groupname').once('value', groupname_snapshot => {
+					var groupname = "";
+					if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
+						groupname = groupname_snapshot.val().toString();
+					}
+
+					const promises = []
+
+					// for each subscriber, remove group from subscribing
+					subscribers_snapshot.forEach(function(subscriber) {
+			        	var uid = subscriber.key;
+						promises.push(snapshot.after.ref.root.child('/groupsFollowing/' + uid + '/' + group_id).remove());
+						promises.push(snapshot.after.ref.root.child('/userRemovedGroups/' + uid + '/' + group_id).remove());
+			    	});
+
+			    	promises.push(snapshot.after.ref.root.child('/groupFollowers/' + group_id).remove());
+			    	promises.push(snapshot.after.ref.root.child('/groupFollowPending/' + group_id).remove());
+			    	promises.push(snapshot.after.ref.root.child('/groupFollowersCount/' + group_id).remove());
+			    	promises.push(snapshot.after.ref.root.child('/groupMembersCount/' + group_id).remove());
+
+			    	if (groupname !== "") {
+			    		promises.push(snapshot.after.ref.root.child('/groupnames/' + groupname).remove());
+			    	}
+
+					// delete the group
+					promises.push(snapshot.after.ref.root.child('/groups/' + group_id).remove());
+
+					if (promises.length === 0) {
+						return null;
+					}
+					return Promise.all(promises);
+				}).catch(() => {return null});
+		  	}).catch(() => {return null});
+		}
+		else {
+			return null;
+		}
+	}).catch(() => {return null});
+})
+
+// when importing contacts, they'll be added with priority 1
+// users that are followed by lots of your following will have priority 3-5, depending on how many common connections [later]
+// priority of 1000 means not active anymore, user has followed them or rejected it
+
+exports.updateRecommendedFollowOnGroupJoin = functions.database.ref('/groups/{groupId}/members/{uid}').onCreate((snapshot, context) => {
+	const group_id = context.params.groupId;
+	const new_member_id = context.params.uid;
+
+	let promises = [];
+
+	// for user joining: add all members of groups to it, if not already following them... with priority 0
+	// for users in group: add joining member to each of them, if not already following... with priority 0
+
+	// fetch the group's members
+	return snapshot.ref.root.child('/groups/' + group_id + '/members/').once('value', members_snapshot => {
+		var sync = new DispatchGroup();
+		var token_0 = sync.enter();
+		members_snapshot.forEach(function(member) {
+			var member_id = member.key;
+			
+			// check if the new member is following them
+			if (member_id !== new_member_id) {
+				var token = sync.enter()
+				snapshot.ref.root.child('/following/' + new_member_id + '/' + member_id).once('value', is_following_member_snapshot => {
+					if (is_following_member_snapshot.val() === null) { // if not already following them
+						promises.push(snapshot.ref.root.child('/recommendedToFollow/' + new_member_id + '/' + member_id).set(0));
+					}
+
+					// check if they are following the new_member
+					snapshot.ref.root.child('/following/' + member_id + '/' + new_member_id).once('value', is_following_new_member_snapshot => {
+						if (is_following_new_member_snapshot.val() === null) { // if not already following them
+							promises.push(snapshot.ref.root.child('/recommendedToFollow/' + member_id + '/' + new_member_id).set(0));
+						}
+						sync.leave(token)
+					}).catch(() => {return null});
+
+				}).catch(() => {return null});
+			}
+		})
+		sync.leave(token_0)
+		sync.notify(function() {
+			if (promises.length === 0) {
+				return null;
+			}
+			return Promise.all(promises);
+		})
+	}).catch(() => {return null});
+})
+
+exports.updateRecommendedFollowOnGroupSubscribe = functions.database.ref('/groupsFollowing/{user_id}/{group_id}').onCreate((snapshot, context) => {
+	const new_subscriber_id = context.params.user_id;
+	const group_id = context.params.group_id;
+
+	// for user subscribing: add all members of groups to it, if not already following them... with priority 4
+	// for users in group: add subscribing user to each of them, if not already following... with priority 4
+	let promises = [];
+
+	// check if new_subscriber_id is in the group already
+	return snapshot.ref.root.child('/groups/' + group_id + '/members/' + new_subscriber_id).once('value', is_in_group_snapshot => {
+		if (is_in_group_snapshot.val() !== null) { // is already in the group as a member
+			return null;
+		}
+		// fetch the group's members
+		return snapshot.ref.root.child('/groups/' + group_id + '/members/').once('value', members_snapshot => {
+			var sync = new DispatchGroup();
+			var token_0 = sync.enter();
+
+			members_snapshot.forEach(function(member) {
+				var member_id = member.key;
+				
+				// check if the new member is following member already
+				if (member_id !== new_subscriber_id) {
+					var token = sync.enter()
+					snapshot.ref.root.child('/following/' + new_subscriber_id + '/' + member_id).once('value', is_following_member_snapshot => {
+						if (is_following_member_snapshot.val() === null) { // if not already following them
+							// check if already in recommendedToFollow with a higher priority
+							snapshot.ref.root.child('/recommendedToFollow/' + new_subscriber_id + '/' + member_id).once('value', new_subscriber_rec_snapshot => {
+								if (new_subscriber_rec_snapshot.val() === null || new_subscriber_rec_snapshot.val() > 4) { // if priority doesn't exist or there is a lower priority currenlty
+									promises.push(snapshot.ref.root.child('/recommendedToFollow/' + new_subscriber_id + '/' + member_id).set(4));
+								}
+								// check if member is already following the new_member
+								snapshot.ref.root.child('/following/' + member_id + '/' + new_subscriber_id).once('value', is_following_new_member_snapshot => {
+									if (is_following_new_member_snapshot.val() === null) { // if not already following them
+										snapshot.ref.root.child('/recommendedToFollow/' + member_id + '/' + new_subscriber_id).once('value', member_rec_snapshot => {
+											if (member_rec_snapshot.val() === null || member_rec_snapshot.val() > 4) { // if priority doesn't exist or there is a lower priority currenlty
+												promises.push(snapshot.ref.root.child('/recommendedToFollow/' + member_id + '/' + new_subscriber_id).set(4));
+											}
+											sync.leave(token)
+										}).catch(() => {return null});
+									}
+									else {
+										sync.leave(token)
+									}
+								}).catch(() => {return null});
+							}).catch(() => {return null});
+						}
+						else {
+							// check if member is already following the new_member
+							snapshot.ref.root.child('/following/' + member_id + '/' + new_subscriber_id).once('value', is_following_new_member_snapshot => {
+								if (is_following_new_member_snapshot.val() === null) { // if not already following them
+									snapshot.ref.root.child('/recommendedToFollow/' + member_id + '/' + new_subscriber_id).once('value', member_rec_snapshot => {
+										if (member_rec_snapshot.val() === null || member_rec_snapshot.val() > 4) { // if priority doesn't exist or there is a lower priority currenlty
+											promises.push(snapshot.ref.root.child('/recommendedToFollow/' + member_id + '/' + new_subscriber_id).set(4));
+										}
+										sync.leave(token)
+									}).catch(() => {return null});
+								}
+								else {
+									sync.leave(token)
+								}
+							}).catch(() => {return null});
+						}
+					}).catch(() => {return null});
+				}
+			})
+			sync.leave(token_0)
+			sync.notify(function() {
+				if (promises.length === 0) {
+					return null;
+				}
+				return Promise.all(promises);
+			})
+		}).catch(() => {return null});
+	}).catch(() => {return null});
+})
+
 // ---------------- Updating counts ----------------
 
 exports.updateGroupFollowersCountOnSubscribe = functions.database.ref('/groupFollowers/{group_id}/{subscribing_user_id}').onCreate((snapshot, context) => {
@@ -749,53 +921,6 @@ exports.updateNumNotificationsCountOnNew = functions.database.ref('/notification
 	}).catch(() => {return null});
 })
 
-// NOT TESTED
-exports.deleteGroupOnNoMembers = functions.database.ref('/groupMembersCount/{group_id}').onUpdate((snapshot, context) => {
-	const group_id = context.params.group_id;
-	const subscribers_path = '/groupFollowers/' + group_id
-	return snapshot.after.ref.root.child('/groupMembersCount/' + group_id).once('value', counter_value => {
-		if (parseInt(counter_value.val()) < 1) {
-			return snapshot.after.ref.root.child(subscribers_path).once('value', subscribers_snapshot => {
-				return snapshot.after.ref.root.child('/groups/' + group_id + '/groupname').once('value', groupname_snapshot => {
-					var groupname = "";
-					if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
-						groupname = groupname_snapshot.val().toString();
-					}
-
-					const promises = []
-
-					// for each subscriber, remove group from subscribing
-					subscribers_snapshot.forEach(function(subscriber) {
-			        	var uid = subscriber.key;
-						promises.push(snapshot.after.ref.root.child('/groupsFollowing/' + uid + '/' + group_id).remove());
-						promises.push(snapshot.after.ref.root.child('/userRemovedGroups/' + uid + '/' + group_id).remove());
-			    	});
-
-			    	promises.push(snapshot.after.ref.root.child('/groupFollowers/' + group_id).remove());
-			    	promises.push(snapshot.after.ref.root.child('/groupFollowPending/' + group_id).remove());
-			    	promises.push(snapshot.after.ref.root.child('/groupFollowersCount/' + group_id).remove());
-			    	promises.push(snapshot.after.ref.root.child('/groupMembersCount/' + group_id).remove());
-
-			    	if (groupname !== "") {
-			    		promises.push(snapshot.after.ref.root.child('/groupnames/' + groupname).remove());
-			    	}
-
-					// delete the group
-					promises.push(snapshot.after.ref.root.child('/groups/' + group_id).remove());
-
-					if (promises.length === 0) {
-						return null;
-					}
-					return Promise.all(promises);
-				}).catch(() => {return null});
-		  	}).catch(() => {return null});
-		}
-		else {
-			return null;
-		}
-	}).catch(() => {return null});
-})
-
 
 // ----------- Invite text messages ----------
 
@@ -809,6 +934,8 @@ function validE164(num) {
     return /^\+?[1-9]\d{1,14}$/.test(num)
 }
 
+// client app checks to see if the number is already in the system
+// so don't need to do it here
 exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id}').onCreate((snapshot, context) => {
 	const number = context.params.number;
 	const group_id = context.params.group_id;
@@ -837,11 +964,9 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 			return snapshot.ref.root.child('/invitedContacts/' + number).once('value', groups_for_contact => {
 				var sync = new DispatchGroup();
 				var token_0 = sync.enter();
-				var found_group = false
 				let used_twilio_numbers = []
 
 				groups_for_contact.forEach(function(post) {
-					found_group = true
 		        	var post_id = post.key;
 		        	var token = sync.enter()
 		        	return snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').once('value', twilio_number_snapshot => {
@@ -850,12 +975,10 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 			        		used_twilio_numbers.push(twilio_number);
 						}
 						sync.leave(token);
-						sync.leave(token_0);
+						
 				  	}).catch(() => {return null});
 				})
-				if (!found_group) {
-					sync.leave(token_0);
-				}
+				sync.leave(token_0);
 
 				sync.notify(function() {
 					var promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+13232501061");
@@ -969,96 +1092,105 @@ exports.sendPostToInvited = functions.database.ref('/posts/{group_id}/{post_id}'
 			var token = sync.enter();
         	var number = number_obj.key;
 
-        	// get the number that was used to send the first message
-        	snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').once('value', twilio_number_snapshot => {
-        		if (twilio_number_snapshot !== null && twilio_number_snapshot.val() !== null && twilio_number_snapshot.val() !== "0") {
-					let twilio_number = twilio_number_snapshot.val().toString();
+        	// check to see that the user hasn't said STOP
+        	snapshot.ref.root.child('/invitedContactsForGroup/' + group_id + '/' + number).once('value', invited_number_snapshot => {
+        		// if the number has value of false, then it has unsubscribed from recieving messages
+        		if (invited_number_snapshot !== null && invited_number_snapshot.val() !== null && invited_number_snapshot.val().toString() === "false") {
+        			return null;
+        		}
+        		else {
+        			// get the number that was used to send the first message
+		        	snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').once('value', twilio_number_snapshot => {
+		        		if (twilio_number_snapshot !== null && twilio_number_snapshot.val() !== null && twilio_number_snapshot.val() !== "0") {
+							let twilio_number = twilio_number_snapshot.val().toString();
 
-					// get the id of the user that invited the user
-					snapshot.ref.root.child('/invitedContacts/' + number + "/" + group_id + "/invitedBy").once('value', invited_by_snapshot => {
-						var invited_by_id = "";
-						if (invited_by_snapshot !== null && invited_by_snapshot.val() !== null) {
-							invited_by_id = invited_by_snapshot.val().toString();
-						}
-
-						snapshot.ref.root.child('/users/' + invited_by_id + '/name').once('value', name_snapshot => {
-							var name = "";
-							if (name_snapshot !== null && name_snapshot.val() !== null) {
-								name = name_snapshot.val().toString();
-							}
-
-							snapshot.ref.root.child('/users/' + invited_by_id + '/username').once('value', username_snapshot => {
-								var username = "";
-								if (username_snapshot !== null && username_snapshot.val() !== null) {
-									username = username_snapshot.val().toString();
+							// get the id of the user that invited the user
+							snapshot.ref.root.child('/invitedContacts/' + number + "/" + group_id + "/invitedBy").once('value', invited_by_snapshot => {
+								var invited_by_id = "";
+								if (invited_by_snapshot !== null && invited_by_snapshot.val() !== null) {
+									invited_by_id = invited_by_snapshot.val().toString();
 								}
 
-								snapshot.ref.root.child('/groups/' + group_id + '/groupname').once('value', groupname_snapshot => {
-									var groupname = "";
-									if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
-										groupname = groupname_snapshot.val().toString();
+								snapshot.ref.root.child('/users/' + invited_by_id + '/name').once('value', name_snapshot => {
+									var name = "";
+									if (name_snapshot !== null && name_snapshot.val() !== null) {
+										name = name_snapshot.val().toString();
 									}
 
-									snapshot.ref.root.child('/posts/' + group_id + "/" + post_id + '/videoUrl').once('value', videoUrl_snapshot => {
-										var vidUrl = "";
-										if (videoUrl_snapshot !== null && videoUrl_snapshot.val() !== null) {
-											vidUrl = videoUrl_snapshot.val().toString();
+									snapshot.ref.root.child('/users/' + invited_by_id + '/username').once('value', username_snapshot => {
+										var username = "";
+										if (username_snapshot !== null && username_snapshot.val() !== null) {
+											username = username_snapshot.val().toString();
 										}
 
-										snapshot.ref.root.child('/posts/' + group_id + "/" + post_id + '/caption').once('value', caption_snapshot => {
-											var caption = "";
-											if (caption_snapshot !== null && caption_snapshot.val() !== null) {
-												caption = caption_snapshot.val().toString();
+										snapshot.ref.root.child('/groups/' + group_id + '/groupname').once('value', groupname_snapshot => {
+											var groupname = "";
+											if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
+												groupname = groupname_snapshot.val().toString();
 											}
 
-											snapshot.ref.root.child('/posts/' + group_id + "/" + post_id + '/imageUrl').once('value', url_snapshot => {
-												var url = "";
-												if (url_snapshot !== null && url_snapshot.val() !== null) {
-													url = url_snapshot.val().toString();
+											snapshot.ref.root.child('/posts/' + group_id + "/" + post_id + '/videoUrl').once('value', videoUrl_snapshot => {
+												var vidUrl = "";
+												if (videoUrl_snapshot !== null && videoUrl_snapshot.val() !== null) {
+													vidUrl = videoUrl_snapshot.val().toString();
 												}
-											// storageRef.child(path).getDownloadURL().then(function(url) {
-												if ( !validE164(number) ) {
-											        throw new Error('number must be E164 format!')
-											    }
 
-											    // create the message
-											    var message1 = ""
+												snapshot.ref.root.child('/posts/' + group_id + "/" + post_id + '/caption').once('value', caption_snapshot => {
+													var caption = "";
+													if (caption_snapshot !== null && caption_snapshot.val() !== null) {
+														caption = caption_snapshot.val().toString();
+													}
 
-											    if (name === "") { message1 += username }
-											    else { message1 += name }
+													snapshot.ref.root.child('/posts/' + group_id + "/" + post_id + '/imageUrl').once('value', url_snapshot => {
+														var url = "";
+														if (url_snapshot !== null && url_snapshot.val() !== null) {
+															url = url_snapshot.val().toString();
+														}
+													// storageRef.child(path).getDownloadURL().then(function(url) {
+														if ( !validE164(number) ) {
+													        throw new Error('number must be E164 format!')
+													    }
 
-											    if (vidUrl === "") { message1 += " posted a picture in " }
-											    else { message1 += " posted a video in " }
-											    
-											    if (groupname === "") { message1 += 'the group' }
-											    else { message1 += groupname.replace("_-a-_", " ") }
+													    // create the message
+													    var message1 = ""
 
-											    if (caption !== ""){
-											    	message1 += ': "' + caption + '"'
-											    }
-												message1 += '... view more with GroupRoots: https://apps.apple.com/us/app/id1525863510'
+													    if (name === "") { message1 += username }
+													    else { message1 += name }
 
-											    const postedMessage = {
-											        body: message1,
-											        to: number,  // Text to this number
-											        from: twilio_number, // From a valid Twilio number
-											        mediaUrl: url
-											    }
-											    client.messages.create(postedMessage)
-											    sync.leave(token)
+													    if (vidUrl === "") { message1 += " posted a picture in " }
+													    else { message1 += " posted a video in " }
+													    
+													    if (groupname === "") { message1 += 'the group' }
+													    else { message1 += groupname.replace("_-a-_", " ") }
 
+													    if (caption !== ""){
+													    	message1 += ': "' + caption + '"'
+													    }
+														message1 += '... view more with GroupRoots: https://apps.apple.com/us/app/id1525863510'
+
+													    const postedMessage = {
+													        body: message1,
+													        to: number,  // Text to this number
+													        from: twilio_number, // From a valid Twilio number
+													        mediaUrl: url
+													    }
+													    client.messages.create(postedMessage)
+													    sync.leave(token)
+
+													}).catch(() => {return null});
+												}).catch(() => {return null});
 											}).catch(() => {return null});
 										}).catch(() => {return null});
 									}).catch(() => {return null});
 								}).catch(() => {return null});
 							}).catch(() => {return null});
-						}).catch(() => {return null});
+						}
+						else {
+							return null;
+						}
 					}).catch(() => {return null});
-				}
-				else {
-					return null;
-				}
-			}).catch(() => {return null});
+        		}
+        	}).catch(() => {return null});        	
 		})
 		sync.leave(token_0)
 		sync.notify(function() {
@@ -1067,8 +1199,100 @@ exports.sendPostToInvited = functions.database.ref('/posts/{group_id}/{post_id}'
 	}).catch(() => {return null});
 });
 
+// https://us-central1-grouproots-1c51f.cloudfunctions.net/reply
+exports.reply = functions.https.onRequest((req, res) => {
+	const from = req.body['From']
+	const twilio_number = req.body['To']
+	const body = req.body['Body']
+	var selected_group_id = ""
 
+ 	// check if contains STOP
+ 	// check if contains START
+ 	if(body.toLowerCase().indexOf("stop") !== -1){
+ 		// first get all the groups that the "from" number has under them,
+ 		// for each group check if the twilio_number is in invitedBy
+ 		// 		if so, then set that group as selected_group
 
+ 		// then do promise as ('/invitedContactsForGroup/' + group_id + '/' + from).set("false")
+
+ 		// now need to modify sendPostToInvited to check to see if the value for that number under the group is false
+
+ 		return admin.database().ref('/invitedContacts/' + from).once('value', groups_invited_to => {
+ 			if (groups_invited_to === null) {
+ 				res.status(500).send('');
+ 				return null;
+ 			}
+
+			var sync = new DispatchGroup();
+			var token_0 = sync.enter();
+			groups_invited_to.forEach(function(group) {
+				var token = sync.enter();
+	        	var group_id = group.key;
+
+	        	admin.database().ref('/invitedContacts/' + from + '/' + group_id + '/twilioNumber').once('value', twilio_number_snapshot => {
+	        		var twilio_number_from_group = "";
+					if (twilio_number_snapshot !== null && twilio_number_snapshot.val() !== null) {
+						twilio_number_from_group = twilio_number_snapshot.val().toString();
+					}
+					if (twilio_number_from_group === twilio_number) {
+						selected_group_id = group_id
+					}
+					sync.leave(token)
+	        	}).catch(() => {res.status(500).send(''); return null});
+	        })
+	        sync.leave(token_0)
+	        sync.notify(function() {
+				if (selected_group_id === "") {
+					res.status(500).send('');
+					return null;
+				}
+				res.status(200).send('');
+				return admin.database().ref('/invitedContactsForGroup/' + selected_group_id + '/' + from).set("false");
+			})
+	  	}).catch(() => {res.status(500).send(''); return null});
+ 	}
+ 	else if(body.toLowerCase().indexOf("start") !== -1){
+ 		// first get all the groups that the from number has under them,
+ 		// for each group check if the twilio_number is in invitedBy
+ 		// 		if so, then set that group as selected_group
+ 		return admin.database().ref('/invitedContacts/' + from).once('value', groups_invited_to => {
+ 			if (groups_invited_to === null) {
+ 				res.status(500).send('');
+ 				return null;
+ 			}
+
+			var sync = new DispatchGroup();
+			var token_0 = sync.enter();
+			groups_invited_to.forEach(function(group) {
+				var token = sync.enter();
+	        	var group_id = group.key;
+
+	        	admin.database().ref('/invitedContacts/' + from + '/' + group_id + '/twilioNumber').once('value', twilio_number_snapshot => {
+	        		var twilio_number_from_group = "";
+					if (twilio_number_snapshot !== null && twilio_number_snapshot.val() !== null) {
+						twilio_number_from_group = twilio_number_snapshot.val().toString();
+					}
+					if (twilio_number_from_group === twilio_number) {
+						selected_group_id = group_id
+					}
+					sync.leave(token)
+	        	}).catch(() => {res.status(500).send(''); return null});
+	        })
+	        sync.leave(token_0)
+	        sync.notify(function() {
+				if (selected_group_id === "") {
+					res.status(500).send('');
+					return null;
+				}
+				res.status(200).send('');
+				return admin.database().ref('/invitedContactsForGroup/' + selected_group_id + '/' + from).set("true");
+			})
+	  	}).catch(() => {res.status(500).send(''); return null});
+ 	}
+
+  	
+  	return null
+});
 
 
 
