@@ -12,6 +12,7 @@ import FirebaseAuth
 import FirebaseDatabase
 import UPCarouselFlowLayout
 import Zoomy
+import NVActivityIndicatorView
 
 class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate, ViewersControllerDelegate {
     
@@ -49,9 +50,23 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         }
     }
     
+    var isZooming = false
+    
     // key is groupId
     // value is an array of GroupPosts of that group
     var groupPostsDict: [String:[GroupPost]] = [:]
+    
+    let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 50, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
+    
+    private lazy var groupnameButton: UIButton = {
+        let label = UIButton(type: .system)
+        label.setTitleColor(.white, for: .normal)
+        label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 20)
+        label.contentHorizontalAlignment = .center
+        label.isUserInteractionEnabled = true
+        label.addTarget(self, action: #selector(handleGroupTap), for: .touchUpInside)
+        return label
+    }()
     
     private lazy var closeButton: UIButton = {
         let button = UIButton(type: .system)
@@ -69,12 +84,50 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
             overrideUserInterfaceStyle = .light
         }
         setupViews()
+        view.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handleDismiss)))
+    }
+    
+    var viewTranslation = CGPoint(x: 0, y: 0)
+    @objc func handleDismiss(sender: UIPanGestureRecognizer) {
+        if !isZooming{
+            switch sender.state {
+                case .changed:
+                    viewTranslation = sender.translation(in: view)
+                    UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+                        self.view.transform = CGAffineTransform(translationX: 0, y: self.viewTranslation.y)
+                    })
+                case .ended:
+                    if viewTranslation.y < 50 && viewTranslation.y > -50 {
+                        UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+                            self.view.transform = .identity
+                        })
+                    } else {
+                        UIView.animate(withDuration: 0.8, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+                            if self.viewTranslation.y > 50 {
+                                self.view.transform = CGAffineTransform(translationX: 0, y: UIScreen.main.bounds.height)
+                            }
+                            else {
+                                self.view.transform = CGAffineTransform(translationX: 0, y: -1 * UIScreen.main.bounds.height)
+                            }
+                        })
+                        self.sendCloseNotifications(animatedScroll: false)
+                        Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false) { timer in
+                            self.collectionView.isHidden = true
+                            self.view.backgroundColor = .clear
+//                            self.sendCloseNotifications(animatedScroll: true)
+                            self.dismiss(animated: false, completion: nil)
+                        }
+                    }
+                default:
+                    break
+                }
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
         self.configureNavigationBar()
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
         
         // not actually scrolling but enables video play
         self.isScrolling = false
@@ -84,6 +137,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         super.viewWillDisappear(animated)
         self.isScrolling = true
         self.navigationController?.isNavigationBarHidden = false
+//        handleCloseFullscreen()
     }
     
     private func configureNavigationBar() {
@@ -101,6 +155,29 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     
     private func configureGroup() {
         handleRefresh()
+        configureGroupNameButton()
+    }
+    
+    @objc private func configureGroupNameButton() {
+        guard let group = group else { return }
+        if group.groupname != "" {
+            let lockImage = #imageLiteral(resourceName: "lock_white")
+            let lockIcon = NSTextAttachment()
+            lockIcon.image = lockImage
+            let lockIconString = NSAttributedString(attachment: lockIcon)
+
+            let balanceFontSize: CGFloat = 20
+            let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
+
+            //Setting up font and the baseline offset of the string, so that it will be centered
+            let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.white, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
+            let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
+
+            if group.isPrivate ?? false {
+                balanceString.append(lockIconString)
+            }
+            self.groupnameButton.setAttributedTitle(balanceString, for: .normal)
+        }
     }
     
     @objc private func handleRefresh() {
@@ -116,63 +193,61 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
             
             self.configureHeader()
             self.collectionView?.reloadData()
-            self.scrollToSetPost()
             self.scrollToIndexPath()
                 
             let sync = DispatchGroup()
             posts.forEach({ (groupPost) in
                 sync.enter()
-                Database.database().fetchFirstCommentForPost(withId: groupPost.id, completion: { (comments) in
-                    Database.database().numberOfCommentsForPost(postId: groupPost.id) { (commentsCount) in
-                        self.numCommentsForPosts[groupPost.id] = commentsCount
-                        Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
-                            sync.leave()
-                            if inGroup {
-                                sync.enter()
-                                Database.database().fetchPostVisibleViewers(postId: groupPost.id, completion: { (viewer_ids) in
-                                    Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
-                                        sync.leave()
-                                        self.numViewsForPost[groupPost.id] = views_count
-    //                                    self.reloadGroupData()
-                                        if viewer_ids.count > 0 {
-                                            var viewers = [User]()
-                                            let viewersSync = DispatchGroup()
-                                            sync.enter()
-                                            viewer_ids.forEach({ (viewer_id) in
-                                                viewersSync.enter()
-                                                Database.database().userExists(withUID: viewer_id, completion: { (exists) in
-                                                    if exists{
-                                                        Database.database().fetchUser(withUID: viewer_id, completion: { (user) in
-                                                            viewers.append(user)
-                                                            viewersSync.leave()
-                                                        })
-                                                    }
-                                                    else {
+                Database.database().numberOfCommentsForPost(postId: groupPost.id) { (commentsCount) in
+                    self.numCommentsForPosts[groupPost.id] = commentsCount
+                    Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
+                        sync.leave()
+                        if inGroup {
+                            sync.enter()
+                            Database.database().fetchPostVisibleViewers(postId: groupPost.id, completion: { (viewer_ids) in
+                                Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
+                                    sync.leave()
+                                    self.numViewsForPost[groupPost.id] = views_count
+//                                    self.reloadGroupData()
+                                    if viewer_ids.count > 0 {
+                                        var viewers = [User]()
+                                        let viewersSync = DispatchGroup()
+                                        sync.enter()
+                                        viewer_ids.forEach({ (viewer_id) in
+                                            viewersSync.enter()
+                                            Database.database().userExists(withUID: viewer_id, completion: { (exists) in
+                                                if exists{
+                                                    Database.database().fetchUser(withUID: viewer_id, completion: { (user) in
+                                                        viewers.append(user)
                                                         viewersSync.leave()
-                                                    }
-                                                })
+                                                    })
+                                                }
+                                                else {
+                                                    viewersSync.leave()
+                                                }
                                             })
-                                            viewersSync.notify(queue: .main) {
-                                                self.viewersForPosts[groupPost.id] = viewers
-                                                sync.leave()
-                                            }
+                                        })
+                                        viewersSync.notify(queue: .main) {
+                                            self.viewersForPosts[groupPost.id] = viewers
+                                            sync.leave()
                                         }
-                                    }) { (err) in }
-                                }) { (err) in
-                                }
+                                    }
+                                }) { (err) in }
+                            }) { (err) in
                             }
-                        }) { (err) in
-                            return
                         }
+                    }) { (err) in
+                        return
                     }
-                }) { (err) in
                 }
             })
             sync.notify(queue: .main) {
                 Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
                     self.groupPostMembers = users
                     DispatchQueue.main.async{
+                        self.activityIndicatorView.isHidden = true
                         self.collectionView.reloadData()
+                        self.scrollToIndexPath()
                         self.configureHeader()
                     }
                 }) { (_) in }
@@ -218,10 +293,21 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         
         self.configureNavigationBar()
         
+        self.view.insertSubview(groupnameButton, at: 6)
+        groupnameButton.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingLeft: 50, paddingRight: 50)
+        groupnameButton.backgroundColor = .clear
+        groupnameButton.isUserInteractionEnabled = true
+        
         self.view.addSubview(closeButton)
-        closeButton.anchor(top: self.view.topAnchor, right: self.view.rightAnchor, paddingTop: 30, paddingRight: 20)
+        closeButton.anchor(top: self.view.topAnchor, right: self.view.rightAnchor, paddingTop: 40, paddingRight: 20)
+        
+        activityIndicatorView.isHidden = false
+        self.view.insertSubview(activityIndicatorView, at: 20)
+        activityIndicatorView.startAnimating()
             
         self.view.backgroundColor = UIColor.black
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleCloseFullscreen), name: NSNotification.Name(rawValue: "closeFullScreenViewController"), object: nil)
     }
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
@@ -260,7 +346,27 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         }
     }
     
+    func sendCloseNotifications(animatedScroll: Bool){
+        guard let group = group else { return }
+        var row = -1
+        collectionView.visibleCells.forEach { cell in
+            if collectionView.indexPath(for: cell) != nil {
+                row = collectionView.indexPath(for: cell)!.row
+            }
+        }
+        if row == -1 { // error occured when trying to find row
+            NotificationCenter.default.post(name: NSNotification.Name("closeFullScreen"), object: nil)
+        }
+        else {
+            let userDataDict:[String: Any] = ["indexPathRow": row, "animatedScroll": animatedScroll, "groupId": group.groupId]
+            NotificationCenter.default.post(name: NSNotification.Name("closeFullScreenWithRow"), object: nil, userInfo: userDataDict)
+        }
+    }
+    
     @objc func handleCloseFullscreen(){
+        // this is called when the button to close is pressed, no need to animate in that case
+        // if animate it will look weird
+        sendCloseNotifications(animatedScroll: false)
         self.dismiss(animated: true, completion: {})
     }
     
@@ -384,6 +490,14 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         }
     }
     
+    @objc func handleGroupTap(){
+        guard let group = group else { return }
+        let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+        groupProfileController.group = group
+        groupProfileController.modalPresentationCapturesStatusBarAppearance = true
+        navigationController?.pushViewController(groupProfileController, animated: true)
+    }
+    
     //MARK: - InnerPostCellDelegate
     
     func didTapComment(groupPost: GroupPost) {
@@ -486,10 +600,12 @@ extension LargeImageViewController: Zoomy.Delegate {
     func didBeginPresentingOverlay(for imageView: Zoomable) {
         NotificationCenter.default.post(name: NSNotification.Name("tabBarDisappear"), object: nil)
         collectionView.isScrollEnabled = false
+        isZooming = true
     }
     
     func didEndPresentingOverlay(for imageView: Zoomable) {
         NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
         collectionView.isScrollEnabled = true
+        isZooming = false
     }
 }

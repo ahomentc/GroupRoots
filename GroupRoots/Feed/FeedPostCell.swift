@@ -78,13 +78,13 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
     
     var isScrolling: Bool? {
         didSet {
-            configurePost()
+//            configurePost()
         }
     }
     
     var isScrollingVertically: Bool? {
         didSet {
-            configurePost()
+//            configurePost()
         }
     }
     
@@ -102,7 +102,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         captionLabel.attributedText = attributedText
         commentsLabel.attributedText = attributedText
         
-        self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
+//        self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
         self.player.pause()
         self.player.url = URL(string: "")
         self.activityIndicatorView.isHidden = true
@@ -305,13 +305,13 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         captionLabel.anchor(left: leftAnchor, bottom: commentsButton.topAnchor, right: rightAnchor, paddingLeft: padding + 3, paddingBottom: padding - 2, paddingRight: padding - 5)
         
         addSubview(viewButton)
-        viewButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: UIScreen.main.bounds.height/16 + 45, paddingLeft: padding)
+        viewButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: UIScreen.main.bounds.height/16 + 50, paddingLeft: padding)
         
         addSubview(viewCountLabel)
-        viewCountLabel.anchor(top: topAnchor, left: viewButton.rightAnchor, paddingTop: UIScreen.main.bounds.height/16 + 60)
+        viewCountLabel.anchor(top: topAnchor, left: viewButton.rightAnchor, paddingTop: UIScreen.main.bounds.height/16 + 65)
 
         addSubview(optionsButton)
-        optionsButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: UIScreen.main.bounds.height/16 - 10, paddingLeft: padding)
+        optionsButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingLeft: padding)
         
         insertSubview(playButton, at: 11)
         
@@ -462,8 +462,6 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
                 self.player.view.isHidden = true
                 self.activityIndicatorView.isHidden = true
                 self.playButton.isHidden = true
-                
-                
             }
             else {
                 self.player.url = URL(string: videoUrl)
@@ -507,8 +505,11 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
                 self.photoImageView.frame.size.height = self.photoImageView.frame.size.width * (height!/width!)
                 
                 var y_offset = UIScreen.main.bounds.height - self.photoImageView.frame.size.height - UIScreen.main.bounds.height/9 - 100
-                if y_offset < 30 {
-                    y_offset = 28 + self.photoImageView.frame.size.height/100
+                if y_offset < 28 {
+                    y_offset = UIScreen.main.bounds.height/9 - 30
+                }
+                else {
+                    y_offset = y_offset + 15
                 }
                 self.photoImageView.frame.origin.y = y_offset
                 self.photoImageView.frame.origin.x = 10

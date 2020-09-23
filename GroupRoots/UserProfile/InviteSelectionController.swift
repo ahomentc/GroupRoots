@@ -95,6 +95,7 @@ class InviteSelectionController: UIViewController, UICollectionViewDataSource, U
     internal func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
         cell.group = groups?[indexPath.item]
+        cell.user = User(uid: "", dictionary: ["":0])
         return cell
     }
     

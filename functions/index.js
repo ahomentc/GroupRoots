@@ -571,7 +571,7 @@ exports.transferToMembersFollowingOnSubscribe = functions.database.ref('/groupsF
 	}).catch(() => {return null});
 })
 
-exports.addToUsernamesOnCreate = functions.database.ref('/users/{user_id}/{username}').onCreate((snapshot, context) => {
+exports.addToUsernamesOnCreate = functions.database.ref('/users/{user_id}/username/{username}').onCreate((snapshot, context) => {
 	const user_id = context.params.user_id;
 	const username = context.params.username;
 
@@ -772,14 +772,14 @@ exports.updateRecommendedFollowOnGroupSubscribe = functions.database.ref('/group
 						if (is_following_member_snapshot.val() === null) { // if not already following them
 							// check if already in recommendedToFollow with a higher priority
 							snapshot.ref.root.child('/recommendedToFollow/' + new_subscriber_id + '/' + member_id).once('value', new_subscriber_rec_snapshot => {
-								if (new_subscriber_rec_snapshot.val() === null || new_subscriber_rec_snapshot.val() > 4) { // if priority doesn't exist or there is a lower priority currenlty
+								if ((new_subscriber_rec_snapshot.val() === null || new_subscriber_rec_snapshot.val() > 4) && new_subscriber_rec_snapshot.val() !== 1000) { // if priority doesn't exist or there is a lower priority currenlty
 									promises.push(snapshot.ref.root.child('/recommendedToFollow/' + new_subscriber_id + '/' + member_id).set(4));
 								}
 								// check if member is already following the new_member
 								snapshot.ref.root.child('/following/' + member_id + '/' + new_subscriber_id).once('value', is_following_new_member_snapshot => {
 									if (is_following_new_member_snapshot.val() === null) { // if not already following them
 										snapshot.ref.root.child('/recommendedToFollow/' + member_id + '/' + new_subscriber_id).once('value', member_rec_snapshot => {
-											if (member_rec_snapshot.val() === null || member_rec_snapshot.val() > 4) { // if priority doesn't exist or there is a lower priority currenlty
+											if ((member_rec_snapshot.val() === null || member_rec_snapshot.val() > 4) && member_rec_snapshot.val() !== 1000) { // if priority doesn't exist or there is a lower priority currenlty
 												promises.push(snapshot.ref.root.child('/recommendedToFollow/' + member_id + '/' + new_subscriber_id).set(4));
 											}
 											sync.leave(token)
@@ -819,6 +819,14 @@ exports.updateRecommendedFollowOnGroupSubscribe = functions.database.ref('/group
 			})
 		}).catch(() => {return null});
 	}).catch(() => {return null});
+})
+
+exports.updateRecommendedFollowOnUserFollow = functions.database.ref('/followers/{following_user}/{follower_user}').onCreate((snapshot, context) => {
+	const following_user = context.params.following_user;
+	const follower_user = context.params.follower_user;
+
+	// remove following_user from follower_user's recommended by setting value to 1000
+	return snapshot.ref.root.child('/recommendedToFollow/' + follower_user + '/' + following_user).set(1000);
 })
 
 // ---------------- Updating counts ----------------

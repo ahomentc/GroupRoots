@@ -53,7 +53,82 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         label.textAlignment = .center
         label.backgroundColor = UIColor.white
         label.font = UIFont(name: "Avenir", size: 22)!
+        label.isHidden = true
         return label
+    }()
+    
+    private let selectedGroupLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+        label.isHidden = true
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "Posting to ", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
+        label.attributedText = attributedText
+        return label
+    }()
+    
+    private let selectedGroupnameLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+        label.isHidden = true
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
+        label.attributedText = attributedText
+        return label
+    }()
+    
+    private let groupImageView: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.image = #imageLiteral(resourceName: "user")
+        iv.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        iv.layer.borderWidth = 0.5
+        return iv
+    }()
+    
+    private let userOneImageView: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.image = #imageLiteral(resourceName: "user")
+        iv.isHidden = true
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderWidth = 0
+        return iv
+    }()
+    
+    private let userTwoImageView: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.image = #imageLiteral(resourceName: "user")
+        iv.isHidden = true
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderWidth = 0
+        return iv
+    }()
+    
+    private let groupnameLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 15)
+        return label
+    }()
+    
+    private lazy var selectOtherGroupButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(postToDiffGroup), for: .touchUpInside)
+        button.layer.zPosition = 4;
+        button.isHidden = true
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        button.setTitle("Post to a different group", for: .normal)
+        return button
     }()
     
 //    override var prefersStatusBarHidden: Bool { return true }
@@ -156,6 +231,38 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         containerView.addSubview(selectGroupLabel)
         selectGroupLabel.anchor(top: textView.bottomAnchor, left: containerView.leftAnchor, right: containerView.rightAnchor, paddingTop: UIScreen.main.bounds.height/50)
         
+        self.view.addSubview(selectedGroupLabel)
+        selectedGroupLabel.anchor(top: containerView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/15)
+        
+        self.selectedGroupLabel.attributedText = NSMutableAttributedString(string: "Posting to", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
+        
+        self.view.addSubview(groupImageView)
+        groupImageView.anchor(top: selectedGroupLabel.bottomAnchor, left: self.view.leftAnchor, paddingTop: 15, paddingLeft: UIScreen.main.bounds.width/2 - 40, width: 80, height: 80)
+//        groupImageView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
+        groupImageView.layer.cornerRadius = 80 / 2
+        groupImageView.isHidden = true
+        
+        self.view.addSubview(userOneImageView)
+        userOneImageView.anchor(top: selectedGroupLabel.bottomAnchor, left: self.view.leftAnchor, paddingTop: 20, paddingLeft: UIScreen.main.bounds.width/2 - 50, width: 70, height: 70)
+//        userOneImageView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
+        userOneImageView.layer.cornerRadius = 70/2
+        userOneImageView.isHidden = true
+        userOneImageView.image = UIImage()
+        
+        self.view.addSubview(userTwoImageView)
+        userTwoImageView.anchor(top: selectedGroupLabel.bottomAnchor, left: self.view.leftAnchor, paddingTop: 17, paddingLeft: UIScreen.main.bounds.width/2 - 20, width: 75, height: 75)
+//        userTwoImageView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
+        userTwoImageView.layer.cornerRadius = 75/2
+        userTwoImageView.isHidden = true
+        userTwoImageView.image = UIImage()
+        
+        selectOtherGroupButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
+        selectOtherGroupButton.layer.cornerRadius = 14
+        self.view.insertSubview(selectOtherGroupButton, at: 4)
+        
+        self.view.addSubview(selectedGroupnameLabel)
+        selectedGroupnameLabel.anchor(top: groupImageView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: 10)
+        
         fetchAllGroups()
     }
     
@@ -185,6 +292,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
     internal func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
         cell.group = groups[indexPath.item]
+        cell.user = User(uid: "", dictionary: ["":0])
         if last_selected_indexpath == indexPath {
             cell.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
         }
@@ -195,26 +303,92 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         Database.database().fetchAllGroups(withUID: "", completion: { (groups) in
             self.groups = groups
             
-            let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
-            let displayWidth: CGFloat = self.view.frame.width
-            let displayHeight: CGFloat = self.view.frame.height
-            
-            let layout = UICollectionViewFlowLayout()
-            layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
-            
-            self.collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/4, width: displayWidth, height: displayHeight - barHeight - UIScreen.main.bounds.height/4 + 10), collectionViewLayout: layout)
-            self.collectionView.delegate = self
-            self.collectionView.dataSource = self
-            self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-            self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
-            self.collectionView.backgroundColor = UIColor.white
-            self.view.addSubview(self.collectionView)
-            
-            self.collectionView.layoutIfNeeded()
-            self.scrollToPreSelected()
-            
-        }) { (_) in
+            if self.preSelectedGroup == nil {
+                self.selectGroupLabel.isHidden = false
+                self.selectedGroupLabel.isHidden = true
+                self.selectedGroupnameLabel.isHidden = true
+                self.selectOtherGroupButton.isHidden = true
+                
+                let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
+                let displayWidth: CGFloat = self.view.frame.width
+                let displayHeight: CGFloat = self.view.frame.height
+                
+                let layout = UICollectionViewFlowLayout()
+                layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
+                
+                self.collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/4, width: displayWidth, height: displayHeight - barHeight - UIScreen.main.bounds.height/4 + 10), collectionViewLayout: layout)
+                self.collectionView.delegate = self
+                self.collectionView.dataSource = self
+                self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+                self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
+                self.collectionView.backgroundColor = UIColor.white
+                self.view.addSubview(self.collectionView)
+            }
+            else {
+                // set up groupname if there is none
+                self.selectGroupLabel.isHidden = true
+                self.selectedGroupLabel.isHidden = false
+                self.selectedGroupnameLabel.isHidden = false
+                self.selectOtherGroupButton.isHidden = false
+                Database.database().fetchFirstNGroupMembers(groupId: self.preSelectedGroup!.groupId, n: 3, completion: { (first_n_users) in
+                    self.loadGroupMembersIcon(group: self.preSelectedGroup!, first_n_users: first_n_users)
+                    if self.preSelectedGroup!.groupname == "" {
+                        var usernames = ""
+                        if first_n_users.count > 2 {
+                            usernames = first_n_users[0].username + " & " + first_n_users[1].username + " & " + first_n_users[2].username
+                            if usernames.count > 21 {
+                                usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                                usernames = usernames + "..."
+                            }
+                        }
+                        else if first_n_users.count == 2 {
+                            usernames = first_n_users[0].username + " & " + first_n_users[1].username
+                            if usernames.count > 21 {
+                                usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                                usernames = usernames + "..."
+                            }
+                        }
+                        else if first_n_users.count == 1 {
+                            usernames = first_n_users[0].username
+                            if usernames.count > 21 {
+                                usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                                usernames = usernames + "..."
+                            }
+                        }
+                        self.selectedGroupnameLabel.attributedText = NSMutableAttributedString(string: usernames, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 20)])
+                    }
+                    else {
+                        self.selectedGroupnameLabel.attributedText = NSMutableAttributedString(string: self.preSelectedGroup!.groupname.replacingOccurrences(of: "_-a-_", with: " "), attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 20)])
+                    }
+                }) { (_) in }
+            }
+            }) { (_) in
         }
+    }
+    
+    @objc private func postToDiffGroup(){
+        self.selectGroupLabel.isHidden = false
+        self.selectedGroupLabel.isHidden = true
+        self.selectedGroupnameLabel.isHidden = true
+        self.selectOtherGroupButton.isHidden = true
+        
+        let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
+        let displayWidth: CGFloat = self.view.frame.width
+        let displayHeight: CGFloat = self.view.frame.height
+        
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
+        
+        self.collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/4, width: displayWidth, height: displayHeight - barHeight - UIScreen.main.bounds.height/4 + 10), collectionViewLayout: layout)
+        self.collectionView.delegate = self
+        self.collectionView.dataSource = self
+        self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
+        self.collectionView.backgroundColor = UIColor.white
+        self.view.addSubview(self.collectionView)
+        
+        self.collectionView.layoutIfNeeded()
+        self.scrollToPreSelected()
     }
     
     
@@ -269,6 +443,45 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
             self.dismiss(animated: true, completion: nil)
         })
     }
+    
+    private func loadGroupMembersIcon(group: Group?, first_n_users: [User]){
+        guard let group = group else { return }
+        Database.database().fetchFirstNGroupMembers(groupId: group.groupId, n: 3, completion: { (first_n_users) in
+            if let groupProfileImageUrl = group.groupProfileImageUrl {
+                self.groupImageView.loadImage(urlString: groupProfileImageUrl)
+                self.groupImageView.isHidden = false
+                self.userOneImageView.isHidden = true
+                self.userTwoImageView.isHidden = true
+            } else {
+                self.groupImageView.isHidden = true
+                self.userOneImageView.isHidden = false
+                self.userTwoImageView.isHidden = true
+                
+                if first_n_users.count > 0 {
+                    if let userOneImageUrl = first_n_users[0].profileImageUrl {
+                        self.userOneImageView.loadImage(urlString: userOneImageUrl)
+                    } else {
+                        self.userOneImageView.image = #imageLiteral(resourceName: "user")
+                        self.userOneImageView.backgroundColor = .white
+                    }
+                }
+                
+                // set the second user (only if it exists)
+                if first_n_users.count > 1 {
+                    self.userTwoImageView.isHidden = false
+                    if let userTwoImageUrl = first_n_users[1].profileImageUrl {
+                        self.userTwoImageView.loadImage(urlString: userTwoImageUrl)
+                        self.userTwoImageView.layer.borderWidth = 2
+                    } else {
+                        self.userTwoImageView.image = #imageLiteral(resourceName: "user")
+                        self.userTwoImageView.backgroundColor = .white
+                        self.userTwoImageView.layer.borderWidth = 2
+                    }
+                }
+            }
+        }) { (_) in }
+    }
+    
 }
 
 extension SharePhotoController: UICollectionViewDelegateFlowLayout {

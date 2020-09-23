@@ -725,6 +725,39 @@ extension Database {
             cancel?(err)
         }
     }
+
+    // Modify this to get a random selection of 10 from the first 30 when sorted by value
+    // Also, this may be out of order since doing an aysnc fetchUser
+    func fetchFollowRecommendations(withUID uid: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
+        let ref = Database.database().reference().child("recommendedToFollow").child(uid)
+        ref.queryOrderedByValue().queryLimited(toFirst: UInt(30)).observeSingleEvent(of: .value, with: { (snapshot) in
+            var users = [User]()
+            
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                sync.enter()
+                let userId = child.key
+                self.userExists(withUID: userId, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchUser(withUID: userId, completion: { (user) in
+                            users.append(user)
+                            sync.leave()
+                        })
+                    }
+                    else{
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                completion(users.shuffled())
+                return
+            }
+        }) { (err) in
+            print("Failed to fetch all users from database:", (err))
+            cancel?(err)
+        }
+    }
     
     func isFollowingUser(withUID uid: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }

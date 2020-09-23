@@ -194,7 +194,8 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         largeImageViewController.group = group
         largeImageViewController.postToScrollToId = post.id
         let navController = UINavigationController(rootViewController: largeImageViewController)
-        navController.modalPresentationStyle = .fullScreen
+//        navController.modalPresentationStyle = .fullScreen
+        navController.modalPresentationStyle = .overCurrentContext
         self.present(navController, animated: true, completion: nil)
     }
     

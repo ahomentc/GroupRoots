@@ -337,7 +337,9 @@ class GroupProfileController: HomePostCellViewController {
         largeImageViewController.group = group
         largeImageViewController.indexPath = indexPath
         let navController = UINavigationController(rootViewController: largeImageViewController)
-        navController.modalPresentationStyle = .fullScreen
+//        navController.modalPresentationStyle = .fullScreen
+        navController.modalPresentationStyle = .overCurrentContext
+        
         self.present(navController, animated: true, completion: nil)
         
         let groupPost = groupPosts[indexPath.row]

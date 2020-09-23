@@ -85,7 +85,7 @@ class FollowPageController: UICollectionViewController, loadMoreFollowersCellDel
         oldestRetrievedDate = 10000000000000.0
         
         self.collectionView?.refreshControl?.beginRefreshing()
-
+        
         Database.database().fetchUserFollowing(withUID: user_id, completion: { (following_users) in
             self.following = following_users
             self.collectionView?.reloadData()

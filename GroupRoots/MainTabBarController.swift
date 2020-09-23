@@ -147,6 +147,9 @@ class MainTabBarController: UITabBarController {
             if !seen {
                 likeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "bell_2_unread"), selectedImage: #imageLiteral(resourceName: "bell_2"), rootViewController: NotificationsController(collectionViewLayout: UICollectionViewFlowLayout()))
             }
+            else {
+                UIApplication.shared.applicationIconBadgeNumber = 0
+            }
             sync.leave()
         })
 
@@ -212,24 +215,20 @@ class MainTabBarController: UITabBarController {
 extension MainTabBarController: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
         let index = viewControllers?.index(of: viewController)
+        if index != 0 {
+            if let topController = UIApplication.topViewController() {
+                if type(of: topController) == LargeImageViewController.self {
+                    NotificationCenter.default.post(name: NSNotification.Name("closeFullScreenViewController"), object: nil)
+                }
+            }
+//            NotificationCenter.default.post(name: NSNotification.Name("closeFullScreenViewController"), object: nil)
+        }
         if index == 3 {
             tabBar.items![3].image = #imageLiteral(resourceName: "bell_2")
             tabBar.backgroundColor = UIColor.clear
             tabBar.unselectedItemTintColor = UIColor.gray
         }
         if index == 2 {
-//            let sharePhotoController = SharePhotoController()
-//            if let topController = UIApplication.topViewController() {
-//                if type(of: topController) == GroupProfileController.self {
-//                    let groupProfile = topController as? GroupProfileController
-//                    sharePhotoController.preSelectedGroup = groupProfile?.group
-//                }
-//            }
-//
-//            let nacController = UINavigationController(rootViewController: sharePhotoController)
-//            nacController.modalPresentationStyle = .fullScreen
-//            present(nacController, animated: true, completion: nil)
-            
             var config = YPImagePickerConfiguration()
             config.library.isSquareByDefault = false
             config.shouldSaveNewPicturesToAlbum = false

@@ -14,7 +14,22 @@ import NVActivityIndicatorView
 import Zoomy
 import SwiftGifOrigin
 
-class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate, InviteToGroupWhenCreateControllerDelegate {
+class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate, InviteToGroupWhenCreateControllerDelegate, EmptyFeedPostCellDelegate {
+    
+    func viewFullScreen(group: Group, indexPath: IndexPath) {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        layout.minimumLineSpacing = CGFloat(0)
+        
+        let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
+        largeImageViewController.group = group
+        largeImageViewController.indexPath = indexPath
+        let navController = UINavigationController(rootViewController: largeImageViewController)
+        navController.modalPresentationStyle = .overCurrentContext
+//        navController.modalPresentationStyle = .fullScreen
+        self.present(navController, animated: true, completion: nil)
+    }
         
     override var prefersStatusBarHidden: Bool {
       return statusBarHidden
@@ -250,13 +265,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             })
         }
     }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        self.navigationController?.isNavigationBarHidden = false
-        // Show the navigation bar on other view controllers
-        self.collectionView?.refreshControl?.endRefreshing()
-    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -304,7 +312,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             }
             self.isFirstView = !hasOpenedApp
         }
-        
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
         
         let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor.black]
@@ -414,6 +421,12 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         }
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // Show the navigation bar on other view controllers
+        self.navigationController?.setNavigationBarHidden(false, animated: true)
+    }
+    
     @objc func handleRefresh() {
         // stop video of visible cell
         collectionView.visibleCells.forEach { cell in
@@ -449,7 +462,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     private func loadGroupPosts(){
         addGroupPosts()
-        showEmptyStateViewIfNeeded()
+        if !isFirstView {
+            showEmptyStateViewIfNeeded()
+        }
     }
     
     private func addGroupPosts() {
@@ -671,6 +686,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.logoImageView.isHidden = false
                     self.collectionView.isHidden = true
                     self.createGroupIconButton.isHidden = true
+                    self.noSubscriptionsLabel.isHidden = true
                 }
                 else if tempGroupPosts2D.count > 0 {
                     self.activityIndicatorView.isHidden = true
@@ -727,6 +743,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         if indexPath.row == groupPosts2D.count {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: EmptyFeedPostCell.cellId, for: indexPath) as! EmptyFeedPostCell
             cell.fetchedAllGroups = fetchedAllGroups
+            cell.delegate = self
             return cell
         }
         else if indexPath.row < groupPosts2D.count {
@@ -942,10 +959,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     func didChangeViewType(isFullscreen: Bool) {
         if isFullscreen {
-            print("---------")
-            print("create group icon is: ", createGroupIconButton.isHidden)
             self.createGroupIconButton.isHidden = true
-            print("create group icon is: ", createGroupIconButton.isHidden)
 //            self.statusBarHidden = true
         }
         else {
