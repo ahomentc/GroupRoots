@@ -94,21 +94,21 @@ class GroupCell: UICollectionViewCell {
     private func sharedInit() {
         
         addSubview(profileImageView)
-        profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 60, height: 60)
+        profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 50, height: 50)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 60 / 2
+        profileImageView.layer.cornerRadius = 50 / 2
         profileImageView.isHidden = false
         
         addSubview(userOneImageView)
-        userOneImageView.anchor(left: leftAnchor, paddingTop: 10, paddingLeft: 28, width: 40, height: 40)
-        userOneImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        userOneImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 16, paddingLeft: 22, width: 40, height: 40)
+//        userOneImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         userOneImageView.layer.cornerRadius = 40/2
         userOneImageView.isHidden = true
         userOneImageView.image = UIImage()
         
         addSubview(userTwoImageView)
-        userTwoImageView.anchor(left: leftAnchor, paddingTop: 0, paddingLeft: 8, width: 44, height: 44)
-        userTwoImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        userTwoImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 20, paddingLeft: 8, width: 44, height: 44)
+//        userTwoImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         userTwoImageView.layer.cornerRadius = 44/2
         userTwoImageView.isHidden = true
         userTwoImageView.image = UIImage()
@@ -117,7 +117,7 @@ class GroupCell: UICollectionViewCell {
         hiddenIcon.anchor(top: topAnchor, bottom: bottomAnchor, right: rightAnchor, paddingRight: 12)
         
         addSubview(groupnameLabel)
-        groupnameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, paddingLeft: 12)
+        groupnameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, paddingLeft: 18)
         
         let separatorView = UIView()
         separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)

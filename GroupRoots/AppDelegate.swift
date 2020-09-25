@@ -6,7 +6,7 @@ import FirebaseCore
 import UserNotifications
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDelegate {
 
     var window: UIWindow?
 
@@ -21,9 +21,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         
+        
+            
         window = UIWindow()
         window?.makeKeyAndVisible()
         window?.backgroundColor = .black
+        let mainTabBarController = MainTabBarController()
+        
+        let remoteNotif = launchOptions?[UIApplication.LaunchOptionsKey.remoteNotification] as? NSDictionary
+        if remoteNotif != nil {
+            mainTabBarController.loadedFromNotif = true
+        }
+        else {
+            print("nil")
+        }
+        
         window?.rootViewController = MainTabBarController()
         return true
     }

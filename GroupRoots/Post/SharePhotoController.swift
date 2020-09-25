@@ -232,7 +232,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         selectGroupLabel.anchor(top: textView.bottomAnchor, left: containerView.leftAnchor, right: containerView.rightAnchor, paddingTop: UIScreen.main.bounds.height/50)
         
         self.view.addSubview(selectedGroupLabel)
-        selectedGroupLabel.anchor(top: containerView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/15)
+        selectedGroupLabel.anchor(top: containerView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/12)
         
         self.selectedGroupLabel.attributedText = NSMutableAttributedString(string: "Posting to", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
         

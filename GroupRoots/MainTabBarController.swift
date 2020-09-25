@@ -8,6 +8,12 @@ import Photos
 
 class MainTabBarController: UITabBarController {
     
+    var loadedFromNotif: Bool = false {
+        didSet {
+            self.selectedIndex = 3
+        }
+    }
+    
     private let loadingScreenView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
@@ -158,6 +164,10 @@ class MainTabBarController: UITabBarController {
             self.viewControllers = [homeNavController, searchNavController, plusNavController, likeNavController, userProfileNavController]
         }
         self.viewControllers = [homeNavController, searchNavController, plusNavController, likeNavController, userProfileNavController]
+        
+        if loadedFromNotif {
+            self.selectedIndex = 3
+        }
     }
     
     private func presentLoginController() {
@@ -296,3 +306,36 @@ extension UIApplication {
         return controller
     }
 }
+
+//extension AppDelegate: UNUserNotificationCenterDelegate {
+//  func userNotificationCenter(
+//    _ center: UNUserNotificationCenter,
+//    didReceive response: UNNotificationResponse,
+//    withCompletionHandler completionHandler: @escaping () -> Void) {
+//
+////    // 1
+////    let userInfo = response.notification.request.content.userInfo
+////
+////    // 2
+////    if let aps = userInfo["aps"] as? [String: AnyObject],
+////      let newsItem = NewsItem.makeNewsItem(aps) {
+////
+////      (window?.rootViewController as? UITabBarController)?.selectedIndex = 1
+////
+////      // 3
+////      if response.actionIdentifier == Identifiers.viewAction,
+////        let url = URL(string: newsItem.link) {
+////        let safari = SFSafariViewController(url: url)
+////        window?.rootViewController?.present(safari, animated: true,
+////                                            completion: nil)
+////      }
+////    }
+//
+////    self.MainTabBarController.selectedIndex = 4
+//    (window?.rootViewController as? UITabBarController)?.selectedIndex = 4
+//
+//    // 4
+//    completionHandler()
+//  }
+//}
+

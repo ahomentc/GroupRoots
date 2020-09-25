@@ -6,6 +6,7 @@ import NVActivityIndicatorView
 
 protocol EmptyFeedPostCellDelegate {
     func didTapUser(user: User)
+    func handleShowNewGroup()
 }
 
 class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, EmptyFeedUserCellDelegate {
@@ -49,7 +50,7 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     
     private lazy var newGroupButton: UIButton = {
         let button = UIButton()
-//        button.addTarget(self, action: #selector(handleShowNewGroup), for: .touchUpInside)
+        button.addTarget(self, action: #selector(didTapNewGroup), for: .touchUpInside)
         button.layer.zPosition = 4;
         button.isHidden = true
         button.backgroundColor = UIColor(white: 0.9, alpha: 1)
@@ -155,29 +156,38 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         self.delegate?.didTapUser(user: user)
     }
     
+    // Follow the user, and remove from the collectionview
+    // Don't need to set 1000 as that happens in cloud function
     func didFollowUser(user: User) {
-        // follow the user and remove from the collectionview
-        
-        // remove from recommendedUsers and refresh the collectionview
-        recommendedUsers.removeAll(where: { $0.uid == user.uid })
-        collectionView.reloadData()
-        
-//        Database.database().followUser(withUID: (notification.from.uid)) { (err) in
-//            if err != nil {
-//                self.actionButton.type = .hidden
-//                return
-//            }
-//            self.reloadActionButton()
-//            Database.database().createNotification(to: (self.notification?.from)!, notificationType: NotificationType.newFollow) { (err) in
-//                if err != nil {
-//                    return
-//                }
-//            }
-//        }
+        Database.database().followUser(withUID: user.uid) { (err) in
+            if err != nil {
+                return
+            }
+            // remove from recommendedUsers and refresh the collectionview
+            self.recommendedUsers.removeAll(where: { $0.uid == user.uid })
+            self.collectionView.reloadData()
+            
+            Database.database().createNotification(to: user, notificationType: NotificationType.newFollow) { (err) in
+                if err != nil {
+                    return
+                }
+            }
+        }
     }
     
     func didRemoveUser(user: User) {
         // set to 1000 and remove from collectionview
+        Database.database().removeFromFollowRecommendation(withUID: user.uid) { (err) in
+            if err != nil {
+                return
+            }
+            self.recommendedUsers.removeAll(where: { $0.uid == user.uid })
+            self.collectionView.reloadData()
+        }
+    }
+    
+    @objc func didTapNewGroup(){
+        self.delegate?.handleShowNewGroup()
     }
     
     func setLoadingVisibility(fetchedAllGroups: Bool){

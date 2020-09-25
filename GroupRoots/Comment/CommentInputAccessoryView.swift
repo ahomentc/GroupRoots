@@ -57,10 +57,10 @@ class CommentInputAccessoryView: UIView, UITextViewDelegate {
         addSubview(commentTextView)
         commentTextView.anchor(top: safeAreaLayoutGuide.topAnchor, left: safeAreaLayoutGuide.leftAnchor, bottom: safeAreaLayoutGuide.bottomAnchor, right: submitButton.leftAnchor, paddingTop: 8, paddingLeft: 12, paddingBottom: 8)
         
-        let lineSeparatorView = UIView()
-        lineSeparatorView.backgroundColor = UIColor.rgb(red: 230, green: 230, blue: 230)
-        addSubview(lineSeparatorView)
-        lineSeparatorView.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, height: 0.5)
+//        let lineSeparatorView = UIView()
+//        lineSeparatorView.backgroundColor = UIColor.rgb(red: 230, green: 230, blue: 230)
+//        addSubview(lineSeparatorView)
+//        lineSeparatorView.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, height: 0.5)
                 
         NotificationCenter.default.addObserver(self, selector: #selector(handleTextChange), name: UITextView.textDidChangeNotification, object: nil)
     }

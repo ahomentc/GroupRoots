@@ -732,11 +732,14 @@ extension Database {
         let ref = Database.database().reference().child("recommendedToFollow").child(uid)
         ref.queryOrderedByValue().queryLimited(toFirst: UInt(30)).observeSingleEvent(of: .value, with: { (snapshot) in
             var users = [User]()
+            var usersToPriority = [String: Int]()
             
             let sync = DispatchGroup()
             for child in snapshot.children.allObjects as! [DataSnapshot] {
                 sync.enter()
                 let userId = child.key
+                let priority = child.value as! Int
+                usersToPriority[userId] = priority
                 self.userExists(withUID: userId, completion: { (exists) in
                     if exists{
                         Database.database().fetchUser(withUID: userId, completion: { (user) in
@@ -750,12 +753,28 @@ extension Database {
                 })
             }
             sync.notify(queue: .main) {
+                users.removeAll(where: { usersToPriority[$0.uid] == 1000 })
                 completion(users.shuffled())
                 return
             }
         }) { (err) in
             print("Failed to fetch all users from database:", (err))
             cancel?(err)
+        }
+    }
+    
+    // doesn't actually remove but sets priority to 1000
+    func removeFromFollowRecommendation(withUID uid: String, completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let ref = Database.database().reference().child("recommendedToFollow").child(currentLoggedInUserId)
+        let values = [uid: 1000] as [String : Any]
+        ref.updateChildValues(values) { (err, ref) in
+            if let err = err {
+                print("Failed to remove follow recommendation", err)
+                completion(err)
+                return
+            }
+            completion(nil)
         }
     }
     

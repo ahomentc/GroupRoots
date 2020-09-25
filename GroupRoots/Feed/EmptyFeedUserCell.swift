@@ -55,7 +55,7 @@ class EmptyFeedUserCell: UICollectionViewCell {
         return button
     }()
     
-    private let cancelButton: UIButton = {
+    private lazy var cancelButton: UIButton = {
         let button = UIButton()
         button.setImage(#imageLiteral(resourceName: "x").withRenderingMode(.alwaysOriginal), for: .normal)
         button.addTarget(self, action: #selector(didRemoveUser), for: .touchUpInside)

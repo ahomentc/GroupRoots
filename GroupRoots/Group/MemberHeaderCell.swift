@@ -33,7 +33,7 @@ class MemberHeaderCell: UICollectionViewCell {
         iv.clipsToBounds = true
         iv.image = #imageLiteral(resourceName: "user")
         iv.layer.borderColor = UIColor.white.cgColor
-        iv.layer.borderWidth = 0
+        iv.layer.borderWidth = 1
         return iv
     }()
     
@@ -65,9 +65,9 @@ class MemberHeaderCell: UICollectionViewCell {
         guard let user = user else { return }
         
         addSubview(profileImageView)
-        profileImageView.anchor(left: leftAnchor, width: 75, height: 75)
+        profileImageView.anchor(left: leftAnchor, width: 60, height: 60)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 75 / 2
+        profileImageView.layer.cornerRadius = 60 / 2
         
         addSubview(usernameLabel)
         usernameLabel.anchor(top: profileImageView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 5, paddingRight: 0)
@@ -131,7 +131,7 @@ class GroupProfileHeaderCell: UICollectionViewCell {
         iv.clipsToBounds = true
         iv.image = CustomImageView.imageWithColor(color: .white)
         iv.layer.borderColor = UIColor.white.cgColor
-        iv.layer.borderWidth = 0
+        iv.layer.borderWidth = 1
         iv.backgroundColor = .white
         return iv
     }()
@@ -143,7 +143,7 @@ class GroupProfileHeaderCell: UICollectionViewCell {
         iv.image = #imageLiteral(resourceName: "user")
         iv.isHidden = true
         iv.layer.borderColor = UIColor.white.cgColor
-        iv.layer.borderWidth = 0
+        iv.layer.borderWidth = 1
         return iv
     }()
     
@@ -154,7 +154,7 @@ class GroupProfileHeaderCell: UICollectionViewCell {
         iv.image = #imageLiteral(resourceName: "user")
         iv.isHidden = true
         iv.layer.borderColor = UIColor.white.cgColor
-        iv.layer.borderWidth = 2
+        iv.layer.borderWidth = 1
         return iv
     }()
     
@@ -179,20 +179,20 @@ class GroupProfileHeaderCell: UICollectionViewCell {
     
     private func sharedInit() {
         addSubview(profileImageView)
-        profileImageView.anchor(left: leftAnchor, paddingLeft: 0, width: 75, height: 75)
+        profileImageView.anchor(left: leftAnchor, paddingLeft: 0, width: 60, height: 60)
         profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 75 / 2
+        profileImageView.layer.cornerRadius = 60 / 2
         
         addSubview(userOneImageView)
-        userOneImageView.anchor(left: leftAnchor, paddingTop: 10, paddingLeft: 20, width: 56, height: 56)
-        userOneImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        userOneImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: -2, paddingLeft: 10, width: 56, height: 56)
+//        userOneImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         userOneImageView.layer.cornerRadius = 56/2
         userOneImageView.isHidden = true
         userOneImageView.image = UIImage()
         
         addSubview(userTwoImageView)
-        userTwoImageView.anchor(left: leftAnchor, paddingTop: 0, paddingLeft: -5, width: 60, height: 60)
-        userTwoImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        userTwoImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 2, paddingLeft: -5, width: 60, height: 60)
+//        userTwoImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         userTwoImageView.layer.cornerRadius = 60/2
         userTwoImageView.isHidden = true
         userTwoImageView.image = UIImage()

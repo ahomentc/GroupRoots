@@ -237,10 +237,10 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     func setupViews() {
         let header_layout = UICollectionViewFlowLayout()
         header_layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
-        header_layout.itemSize = CGSize(width: 75, height: 75)
-        header_layout.minimumLineSpacing = CGFloat(10)
+        header_layout.itemSize = CGSize(width: 60, height: 60)
+        header_layout.minimumLineSpacing = CGFloat(20)
         
-        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height - UIScreen.main.bounds.height/8*7, width: UIScreen.main.bounds.width, height: 120), collectionViewLayout: header_layout)
+        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height - UIScreen.main.bounds.height/9*8, width: UIScreen.main.bounds.width, height: 120), collectionViewLayout: header_layout)
         headerCollectionView.delegate = self
         headerCollectionView.dataSource = self
         headerCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -389,13 +389,22 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
                     cell.profileImageUrl = group?.groupProfileImageUrl
                     cell.groupname = group?.groupname
-//                    cell.group = group
+                    cell.layer.backgroundColor = UIColor.clear.cgColor
+                    cell.layer.shadowColor = UIColor.black.cgColor
+                    cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+                    cell.layer.shadowOpacity = 0.2
+                    cell.layer.shadowRadius = 4.0
                     return cell
                 }
                 else {
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: MemberHeaderCell.cellId, for: indexPath) as! MemberHeaderCell
                     cell.user = groupMembers?[indexPath.item-1]
                     cell.group_has_profile_image = true
+                    cell.layer.backgroundColor = UIColor.clear.cgColor
+                    cell.layer.shadowColor = UIColor.black.cgColor
+                    cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+                    cell.layer.shadowOpacity = 0.2
+                    cell.layer.shadowRadius = 2.0
                     return cell
                 }
             }
@@ -427,12 +436,22 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     else {
                         cell.userTwoImageUrl = ""
                     }
+                    cell.layer.backgroundColor = UIColor.clear.cgColor
+                    cell.layer.shadowColor = UIColor.black.cgColor
+                    cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+                    cell.layer.shadowOpacity = 0.2
+                    cell.layer.shadowRadius = 4.0
                     return cell
                 }
                 else {
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: MemberHeaderCell.cellId, for: indexPath) as! MemberHeaderCell
                     cell.user = groupMembers?[indexPath.item-1]
                     cell.group_has_profile_image = false
+                    cell.layer.backgroundColor = UIColor.clear.cgColor
+                    cell.layer.shadowColor = UIColor.black.cgColor
+                    cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+                    cell.layer.shadowOpacity = 0.2
+                    cell.layer.shadowRadius = 2.0
                     return cell
                 }
             }
@@ -673,7 +692,7 @@ extension FeedGroupCell: UICollectionViewDelegateFlowLayout {
             return CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 175)
         }
         else {
-            return CGSize(width: 75, height: 75)
+            return CGSize(width: 60, height: 60)
         }
     }
 
@@ -683,7 +702,7 @@ extension FeedGroupCell: UICollectionViewDelegateFlowLayout {
         }
         else {
             if groupMembers?.count == 1 {
-                let totalCellWidth = 80 * collectionView.numberOfItems(inSection: 0)
+                let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
                 let totalSpacingWidth = 10 * (collectionView.numberOfItems(inSection: 0) - 1)
 
                 let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
@@ -692,7 +711,7 @@ extension FeedGroupCell: UICollectionViewDelegateFlowLayout {
                 return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
             }
             else if groupMembers?.count == 2 {
-                let totalCellWidth = 80 * collectionView.numberOfItems(inSection: 0)
+                let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
                 let totalSpacingWidth = 20 * (collectionView.numberOfItems(inSection: 0) - 1)
 
                 let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2

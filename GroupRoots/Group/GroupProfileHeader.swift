@@ -179,6 +179,8 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
     private func sharedInit() {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
+        layout.minimumLineSpacing = CGFloat(20)
+        
         collectionView = UICollectionView(frame: CGRect(x: 0, y: 5, width: UIScreen.main.bounds.width, height: 120), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
@@ -208,6 +210,11 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
                 cell.profileImageUrl = group?.groupProfileImageUrl
                 cell.groupname = group?.groupname
+                cell.layer.backgroundColor = UIColor.clear.cgColor
+                cell.layer.shadowColor = UIColor.black.cgColor
+                cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+                cell.layer.shadowOpacity = 0.1
+                cell.layer.shadowRadius = 2.0
 //                cell.group = group
                 return cell
             }
@@ -215,6 +222,11 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MemberHeaderCell.cellId, for: indexPath) as! MemberHeaderCell
                 cell.user = users[indexPath.item-1]
                 cell.group_has_profile_image = true
+                cell.layer.backgroundColor = UIColor.clear.cgColor
+                cell.layer.shadowColor = UIColor.black.cgColor
+                cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+                cell.layer.shadowOpacity = 0.2
+                cell.layer.shadowRadius = 1.0
                 return cell
             }
         }
@@ -222,6 +234,11 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MemberHeaderCell.cellId, for: indexPath) as! MemberHeaderCell
             cell.user = users[indexPath.item]
             cell.group_has_profile_image = false
+            cell.layer.backgroundColor = UIColor.clear.cgColor
+            cell.layer.shadowColor = UIColor.black.cgColor
+            cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+            cell.layer.shadowOpacity = 0.2
+            cell.layer.shadowRadius = 1.0
             return cell
         }
     }
@@ -240,7 +257,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        return 10
+        return 20
 //        if group?.groupProfileImageUrl != nil && group?.groupProfileImageUrl != ""{
 //            return 20
 //        }
@@ -872,12 +889,12 @@ private class GroupJoinButton: UIButton {
 
 extension GroupProfileHeader: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 75, height: 75)
+        return CGSize(width: 60, height: 60)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         if users.count == 1 {
-            let totalCellWidth = 80 * collectionView.numberOfItems(inSection: 0)
+            let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
             let totalSpacingWidth = 10 * (collectionView.numberOfItems(inSection: 0) - 1)
 
             let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2

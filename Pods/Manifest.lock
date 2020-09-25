@@ -143,7 +143,6 @@ PODS:
   - PromisesObjC (1.2.10)
   - Protobuf (3.12.0)
   - PryntTrimmerView (4.0.0)
-  - PullToDismiss (2.1)
   - SGHTTPRequest/Core (1.9.0):
     - AFNetworking/NSURLSession (~> 3.0)
     - AFNetworking/Reachability (~> 3.0)
@@ -173,7 +172,6 @@ DEPENDENCIES:
   - NVActivityIndicatorView
   - PhoneNumberKit (~> 3.1)
   - Player (~> 0.13.2)
-  - PullToDismiss (= 2.1)
   - SGImageCache
   - SwiftGifOrigin (~> 1.7.0)
   - UPCarouselFlowLayout
@@ -220,7 +218,6 @@ SPEC REPOS:
     - PhoneNumberKit
     - PromisesObjC
     - Protobuf
-    - PullToDismiss
     - SwiftGifOrigin
     - Zoomy
 
@@ -257,7 +254,6 @@ SPEC CHECKSUMS:
   PromisesObjC: b14b1c6b68e306650688599de8a45e49fae81151
   Protobuf: 2793fcd0622a00b546c60e7cbbcc493e043e9bb9
   PryntTrimmerView: 67e67573ffd4c073f1308effa66aefd0cfa667a0
-  PullToDismiss: 5513d561c382d201d0e3fbbdab9a47196cf5d2e2
   SGHTTPRequest: 93646208528eafd758052a92ee4dcf04e0d263c5
   SGImageCache: ef7daf2cb76a67a79c25a1c1f71fa675c5fc9672
   SteviaLayout: c2ecdcff57d44e38fd2f65e54ad52aeae28ca0c4
@@ -266,6 +262,6 @@ SPEC CHECKSUMS:
   YPImagePicker: 7a34eabd0ef544ae8fbf9785c3df9ec5bbf242e3
   Zoomy: 598d7a6d52567e4f8bf2e557907bbd9d7e725664
 
-PODFILE CHECKSUM: 15aaaa3cf9dadf85cb555dd8f4be8536339f0780
+PODFILE CHECKSUM: e1c4737e167c5f804b1fe038da4d5d994d1e2ab9
 
 COCOAPODS: 1.9.3
