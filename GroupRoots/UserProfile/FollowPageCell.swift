@@ -75,10 +75,10 @@ class FollowPageCell: UICollectionViewCell {
         addSubview(followButton)
         followButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: padding, paddingRight: padding, height: 40)
         
-        let separatorView = UIView()
-        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
-        addSubview(separatorView)
-        separatorView.anchor(left: usernameLabel.leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 0.5)
+//        let separatorView = UIView()
+//        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
+//        addSubview(separatorView)
+//        separatorView.anchor(left: usernameLabel.leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 0.5)
         
     }
     

@@ -194,6 +194,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
             self.configureHeader()
             self.collectionView?.reloadData()
             self.scrollToIndexPath()
+            self.scrollToSetPost()
                 
             let sync = DispatchGroup()
             posts.forEach({ (groupPost) in
@@ -304,7 +305,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         activityIndicatorView.isHidden = false
         self.view.insertSubview(activityIndicatorView, at: 20)
         activityIndicatorView.startAnimating()
-            
+        
         self.view.backgroundColor = UIColor.black
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleCloseFullscreen), name: NSNotification.Name(rawValue: "closeFullScreenViewController"), object: nil)

@@ -102,6 +102,7 @@ class GroupProfileHeaderCell: UICollectionViewCell {
     var userOneImageUrl: String? {
         didSet {
             configureCellForUserImage()
+            configureCellForGroupImage()
         }
     }
     
@@ -133,6 +134,7 @@ class GroupProfileHeaderCell: UICollectionViewCell {
         iv.layer.borderColor = UIColor.white.cgColor
         iv.layer.borderWidth = 1
         iv.backgroundColor = .white
+        iv.layer.zPosition = 10
         return iv
     }()
     
@@ -178,15 +180,21 @@ class GroupProfileHeaderCell: UICollectionViewCell {
     }
     
     private func sharedInit() {
+//        addSubview(profileImageView)
+//        profileImageView.anchor(left: leftAnchor, paddingLeft: 0, width: 60, height: 60)
+//        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+//        profileImageView.layer.cornerRadius = 60 / 2
+        
         addSubview(profileImageView)
-        profileImageView.anchor(left: leftAnchor, paddingLeft: 0, width: 60, height: 60)
-        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 60 / 2
+        profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 2, paddingLeft: -5, width: 60, height: 60)
+        profileImageView.layer.cornerRadius = 60/2
+        profileImageView.isHidden = true
+        profileImageView.image = UIImage()
         
         addSubview(userOneImageView)
-        userOneImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: -2, paddingLeft: 10, width: 56, height: 56)
+        userOneImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: -2, paddingLeft: 10, width: 58, height: 58)
 //        userOneImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        userOneImageView.layer.cornerRadius = 56/2
+        userOneImageView.layer.cornerRadius = 58/2
         userOneImageView.isHidden = true
         userOneImageView.image = UIImage()
         
@@ -219,11 +227,19 @@ class GroupProfileHeaderCell: UICollectionViewCell {
     
     private func configureCellForGroupImage() {
         guard let profileImageUrl = profileImageUrl else { return }
+        guard let userOneImageUrl = userOneImageUrl else { return }
         self.profileImageView.isHidden = false
-        self.userOneImageView.isHidden = true
+        self.userOneImageView.isHidden = false
         self.userTwoImageView.isHidden = true
         if profileImageUrl != "" {
             profileImageView.loadImage(urlString: profileImageUrl)
+        }
+        if userOneImageUrl != "" {
+            self.userOneImageView.loadImage(urlString: userOneImageUrl)
+        }
+        else {
+            self.userOneImageView.image = #imageLiteral(resourceName: "user")
+            self.userOneImageView.backgroundColor = .white
         }
     }
     

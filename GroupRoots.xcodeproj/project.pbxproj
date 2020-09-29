@@ -64,6 +64,7 @@
 		75BE32DC24E22E1800310BA4 /* ResetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DB24E22E1800310BA4 /* ResetController.swift */; };
 		75BE32DE24E29A4200310BA4 /* IntroCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */; };
 		75CAD5FC243C527E006941B2 /* MemberHeaderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */; };
+		75D86CAC252094E100939301 /* ImportContactsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CAB252094E100939301 /* ImportContactsCell.swift */; };
 		75DD552924A2F89800FE9E7D /* LoadMoreNotificationsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */; };
 		75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */; };
 		75E5CBB324FACC4B0080F815 /* ContactsInviteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */; };
@@ -176,6 +177,7 @@
 		75BE32DB24E22E1800310BA4 /* ResetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetController.swift; sourceTree = "<group>"; };
 		75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroCodeController.swift; sourceTree = "<group>"; };
 		75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberHeaderCell.swift; sourceTree = "<group>"; };
+		75D86CAB252094E100939301 /* ImportContactsCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportContactsCell.swift; sourceTree = "<group>"; };
 		75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadMoreNotificationsCell.swift; sourceTree = "<group>"; };
 		75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpTwoController.swift; sourceTree = "<group>"; };
 		75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsInviteController.swift; sourceTree = "<group>"; };
@@ -324,6 +326,7 @@
 				75BB489023DACD5100CF008F /* FeedPostCell.swift */,
 				75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */,
 				752B5DBD250F1D1D00693A04 /* EmptyFeedUserCell.swift */,
+				75D86CAB252094E100939301 /* ImportContactsCell.swift */,
 				75BB489223DACF2000CF008F /* FeedPostCellHeader.swift */,
 				75BB489423DB00E800CF008F /* MembersCell.swift */,
 				75ACAFCA23FBADD000DAE747 /* FeedMemberCell.swift */,
@@ -735,6 +738,7 @@
 				AD2CC6D6211FA0C40091E7D9 /* UserProfileEmptyStateCell.swift in Sources */,
 				75B65DEF24144284006CBA0B /* SubscriptionsController.swift in Sources */,
 				75E5CBBB24FB84800080F815 /* AddedUserCell.swift in Sources */,
+				75D86CAC252094E100939301 /* ImportContactsCell.swift in Sources */,
 				759CB61323D62CE100178673 /* MembersHeader.swift in Sources */,
 				759CB61123D593E000178673 /* LargeImageViewController.swift in Sources */,
 				7522E43A24A937F60013A351 /* LoadMoreFollowersCell.swift in Sources */,

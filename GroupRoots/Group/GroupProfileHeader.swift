@@ -215,6 +215,17 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                 cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
                 cell.layer.shadowOpacity = 0.1
                 cell.layer.shadowRadius = 2.0
+                if users.count > 0 {
+                    if users[0].profileImageUrl != nil {
+                        cell.userOneImageUrl = users[0].profileImageUrl
+                    }
+                    else {
+                        cell.userOneImageUrl = ""
+                    }
+                }
+                else {
+                    cell.userOneImageUrl = ""
+                }
 //                cell.group = group
                 return cell
             }

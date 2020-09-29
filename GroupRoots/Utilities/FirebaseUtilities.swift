@@ -75,7 +75,7 @@ extension Auth {
 extension Storage {
     
     fileprivate func uploadUserProfileImage(image: UIImage, completion: @escaping (String) -> ()) {
-        guard let uploadData = image.jpegData(compressionQuality: 1) else { return } //changed from 0.3
+        guard let uploadData = image.jpegData(compressionQuality: 0.7) else { return } //changed from 0.3
         
         let storageRef = Storage.storage().reference().child("profile_images").child(NSUUID().uuidString)
         
@@ -97,7 +97,7 @@ extension Storage {
     }
     
     fileprivate func uploadPostImage(image: UIImage, filename: String, completion: @escaping (String) -> ()) {
-        guard let uploadData = image.jpegData(compressionQuality: 0.7) else { return } //changed from 0.5
+        guard let uploadData = image.jpegData(compressionQuality: 0.95) else { return } //changed from 0.5
         
         let storageRef = Storage.storage().reference().child("post_images").child(filename)
         storageRef.putData(uploadData, metadata: nil, completion: { (_, err) in
@@ -119,7 +119,7 @@ extension Storage {
     
     // distributes into folders
     fileprivate func uploadPostImageDistributed(image: UIImage, groupId: String, filename: String, completion: @escaping (String) -> ()) {
-        guard let uploadData = image.jpegData(compressionQuality: 0.7) else { return } //changed from 0.5
+        guard let uploadData = image.jpegData(compressionQuality: 0.95) else { return } //changed from 0.5
         
         let storageRef = Storage.storage().reference().child("group_post_images").child(groupId).child(filename + ".jpeg")
         storageRef.putData(uploadData, metadata: nil, completion: { (_, err) in
@@ -186,7 +186,7 @@ extension Storage {
     }
     
     fileprivate func uploadGroupProfileImage(image: UIImage, completion: @escaping (String) -> ()) {
-        guard let uploadData = image.jpegData(compressionQuality: 1) else { return } //changed from 0.3
+        guard let uploadData = image.jpegData(compressionQuality: 0.7) else { return } //changed from 0.3
         
         let storageRef = Storage.storage().reference().child("group_profile_images").child(NSUUID().uuidString)
         
@@ -210,7 +210,7 @@ extension Storage {
     }
     
     fileprivate func uploadGroupImage(image: UIImage, filename: String, completion: @escaping (String) -> ()) {
-        guard let uploadData = image.jpegData(compressionQuality: 1) else { return } //changed from 0.5
+        guard let uploadData = image.jpegData(compressionQuality: 0.95) else { return } //changed from 0.5
         
         let storageRef = Storage.storage().reference().child("group_images").child(filename)
         storageRef.putData(uploadData, metadata: nil, completion: { (_, err) in
@@ -768,6 +768,66 @@ extension Database {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         let ref = Database.database().reference().child("recommendedToFollow").child(currentLoggedInUserId)
         let values = [uid: 1000] as [String : Any]
+        ref.updateChildValues(values) { (err, ref) in
+            if let err = err {
+                print("Failed to remove follow recommendation", err)
+                completion(err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
+    func addToFollowRecommendation(withUID uid: String, priority: Int, completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let ref = Database.database().reference().child("recommendedToFollow").child(currentLoggedInUserId)
+        
+        Database.database().isFollowingUser(withUID: uid, completion: { (following) in
+            if following {
+                completion(nil)
+            } else {
+                let values = [uid: priority] as [String : Any]
+                ref.updateChildValues(values) { (err, ref) in
+                    if let err = err {
+                        print("Failed to remove follow recommendation", err)
+                        completion(err)
+                        return
+                    }
+                    completion(nil)
+                }
+            }
+        }) { (err) in }
+    }
+    
+    // check if user with uid is recommended for the current user
+    func isInFollowRecommendation(withUID uid: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        
+        Database.database().reference().child("recommendedToFollow").child(currentLoggedInUserId).child(uid).observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(true)
+                }
+            } else {
+                completion(false)
+            }
+            
+        }) { (err) in
+            print("Failed to check if following:", err)
+            cancel?(err)
+        }
+    }
+    
+    // importedContacts holds all the numbers of contacts from grouproots users... that haven't joined yet
+    // each number has children of the users who have that number in their contacts
+    // when the number joins, each user who has it gets a recommendation to follow
+    func addToImportedContacts(number: String, name: String, completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let ref = Database.database().reference().child("importedContacts").child(number)
+        let values = [currentLoggedInUserId: 0, "name": name] as [String : Any]
         ref.updateChildValues(values) { (err, ref) in
             if let err = err {
                 print("Failed to remove follow recommendation", err)

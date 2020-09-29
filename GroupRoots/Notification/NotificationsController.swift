@@ -150,6 +150,12 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         navigationController?.pushViewController(userProfileController, animated: true)
     }
     
+    func handleShowComment(groupPost: GroupPost) {
+        let commentsController = CommentsController(collectionViewLayout: UICollectionViewFlowLayout())
+        commentsController.groupPost = groupPost
+        navigationController?.pushViewController(commentsController, animated: true)
+    }
+    
     func handleShowGroupMemberRequest(group: Group) {
         Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
             let membersController = MembersController(collectionViewLayout: UICollectionViewFlowLayout())

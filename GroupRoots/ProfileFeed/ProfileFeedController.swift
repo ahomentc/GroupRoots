@@ -13,6 +13,8 @@ import FirebaseDatabase
 import NVActivityIndicatorView
 import Zoomy
 import SwiftGifOrigin
+import Contacts
+import PhoneNumberKit
 
 class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate, InviteToGroupWhenCreateControllerDelegate, EmptyFeedPostCellDelegate {
     
@@ -265,6 +267,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             })
         }
     }
+    
+    let phoneNumberKit = PhoneNumberKit()
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -709,6 +713,15 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.collectionView.isHidden = true
                     self.createGroupIconButton.isHidden = true
                 }
+                
+                // after done loading all the groups, load the contacts
+//                self.importContactsToRecommended() { (err) in
+//                    self.collectionView.visibleCells.forEach { cell in
+//                        if cell is EmptyFeedPostCell {
+//                            (cell as! EmptyFeedPostCell).collectionView.reloadData()
+//                        }
+//                    }
+//                }
             }
         }
     }
@@ -1072,6 +1085,154 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 return
             }
         })
+    }
+    
+    func didTapImportContacts() {
+        CNContactStore().requestAccess(for: .contacts) { (access, error) in
+            guard access else {
+                let alert = UIAlertController(title: "Can't access contact", message: "Please go to Settings to enable contact permissions.", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                self.present(alert, animated: true, completion: nil)
+                return
+            }
+            self.importContactsToRecommended() { (err) in
+                self.collectionView.visibleCells.forEach { cell in
+                    if cell is EmptyFeedPostCell {
+                        (cell as! EmptyFeedPostCell).collectionView.reloadData()
+                    }
+                }
+            }
+        }
+    }
+    
+    func requestImportContactsIfAuth() {
+        self.importContactsToRecommended() { (err) in
+            self.collectionView.visibleCells.forEach { cell in
+                if cell is EmptyFeedPostCell {
+                    (cell as! EmptyFeedPostCell).collectionView.reloadData()
+                }
+            }
+        }
+    }
+    
+    // imports all the users contacts and store in userDefaults as an array
+    // if the contact is in userDefaults already then return
+    // add user's number to userDefaults
+    // if the user's number is tied to an account already
+    //      if not already in recommendedUsers:
+    //          add them to recommendedUsers
+    // else
+    //      upload the contact under firebase database entree of "importedContacts": "userId"
+    //      this is so that when that user signs up, it adds them as a recommended to all users under them in "importedContacts"
+    //          (remember to remove them from importedContacts when they sign up after doing all of this)
+    
+    // cloud function stuff:
+    //      when user creates an account with a number tied to it:
+    //          for each user under the number in importedContacts:
+    //              if not already in said user's recommendedUsers
+    //                  add them to recommendedUsers with priority 1
+    //          remove user from importedContacts
+    func importContactsToRecommended(completion: @escaping (Error?) -> ()) {
+        let store = CNContactStore()
+        if CNContactStore.authorizationStatus(for: .contacts) != .authorized {
+            completion(nil)
+            return
+        }
+        do {
+            let sync = DispatchGroup()
+            
+            let keys = [CNContactGivenNameKey as CNKeyDescriptor, CNContactFamilyNameKey as CNKeyDescriptor, CNContactPhoneNumbersKey as CNKeyDescriptor]
+            
+            // Get all the containers
+            var allContainers: [CNContainer] = []
+            do {
+                allContainers = try store.containers(matching: nil)
+            } catch {
+                print("Error fetching containers")
+            }
+            var contacts: [CNContact] = []
+            
+            // Iterate all containers and append their contacts to our results array
+            for container in allContainers {
+                let fetchPredicate = CNContact.predicateForContactsInContainer(withIdentifier: container.identifier)
+                do {
+                    let containerResults = try store.unifiedContacts(matching: fetchPredicate, keysToFetch: keys)
+                    contacts.append(contentsOf: containerResults)
+                } catch {
+                    print("Error fetching results for container")
+                }
+            }
+            
+            var updatedImportedContacts = [String]()
+            if let importedContactsRetrieved = UserDefaults.standard.object(forKey: "importedContacts") as? Data {
+                guard let importedContacts = try? JSONDecoder().decode([String].self, from: importedContactsRetrieved) else {
+                    print("Error: Couldn't decode data into Blog")
+                    return
+                }
+                updatedImportedContacts = importedContacts
+            }
+            
+            for contact in contacts {
+                if contact.phoneNumbers.count > 0 {
+                    let new_contact = Contact(contact: contact, selected_number: contact.phoneNumbers.first!)
+                    // check that contact is not in userDefaults
+                    if !updatedImportedContacts.contains(new_contact.contact.identifier) {
+                        // add it to updatedImportedContacts
+                        updatedImportedContacts.append(new_contact.contact.identifier)
+                        
+                        // check if number is tied to an account already
+                        let phoneNumber = try? phoneNumberKit.parse(contact.phoneNumbers.first!.value.stringValue)
+                        if phoneNumber != nil {
+                            let numberString = phoneNumberKit.format(phoneNumber!, toType: .e164)
+                            sync.enter()
+                            Database.database().doesNumberExist(number: numberString, completion: { (exists) in
+                                if exists {
+                                    Database.database().fetchUserIdFromNumber(number: numberString, completion: { (userId) in
+                                        // check if not in recommendedUsers then add to recommendedUsers
+                                        Database.database().isInFollowRecommendation(withUID: userId, completion: { (isRecommended) in
+                                            if !isRecommended {
+                                                // add to recommended users
+                                                // checks to see if already follow user inside addToFollowRecommendation
+                                                Database.database().addToFollowRecommendation(withUID: userId, priority: 1) { (err) in
+                                                    if err != nil {
+                                                        return
+                                                    }
+                                                    sync.leave()
+                                                }
+                                            }
+                                            else {
+                                                sync.leave()
+                                            }
+                                        }) { (err) in }
+                                    })
+                                }
+                                else {
+                                    // upload to importedContacts: currentUserId
+                                    Database.database().addToImportedContacts(number: numberString, name: new_contact.given_name + " " + new_contact.family_name) { (err) in
+                                        if err != nil {
+                                            return
+                                        }
+                                        sync.leave()
+                                    }
+                                }
+                            }) { (err) in return}
+                        }
+                    }
+                }
+            }
+            
+//            print("imported contacts updated")
+//            print(updatedImportedContacts)
+            
+            // set updatedImportedContacts to importedContacts
+            if let importedContactsEncodedData = try? JSONEncoder().encode(updatedImportedContacts) {
+                UserDefaults.standard.set(importedContactsEncodedData, forKey: "importedContacts")
+            }
+            
+            sync.notify(queue: .main) {
+                completion(nil)
+            }
+        }
     }
 }
 

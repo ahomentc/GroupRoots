@@ -10,7 +10,9 @@ class MainTabBarController: UITabBarController {
     
     var loadedFromNotif: Bool = false {
         didSet {
-            self.selectedIndex = 3
+            if loadedFromNotif {
+                self.selectedIndex = 3
+            }
         }
     }
     
@@ -92,34 +94,6 @@ class MainTabBarController: UITabBarController {
                     }
                 })
             }
-            
-//            // update when recieve addition for membership
-//            let membership_ref_add = Database.database().reference().child("users").child(uid).child("groups")
-//            membership_ref_add.observe(.childAdded, with: { (snapshot) -> Void in
-//                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-//                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-//            })
-//
-//            // update when recieve addition for subscription
-//            let subscription_ref_add = Database.database().reference().child("groupsFollowing").child(uid)
-//            subscription_ref_add.observe(.childAdded, with: { (snapshot) -> Void in
-//                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-//                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-//            })
-//
-//            // update when recieve removal for membership
-//            let membership_ref_remove = Database.database().reference().child("users").child(uid).child("groups")
-//            membership_ref_remove.observe(.childRemoved, with: { (snapshot) -> Void in
-//                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-//                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-//            })
-//
-//            // update when recieve removal for subscription
-//            let subscription_ref_remove = Database.database().reference().child("groupsFollowing").child(uid)
-//            subscription_ref_remove.observe(.childRemoved, with: { (snapshot) -> Void in
-//                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-//                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-//            })
         }
         
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarClear), name: NSNotification.Name(rawValue: "tabBarClear"), object: nil)
@@ -235,8 +209,8 @@ extension MainTabBarController: UITabBarControllerDelegate {
         }
         if index == 3 {
             tabBar.items![3].image = #imageLiteral(resourceName: "bell_2")
-            tabBar.backgroundColor = UIColor.clear
-            tabBar.unselectedItemTintColor = UIColor.gray
+//            tabBar.backgroundColor = UIColor.clear
+//            tabBar.unselectedItemTintColor = UIColor.gray
         }
         if index == 2 {
             var config = YPImagePickerConfiguration()

@@ -40,8 +40,8 @@ class InviteSelectionController: UIViewController, UICollectionViewDataSource, U
         navigationItem.leftBarButtonItem?.tintColor = .black
         
         let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
-        self.collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height), collectionViewLayout: layout)
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: 80)
+        self.collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height - 30), collectionViewLayout: layout)
         self.collectionView.delegate = self
         self.collectionView.dataSource = self
         self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -103,7 +103,7 @@ class InviteSelectionController: UIViewController, UICollectionViewDataSource, U
 
 extension InviteSelectionController: UICollectionViewDelegateFlowLayout {
     internal func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 100)
+        return CGSize(width: view.frame.width, height: 80)
     }
 }
 

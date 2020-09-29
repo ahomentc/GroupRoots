@@ -21,22 +21,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDelegat
             }
         }
         
-        
-            
         window = UIWindow()
         window?.makeKeyAndVisible()
         window?.backgroundColor = .black
         let mainTabBarController = MainTabBarController()
-        
-        let remoteNotif = launchOptions?[UIApplication.LaunchOptionsKey.remoteNotification] as? NSDictionary
-        if remoteNotif != nil {
+        if launchOptions?[UIApplication.LaunchOptionsKey.remoteNotification] != nil {
             mainTabBarController.loadedFromNotif = true
         }
-        else {
-            print("nil")
-        }
-        
-        window?.rootViewController = MainTabBarController()
+        window?.rootViewController = mainTabBarController
         return true
     }
 

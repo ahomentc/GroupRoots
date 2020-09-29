@@ -12,6 +12,7 @@ protocol NotificationCellDelegate {
     func groupJoinAlert(group: Group)
     func handleShowGroupMemberRequest(group: Group)
     func handleShowGroupSubscriberRequest(group: Group)
+    func handleShowComment(groupPost: GroupPost)
 }
 
 class NotificationCell: UICollectionViewCell {
@@ -286,6 +287,9 @@ class NotificationCell: UICollectionViewCell {
                 groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
             }
             notificationsLabel.text = "commented on " + groupname + "'s post "
+            notificationsLabel.isUserInteractionEnabled = true
+            let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowComments))
+            notificationsLabel.addGestureRecognizer(gestureRecognizer)
         }
         else if notification.type == NotificationType.newGroupPost {
             var groupname = "your group"
@@ -570,6 +574,18 @@ class NotificationCell: UICollectionViewCell {
             self.backgroundColor = .white
         }
         delegate?.handleShowGroup(group: group)
+    }
+    
+    @objc private func handleShowComments() {
+        guard let notification = notification else { return }
+        guard let groupPost = notification.groupPost else { return }
+        Database.database().interactWithNotification(notificationId: notification.id) { (err) in
+            if err != nil {
+                return
+            }
+            self.backgroundColor = .white
+        }
+        delegate?.handleShowComment(groupPost: groupPost)
     }
     
     @objc private func handleShowGroupMemberRequest() {

@@ -31,8 +31,10 @@ class SubscriptionCell: UICollectionViewCell {
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
         iv.image = #imageLiteral(resourceName: "user")
-        iv.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
-        iv.layer.borderWidth = 0.5
+        iv.isHidden = true
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderWidth = 2
+        iv.layer.zPosition = 10
         return iv
     }()
     
@@ -79,27 +81,25 @@ class SubscriptionCell: UICollectionViewCell {
     
     private func sharedInit() {
         addSubview(profileImageView)
-        profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 60, height: 60)
-        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 60 / 2
-        profileImageView.isHidden = false
+        profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 20, paddingLeft: 8, width: 44, height: 44)
+        profileImageView.layer.cornerRadius = 44/2
+        profileImageView.isHidden = true
+        profileImageView.image = UIImage()
         
         addSubview(userOneImageView)
-        userOneImageView.anchor(left: leftAnchor, paddingTop: 10, paddingLeft: 28, width: 40, height: 40)
-        userOneImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        userOneImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 10, paddingLeft: 22, width: 40, height: 40)
         userOneImageView.layer.cornerRadius = 40/2
         userOneImageView.isHidden = true
         userOneImageView.image = UIImage()
         
         addSubview(userTwoImageView)
-        userTwoImageView.anchor(left: leftAnchor, paddingTop: 0, paddingLeft: 8, width: 44, height: 44)
-        userTwoImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        userTwoImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 14, paddingLeft: 8, width: 44, height: 44)
         userTwoImageView.layer.cornerRadius = 44/2
         userTwoImageView.isHidden = true
-        userOneImageView.image = UIImage()
+        userTwoImageView.image = UIImage()
         
         addSubview(groupnameLabel)
-        groupnameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 12)
+        groupnameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 20)
         
         addSubview(subscribeButton)
         subscribeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: padding, paddingRight: padding, height: 40)
@@ -108,7 +108,7 @@ class SubscriptionCell: UICollectionViewCell {
         separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
 
     }
-    
+
     private func configureCell() {
         guard let group = group else { return }
         
@@ -147,8 +147,21 @@ class SubscriptionCell: UICollectionViewCell {
             if let groupProfileImageUrl = group.groupProfileImageUrl {
                 self.profileImageView.loadImage(urlString: groupProfileImageUrl)
                 self.profileImageView.isHidden = false
-                self.userOneImageView.isHidden = true
+                self.userOneImageView.isHidden = false
                 self.userTwoImageView.isHidden = true
+                
+                if first_n_users.count > 0 {
+                    if let userOneImageUrl = first_n_users[0].profileImageUrl {
+                        self.userOneImageView.loadImage(urlString: userOneImageUrl)
+                    } else {
+                        self.userOneImageView.image = #imageLiteral(resourceName: "user")
+                        self.userOneImageView.backgroundColor = .white
+                    }
+                }
+                else {
+                    self.userOneImageView.image = #imageLiteral(resourceName: "user")
+                    self.userOneImageView.backgroundColor = .white
+                }
             } else {
                 self.profileImageView.isHidden = true
                 self.userOneImageView.isHidden = false
@@ -178,6 +191,11 @@ class SubscriptionCell: UICollectionViewCell {
                         self.userTwoImageView.backgroundColor = .white
                         self.userTwoImageView.layer.borderWidth = 2
                     }
+                }
+                else {
+                    self.userTwoImageView.image = #imageLiteral(resourceName: "user")
+                    self.userTwoImageView.backgroundColor = .white
+                    self.userTwoImageView.layer.borderWidth = 2
                 }
             }
         }) { (_) in }

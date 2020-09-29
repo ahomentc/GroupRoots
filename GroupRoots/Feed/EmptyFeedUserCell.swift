@@ -77,6 +77,7 @@ class EmptyFeedUserCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
+        
     }
 
     private func sharedInit() {
@@ -92,14 +93,6 @@ class EmptyFeedUserCell: UICollectionViewCell {
         
         addSubview(cancelButton)
         cancelButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 5, paddingRight: 5, width: 44, height: 44)
-
-//        addSubview(removeButton)
-//        removeButton.anchor(top: usernameLabel.bottomAnchor, left: followButton.rightAnchor, paddingTop: 12, paddingLeft: 10)
-        
-//        let separatorView = UIView()
-//        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
-//        addSubview(separatorView)
-//        separatorView.anchor(top: topAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 0, paddingBottom: 15, width: 0.5)
         
         self.backgroundColor = .white
         

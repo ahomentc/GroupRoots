@@ -3,13 +3,16 @@ import Firebase
 import FirebaseAuth
 import FirebaseDatabase
 import NVActivityIndicatorView
+import Contacts
 
 protocol EmptyFeedPostCellDelegate {
     func didTapUser(user: User)
     func handleShowNewGroup()
+    func didTapImportContacts()
+    func requestImportContactsIfAuth()
 }
 
-class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, EmptyFeedUserCellDelegate {
+class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, EmptyFeedUserCellDelegate, ImportContactsCellDelegate {
     
     let padding: CGFloat = 12
     
@@ -21,10 +24,25 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     
     var delegate: EmptyFeedPostCellDelegate?
     
-    var recommendedUsers = [User]()
+    var recommendedUsers: [User]? {
+        didSet {
+            
+        }
+    }
     var collectionView: UICollectionView!
     
     let endLabel: UILabel = {
+        let label = UILabel()
+        label.isHidden = true
+        label.textColor = UIColor.black
+        label.attributedText = NSMutableAttributedString(string: "You're All Caught Up!", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 18)])
+        label.numberOfLines = 0
+        label.size(22)
+        label.textAlignment = .center
+        return label
+    }()
+    
+    let endLabelNoRecommended: UILabel = {
         let label = UILabel()
         label.isHidden = true
         label.textColor = UIColor.black
@@ -60,6 +78,13 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         return button
     }()
     
+    let logoImageView: UIImageView = {
+        let img = UIImageView()
+        img.image = #imageLiteral(resourceName: "icon_login_4")
+        img.isHidden = true
+        return img
+    }()
+    
     let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
     
     var activityIndicator = UIActivityIndicatorView()
@@ -79,27 +104,36 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     override func prepareForReuse() {
         super.prepareForReuse()
         endLabel.isHidden = true
+        endLabelNoRecommended.isHidden = true
         activityIndicatorView.isHidden = false
         recommendedLabel.isHidden = true
         newGroupButton.isHidden = true
         collectionView.isHidden = true
+        logoImageView.isHidden = true
     }
 
     private func sharedInit() {
         addSubview(endLabel)
         endLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/8)
         
+        addSubview(endLabelNoRecommended)
+        endLabelNoRecommended.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/2.2)
+        
+        insertSubview(activityIndicatorView, at: 20)
         activityIndicatorView.isHidden = true
         activityIndicatorView.color = .black
-        insertSubview(activityIndicatorView, at: 20)
         activityIndicatorView.startAnimating()
         
+        addSubview(newGroupButton)
         newGroupButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
         newGroupButton.layer.cornerRadius = 14
-        addSubview(newGroupButton)
         
         addSubview(recommendedLabel)
         recommendedLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/3 - 40, width: 300, height: 60)
+        
+        addSubview(logoImageView)
+        logoImageView.frame = CGRect(x: frame.width/2 - 100, y: 80, width: 200, height: 200)
+        
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
@@ -110,6 +144,7 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         collectionView.dataSource = self
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         collectionView.register(EmptyFeedUserCell.self, forCellWithReuseIdentifier: EmptyFeedUserCell.cellId)
+        collectionView.register(ImportContactsCell.self, forCellWithReuseIdentifier: ImportContactsCell.cellId)
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.isUserInteractionEnabled = true
 //        collectionView.allowsSelection = true
@@ -132,24 +167,72 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         Database.database().fetchFollowRecommendations(withUID: currentLoggedInUserId, completion: { (recommended_users) in
             self.recommendedUsers = recommended_users
+            self.setRecommendedVisibility()
             self.collectionView?.reloadData()
+            
+            self.requestImportContacts()
+            
         }) { (err) in
         }
     }
     
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return recommendedUsers.count
+    func requestImportContacts(){
+        guard recommendedUsers != nil else { return }
+        guard let fetchedAllGroups = fetchedAllGroups else { return }
+        if fetchedAllGroups {
+            print("sending request")
+            self.delegate?.requestImportContactsIfAuth()
+        }
     }
     
+    func setRecommendedVisibility() {
+        guard let recommendedUsers = recommendedUsers else { return }
+        guard let fetchedAllGroups = fetchedAllGroups else { return }
+        if recommendedUsers.count == 0 && CNContactStore.authorizationStatus(for: .contacts) == .authorized && fetchedAllGroups {
+            collectionView.isHidden = true
+            recommendedLabel.isHidden = true
+            endLabel.isHidden = true
+            endLabelNoRecommended.isHidden = false
+            logoImageView.isHidden = false
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if CNContactStore.authorizationStatus(for: .contacts) != .authorized {
+            return (recommendedUsers?.count ?? 0) + 1
+        }
+        return recommendedUsers?.count ?? 0
+    }
+
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: EmptyFeedUserCell.cellId, for: indexPath) as! EmptyFeedUserCell
-        cell.user = recommendedUsers[indexPath.row]
-        cell.layer.cornerRadius = 10
-        cell.layer.borderWidth = 1.0
-        cell.layer.borderColor = UIColor.clear.cgColor
-        cell.layer.masksToBounds = true
-        cell.delegate = self
-        return cell
+        if CNContactStore.authorizationStatus(for: .contacts) != .authorized && indexPath.row == 0 {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImportContactsCell.cellId, for: indexPath) as! ImportContactsCell
+            cell.layer.cornerRadius = 10
+            cell.layer.borderWidth = 1.0
+            cell.layer.borderColor = UIColor.clear.cgColor
+            cell.layer.masksToBounds = true
+            cell.delegate = self
+            return cell
+        }
+        else {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: EmptyFeedUserCell.cellId, for: indexPath) as! EmptyFeedUserCell
+            if recommendedUsers != nil && recommendedUsers!.count > 0 {
+                if CNContactStore.authorizationStatus(for: .contacts) != .authorized {
+                    // need to do minus 1 here because first cell is taken up by the import contact cell
+                    // so all are shifted right by 1
+                    cell.user = recommendedUsers![indexPath.row - 1]
+                }
+                else {
+                    cell.user = recommendedUsers![indexPath.row]
+                }
+            }
+            cell.layer.cornerRadius = 10
+            cell.layer.borderWidth = 1.0
+            cell.layer.borderColor = UIColor.clear.cgColor
+            cell.layer.masksToBounds = true
+            cell.delegate = self
+            return cell
+        }
     }
     
     func didTapUser(user: User) {
@@ -164,7 +247,9 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
                 return
             }
             // remove from recommendedUsers and refresh the collectionview
-            self.recommendedUsers.removeAll(where: { $0.uid == user.uid })
+            if self.recommendedUsers != nil && self.recommendedUsers!.count > 0 {
+                self.recommendedUsers!.removeAll(where: { $0.uid == user.uid })
+            }
             self.collectionView.reloadData()
             
             Database.database().createNotification(to: user, notificationType: NotificationType.newFollow) { (err) in
@@ -181,7 +266,9 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
             if err != nil {
                 return
             }
-            self.recommendedUsers.removeAll(where: { $0.uid == user.uid })
+            if self.recommendedUsers != nil && self.recommendedUsers!.count > 0 {
+                self.recommendedUsers!.removeAll(where: { $0.uid == user.uid })
+            }
             self.collectionView.reloadData()
         }
     }
@@ -197,7 +284,13 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
             newGroupButton.isHidden = false
             recommendedLabel.isHidden = false
             collectionView.isHidden = false
+            self.setRecommendedVisibility()
+            self.requestImportContacts()
         }
+    }
+    
+    func didTapImportContacts() {
+        self.delegate?.didTapImportContacts()
     }
 }
 

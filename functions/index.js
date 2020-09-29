@@ -829,6 +829,119 @@ exports.updateRecommendedFollowOnUserFollow = functions.database.ref('/followers
 	return snapshot.ref.root.child('/recommendedToFollow/' + follower_user + '/' + following_user).set(1000);
 })
 
+exports.updateRecommendedUsersOnNumberTiedToAccount = functions.database.ref('/numbers/{number}').onCreate((snapshot, context) => {
+//      when user creates an account with a number tied to it:
+//          for each user under the number in importedContacts:
+//              if not already in said user's recommendedUsers
+//                  add them to recommendedUsers with priority 1
+//          remove user from importedContacts
+
+	const number = context.params.number;
+	if (snapshot.val() === null) { 
+		return null
+	}
+	// const numbers_user_id = context.params.numbers_user_id;
+	const numbers_user_id = snapshot.val()
+
+	// if number not in importedContacts then return
+	console.log("start")
+	return snapshot.ref.root.child('/importedContacts/' + number).once('value', imported_contacts_snapchat => {
+		if (imported_contacts_snapchat === null || imported_contacts_snapchat.val() === null) {
+			console.log("null 1")
+			return null;
+		}
+		console.log("inside")
+
+		const promises = []
+
+		//  remove user from importedContacts
+		promises.push(snapshot.ref.root.child('/importedContacts/' + number).remove());
+
+		var sync = new DispatchGroup();
+		var token_0 = sync.enter();
+		console.log("enter 0")
+		imported_contacts_snapchat.forEach(function(imported_user) {
+			var token = sync.enter();
+			console.log("enter 1")
+			var imported_user_id = imported_user.key
+			snapshot.ref.root.child('/following/' + numbers_user_id + '/' + imported_user_id).once('value', is_following_imported_snapshot => {
+				if (is_following_imported_snapshot.val() === null) { // if not already following them
+					// check if already in recommendedToFollow with a higher priority
+					snapshot.ref.root.child('/recommendedToFollow/' + numbers_user_id + '/' + imported_user_id).once('value', imported_rec_snapshot => {
+						if ((imported_rec_snapshot.val() === null || imported_rec_snapshot.val() > 4) && imported_rec_snapshot.val() !== 1000) { // if priority doesn't exist or there is a lower priority currenlty
+							promises.push(snapshot.ref.root.child('/recommendedToFollow/' + numbers_user_id + '/' + imported_user_id).set(1));
+						}
+						// check if member is already following the new_member
+						snapshot.ref.root.child('/following/' + imported_user_id + '/' + numbers_user_id).once('value', is_following_numbers_user_snapshot => {
+							if (is_following_numbers_user_snapshot.val() === null) { // if not already following them
+								snapshot.ref.root.child('/recommendedToFollow/' + imported_user_id + '/' + numbers_user_id).once('value', number_rec_snapshot => {
+									if ((number_rec_snapshot.val() === null || number_rec_snapshot.val() > 4) && number_rec_snapshot.val() !== 1000) { // if priority doesn't exist or there is a lower priority currenlty
+										promises.push(snapshot.ref.root.child('/recommendedToFollow/' + imported_user_id + '/' + numbers_user_id).set(1));
+									}
+									sync.leave(token)
+									console.log("leave 0")
+								}).catch(() => {return null});
+							}
+							else {
+								sync.leave(token)
+								console.log("leave 1")
+							}
+						}).catch(() => {return null});
+					}).catch(() => {return null});
+				}
+				else {
+					// check if member is already following the new_member
+					snapshot.ref.root.child('/following/' + imported_user_id + '/' + numbers_user_id).once('value', is_following_numbers_user_snapshot => {
+						if (is_following_numbers_user_snapshot.val() === null) { // if not already following them
+							snapshot.ref.root.child('/recommendedToFollow/' + imported_user_id + '/' + numbers_user_id).once('value', number_rec_snapshot => {
+								if (number_rec_snapshot.val() === null || number_rec_snapshot.val() > 4) { // if priority doesn't exist or there is a lower priority currenlty
+									promises.push(snapshot.ref.root.child('/recommendedToFollow/' + imported_user_id + '/' + numbers_user_id).set(1));
+								}
+								sync.leave(token)
+								console.log("leave 2")
+							}).catch(() => {return null});
+						}
+						else {
+							sync.leave(token)
+						}
+					}).catch(() => {return null});
+				}
+			}).catch(() => {return null});
+    	});
+
+    	sync.leave(token_0)
+    	console.log("leave 3")
+		sync.notify(function() {
+			console.log("in notify")
+			if (promises.length === 0) {
+				return null;
+			}
+			return Promise.all(promises);
+		})
+
+		// get all the users under the number in importedContacts
+	}).catch(() => {return null});
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ---------------- Updating counts ----------------
 
 exports.updateGroupFollowersCountOnSubscribe = functions.database.ref('/groupFollowers/{group_id}/{subscribing_user_id}').onCreate((snapshot, context) => {

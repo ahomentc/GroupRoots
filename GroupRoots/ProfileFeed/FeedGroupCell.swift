@@ -389,6 +389,18 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
                     cell.profileImageUrl = group?.groupProfileImageUrl
                     cell.groupname = group?.groupname
+                    if groupMembers?.count ?? 0 > 0 {
+                        if groupMembers?[0].profileImageUrl != nil {
+                            cell.userOneImageUrl = groupMembers?[0].profileImageUrl
+                        }
+                        else {
+                            cell.userOneImageUrl = ""
+                        }
+                    }
+                    else {
+                        cell.userOneImageUrl = ""
+                    }
+                    
                     cell.layer.backgroundColor = UIColor.clear.cgColor
                     cell.layer.shadowColor = UIColor.black.cgColor
                     cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)

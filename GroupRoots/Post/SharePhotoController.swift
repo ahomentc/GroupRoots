@@ -325,45 +325,72 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                 self.view.addSubview(self.collectionView)
             }
             else {
-                // set up groupname if there is none
-                self.selectGroupLabel.isHidden = true
-                self.selectedGroupLabel.isHidden = false
-                self.selectedGroupnameLabel.isHidden = false
-                self.selectOtherGroupButton.isHidden = false
-                Database.database().fetchFirstNGroupMembers(groupId: self.preSelectedGroup!.groupId, n: 3, completion: { (first_n_users) in
-                    self.loadGroupMembersIcon(group: self.preSelectedGroup!, first_n_users: first_n_users)
-                    if self.preSelectedGroup!.groupname == "" {
-                        var usernames = ""
-                        if first_n_users.count > 2 {
-                            usernames = first_n_users[0].username + " & " + first_n_users[1].username + " & " + first_n_users[2].username
-                            if usernames.count > 21 {
-                                usernames = String(usernames.prefix(21)) // keep only the first 21 characters
-                                usernames = usernames + "..."
+                Database.database().isInGroup(groupId: self.preSelectedGroup!.groupId, completion: { (inGroup) in
+                    if inGroup {
+                        // in group so show preselected group
+                        self.selectGroupLabel.isHidden = true // set up groupname if there is none
+                        self.selectedGroupLabel.isHidden = false
+                        self.selectedGroupnameLabel.isHidden = false
+                        self.selectOtherGroupButton.isHidden = false
+                        Database.database().fetchFirstNGroupMembers(groupId: self.preSelectedGroup!.groupId, n: 3, completion: { (first_n_users) in
+                            self.loadGroupMembersIcon(group: self.preSelectedGroup!, first_n_users: first_n_users)
+                            if self.preSelectedGroup!.groupname == "" {
+                                var usernames = ""
+                                if first_n_users.count > 2 {
+                                    usernames = first_n_users[0].username + " & " + first_n_users[1].username + " & " + first_n_users[2].username
+                                    if usernames.count > 21 {
+                                        usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                                        usernames = usernames + "..."
+                                    }
+                                }
+                                else if first_n_users.count == 2 {
+                                    usernames = first_n_users[0].username + " & " + first_n_users[1].username
+                                    if usernames.count > 21 {
+                                        usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                                        usernames = usernames + "..."
+                                    }
+                                }
+                                else if first_n_users.count == 1 {
+                                    usernames = first_n_users[0].username
+                                    if usernames.count > 21 {
+                                        usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                                        usernames = usernames + "..."
+                                    }
+                                }
+                                self.selectedGroupnameLabel.attributedText = NSMutableAttributedString(string: usernames, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 20)])
                             }
-                        }
-                        else if first_n_users.count == 2 {
-                            usernames = first_n_users[0].username + " & " + first_n_users[1].username
-                            if usernames.count > 21 {
-                                usernames = String(usernames.prefix(21)) // keep only the first 21 characters
-                                usernames = usernames + "..."
+                            else {
+                                self.selectedGroupnameLabel.attributedText = NSMutableAttributedString(string: self.preSelectedGroup!.groupname.replacingOccurrences(of: "_-a-_", with: " "), attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 20)])
                             }
-                        }
-                        else if first_n_users.count == 1 {
-                            usernames = first_n_users[0].username
-                            if usernames.count > 21 {
-                                usernames = String(usernames.prefix(21)) // keep only the first 21 characters
-                                usernames = usernames + "..."
-                            }
-                        }
-                        self.selectedGroupnameLabel.attributedText = NSMutableAttributedString(string: usernames, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 20)])
+                        }) { (_) in }
                     }
                     else {
-                        self.selectedGroupnameLabel.attributedText = NSMutableAttributedString(string: self.preSelectedGroup!.groupname.replacingOccurrences(of: "_-a-_", with: " "), attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 20)])
+                        // not in group so show group selection instead
+                        self.selectGroupLabel.isHidden = false
+                        self.selectedGroupLabel.isHidden = true
+                        self.selectedGroupnameLabel.isHidden = true
+                        self.selectOtherGroupButton.isHidden = true
+                        
+                        let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
+                        let displayWidth: CGFloat = self.view.frame.width
+                        let displayHeight: CGFloat = self.view.frame.height
+                        
+                        let layout = UICollectionViewFlowLayout()
+                        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
+                        
+                        self.collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/4, width: displayWidth, height: displayHeight - barHeight - UIScreen.main.bounds.height/4 + 10), collectionViewLayout: layout)
+                        self.collectionView.delegate = self
+                        self.collectionView.dataSource = self
+                        self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+                        self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
+                        self.collectionView.backgroundColor = UIColor.white
+                        self.view.addSubview(self.collectionView)
                     }
-                }) { (_) in }
+                }) { (err) in
+                    return
+                }
             }
-            }) { (_) in
-        }
+        }) { (_) in}
     }
     
     @objc private func postToDiffGroup(){
@@ -399,8 +426,11 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         guard let postImage = selectedImage else { return }
         let caption = textView.text
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-        
-        if selectedGroupId == "" { return }
+        if selectedGroupId == "" && preSelectedGroup == nil { return }
+
+        if selectedGroupId == "" && preSelectedGroup != nil {
+            selectedGroupId = preSelectedGroup!.groupId
+        }
         
         navigationItem.rightBarButtonItem?.isEnabled = false
         textView.isUserInteractionEnabled = false

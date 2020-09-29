@@ -32,13 +32,25 @@ class GroupCell: UICollectionViewCell {
         return button
     }()
     
+//    private let profileImageView: CustomImageView = {
+//        let iv = CustomImageView()
+//        iv.contentMode = .scaleAspectFill
+//        iv.clipsToBounds = true
+//        iv.image = #imageLiteral(resourceName: "user")
+//        iv.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+//        iv.layer.borderWidth = 0.5
+//        return iv
+//    }()
+    
     private let profileImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
         iv.image = #imageLiteral(resourceName: "user")
-        iv.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
-        iv.layer.borderWidth = 0.5
+        iv.isHidden = true
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderWidth = 2
+        iv.layer.zPosition = 10
         return iv
     }()
     
@@ -93,11 +105,18 @@ class GroupCell: UICollectionViewCell {
     
     private func sharedInit() {
         
+//        addSubview(profileImageView)
+//        profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 50, height: 50)
+//        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+//        profileImageView.layer.cornerRadius = 50 / 2
+//        profileImageView.isHidden = false
+        
         addSubview(profileImageView)
-        profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 50, height: 50)
-        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 50 / 2
-        profileImageView.isHidden = false
+        profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 20, paddingLeft: 8, width: 44, height: 44)
+        profileImageView.layer.cornerRadius = 44/2
+        profileImageView.isHidden = true
+        profileImageView.image = UIImage()
+
         
         addSubview(userOneImageView)
         userOneImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 16, paddingLeft: 22, width: 40, height: 40)
@@ -179,8 +198,21 @@ class GroupCell: UICollectionViewCell {
             if let groupProfileImageUrl = group.groupProfileImageUrl {
                 self.profileImageView.loadImage(urlString: groupProfileImageUrl)
                 self.profileImageView.isHidden = false
-                self.userOneImageView.isHidden = true
+                self.userOneImageView.isHidden = false
                 self.userTwoImageView.isHidden = true
+                
+                if first_n_users.count > 0 {
+                    if let userOneImageUrl = first_n_users[0].profileImageUrl {
+                        self.userOneImageView.loadImage(urlString: userOneImageUrl)
+                    } else {
+                        self.userOneImageView.image = #imageLiteral(resourceName: "user")
+                        self.userOneImageView.backgroundColor = .white
+                    }
+                }
+                else {
+                    self.userOneImageView.image = #imageLiteral(resourceName: "user")
+                    self.userOneImageView.backgroundColor = .white
+                }
             } else {
                 self.profileImageView.isHidden = true
                 self.userOneImageView.isHidden = false
@@ -194,6 +226,10 @@ class GroupCell: UICollectionViewCell {
                         self.userOneImageView.backgroundColor = .white
                     }
                 }
+                else {
+                    self.userOneImageView.image = #imageLiteral(resourceName: "user")
+                    self.userOneImageView.backgroundColor = .white
+                }
                 
                 // set the second user (only if it exists)
                 if first_n_users.count > 1 {
@@ -206,6 +242,11 @@ class GroupCell: UICollectionViewCell {
                         self.userTwoImageView.backgroundColor = .white
                         self.userTwoImageView.layer.borderWidth = 2
                     }
+                }
+                else {
+                    self.userTwoImageView.image = #imageLiteral(resourceName: "user")
+                    self.userTwoImageView.backgroundColor = .white
+                    self.userTwoImageView.layer.borderWidth = 2
                 }
             }
         }) { (_) in }
