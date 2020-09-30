@@ -11,7 +11,7 @@ import Firebase
 import FirebaseAuth
 import FirebaseDatabase
 
-class CommentsController: UICollectionViewController {
+class CommentsController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate {
     
     var groupPost: GroupPost? {
         didSet {
@@ -20,6 +20,9 @@ class CommentsController: UICollectionViewController {
     }
     
     private var comments = [Comment]()
+    
+    var searchCollectionView: UICollectionView!
+    var collectionView: UICollectionView!
     
     private let emojiCover: UIView = {
         let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
@@ -111,16 +114,38 @@ class CommentsController: UICollectionViewController {
             overrideUserInterfaceStyle = .light
         }
         
+        self.view.backgroundColor = .white
+        
         navigationItem.title = "Comments"
         let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        layout.minimumLineSpacing = CGFloat(0)
+        
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), collectionViewLayout: layout)
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        collectionView?.register(CommentCell.self, forCellWithReuseIdentifier: CommentCell.cellId)
+        collectionView.backgroundColor = UIColor.white
+        self.view.insertSubview(collectionView, at: 5)
+        
         collectionView?.backgroundColor = UIColor.white
         collectionView?.alwaysBounceVertical = true
         collectionView?.keyboardDismissMode = .interactive
-        collectionView?.register(CommentCell.self, forCellWithReuseIdentifier: CommentCell.cellId)
+        
+        searchCollectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), collectionViewLayout: layout)
+        searchCollectionView.delegate = self
+        searchCollectionView.dataSource = self
+        searchCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        searchCollectionView?.register(UserSearchCell.self, forCellWithReuseIdentifier: UserSearchCell.cellId)
+        searchCollectionView.backgroundColor = UIColor.white
+        self.view.insertSubview(collectionView, at: 5)
         
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(fetchComments), for: .valueChanged)
@@ -172,11 +197,11 @@ class CommentsController: UICollectionViewController {
         }
     }
         
-    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return comments.count
     }
     
-    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CommentCell.cellId, for: indexPath) as! CommentCell
         cell.comment = comments[indexPath.item]
         cell.delegate = self
@@ -258,6 +283,21 @@ extension CommentsController: UICollectionViewDelegateFlowLayout {
 //MARK: - CommentInputAccessoryViewDelegate
 
 extension CommentsController: CommentInputAccessoryViewDelegate {
+    func didChangeAtStatus(isInAt: Bool) {
+        if isInAt {
+            collectionView.isHidden = true
+            searchCollectionView.isHidden = false
+        }
+        else {
+            collectionView.isHidden = false
+            searchCollectionView.isHidden = true
+        }
+    }
+    
+    func displaySearchUsers(users: [User]) {
+        
+    }
+    
     func didSubmit(comment: String) {
         guard let postId = groupPost?.id else { return }
         Database.database().addCommentToPost(withId: postId, text: comment) { (err) in

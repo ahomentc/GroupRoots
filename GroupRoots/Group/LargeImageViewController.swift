@@ -502,7 +502,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     //MARK: - InnerPostCellDelegate
     
     func didTapComment(groupPost: GroupPost) {
-        let commentsController = CommentsController(collectionViewLayout: UICollectionViewFlowLayout())
+        let commentsController = CommentsController()
         commentsController.groupPost = groupPost
         navigationController?.pushViewController(commentsController, animated: true)
     }

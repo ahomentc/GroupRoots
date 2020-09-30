@@ -151,7 +151,7 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
     }
     
     func handleShowComment(groupPost: GroupPost) {
-        let commentsController = CommentsController(collectionViewLayout: UICollectionViewFlowLayout())
+        let commentsController = CommentsController()
         commentsController.groupPost = groupPost
         navigationController?.pushViewController(commentsController, animated: true)
     }

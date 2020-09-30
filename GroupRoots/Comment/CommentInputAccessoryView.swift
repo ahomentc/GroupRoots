@@ -7,9 +7,12 @@
 //
 
 import UIKit
+import FirebaseDatabase
 
 protocol CommentInputAccessoryViewDelegate {
     func didSubmit(comment: String)
+    func didChangeAtStatus(isInAt: Bool)
+    func displaySearchUsers(users: [User])
 }
 
 class CommentInputAccessoryView: UIView, UITextViewDelegate {
@@ -74,12 +77,70 @@ class CommentInputAccessoryView: UIView, UITextViewDelegate {
     
     @objc private func handleSubmit() {
         guard let commentText = commentTextView.text else { return }
+        checkForAtInput(text: commentText + " ")
         commentTextView.resignFirstResponder()
         delegate?.didSubmit(comment: commentText)
     }
     
+
+    var atUsers = [User]()
+    func checkForAtInput(text: String){
+        if text.last != nil {
+            let lastChar = text.last!
+            if lastChar == " " {
+                // user has entered the full username without search
+                delegate?.didChangeAtStatus(isInAt: false)
+                var seperatedTextArr = text.components(separatedBy: " ")
+                seperatedTextArr.removeLast()
+                let lastWord = seperatedTextArr.last
+                if lastWord == nil || lastWord?.first != "@" {
+                    return
+                }
+                let username = lastWord!.trimmingCharacters(in: .whitespaces).removeCharacters(from: "@")
+                Database.database().fetchUserFromUsername(username: username, completion: { (user) in
+                    self.atUsers.append(user)
+                    // check to not add duplicates
+                    print(self.atUsers)
+                })
+            }
+            else {
+                // user is still typing the @
+                // implement search for user here
+                
+                // when doing search, do a search through the users that you follow first
+                // and then add the rest of regular search
+                // for now can just do regular search only
+                
+                let seperatedTextArr = text.components(separatedBy: " ")
+                let lastWord = seperatedTextArr.last
+                if lastWord == nil || lastWord?.first != "@"{
+                    delegate?.didChangeAtStatus(isInAt: false)
+                    return
+                }
+                delegate?.didChangeAtStatus(isInAt: true)
+                let searchTerm = lastWord!.trimmingCharacters(in: .whitespaces).removeCharacters(from: "@")
+                searchForUser(username: searchTerm)
+            }
+        }
+    }
+    
+    private func searchForUser(username: String){
+        if username.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil || username == "" {
+            return
+        }
+        Database.database().searchForUsers(username: username, completion: { (users) in
+            self.delegate?.displaySearchUsers(users: users)
+        })
+    }
+    
+    func submitAts(){
+        
+    }
+    
+    
     @objc private func handleTextChange() {
         guard let text = commentTextView.text else { return }
+        checkForAtInput(text: text)
         if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             submitButton.isEnabled = false
             submitButton.setTitleColor(.lightGray, for: .normal)
@@ -87,5 +148,28 @@ class CommentInputAccessoryView: UIView, UITextViewDelegate {
             submitButton.isEnabled = true
             submitButton.setTitleColor(.black, for: .normal)
         }
+    }
+}
+
+extension String {
+    subscript (bounds: CountableClosedRange<Int>) -> String {
+        let start = index(startIndex, offsetBy: bounds.lowerBound)
+        let end = index(startIndex, offsetBy: bounds.upperBound)
+        return String(self[start...end])
+    }
+
+    subscript (bounds: CountableRange<Int>) -> String {
+        let start = index(startIndex, offsetBy: bounds.lowerBound)
+        let end = index(startIndex, offsetBy: bounds.upperBound)
+        return String(self[start..<end])
+    }
+    
+    func removeCharacters(from forbiddenChars: CharacterSet) -> String {
+        let passed = self.unicodeScalars.filter { !forbiddenChars.contains($0) }
+        return String(String.UnicodeScalarView(passed))
+    }
+
+    func removeCharacters(from: String) -> String {
+        return removeCharacters(from: CharacterSet(charactersIn: from))
     }
 }

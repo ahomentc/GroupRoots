@@ -398,6 +398,26 @@ extension Database {
             }
         }
     }
+
+    func fetchUserFromUsername(username: String, completion: @escaping (User) -> ()) {
+        Database.database().reference().child("usernames").child(username).observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    return
+                }
+                let userId = snapshot.value as! String
+                self.userExists(withUID: userId, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchUser(withUID: userId, completion: { (user) in
+                            completion(user)
+                        })
+                    }
+                })
+            }
+        }) { (err) in
+            print("Failed to fetch user from database:", err)
+        }
+    }
     
     func inviteCodeExists(code: String, completion: @escaping (Bool) -> ()) {
         Database.database().reference().child("inviteCodes").child(code).observeSingleEvent(of: .value, with: { (snapshot) in

@@ -24,7 +24,7 @@ class HomePostCellViewController: UICollectionViewController, HomePostCellDelega
     //MARK: - HomePostCellDelegate
     
     func didTapComment(groupPost: GroupPost) {
-        let commentsController = CommentsController(collectionViewLayout: UICollectionViewFlowLayout())
+        let commentsController = CommentsController()
         commentsController.groupPost = groupPost
         navigationController?.pushViewController(commentsController, animated: true)
     }
