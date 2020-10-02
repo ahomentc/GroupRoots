@@ -105,12 +105,6 @@ class GroupCell: UICollectionViewCell {
     
     private func sharedInit() {
         
-//        addSubview(profileImageView)
-//        profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 50, height: 50)
-//        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-//        profileImageView.layer.cornerRadius = 50 / 2
-//        profileImageView.isHidden = false
-        
         addSubview(profileImageView)
         profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 20, paddingLeft: 8, width: 44, height: 44)
         profileImageView.layer.cornerRadius = 44/2

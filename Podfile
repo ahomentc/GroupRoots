@@ -27,4 +27,5 @@ target 'GroupRoots' do
   pod 'PhoneNumberKit', '~> 3.1'
   pod 'Zoomy'
   pod 'SwiftGifOrigin', '~> 1.7.0'
+  pod 'DGCollectionViewLeftAlignFlowLayout'
 end

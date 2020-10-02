@@ -114,7 +114,7 @@ class MembersController: UICollectionViewController {
     @objc private func handleInviteMember() {
         guard let group = group else { return }
         let layout = UICollectionViewFlowLayout()
-        let inviteToGroupController = InviteToGroupController(collectionViewLayout: layout)
+        let inviteToGroupController = InviteToGroupController()
         inviteToGroupController.group = group
         let navController = UINavigationController(rootViewController: inviteToGroupController)
         self.present(navController, animated: true, completion: nil)

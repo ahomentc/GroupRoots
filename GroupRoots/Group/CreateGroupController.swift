@@ -222,7 +222,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
             Database.database().groupExists(groupId: groupId, completion: { (exists) in
                 if exists {
                     Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                        let inviteToGroupController = InviteToGroupWhenCreateController(collectionViewLayout: UICollectionViewFlowLayout())
+                        let inviteToGroupController = InviteToGroupWhenCreateController()
                         inviteToGroupController.group = group
                         inviteToGroupController.delegate = self.delegateForInvite
                         self.navigationController?.pushViewController(inviteToGroupController, animated: true)

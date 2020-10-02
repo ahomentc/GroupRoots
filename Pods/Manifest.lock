@@ -16,6 +16,7 @@ PODS:
     - BSGridCollectionViewLayout (= 1.2.5)
     - BSImageView (= 1.0.3)
   - BSImageView (1.0.3)
+  - DGCollectionViewLeftAlignFlowLayout (1.0.4)
   - Firebase/Analytics (6.29.0):
     - Firebase/Core
   - Firebase/Auth (6.29.0):
@@ -162,6 +163,7 @@ PODS:
 
 DEPENDENCIES:
   - BSImagePicker (~> 2.8)
+  - DGCollectionViewLeftAlignFlowLayout
   - Firebase/Analytics
   - Firebase/Auth
   - Firebase/Core
@@ -199,6 +201,7 @@ SPEC REPOS:
     - UPCarouselFlowLayout
     - YPImagePicker
   trunk:
+    - DGCollectionViewLeftAlignFlowLayout
     - Firebase
     - FirebaseAnalytics
     - FirebaseAuth
@@ -227,6 +230,7 @@ SPEC CHECKSUMS:
   BSGridCollectionViewLayout: 333dcb457a5a3bdd9212607ab5756553dcfe06cb
   BSImagePicker: 07404254f2fcdaf5a2eb403c0f8c337267ce8738
   BSImageView: a149459433a2687157d034c78e059d30ac7f2544
+  DGCollectionViewLeftAlignFlowLayout: a0fa58797373ded039cafba8133e79373d048399
   Firebase: 57957c8d6eb3d8b80a560b1dc58be24724b89ff2
   FirebaseAnalytics: aa522dce9fd93002ba1554467d23ce7092323000
   FirebaseAuth: a818d73466d51db897d3bf3c0f3baa3dae7fd4c0
@@ -262,6 +266,6 @@ SPEC CHECKSUMS:
   YPImagePicker: 7a34eabd0ef544ae8fbf9785c3df9ec5bbf242e3
   Zoomy: 598d7a6d52567e4f8bf2e557907bbd9d7e725664
 
-PODFILE CHECKSUM: e1c4737e167c5f804b1fe038da4d5d994d1e2ab9
+PODFILE CHECKSUM: 212460ebf583d4b2f84810018e214539757c380a
 
 COCOAPODS: 1.9.3

@@ -42,7 +42,7 @@ class MembershipLabelCell: UICollectionViewCell {
     
     private let membershipsLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16)
+        label.font = UIFont.systemFont(ofSize: 18)
         label.text = "Group Memberships"
         label.textColor = .lightGray
         label.textAlignment = .center
@@ -64,5 +64,10 @@ class MembershipLabelCell: UICollectionViewCell {
     private func sharedInit() {
         addSubview(membershipsLabel)
         membershipsLabel.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 25)
+        
+//        let separatorView = UIView()
+//        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
+//        addSubview(separatorView)
+//        separatorView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 0.5)
     }
 }

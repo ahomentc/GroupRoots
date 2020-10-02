@@ -17,7 +17,7 @@ class UserProfilePhotoGridCell: UICollectionViewCell {
         }
     }
     
-    private let photoImageView: CustomImageView = {
+    let photoImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true

@@ -542,7 +542,7 @@ extension GroupProfileController: GroupProfileHeaderDelegate {
     
     @objc internal func handleShowAddMember(){
         let layout = UICollectionViewFlowLayout()
-        let inviteToGroupController = InviteToGroupController(collectionViewLayout: layout)
+        let inviteToGroupController = InviteToGroupController()
         inviteToGroupController.group = self.group
         let navController = UINavigationController(rootViewController: inviteToGroupController)
 //        navController.modalPresentationStyle = .popover

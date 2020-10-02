@@ -3,8 +3,8 @@ import Firebase
 import FirebaseAuth
 import FirebaseDatabase
 
-class UserProfileController: HomePostCellViewController, CreateGroupControllerDelegate {
-    
+class UserProfileController: HomePostCellViewController, CreateGroupControllerDelegate, FullGroupCellDelegate {
+
     var user: User? {
         didSet {
             configureUser()
@@ -53,6 +53,8 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         collectionView?.register(UserProfileEmptyStateCell.self, forCellWithReuseIdentifier: UserProfileEmptyStateCell.cellId)
         collectionView?.register(MembershipLabelCell.self, forCellWithReuseIdentifier: MembershipLabelCell.cellId)
         collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
+        collectionView?.register(FullGroupCell.self, forCellWithReuseIdentifier: FullGroupCell.cellId)
+        collectionView?.showsVerticalScrollIndicator = false
 
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
@@ -217,14 +219,18 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
     private func fetchAllGroups() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         collectionView?.refreshControl?.beginRefreshing()
-
+        
         guard let user = user else { return }
+        
         Database.database().isUserBlocked(withUID: user.uid, completion: { (isBlocked) in
             self.isBlockedByThisUser = isBlocked
             if !isBlocked{
                 Database.database().fetchAllGroups(withUID: user.uid, completion: { (groups) in
                     if user.uid == currentLoggedInUserId { // show all groups
                         self.groups = groups
+                        self.groups.sort(by: { (g1, g2) -> Bool in
+                            return g1.lastPostedDate > g2.lastPostedDate
+                        })
                         self.fetchedGroups = true
                         self.collectionView?.reloadData()
                         self.collectionView?.refreshControl?.endRefreshing()
@@ -246,6 +252,9 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
                         }
                         sync.notify(queue: .main) {
                             self.groups = visibleGroups
+                            self.groups.sort(by: { (g1, g2) -> Bool in
+                                return g1.lastPostedDate > g2.lastPostedDate
+                            })
                             self.fetchedGroups = true
                             self.collectionView?.reloadData()
                             self.collectionView?.refreshControl?.endRefreshing()
@@ -326,9 +335,14 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MembershipLabelCell.cellId, for: indexPath) as! MembershipLabelCell
             return cell
         }
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
+//        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
+//        cell.group = groups[indexPath.item - 1]
+//        cell.user = user
+//        return cell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FullGroupCell.cellId, for: indexPath) as! FullGroupCell
         cell.group = groups[indexPath.item - 1]
         cell.user = user
+        cell.delegate = self
         return cell
     }
     
@@ -375,6 +389,28 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
             }
         })
     }
+    
+    func didTapGroupPost(groupPost: GroupPost, index: Int) {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        layout.minimumLineSpacing = CGFloat(0)
+        
+        let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
+        largeImageViewController.group = groupPost.group
+        largeImageViewController.indexPath = IndexPath(item: index, section: 0)
+        let navController = UINavigationController(rootViewController: largeImageViewController)
+//        navController.modalPresentationStyle = .fullScreen
+        navController.modalPresentationStyle = .overCurrentContext
+        
+        self.present(navController, animated: true, completion: nil)
+        
+        handleDidView(groupPost: groupPost)
+    }
+    
+    func handleDidView(groupPost: GroupPost) {
+        Database.database().addToViewedPosts(postId: groupPost.id, completion: { _ in })
+    }
 }
 
 extension UserProfileController: UICollectionViewDelegateFlowLayout {
@@ -384,9 +420,19 @@ extension UserProfileController: UICollectionViewDelegateFlowLayout {
             return CGSize(width: view.frame.width, height: emptyStateCellHeight)
         }
         if indexPath.item == 0 {
-            return CGSize(width: view.frame.width, height: 40)
+            return CGSize(width: view.frame.width, height: 60)
         }
-        return CGSize(width: view.frame.width, height: 80)
+//        return CGSize(width: view.frame.width, height: 80)
+        return CGSize(width: view.frame.width, height: 300)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        if groups.count == 0  {
+            return 0
+        }
+        else {
+            return 20
+        }
     }
 }
 

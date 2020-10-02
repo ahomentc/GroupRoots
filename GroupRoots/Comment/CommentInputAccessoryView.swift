@@ -98,7 +98,9 @@ class CommentInputAccessoryView: UIView, UITextViewDelegate {
                 }
                 let username = lastWord!.trimmingCharacters(in: .whitespaces).removeCharacters(from: "@")
                 Database.database().fetchUserFromUsername(username: username, completion: { (user) in
-                    self.atUsers.append(user)
+                    if !self.atUsers.contains(user) {
+                        self.atUsers.append(user)
+                    }
                     // check to not add duplicates
                     print(self.atUsers)
                 })
