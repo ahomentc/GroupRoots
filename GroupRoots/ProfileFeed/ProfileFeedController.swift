@@ -171,7 +171,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         let button = UIButton()
         button.addTarget(self, action: #selector(handleShowNewGroup), for: .touchUpInside)
         button.layer.zPosition = 10;
-        button.setImage(#imageLiteral(resourceName: "group_plus"), for: .normal)
+        button.setImage(#imageLiteral(resourceName: "group_plus").withRenderingMode(UIImage.RenderingMode.alwaysTemplate), for: .normal)
+        button.tintColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         return button
     }()
     

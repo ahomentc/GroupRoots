@@ -67,6 +67,11 @@
 		75D86CAC252094E100939301 /* ImportContactsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CAB252094E100939301 /* ImportContactsCell.swift */; };
 		75D86CAE2524478A00939301 /* FullGroupCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CAD2524478A00939301 /* FullGroupCell.swift */; };
 		75D86CB025270BB600939301 /* Contacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CAF25270BB500939301 /* Contacts.swift */; };
+		75D86CB42530307A00939301 /* SignUpAfterPhoneController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CB32530307A00939301 /* SignUpAfterPhoneController.swift */; };
+		75D86CB62530329C00939301 /* GroupInviteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CB52530329C00939301 /* GroupInviteController.swift */; };
+		75D86CB82531AAFF00939301 /* ConnectAccountController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CB72531AAFF00939301 /* ConnectAccountController.swift */; };
+		75D86CBA2533063000939301 /* PlusCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CB92533063000939301 /* PlusCell.swift */; };
+		75D86CBC2533B51E00939301 /* NewGroupInPostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CBB2533B51E00939301 /* NewGroupInPostCell.swift */; };
 		75DD552924A2F89800FE9E7D /* LoadMoreNotificationsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */; };
 		75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */; };
 		75E5CBB324FACC4B0080F815 /* ContactsInviteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */; };
@@ -182,6 +187,11 @@
 		75D86CAB252094E100939301 /* ImportContactsCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportContactsCell.swift; sourceTree = "<group>"; };
 		75D86CAD2524478A00939301 /* FullGroupCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullGroupCell.swift; sourceTree = "<group>"; };
 		75D86CAF25270BB500939301 /* Contacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Contacts.swift; sourceTree = "<group>"; };
+		75D86CB32530307A00939301 /* SignUpAfterPhoneController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpAfterPhoneController.swift; sourceTree = "<group>"; };
+		75D86CB52530329C00939301 /* GroupInviteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupInviteController.swift; sourceTree = "<group>"; };
+		75D86CB72531AAFF00939301 /* ConnectAccountController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectAccountController.swift; sourceTree = "<group>"; };
+		75D86CB92533063000939301 /* PlusCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlusCell.swift; sourceTree = "<group>"; };
+		75D86CBB2533B51E00939301 /* NewGroupInPostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewGroupInPostCell.swift; sourceTree = "<group>"; };
 		75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadMoreNotificationsCell.swift; sourceTree = "<group>"; };
 		75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpTwoController.swift; sourceTree = "<group>"; };
 		75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsInviteController.swift; sourceTree = "<group>"; };
@@ -429,6 +439,7 @@
 				AD32DEC6210C0995002F4973 /* PhotoSelectorCell.swift */,
 				AD32DEC8210C10A0002F4973 /* PhotoSelectorHeader.swift */,
 				AD32DECA210C18E6002F4973 /* SharePhotoController.swift */,
+				75D86CBB2533B51E00939301 /* NewGroupInPostCell.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -453,6 +464,7 @@
 				AD2CC6D5211FA0C40091E7D9 /* UserProfileEmptyStateCell.swift */,
 				7578BB1123D2694F00AF9BFB /* GroupCell.swift */,
 				75D86CAD2524478A00939301 /* FullGroupCell.swift */,
+				75D86CB92533063000939301 /* PlusCell.swift */,
 				754295C323E162F600893EFD /* InviteSelectionController.swift */,
 				75ACAFC423F6768A00DAE747 /* FollowPageController.swift */,
 				75ACAFC623F677BD00DAE747 /* FollowPageHeader.swift */,
@@ -471,6 +483,9 @@
 				AD4D8CF32060A70E00A49BA4 /* LoginController.swift */,
 				75E5CBC025036ACE0080F815 /* LoginPhoneController.swift */,
 				75E5CBC62504CE950080F815 /* LoginPhoneVerifyController.swift */,
+				75D86CB32530307A00939301 /* SignUpAfterPhoneController.swift */,
+				75D86CB52530329C00939301 /* GroupInviteController.swift */,
+				75D86CB72531AAFF00939301 /* ConnectAccountController.swift */,
 				AD2A2CB2205C88DE0023D5C8 /* SignUpController.swift */,
 				75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */,
 				75E5CBC22503793F0080F815 /* SignUpPhoneController.swift */,
@@ -706,9 +721,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				ADAC080D2110318400615E62 /* UserSearchCell.swift in Sources */,
+				75D86CB42530307A00939301 /* SignUpAfterPhoneController.swift in Sources */,
 				7521D04A243463480028FC9C /* GroupSearchCell.swift in Sources */,
 				756D72CB242B3247008B6F42 /* InviteToGroupCell.swift in Sources */,
 				7578BB0A23D1B1C000AF9BFB /* Group.swift in Sources */,
+				75D86CBA2533063000939301 /* PlusCell.swift in Sources */,
 				75B65DF1241442FF006CBA0B /* SubscriptionCell.swift in Sources */,
 				75BB488F23DAB1CD00CF008F /* FeedCell.swift in Sources */,
 				AD32EF792114E4B200BB7B56 /* CustomAnimationDismissor.swift in Sources */,
@@ -737,11 +754,14 @@
 				75EFCCFA23F11D9D00B7580D /* EmtpyFeedCell.swift in Sources */,
 				757B35CB2472435900C9AFE1 /* FeedGroupCell.swift in Sources */,
 				ADAC080B21102E8D00615E62 /* UserSearchController.swift in Sources */,
+				75D86CBC2533B51E00939301 /* NewGroupInPostCell.swift in Sources */,
 				ADE95AF7210D1D6E003D9A54 /* UserProfilePhotoGridCell.swift in Sources */,
 				AD32EF772114E21900BB7B56 /* CustomAnimationPresentor.swift in Sources */,
 				75BB488E23DAB1CD00CF008F /* FeedController.swift in Sources */,
+				75D86CB82531AAFF00939301 /* ConnectAccountController.swift in Sources */,
 				75ACAFC923F7DE8700DAE747 /* FollowPageCell.swift in Sources */,
 				754295C423E162F600893EFD /* InviteSelectionController.swift in Sources */,
+				75D86CB62530329C00939301 /* GroupInviteController.swift in Sources */,
 				756E3D17243980BD00E167BA /* EditProfileController.swift in Sources */,
 				75BB489523DB00E800CF008F /* MembersCell.swift in Sources */,
 				AD2CC6D6211FA0C40091E7D9 /* UserProfileEmptyStateCell.swift in Sources */,

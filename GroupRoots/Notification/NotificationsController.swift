@@ -62,6 +62,8 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         self.navigationController?.navigationBar.shadowImage = UIImage()
         self.navigationController?.navigationBar.isTranslucent = false
         self.navigationController?.navigationBar.backgroundColor = UIColor.white
+        
+        UIApplication.shared.applicationIconBadgeNumber = 0
     }
     
     override func viewWillDisappear(_ animated: Bool) {

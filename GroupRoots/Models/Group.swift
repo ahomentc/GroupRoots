@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct Group: Codable {
+struct Group: Equatable, Codable {
     
     let groupId: String
     let groupname: String
@@ -30,5 +30,9 @@ struct Group: Codable {
         else {
             self.isPrivate = false
         }
+    }
+    
+    static func ==(lhs: Group, rhs: Group) -> Bool {
+        return lhs.groupId == rhs.groupId
     }
 }

@@ -118,6 +118,7 @@ class LoginPhoneVerifyController: UIViewController, UINavigationControllerDelega
     @objc private func handleVerify() {
         guard let verificationID = verificationID else { return }
         guard let verificationCode = verificationTextField.text else { return }
+        guard let phone = phone else { return }
         
         verificationTextField.isUserInteractionEnabled = false
         
@@ -139,11 +140,28 @@ class LoginPhoneVerifyController: UIViewController, UINavigationControllerDelega
                 self.verificationTextField.text = ""
                 return
             }
-            if let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController {
-                mainTabBarController.setupViewControllers()
-                mainTabBarController.selectedIndex = 0
-                self.dismiss(animated: true, completion: nil)
-            }
+            // check if number already belongs to a user in database
+            // if not, then take to modified version of SignUpController, no password and no group invite code
+            // add a label saying "connect phone to existing account?" -> login with email page that also connects phone number
+            //      then, take to a page that does this:
+            //      if number is invited to a group: You've been invited to join the group: ___. You'll be added as a member.
+            //      if number isn't: You're not invited to a group yet. Do you have a group invite code?
+            
+            Database.database().doesNumberExist(number: phone, completion: { (exists) in
+                if exists{
+                    if let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController {
+                        mainTabBarController.setupViewControllers()
+                        mainTabBarController.selectedIndex = 0
+                        self.dismiss(animated: true, completion: nil)
+                    }
+                }
+                else {
+                    let signUpAfterPhoneController = SignUpAfterPhoneController()
+                    signUpAfterPhoneController.uid = Auth.auth().currentUser?.uid
+                    signUpAfterPhoneController.number = phone
+                    self.navigationController?.pushViewController(signUpAfterPhoneController, animated: true)
+                }
+            }) { (err) in return}
         }
     }
 }

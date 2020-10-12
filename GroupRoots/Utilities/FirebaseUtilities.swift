@@ -48,6 +48,39 @@ extension Auth {
         })
     }
     
+    func createUserFromPhone(withUID uid: String, withEmail email: String, username: String, name: String, bio: String, image: UIImage?, completion: @escaping (Error?) -> ()) {
+        Database.database().usernameExists(username: username, completion: { (exists) in
+            if !exists{
+                
+                // some sort of weird bug where username isn't added to usernames so add it here too
+                let username_values = [username: uid]
+                Database.database().reference().child("usernames").updateChildValues(username_values, withCompletionBlock: { (err, ref) in
+                    if let err = err {
+                        print("Failed to upload user to database:", err)
+                        return
+                    }
+                })
+                
+                if let image = image {
+                    Storage.storage().uploadUserProfileImage(image: image, completion: { (profileImageUrl) in
+                        self.uploadUser(withUID: uid, username: username, name: name, bio: bio, profileImageUrl: profileImageUrl) {
+                            completion(nil)
+                        }
+                    })
+                } else {
+                    self.uploadUser(withUID: uid, username: username, name: name, bio: bio) {
+                        completion(nil)
+                    }
+                }
+            }
+            else {
+                let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "Username Taken"])
+                completion(error)
+                return
+            }
+        })
+    }
+    
     private func uploadUser(withUID uid: String, username: String, name: String, bio: String, profileImageUrl: String? = nil, completion: @escaping (() -> ())) {
         var dictionaryValues = ["username": username, "name": name, "bio": bio]
         if profileImageUrl != nil {
@@ -448,6 +481,18 @@ extension Database {
     
     func userExists(withUID uid: String, completion: @escaping (Bool) -> ()) {
         Database.database().reference().child("users").child(uid).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard (snapshot.value as? [String: Any]) != nil else {
+                completion(false)
+                return
+            }
+            completion(true)
+        }) { (err) in
+            print("Failed to fetch user from database:", err)
+        }
+    }
+    
+    func groupRootsUserExists(withUID uid: String, completion: @escaping (Bool) -> ()) {
+        Database.database().reference().child("users").child(uid).child("username").observeSingleEvent(of: .value, with: { (snapshot) in
             guard (snapshot.value as? [String: Any]) != nil else {
                 completion(false)
                 return
@@ -2305,6 +2350,53 @@ extension Database {
         }
     }
     
+    func isNumberInvitedToAGroup(number: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+        Database.database().reference().child("invitedContacts").child(number).observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(true)
+                }
+            } else {
+                completion(false)
+            }
+            
+        }) { (err) in
+            print("Failed to check if following:", err)
+            cancel?(err)
+        }
+    }
+    
+    func fetchFirstGroupNumberIsInvitedTo(number: String, completion: @escaping (Group) -> (), withCancel cancel: ((Error) -> ())? = nil) {
+        let ref = Database.database().reference().child("invitedContacts").child(number)
+        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let groupId = child.key
+                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                    completion(group)
+                    return
+                })
+            }
+        })
+    }
+    
+    func fetchInvitedBy(number: String, groupId: String, completion: @escaping (User) -> (), withCancel cancel: ((Error) -> ())? = nil) {
+        let ref = Database.database().reference().child("invitedContacts").child(number).child(groupId).child("invitedBy")
+        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+            if let invited_by_id = snapshot.value as? String {
+                self.userExists(withUID: invited_by_id, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchUser(withUID: invited_by_id, completion: { (user) in
+                            completion(user)
+                        })
+                    }
+                })
+            }
+        })
+    }
+
     //  number should already be formatted when it gets here
     func addNumberToGroupsInvited(number: String, completion: @escaping (Error?) -> ()) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
@@ -4286,6 +4378,27 @@ extension Database {
                         completion(nil)
                     }
                 }
+            case .mentionedInComment:
+                Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
+                    guard let group = group else { return }
+                    // could add a check to see if the currentLoggedInUser is following the user in the group.
+                    // if not following, then could not send a notification for them.
+                    // could add this here, before this function is called, + have default and change from settings
+
+                    let pushMessage = user.username + " mentioned you in a comment"
+                    PushNotificationSender().sendPushNotification(to: token, title: "Group Post", body: pushMessage)
+                    
+                    // Save the notification
+                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group.groupId, "group_post_id": groupPost!.id, "type": "mentionedInComment", "creationDate": Date().timeIntervalSince1970] as [String : Any]
+                    notificationRef.updateChildValues(values) { (err, ref) in
+                        if let err = err {
+                            print("Failed to save post to database", err)
+                            completion(err)
+                            return
+                        }
+                        completion(nil)
+                    }
+                }
             case .unsubscribeRequest:
                 // no notification for unsubscribe request
                 completion(nil)
@@ -4384,6 +4497,19 @@ extension Database {
                                 }
                             })
                         case "newGroupPost":
+                            self.groupExists(groupId: group_id, completion: { (exists) in
+                                if exists {
+                                    self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
+                                        completion(post_exists)
+                                        return
+                                    })
+                                }
+                                else{
+                                    completion(false)
+                                    return
+                                }
+                            })
+                        case "mentionedInComment":
                             self.groupExists(groupId: group_id, completion: { (exists) in
                                 if exists {
                                     self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
@@ -4603,6 +4729,32 @@ extension Database {
                                                         notification.id = notificationId
                                                         completion(notification)
 
+                                                    })
+                                                }
+                                                else{
+                                                    let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "groupPost existance"])
+                                                    cancel?(err)
+                                                    return
+                                                }
+                                            })
+                                        })
+                                    }
+                                    else {
+                                        let err = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "group existance"])
+                                        cancel?(err)
+                                        return
+                                    }
+                                })
+                            case "mentionedInComment":
+                                self.groupExists(groupId: group_id, completion: { (exists) in
+                                    if exists {
+                                        Database.database().fetchGroup(groupId: group_id, completion: { (group) in
+                                            self.groupPostExists(groupId: group_id, postId: group_post_id, completion: { (post_exists) in
+                                                if post_exists{
+                                                    Database.database().fetchGroupPost(groupId: group_id, postId: group_post_id, completion: { (post) in
+                                                        var notification = Notification(group: group, groupPost: post, from: fromUser, to: toUser, type: NotificationType.mentionedInComment, dictionary: notificationDictionary)
+                                                        notification.id = notificationId
+                                                        completion(notification)
                                                     })
                                                 }
                                                 else{

@@ -39,6 +39,7 @@ class SearchUserForInvitationController: UICollectionViewController {
         sb.autocorrectionType = .no
         sb.autocapitalizationType = .none
         sb.barTintColor = .gray
+        sb.layer.backgroundColor = UIColor.white.cgColor
         UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).backgroundColor = UIColor.rgb(red: 240, green: 240, blue: 240)
         return sb
     }()

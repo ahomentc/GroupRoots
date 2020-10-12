@@ -145,6 +145,8 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Share", style: .plain, target: self, action: #selector(handleShare))
         
         layoutViews()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateGroupsToPostTo, object: nil)
     }
 
     @objc private func selectImage(){
@@ -272,31 +274,84 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
     
     internal func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         textView.endEditing(true)
-        self.selectedGroupId = groups[indexPath.row].groupId
         
-        if last_selected_indexpath != nil {
-            let old_cell = collectionView.cellForItem(at: last_selected_indexpath!)
-            old_cell?.layer.backgroundColor = UIColor.white.cgColor
+        if preSelectedGroup != nil {
+            self.selectedGroupId = groups[indexPath.row].groupId
+            
+            if last_selected_indexpath != nil {
+                let old_cell = collectionView.cellForItem(at: last_selected_indexpath!)
+                old_cell?.layer.backgroundColor = UIColor.white.cgColor
+            }
+            
+            let cell = collectionView.cellForItem(at: indexPath)
+            cell?.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
         }
-        
-        let cell = collectionView.cellForItem(at: indexPath)
-        cell?.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
-        
-        last_selected_indexpath = indexPath
+        else {
+            if indexPath.row == 0 {
+                let createGroupController = CreateGroupController()
+                let navController = UINavigationController(rootViewController: createGroupController)
+                navController.modalPresentationStyle = .fullScreen
+                present(navController, animated: true, completion: nil)
+            }
+            else {
+                self.selectedGroupId = groups[indexPath.row - 1].groupId
+                
+                if last_selected_indexpath != nil {
+                    let old_cell = collectionView.cellForItem(at: last_selected_indexpath!)
+                    old_cell?.layer.backgroundColor = UIColor.white.cgColor
+                }
+                
+                let cell = collectionView.cellForItem(at: indexPath)
+                cell?.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
+                
+                last_selected_indexpath = indexPath
+            }
+        }
     }
     
     internal func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return groups.count
+        if preSelectedGroup != nil {
+            return groups.count
+        }
+        else {
+            return groups.count + 1
+        }
     }
     
     internal func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
-        cell.group = groups[indexPath.item]
-        cell.user = User(uid: "", dictionary: ["":0])
-        if last_selected_indexpath == indexPath {
-            cell.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
+        if preSelectedGroup != nil { // preSelected group means that "post to new group" doesn't appear
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
+            if indexPath.item < groups.count {
+                cell.group = groups[indexPath.item]
+            }
+            cell.user = User(uid: "", dictionary: ["":0])
+            if last_selected_indexpath == indexPath {
+                cell.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
+            }
+            return cell
         }
-        return cell
+        else {
+            if indexPath.item == 0 {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NewGroupInPostCell.cellId, for: indexPath) as! NewGroupInPostCell
+                return cell
+            }
+            else {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
+                if indexPath.item - 1 < groups.count {
+                    cell.group = groups[indexPath.item - 1]
+                }
+                cell.user = User(uid: "", dictionary: ["":0])
+                if last_selected_indexpath == indexPath {
+                    cell.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
+                }
+                return cell
+            }
+        }
+        
+    }
+    
+    @objc func handleRefresh() {
+        fetchAllGroups()
     }
     
     private func fetchAllGroups() {
@@ -321,6 +376,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                 self.collectionView.dataSource = self
                 self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
                 self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
+                self.collectionView?.register(NewGroupInPostCell.self, forCellWithReuseIdentifier: NewGroupInPostCell.cellId)
                 self.collectionView.backgroundColor = UIColor.white
                 self.view.addSubview(self.collectionView)
             }
@@ -470,6 +526,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
             })
             NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
             NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name("updatedUser"), object: nil)
             self.dismiss(animated: true, completion: nil)
         })
     }

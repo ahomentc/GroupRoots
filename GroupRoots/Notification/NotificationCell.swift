@@ -291,6 +291,12 @@ class NotificationCell: UICollectionViewCell {
             let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowComments))
             notificationsLabel.addGestureRecognizer(gestureRecognizer)
         }
+        else if notification.type == NotificationType.mentionedInComment {
+            notificationsLabel.text = "mentioned you in a comment"
+            notificationsLabel.isUserInteractionEnabled = true
+            let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowComments))
+            notificationsLabel.addGestureRecognizer(gestureRecognizer)
+        }
         else if notification.type == NotificationType.newGroupPost {
             var groupname = "your group"
             if notification.group?.groupname ?? "" != "" {
@@ -433,7 +439,7 @@ class NotificationCell: UICollectionViewCell {
                 return
             }
         }
-        else if notification?.type == NotificationType.groupPostComment || notification!.type == NotificationType.newGroupPost {
+        else if notification?.type == NotificationType.groupPostComment || notification!.type == NotificationType.newGroupPost || notification?.type == NotificationType.mentionedInComment {
             postImageView.loadImage(urlString: self.notification?.groupPost?.imageUrl ?? "")
             postImageView.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
             postImageView.layer.borderWidth = 0.5

@@ -9,6 +9,7 @@
 import UIKit
 import Foundation
 import SystemConfiguration
+import CommonCrypto
 
 extension UIColor {
     
@@ -122,6 +123,7 @@ extension NSNotification.Name {
     static var updateNotifications = NSNotification.Name(rawValue: "updateNotifications")
     static var updateGroupProfile = NSNotification.Name(rawValue: "updateGroupProfile")
     static var updateUserProfile = NSNotification.Name(rawValue: "updateUserProfile")
+    static var updateGroupsToPostTo = NSNotification.Name(rawValue: "updateGroupsToPostTo")
 }
 
 public class Reachability {
@@ -158,4 +160,43 @@ public class Reachability {
         return ret
 
     }
+}
+
+extension String {
+    func capitalizingFirstLetter() -> String {
+        return prefix(1).capitalized + dropFirst()
+    }
+
+    mutating func capitalizeFirstLetter() {
+        self = self.capitalizingFirstLetter()
+    }
+}
+
+extension String {
+
+    func fromBase64() -> String? {
+        guard let data = Data(base64Encoded: self) else {
+            return nil
+        }
+
+        return String(data: data, encoding: .utf8)
+    }
+
+    func toBase64() -> String {
+        return Data(self.utf8).base64EncodedString()
+    }
+
+}
+
+extension String {
+
+    func sha512() -> String {
+        let data = self.data(using: .utf8)!
+        var digest = [UInt8](repeating: 0, count: Int(CC_SHA512_DIGEST_LENGTH))
+        data.withUnsafeBytes({
+            _ = CC_SHA512($0, CC_LONG(data.count), &digest)
+        })
+        return digest.map({ String(format: "%02hhx", $0) }).joined(separator: "")
+    }
+
 }

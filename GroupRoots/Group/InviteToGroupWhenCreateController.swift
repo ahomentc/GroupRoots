@@ -12,16 +12,17 @@ import FirebaseAuth
 import FirebaseDatabase
 import ContactsUI
 import PhoneNumberKit
+import DGCollectionViewLeftAlignFlowLayout
 
 protocol InviteToGroupWhenCreateControllerDelegate {
     func shouldOpenGroup(groupId: String)
 }
 
-class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate {
+class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, ContactCellDelegate, AddedUserCellDelegate {
     
     var group: Group? {
         didSet {
-            self.addedCollectionView.reloadData()
+//            self.addedCollectionView.reloadData()
         }
     }
     
@@ -34,38 +35,53 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
         label.layer.zPosition = 4
         label.numberOfLines = 0
         label.isUserInteractionEnabled = true
-        label.layer.cornerRadius = 20
+        label.layer.cornerRadius = 10
         label.layer.masksToBounds = true
         label.isHidden = false
         label.textAlignment = .center
-        let attributedText = NSMutableAttributedString(string: "Add From\nContacts", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
+        let attributedText = NSMutableAttributedString(string: "Select Contacts", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
         label.attributedText = attributedText
         return label
     }()
     
-    private lazy var searchLabel: UILabel = {
+    private lazy var explainSelectContactLabel: UILabel = {
         let label = UILabel()
-        label.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        label.backgroundColor = UIColor.clear
         label.textColor = UIColor.black
         label.layer.zPosition = 4
         label.numberOfLines = 0
-        label.isUserInteractionEnabled = true
-        label.layer.cornerRadius = 20
-        label.layer.masksToBounds = true
-        label.isHidden = false
         label.textAlignment = .center
-        let attributedText = NSMutableAttributedString(string: "Search By\nUsername", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
+        label.isHidden = true
+        let attributedText = NSMutableAttributedString(string: "Add contacts without giving access\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 18)])
+        attributedText.append(NSMutableAttributedString(string: "Only add contacts you select with\n\"Select Contacts\"\n\nGroupRoots will not have access to\nall of your contacts", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
     }()
     
+    private let searchBar: UISearchBar = {
+            let sb = UISearchBar()
+            sb.placeholder = "Contact or Username"
+            sb.autocorrectionType = .no
+            sb.autocapitalizationType = .none
+    //        sb.barTintColor = .gray
+            sb.backgroundImage = UIImage()
+            UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).backgroundColor = UIColor.rgb(red: 240, green: 240, blue: 240)
+            return sb
+        }()
+    
+    private var filteredUsers = [User]()
+    private var filteredContacts = [Contact]()
+    
     private var contactsToInvite = [Contact]()
     private var users = [User]()
+    var allContacts = [Contact]()
     
     var addedCollectionView: UICollectionView!
-    var contactsCollectionView: UICollectionView!
+    var searchCollectionView: UICollectionView!
     
     let phoneNumberKit = PhoneNumberKit()
+    
+    var hasClickedSelectContacts = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -73,7 +89,16 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
             overrideUserInterfaceStyle = .light
         }
         
+        self.view.backgroundColor = .white
+        
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+        
+        if let hasSelectedContactsRetrieved = UserDefaults.standard.object(forKey: "hasSelectedContacts") as? Data {
+            guard let hasSelectedContacts = try? JSONDecoder().decode(Bool.self, from: hasSelectedContactsRetrieved) else {
+                return
+            }
+            self.hasClickedSelectContacts = hasSelectedContacts
+        }
         
 //        navigationItem.titleView = searchBar
         navigationItem.title = "Add Group Members"
@@ -83,49 +108,63 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
         navigationItem.rightBarButtonItem?.tintColor = .black
         self.navigationController?.navigationBar.shadowImage = UIColor.white.as1ptImage()
         
-        let added_layout = UICollectionViewFlowLayout()
+        let added_layout = DGCollectionViewLeftAlignFlowLayout()
         added_layout.scrollDirection = UICollectionView.ScrollDirection.vertical
-        added_layout.itemSize = CGSize(width: 60, height: 60)
-        added_layout.minimumLineSpacing = CGFloat(20)
-        addedCollectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height - UIScreen.main.bounds.height/9*8, width: UIScreen.main.bounds.width, height: 120), collectionViewLayout: added_layout)
+//        added_layout.minimumLineSpacing = CGFloat(20)
+        addedCollectionView = UICollectionView(frame: CGRect(x: 0, y: 90, width: UIScreen.main.bounds.width, height: 140), collectionViewLayout: added_layout)
         addedCollectionView.delegate = self
         addedCollectionView.dataSource = self
         addedCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-        addedCollectionView?.register(AddedUserCell.self, forCellWithReuseIdentifier: AddedUserCell.cellId)
-        addedCollectionView?.register(ContactCell.self, forCellWithReuseIdentifier: ContactCell.cellId)
+        addedCollectionView.register(MiniAddedUserCell.self, forCellWithReuseIdentifier: MiniAddedUserCell.cellId)
+        addedCollectionView.register(MiniContactCell.self, forCellWithReuseIdentifier: MiniContactCell.cellId)
         addedCollectionView.showsVerticalScrollIndicator = true
         addedCollectionView.isUserInteractionEnabled = true
         addedCollectionView.allowsSelection = true
-        addedCollectionView.showsHorizontalScrollIndicator = false
-        addedCollectionView?.backgroundColor = .white
-        addedCollectionView?.alwaysBounceVertical = true
-        addedCollectionView?.keyboardDismissMode = .onDrag
+        addedCollectionView.backgroundColor = .white
+        addedCollectionView.alwaysBounceVertical = true
+        addedCollectionView.keyboardDismissMode = .onDrag
+        addedCollectionView.layer.borderColor = UIColor.init(white: 0.9, alpha: 1).cgColor
+        addedCollectionView.layer.borderWidth = 1
+        addedCollectionView.contentInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
         self.view.insertSubview(addedCollectionView, at: 10)
         
         let contacts_layout = UICollectionViewFlowLayout()
         contacts_layout.scrollDirection = UICollectionView.ScrollDirection.vertical
-        contacts_layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        contacts_layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: 70)
         contacts_layout.minimumLineSpacing = CGFloat(0)
         
-        contactsCollectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), collectionViewLayout: contacts_layout)
-        contactsCollectionView.delegate = self
-        contactsCollectionView.dataSource = self
-        contactsCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-        contactsCollectionView?.register(AddedUserCell.self, forCellWithReuseIdentifier: AddedUserCell.cellId)
-        contactsCollectionView?.register(ContactCell.self, forCellWithReuseIdentifier: ContactCell.cellId)
-        contactsCollectionView.showsHorizontalScrollIndicator = false
-        contactsCollectionView?.backgroundColor = .white
-        contactsCollectionView?.alwaysBounceVertical = true
-        contactsCollectionView?.keyboardDismissMode = .onDrag
-        self.view.insertSubview(contactsCollectionView, at: 5)
+        searchCollectionView = UICollectionView(frame: CGRect(x: 0, y: 300, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height-300), collectionViewLayout: contacts_layout)
+        searchCollectionView.delegate = self
+        searchCollectionView.dataSource = self
+        searchCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        searchCollectionView?.register(AddedUserCell.self, forCellWithReuseIdentifier: AddedUserCell.cellId)
+        searchCollectionView?.register(ContactCell.self, forCellWithReuseIdentifier: ContactCell.cellId)
+        searchCollectionView?.backgroundColor = .white
+        searchCollectionView?.alwaysBounceVertical = true
+        searchCollectionView?.keyboardDismissMode = .onDrag
+        self.view.insertSubview(searchCollectionView, at: 5)
+                
+        if CNContactStore.authorizationStatus(for: .contacts) == .authorized {
+            searchBar.frame = CGRect(x: 10, y: 243, width: UIScreen.main.bounds.width - 20, height: 44)
+            self.view.insertSubview(searchBar, at: 4)
+            searchBar.delegate = self
+            searchBar.placeholder = "Username or Contact Name"
+        }
+        else {
+            contactsLabel.frame = CGRect(x: 20 + (UIScreen.main.bounds.width - 40) / 2, y: 247, width: (UIScreen.main.bounds.width - 40) / 2, height: 37)
+            contactsLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleShowContacts)))
+            self.view.insertSubview(contactsLabel, at: 4)
+
+            searchBar.frame = CGRect(x: 10, y: 243, width: (UIScreen.main.bounds.width - 40) / 2, height: 44)
+            self.view.insertSubview(searchBar, at: 4)
+            searchBar.delegate = self
+            searchBar.placeholder = "Username"
+            
+            explainSelectContactLabel.frame = CGRect(x: 20, y: 300, width: UIScreen.main.bounds.width - 40, height: 300)
+            self.view.insertSubview(explainSelectContactLabel, at: 4)
+        }
         
-        contactsLabel.frame = CGRect(x: 30, y: 100, width: (UIScreen.main.bounds.width - 80) / 2, height: 60)
-        contactsLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleShowContacts)))
-        self.view.insertSubview(contactsLabel, at: 4)
-        
-        searchLabel.frame = CGRect(x: 50 + ((UIScreen.main.bounds.width - 80) / 2), y: 100, width: (UIScreen.main.bounds.width - 80) / 2, height: 60)
-        searchLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleShowSearch)))
-        self.view.insertSubview(searchLabel, at: 4)
+        self.importAllContacts()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -159,7 +198,6 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
         else {
             let sync = DispatchGroup()
             var alertsToPresent: [UIAlertController] = []
-//            var alertsToPresent2 = [String: UIAlertController]()
             var skippedAddingFirstAlertToList = false
             
             for user in users {
@@ -257,9 +295,13 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
     }
     
     @objc private func handleShowContacts(){
-//        let contactsInviteController = ContactsInviteController(collectionViewLayout: UICollectionViewFlowLayout())
-//        userProfileController.user = selectedUser
-//        navigationController?.pushViewController(contactsInviteController, animated: true)
+        if hasClickedSelectContacts == false {
+            if let hasSelectedContacts = try? JSONEncoder().encode(true) {
+                UserDefaults.standard.set(hasSelectedContacts, forKey: "hasSelectedContacts")
+            }
+            self.hasClickedSelectContacts = true
+            self.explainSelectContactLabel.isHidden = true
+        }
         
         let contactPicker = CNContactPickerViewController()
         contactPicker.delegate = self
@@ -278,73 +320,167 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
         navigationController?.pushViewController(searchUserForInvitationController, animated: true)
     }
     
+    func remove_contact(contact: Contact){
+        contactsToInvite.removeAll(where: { $0.identifier == contact.identifier })
+        self.addedCollectionView.collectionViewLayout.invalidateLayout()
+        self.addedCollectionView.reloadData()
+        self.addedCollectionView.layoutIfNeeded()
+    }
+    
+    func remove_added_user(user: User) {
+        users.removeAll(where: { $0.uid == user.uid })
+        self.addedCollectionView.collectionViewLayout.invalidateLayout()
+        self.addedCollectionView.reloadData()
+        self.addedCollectionView.layoutIfNeeded()
+    }
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
+        if collectionView == self.searchCollectionView {
+            if indexPath.item < filteredContacts.count {
+                let contact = filteredContacts[indexPath.item]
+                if !contactsToInvite.contains(contact) {
+                    self.contactsToInvite.append(contact)
+                    self.addedCollectionView.collectionViewLayout.invalidateLayout()
+                    self.addedCollectionView.reloadData()
+                    self.addedCollectionView.layoutIfNeeded()
+                    self.addedCollectionView.scrollToItem(at: IndexPath(item: self.contactsToInvite.count + self.users.count - 1, section: 0), at: [.centeredVertically, .centeredHorizontally], animated: false)
+                }
+            }
+            else if indexPath.item < filteredContacts.count + filteredUsers.count { // filteredUsers
+                let user = filteredUsers[indexPath.item - filteredContacts.count]
+                if !users.contains(user) {
+                    users.append(user)
+                }
+                self.addedCollectionView.collectionViewLayout.invalidateLayout()
+                self.addedCollectionView.reloadData()
+                self.addedCollectionView.layoutIfNeeded()
+                self.addedCollectionView.scrollToItem(at: IndexPath(item: self.contactsToInvite.count + self.users.count - 1, section: 0), at: [.centeredVertically, .centeredHorizontally], animated: false)
+            }
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-//        return filteredUsers.count
-        return contactsToInvite.count + users.count
+        if collectionView == self.addedCollectionView {
+            return contactsToInvite.count + users.count
+        }
+        else { // searchCollectionView
+            return filteredContacts.count + filteredUsers.count
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if indexPath.item < contactsToInvite.count {
-            let contact = contactsToInvite[indexPath.item]
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ContactCell.cellId, for: indexPath) as! ContactCell
-            cell.contact = contact
-            return cell
+        if collectionView == self.addedCollectionView {
+            if indexPath.item < contactsToInvite.count {
+                let contact = contactsToInvite[indexPath.item]
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MiniContactCell.cellId, for: indexPath) as! MiniContactCell
+                cell.contact = contact
+                cell.layer.cornerRadius = 10
+                cell.delegate = self
+                return cell
+            }
+            else {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MiniAddedUserCell.cellId, for: indexPath) as! MiniAddedUserCell
+                cell.user = users[indexPath.item - contactsToInvite.count]
+                cell.group = group
+                cell.layer.cornerRadius = 10
+                cell.delegate = self
+                return cell
+            }
         }
         else {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: AddedUserCell.cellId, for: indexPath) as! AddedUserCell
-            cell.user = users[indexPath.item - contactsToInvite.count]
-            cell.group = group
-//            cell.delegate = self
-            return cell
+            if indexPath.item < filteredContacts.count {
+                let contact = filteredContacts[indexPath.item]
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ContactCell.cellId, for: indexPath) as! ContactCell
+                cell.contact = contact
+                return cell
+            }
+            else { // filteredUsers
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: AddedUserCell.cellId, for: indexPath) as! AddedUserCell
+                cell.user = filteredUsers[indexPath.item - filteredContacts.count]
+                cell.group = group
+                return cell
+            }
         }
     }
     
-//    func chooseNumber(contact: Contact, completion: (CNLabeledValue<CNPhoneNumber>?)) {
-//        let alert = UIAlertController(title: "Pick a number for", message: "", preferredStyle: .alert)
-//        var i = 0
-//        for number in contact.phone_numbers {
-//            let action = UIAlertAction(title: number?.value.stringValue, style: .default) { _ in
-//                let val = contact.phone_numbers[i]
-//                completion(val)
-//            }
-//            alert.addAction(action)
-//            i += 1
-//        }
-//        let cancel = UIAlertAction(title: "Cancel", style: .destructive, handler: nil)
-//        alert.addAction(cancel)
-//        self.present(alert, animated: true, completion: {
-//
-//        })
-//    }
+    func importAllContacts() {
+        CNContactStore().requestAccess(for: .contacts) { (access, error) in
+            guard access else {
+                let alert = UIAlertController(title: "GroupRoots does not have access to your contacts.\n\nEnable contacts in\nSettings > GroupRoots", message: "", preferredStyle: .alert)
+
+                let cancel_closure = { () in
+                    { (action: UIAlertAction!) -> Void in
+//                         let alert = UIAlertController(title: "Add contacts without giving access", message: "Only add contacts you select with \"Add Selected Contacts\". GroupRoots will not access to all of your contacts", preferredStyle: .alert)
+//                         alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+//                         self.present(alert, animated: true, completion: nil)
+                        if !self.hasClickedSelectContacts {
+                            self.explainSelectContactLabel.isHidden = false
+                        }
+                    }
+                }
+                
+                let okay_closure = { () in
+                    { (action: UIAlertAction!) -> Void in
+                        guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
+                            return
+                        }
+                        if UIApplication.shared.canOpenURL(settingsUrl) {
+                            UIApplication.shared.open(settingsUrl, completionHandler: { (success) in
+                                print("Settings opened: \(success)") // Prints true
+                            })
+                        }
+                    }
+                }
+                 
+                alert.addAction(UIAlertAction(title: "Close", style: .destructive, handler: cancel_closure()))
+                alert.addAction(UIAlertAction(title: "Open Settings", style: .default, handler: okay_closure()))
+                self.present(alert, animated: true, completion: nil)
+                
+                return
+            }
+            
+            importContactsToRecommended() { (err) in }
+            fetchAllContacts(completion: { (contacts) in
+                for contact in contacts {
+                    if contact.phoneNumbers.count > 0 {
+                        let new_contact = Contact(contact: contact)
+                        self.allContacts.append(new_contact)
+                    }
+                }
+                self.filteredContacts = self.allContacts
+                DispatchQueue.main.async {
+                    self.searchCollectionView.reloadData()
+                    self.contactsLabel.isHidden = true
+                    self.searchBar.frame = CGRect(x: 10, y: 243, width: UIScreen.main.bounds.width - 20, height: 44)
+                    self.searchBar.placeholder = "Username or Contact Name"
+                }
+            }) { (err) in return }
+        }
+    }
 }
 
 //MARK: - UICollectionViewDelegateFlowLayout
 
 extension InviteToGroupWhenCreateController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 66)
+        if collectionView == self.addedCollectionView {
+             if indexPath.row < contactsToInvite.count {
+                 let contact = contactsToInvite[indexPath.row]
+                 let name = contact.given_name + " " + contact.family_name
+                 return CGSize(width: 75 + 9 * name.count, height: 40)
+             }
+             else {
+                 let user = users[indexPath.item - contactsToInvite.count]
+                 let name = user.username
+                 return CGSize(width: 75 + 9 * name.count, height: 40)
+             }
+        }
+        else {
+            return CGSize(width: UIScreen.main.bounds.width, height: 70)
+        }
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: view.frame.width, height: 200)
-    }
 }
-
-////MARK: - InviteToGroupCellDelegate
-//extension InviteToGroupWhenCreateController: InviteToGroupCellDelegate {
-//    func inviteSentMessage(){
-//        let alert = UIAlertController(title: "", message: "Invite Sent", preferredStyle: .alert)
-//        self.present(alert, animated: true, completion: nil)
-//        let when = DispatchTime.now() + 2
-//        DispatchQueue.main.asyncAfter(deadline: when){
-//          alert.dismiss(animated: true, completion: nil)
-//        }
-//    }
-//}
 
 extension InviteToGroupWhenCreateController: CNContactPickerDelegate {
     func contactPicker(_ picker: CNContactPickerViewController,
@@ -355,18 +491,71 @@ extension InviteToGroupWhenCreateController: CNContactPickerDelegate {
                 self.contactsToInvite.append(contact)
             }
         }
+        self.addedCollectionView.collectionViewLayout.invalidateLayout()
         self.addedCollectionView.reloadData()
+        self.addedCollectionView.layoutIfNeeded()
+        self.addedCollectionView.scrollToItem(at: IndexPath(item: self.contactsToInvite.count + self.users.count - 1, section: 0), at: [.centeredVertically, .centeredHorizontally], animated: false)
     }
 }
 
 extension InviteToGroupWhenCreateController: SearchUserForInvitationDelegate {
     func addUser(user: User){
-//        users.append(user)
         if !users.contains(user) {
             users.append(user)
         }
+        self.addedCollectionView.collectionViewLayout.invalidateLayout()
         self.addedCollectionView.reloadData()
+        self.addedCollectionView.layoutIfNeeded()
+        self.addedCollectionView.scrollToItem(at: IndexPath(item: self.contactsToInvite.count + self.users.count - 1, section: 0), at: [.centeredVertically, .centeredHorizontally], animated: false)
     }
 }
 
 
+extension InviteToGroupWhenCreateController: UISearchBarDelegate {
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText.isEmpty {
+            self.filteredUsers = []
+            self.filteredContacts = allContacts
+            self.searchCollectionView.reloadData()
+            
+            if CNContactStore.authorizationStatus(for: .contacts) != .authorized {
+                if !self.hasClickedSelectContacts {
+                    self.explainSelectContactLabel.isHidden = false
+                }
+            }
+        } else {
+            self.filteredUsers = []
+            if self.explainSelectContactLabel.isHidden == false {
+                self.explainSelectContactLabel.isHidden = true
+            }
+            let formatted_search_word = searchText.removeCharacters(from: "@")
+            Database.database().searchForUsers(username: formatted_search_word, completion: { (users) in
+                self.filteredUsers = users
+//                self.searchCollectionView.reloadData()
+                Database.database().searchForUsers(username: formatted_search_word.lowercased(), completion: { (lowercase_users) in
+                    for user in lowercase_users {
+                        if !self.filteredUsers.contains(user) {
+                            self.filteredUsers.append(user)
+                        }
+                    }
+                    Database.database().searchForUsers(username: formatted_search_word.capitalizingFirstLetter(), completion: { (first_capitalized_users) in
+                        for user in first_capitalized_users {
+                            if !self.filteredUsers.contains(user) {
+                                self.filteredUsers.append(user)
+                            }
+                        }
+                        self.filteredContacts = self.allContacts.filter { (contact: Contact) -> Bool in
+                            return (contact.given_name + contact.family_name).lowercased().contains(searchText.lowercased())
+                        }
+                        self.searchCollectionView.reloadData()
+                    })
+                })
+            })
+        }
+    }
+    
+    func InviteToGroupWhenCreateController(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+}

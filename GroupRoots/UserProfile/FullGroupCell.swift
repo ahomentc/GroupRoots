@@ -15,6 +15,7 @@ protocol FullGroupCellDelegate {
     func didTapGroup(group: Group)
     func didTapUser(user: User)
     func didTapGroupPost(groupPost: GroupPost, index: Int)
+    func postToGroup(group: Group)
 }
 
 class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate {
@@ -31,11 +32,15 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         }
     }
     
+    var isInGroup: Bool?
+    
     var groupPosts = [GroupPost]()
     var groupMembers = [User]()
     var canView: Bool? = nil
     
     var delegate: FullGroupCellDelegate?
+    
+    var isInFollowPending: Bool? = nil
     
     private let hiddenIcon: UIButton = {
         let button = UIButton(type: .system)
@@ -44,11 +49,52 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         return button
     }()
     
-    private let groupnameLabel: UILabel = {
+    private lazy var groupnameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 16)
         label.textAlignment = .center
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleGroupTap))
+        label.isUserInteractionEnabled = true
+        label.addGestureRecognizer(tap)
         return label
+    }()
+    
+    private let noPostsLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 14)
+        label.textAlignment = .center
+        label.text = "No posts yet."
+        label.numberOfLines = 2
+        label.isHidden = true
+        label.textColor = .lightGray
+        return label
+    }()
+
+    private let privateLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 14)
+        label.textAlignment = .center
+        label.numberOfLines = 2
+        label.isHidden = true
+        label.textColor = .lightGray
+        return label
+    }()
+    
+    private lazy var subscribeButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.addTarget(self, action: #selector(handleSubscribeTap), for: .touchUpInside)
+        button.setTitle("Subscribe", for: .normal)
+        button.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
+        button.backgroundColor = UIColor.white
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+        button.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
+        button.layer.cornerRadius = 5
+        button.layer.borderWidth = 1
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.isUserInteractionEnabled = true
+        button.isHidden = true
+        return button
     }()
     
     var headerCollectionView: UICollectionView!
@@ -73,6 +119,11 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         self.groupnameLabel.text = ""
         self.groupPosts = []
         self.groupMembers = []
+        collectionView.isHidden = false
+        noPostsLabel.isHidden = true
+        privateLabel.isHidden = true
+        subscribeButton.isHidden = true
+        collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
     }
     
     private func sharedInit() {
@@ -84,10 +135,14 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         addSubview(groupnameLabel)
         groupnameLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 8)
         
-//        let separatorView = UIView()
-//        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
-//        addSubview(separatorView)
-//        separatorView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 100, paddingRight: 100)
+        addSubview(noPostsLabel)
+        noPostsLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 200)
+        
+        addSubview(privateLabel)
+        privateLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 170)
+        
+        addSubview(subscribeButton)
+        subscribeButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 220, paddingLeft: UIScreen.main.bounds.width/3, paddingRight: UIScreen.main.bounds.width/3, height: 40)
         
         let separatorView = UIView()
         separatorView.backgroundColor = UIColor(white: 0, alpha: 0.25)
@@ -128,11 +183,11 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         collectionView?.register(EmptyFeedPostCell.self, forCellWithReuseIdentifier: EmptyFeedPostCell.cellId)
         collectionView?.register(MembersCell.self, forCellWithReuseIdentifier: MembersCell.cellId)
         collectionView?.register(GroupProfilePhotoGridCell.self, forCellWithReuseIdentifier: GroupProfilePhotoGridCell.cellId)
+        collectionView?.register(PlusCell.self, forCellWithReuseIdentifier: PlusCell.cellId)
         collectionView.isUserInteractionEnabled = true
         
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
-//        collectionView.isPagingEnabled = true
         insertSubview(collectionView, at: 5)
     }
     
@@ -166,7 +221,6 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.black, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
             
             if group.groupname != "" {
-//                self.groupnameLabel.text = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
                 let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
                 if group.isPrivate ?? false {
                     balanceString.append(lockIconString)
@@ -180,7 +234,6 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                         usernames = String(usernames.prefix(21)) // keep only the first 21 characters
                         usernames = usernames + "..."
                     }
-//                    self.groupnameLabel.text = usernames
                     let balanceString = NSMutableAttributedString(string: usernames.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
                     if group.isPrivate ?? false {
                         balanceString.append(lockIconString)
@@ -193,7 +246,6 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                         usernames = String(usernames.prefix(21)) // keep only the first 21 characters
                         usernames = usernames + "..."
                     }
-//                    self.groupnameLabel.text = usernames
                     let balanceString = NSMutableAttributedString(string: usernames.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
                     if group.isPrivate ?? false {
                         balanceString.append(lockIconString)
@@ -206,7 +258,6 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                         usernames = String(usernames.prefix(21)) // keep only the first 21 characters
                         usernames = usernames + "..."
                     }
-//                    self.groupnameLabel.text = usernames
                     let balanceString = NSMutableAttributedString(string: usernames.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
                     if group.isPrivate ?? false {
                         balanceString.append(lockIconString)
@@ -221,26 +272,47 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     
     func loadGroupPosts(){
         guard let group = group else { return }
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
         groupPosts.removeAll()
         Database.database().canViewGroupPosts(groupId: group.groupId, completion: { (canView) in
             if canView{
                 self.canView = true
                 Database.database().fetchAllGroupPosts(groupId: group.groupId, completion: { (countAndPosts) in
-                    if countAndPosts.count > 0 {
-                        self.groupPosts = countAndPosts[1] as! [GroupPost]
-                        self.groupPosts.sort(by: { (p1, p2) -> Bool in
-                            return p1.creationDate.compare(p2.creationDate) == .orderedDescending
-                        })
+                    Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+                        self.isInGroup = inGroup
+                        if countAndPosts.count > 0 {
+                            self.groupPosts = countAndPosts[1] as! [GroupPost]
+                            self.groupPosts.sort(by: { (p1, p2) -> Bool in
+                                return p1.creationDate.compare(p2.creationDate) == .orderedDescending
+                            })
+                        }
+                        else {
+                            self.setupEmpty()
+                        }
+                        self.collectionView?.reloadData()
+                        self.collectionView?.refreshControl?.endRefreshing()
+                    }) { (err) in
+                        return
                     }
-                    self.collectionView?.reloadData()
-                    self.collectionView?.refreshControl?.endRefreshing()
+//                    if countAndPosts.count > 0 {
+//                        self.groupPosts = countAndPosts[1] as! [GroupPost]
+//                        self.groupPosts.sort(by: { (p1, p2) -> Bool in
+//                            return p1.creationDate.compare(p2.creationDate) == .orderedDescending
+//                        })
+//                    }
+//                    else {
+//                        self.setupEmpty()
+//                    }
+//                    self.collectionView?.reloadData()
+//                    self.collectionView?.refreshControl?.endRefreshing()
                 }) { (err) in
                     self.collectionView?.refreshControl?.endRefreshing()
                 }
             }
             else {
                 self.canView = false
+                self.setupEmpty()
             }
         }) { (err) in
             return
@@ -250,11 +322,46 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             self.groupMembers = members
             self.headerCollectionView.reloadData()
         }) { (_) in }
+        
+        Database.database().isInGroupFollowPending(groupId: group.groupId, withUID: currentLoggedInUserId, completion: { (followPending) in
+            self.isInFollowPending = followPending
+        }) { (err) in
+            return
+        }
+    }
+    
+    func setupEmpty(){
+        collectionView.isHidden = true
+        noPostsLabel.isHidden = false
+        if canView ?? true { // no posts
+//            noPostsLabel.isHidden = false
+            noPostsLabel.text = "No posts yet."
+        }
+        else { // private so need to set the follow label thing
+            if isInFollowPending ?? false {
+                noPostsLabel.isHidden = false
+                privateLabel.isHidden = true
+                noPostsLabel.text = "This group is private.\n Your subscription is pending."
+                subscribeButton.isHidden = true
+            }
+            else {
+                noPostsLabel.isHidden = true
+                privateLabel.isHidden = false
+                privateLabel.text = "This group is private.\n Subscribe to see their posts."
+                subscribeButton.isHidden = false
+            }
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == self.collectionView {
-            return groupPosts.count
+//            if user != nil && user!.uid == Auth.auth().currentUser?.uid {
+            if self.isInGroup != nil && self.isInGroup! {
+                return groupPosts.count + 1
+            }
+            else {
+                return groupPosts.count
+            }
         }
         else {
             return groupMembers.count + 1
@@ -263,13 +370,40 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if collectionView == self.collectionView { // collectionview for posts
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfilePhotoGridCell.cellId, for: indexPath) as! GroupProfilePhotoGridCell
-            cell.groupPost = groupPosts[indexPath.item]
-            cell.photoImageView.layer.cornerRadius = 12
-            return cell
+            if indexPath.item == 0 {
+                if self.isInGroup != nil && self.isInGroup! {
+                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PlusCell.cellId, for: indexPath) as! PlusCell
+                    cell.parentCollectionViewSize = collectionView.numberOfItems(inSection: 0)
+                    return cell
+                }
+                else {
+                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfilePhotoGridCell.cellId, for: indexPath) as! GroupProfilePhotoGridCell
+                    if indexPath.item < groupPosts.count {
+                        cell.groupPost = groupPosts[indexPath.item]
+                    }
+                    cell.photoImageView.layer.cornerRadius = 12
+                    return cell
+                }
+            }
+            else {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfilePhotoGridCell.cellId, for: indexPath) as! GroupProfilePhotoGridCell
+                if self.isInGroup != nil && self.isInGroup! {
+                    if indexPath.item - 1 < groupPosts.count {
+                        cell.groupPost = groupPosts[indexPath.item - 1]
+                    }
+                }
+                else {
+                    if indexPath.item < groupPosts.count {
+                        cell.groupPost = groupPosts[indexPath.item]
+                    }
+                }
+                cell.photoImageView.layer.cornerRadius = 12
+                return cell
+            }
         }
         else { // collectionview with group members
             guard let group = group else {
+                // if group not set yet just set an empty cell
                 let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: MemberHeaderCell.cellId, for: indexPath) as! MemberHeaderCell
                 cell.layer.backgroundColor = UIColor.clear.cgColor
                 cell.layer.shadowColor = UIColor.black.cgColor
@@ -307,12 +441,10 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: MemberHeaderCell.cellId, for: indexPath) as! MemberHeaderCell
                     if groupMembers.count == 0 {
                         // do soemting
-                        
-                        
-                        
-                        
                     }
-                    cell.user = groupMembers[indexPath.item-1]
+                    if indexPath.item-1 < groupMembers.count {
+                        cell.user = groupMembers[indexPath.item-1]
+                    }
                     cell.group_has_profile_image = true
                     cell.layer.backgroundColor = UIColor.clear.cgColor
                     cell.layer.shadowColor = UIColor.black.cgColor
@@ -382,8 +514,28 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if collectionView == self.collectionView { // collectionview for posts
-            if self.groupPosts.count != 0 && indexPath.row < self.groupPosts.count {
-                delegate?.didTapGroupPost(groupPost: self.groupPosts[indexPath.row], index: indexPath.row)
+            if indexPath.row == 0 {
+                if self.isInGroup != nil && self.isInGroup! {
+                    guard let group = group else { return }
+                    self.delegate?.postToGroup(group: group)
+                }
+                else {
+                    if indexPath.row < self.groupPosts.count {
+                        delegate?.didTapGroupPost(groupPost: self.groupPosts[indexPath.row], index: indexPath.row)
+                    }
+                }
+            }
+            else if self.groupPosts.count != 0 {
+                if self.isInGroup != nil && self.isInGroup! {
+                    if indexPath.row - 1 < self.groupPosts.count {
+                        delegate?.didTapGroupPost(groupPost: self.groupPosts[indexPath.row - 1], index: indexPath.row-1)
+                    }
+                }
+                else {
+                    if indexPath.row < self.groupPosts.count {
+                        delegate?.didTapGroupPost(groupPost: self.groupPosts[indexPath.row], index: indexPath.row)
+                    }
+                }
             }
         }
         else { // collectionview with group members
@@ -395,7 +547,61 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 delegate?.didTapUser(user: self.groupMembers[indexPath.row - 1])
             }
         }
+    }
+
+    @objc private func handleGroupTap(){
+        guard let group = group else { return }
+        delegate?.didTapGroup(group: group)
+    }
+    
+    @objc private func handleSubscribeTap() {
+        guard let groupId = group?.groupId else { return }
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
+        noPostsLabel.isHidden = false
+        privateLabel.isHidden = true
+        noPostsLabel.text = "This group is private.\n Your subscription is pending."
+        subscribeButton.isHidden = true
+        
+        Database.database().subscribeToGroup(groupId: groupId) { (err) in
+            
+            NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+            
+            // sending notification
+            Database.database().groupExists(groupId: groupId, completion: { (exists) in
+                if exists {
+                    Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                        Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+                            Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                guard let isPrivate = group.isPrivate else { return }
+                                members.forEach({ (member) in
+                                    if user.uid != member.uid {
+                                        if isPrivate {
+                                            // send notification for subscription request to all members of group
+                                            Database.database().createNotification(to: member, notificationType: NotificationType.groupSubscribeRequest, subjectUser: user, group: group) { (err) in
+                                                if err != nil {
+                                                    return
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            // send notification for did subscribe to all members of group
+                                            Database.database().createNotification(to: member, notificationType: NotificationType.newGroupSubscribe, subjectUser: user, group: group) { (err) in
+                                                if err != nil {
+                                                    return
+                                                }
+                                            }
+                                        }
+                                    }
+                                })
+                            }) { (_) in}
+                        })
+                    })
+                }
+            })
+        }
     }
 }
 
@@ -419,6 +625,9 @@ extension FullGroupCell: UICollectionViewDelegateFlowLayout {
             let width = (UIScreen.main.bounds.width - 16) / 3
             if groupPosts.count == 0 {
                 return CGSize(width: UIScreen.main.bounds.width, height: width)
+            }
+            if indexPath.item == 0 && self.isInGroup != nil && self.isInGroup! {
+                return CGSize(width: width/3*2, height: width)
             }
             return CGSize(width: width, height: width)
         }

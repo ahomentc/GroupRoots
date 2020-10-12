@@ -2,6 +2,8 @@ import UIKit
 import Firebase
 import FirebaseAuth
 import FirebaseDatabase
+import YPImagePicker
+import Photos
 
 class UserProfileController: HomePostCellViewController, CreateGroupControllerDelegate, FullGroupCellDelegate {
 
@@ -115,7 +117,7 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
                         defaults.removeObject(forKey: key)
                     }
                     
-                    let loginController = LoginController()
+                    let loginController = LoginPhoneController()
                     let navController = UINavigationController(rootViewController: loginController)
                     navController.modalPresentationStyle = .fullScreen
                     self.present(navController, animated: true, completion: nil)
@@ -271,11 +273,7 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
     }
     
     @objc private func reloadUser(){
-        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-        Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
-            self.user = user
-            self.handleRefresh()
-        })
+        self.handleRefresh()
     }
     
     private func configureUser() {
@@ -410,6 +408,45 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
     
     func handleDidView(groupPost: GroupPost) {
         Database.database().addToViewedPosts(postId: groupPost.id, completion: { _ in })
+    }
+    
+    func postToGroup(group: Group) {
+        var config = YPImagePickerConfiguration()
+        config.library.isSquareByDefault = false
+        config.shouldSaveNewPicturesToAlbum = false
+        config.library.mediaType = .photoAndVideo
+        config.hidesStatusBar = false
+        config.startOnScreen = YPPickerScreen.library
+        config.targetImageSize = .cappedTo(size: 600)
+        config.video.compression = AVAssetExportPresetMediumQuality
+        let picker = YPImagePicker(configuration: config)
+        
+        picker.didFinishPicking { [unowned picker] items, cancelled in
+            if cancelled {
+                print("Picker was canceled")
+                picker.dismiss(animated: true, completion: nil)
+                return
+            }
+            _ = items.map { print("🧀 \($0)") }
+            if let firstItem = items.first {
+                switch firstItem {
+                case .photo(let photo):
+                    // need to do self.scrollToPreSelected() too
+                    let sharePhotoController = SharePhotoController()
+                    sharePhotoController.preSelectedGroup = group
+                    sharePhotoController.selectedImage = photo.image
+                    picker.pushViewController(sharePhotoController, animated: true)
+                    
+                case .video(let video):
+                    let sharePhotoController = SharePhotoController()
+                    sharePhotoController.preSelectedGroup = group
+                    sharePhotoController.selectedVideoURL = video.url
+                    sharePhotoController.selectedImage = video.thumbnail
+                    picker.pushViewController(sharePhotoController, animated: true)
+                }
+            }
+        }
+        present(picker, animated: true, completion: nil)
     }
 }
 

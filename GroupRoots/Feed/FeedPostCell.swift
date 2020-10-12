@@ -116,6 +116,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         label.isUserInteractionEnabled = true
         let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)])
         label.attributedText = attributedText
+        label.textAlignment = .right
         return label
     }()
     

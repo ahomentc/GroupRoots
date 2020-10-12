@@ -32,7 +32,7 @@ class LoginPhoneController: UIViewController {
     
     private let nextButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Login", for: .normal)
+        button.setTitle("Continue", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         button.layer.cornerRadius = 5
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
@@ -54,7 +54,9 @@ class LoginPhoneController: UIViewController {
     
     private let resetButton: UIButton = {
         let button = UIButton(type: .system)
-        let attributedTitle = NSAttributedString(string: "Login with email", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
+//        let attributedTitle = NSAttributedString(string: "Login with email", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
+//        ])
+        let attributedTitle = NSAttributedString(string: "Use email instead", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         ])
         button.setAttributedTitle(attributedTitle, for: .normal)
         button.addTarget(self, action: #selector(handleShowEmailLogin), for: .touchUpInside)
@@ -80,8 +82,8 @@ class LoginPhoneController: UIViewController {
         view.addSubview(resetButton)
         resetButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingBottom: 10, height: 50)
         
-        view.addSubview(dontHaveAccountButton)
-        dontHaveAccountButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: resetButton.topAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 50)
+//        view.addSubview(dontHaveAccountButton)
+//        dontHaveAccountButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: resetButton.topAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 50)
         
         setupInputFields()
     }
@@ -105,9 +107,12 @@ class LoginPhoneController: UIViewController {
     
     @objc private func handleLogin() {
         guard let number = phoneTextField.text else { return }
+//        let groupInviteController = GroupInviteController()
+//        groupInviteController.number = number
+//        self.navigationController?.pushViewController(groupInviteController, animated: true)
+//        return
         
         phoneTextField.isUserInteractionEnabled = false
-        
         nextButton.isEnabled = false
         nextButton.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 0.7)
         

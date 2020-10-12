@@ -26,13 +26,14 @@ import Foundation
  Group Post notifications:
  - groupPostComment
  - newGroupPost
+ - mentionedInComment
  
  */
 
 public enum NotificationType {
  /*      User */ case newFollow,
  /*     Group */ groupJoinRequest, newGroupJoin, groupJoinInvitation, newGroupSubscribe, groupSubscribeRequest, groupProfileNameEdit, groupProfilePicEdit, groupPrivacyChange, unsubscribeRequest,
- /* GroupPost */ groupPostComment, newGroupPost
+ /* GroupPost */ groupPostComment, newGroupPost, mentionedInComment
 }
 
 struct Notification {

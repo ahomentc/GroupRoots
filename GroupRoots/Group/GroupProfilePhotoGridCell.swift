@@ -28,6 +28,7 @@ class GroupProfilePhotoGridCell: UICollectionViewCell {
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
         iv.backgroundColor = UIColor(white: 0.95, alpha: 1)
+        iv.image = CustomImageView.imageWithColor(color: .white)
         return iv
     }()
     
@@ -64,6 +65,8 @@ class GroupProfilePhotoGridCell: UICollectionViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         playButton.isHidden = true
+        photoImageView.image = CustomImageView.imageWithColor(color: .white)
+        groupPost = nil
     }
 }
 

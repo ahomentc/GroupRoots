@@ -13,18 +13,20 @@ protocol CommentInputAccessoryViewDelegate {
     func didSubmit(comment: String)
     func didChangeAtStatus(isInAt: Bool)
     func displaySearchUsers(users: [User])
+    func submitAtUsers(users: [User])
 }
 
 class CommentInputAccessoryView: UIView, UITextViewDelegate {
     
     var delegate: CommentInputAccessoryViewDelegate?
-    
+
     private let commentTextView: PlaceholderTextView = {
         let tv = PlaceholderTextView()
         tv.placeholderLabel.text = "Add a comment..."
         tv.isScrollEnabled = false
         tv.font = UIFont.systemFont(ofSize: 18)
-        tv.autocorrectionType = .no
+        tv.keyboardType = .twitter
+//        tv.autocorrectionType = .no
         return tv
     }()
     
@@ -75,16 +77,38 @@ class CommentInputAccessoryView: UIView, UITextViewDelegate {
         submitButton.setTitleColor(.lightGray, for: .normal)
     }
     
+    func replaceWithUsername(username: String) {
+        guard let text = commentTextView.text else { return }
+        var seperatedTextArr = text.components(separatedBy: " ")
+        let lastWord = seperatedTextArr.last
+        if lastWord != nil && lastWord?.first == "@" {
+            seperatedTextArr.removeLast()
+            seperatedTextArr.append("@" + username + " ")
+            let to_replace = seperatedTextArr.joined(separator: " ")
+            commentTextView.text = to_replace
+            commentTextView.text = to_replace // need to do this again because autocorrect will mess it up the first time if it appears
+            delegate?.didChangeAtStatus(isInAt: false)
+            
+            if username != "" && !username.contains(".") && !username.contains("#") {
+                Database.database().fetchUserFromUsername(username: username, completion: { (user) in
+                    if !self.atUsers.contains(user) {
+                        self.atUsers.append(user)
+                    }
+                })
+            }
+        }
+    }
+    
     @objc private func handleSubmit() {
         guard let commentText = commentTextView.text else { return }
-        checkForAtInput(text: commentText + " ")
+        checkForAtInput(text: commentText + " ", submitAfterCheck: true)
         commentTextView.resignFirstResponder()
         delegate?.didSubmit(comment: commentText)
     }
     
 
     var atUsers = [User]()
-    func checkForAtInput(text: String){
+    func checkForAtInput(text: String, submitAfterCheck: Bool){
         if text.last != nil {
             let lastChar = text.last!
             if lastChar == " " {
@@ -94,16 +118,26 @@ class CommentInputAccessoryView: UIView, UITextViewDelegate {
                 seperatedTextArr.removeLast()
                 let lastWord = seperatedTextArr.last
                 if lastWord == nil || lastWord?.first != "@" {
+                    if submitAfterCheck {
+                        self.submitAts()
+                    }
                     return
                 }
                 let username = lastWord!.trimmingCharacters(in: .whitespaces).removeCharacters(from: "@")
-                Database.database().fetchUserFromUsername(username: username, completion: { (user) in
-                    if !self.atUsers.contains(user) {
-                        self.atUsers.append(user)
-                    }
-                    // check to not add duplicates
-                    print(self.atUsers)
-                })
+                if username != "" && !username.contains(".") && !username.contains("#") {
+                    Database.database().fetchUserFromUsername(username: username, completion: { (user) in
+                        if !self.atUsers.contains(user) {
+                            self.atUsers.append(user)
+                        }
+                        
+                        if submitAfterCheck {
+                            self.submitAts()
+                        }
+                    })
+                }
+                else if submitAfterCheck {
+                    self.submitAts()
+                }
             }
             else {
                 // user is still typing the @
@@ -124,25 +158,55 @@ class CommentInputAccessoryView: UIView, UITextViewDelegate {
                 searchForUser(username: searchTerm)
             }
         }
+        else {
+            delegate?.didChangeAtStatus(isInAt: false)
+        }
     }
     
     private func searchForUser(username: String){
         if username.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil || username == "" {
             return
         }
-        Database.database().searchForUsers(username: username, completion: { (users) in
-            self.delegate?.displaySearchUsers(users: users)
-        })
+        if username != "" && !username.contains(".") && !username.contains("#") {
+            var filteredUsers = [User]()
+            Database.database().searchForUsers(username: username, completion: { (users) in
+                filteredUsers = users
+                Database.database().searchForUsers(username: username.lowercased(), completion: { (lowercase_users) in
+                    for user in lowercase_users {
+                        if !filteredUsers.contains(user) {
+                            filteredUsers.append(user)
+                        }
+                    }
+                    Database.database().searchForUsers(username: username.capitalizingFirstLetter(), completion: { (first_capitalized_users) in
+                        for user in first_capitalized_users {
+                            if !filteredUsers.contains(user) {
+                                filteredUsers.append(user)
+                            }
+                        }
+                        self.delegate?.displaySearchUsers(users: filteredUsers)
+                    })
+                })
+            })
+        }
     }
     
-    func submitAts(){
-        
+    func submitAts() {
+        var filteredAtUsers = [User]()
+        for user in atUsers {
+            // this checks to see if any atUsers were deleted while
+            // typing the comment
+            if !commentTextView.text.contains(user.username) {
+                // create a notification for the user
+                filteredAtUsers.append(user)
+            }
+        }
+        self.delegate?.submitAtUsers(users: filteredAtUsers)
     }
     
     
     @objc private func handleTextChange() {
         guard let text = commentTextView.text else { return }
-        checkForAtInput(text: text)
+        checkForAtInput(text: text, submitAfterCheck: false)
         if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             submitButton.isEnabled = false
             submitButton.setTitleColor(.lightGray, for: .normal)

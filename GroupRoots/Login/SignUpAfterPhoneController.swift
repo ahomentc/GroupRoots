@@ -1,9 +1,9 @@
 //
-//  ViewController.swift
-//  InstagramClone
+//  SignUpAfterPhoneController.swift
+//  GroupRoots
 //
-//  Created by Mac Gallagher on 3/16/18.
-//  Copyright © 2018 Mac Gallagher. All rights reserved.
+//  Created by Andrei Homentcovschi on 10/8/20.
+//  Copyright © 2020 Andrei Homentcovschi. All rights reserved.
 //
 
 import UIKit
@@ -12,8 +12,11 @@ import GoogleSignIn
 import FirebaseAuth
 import FirebaseDatabase
 
-class SignUpController: UIViewController, UINavigationControllerDelegate {
+class SignUpAfterPhoneController: UIViewController, UINavigationControllerDelegate {
 
+    var uid: String?
+    var number: String?
+    
     private let plusPhotoButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(#imageLiteral(resourceName: "plus_photo"), for: .normal)
@@ -92,10 +95,11 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     private let alreadyHaveAccountButton: UIButton = {
         let button = UIButton(type: .system)
         let attributedTitle = NSMutableAttributedString(string: "Already have an account?  ", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.lightGray])
-        attributedTitle.append(NSAttributedString(string: "Sign In", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
+        attributedTitle.append(NSAttributedString(string: "Connect to it", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
             ]))
         button.setAttributedTitle(attributedTitle, for: .normal)
         button.addTarget(self, action: #selector(handleAlreadyHaveAccount), for: .touchUpInside)
+        button.isHidden = true
         return button
     }()
     
@@ -228,7 +232,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
     }
     
     @objc private func handleAlreadyHaveAccount() {
-        _ = navigationController?.popViewController(animated: true)
+        navigationController?.pushViewController(ConnectAccountController(), animated: true)
     }
     
     @objc private func handleNext() {
@@ -236,6 +240,9 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
         guard let username = usernameTextField.text else { return }
         guard let name = nameTextField.text else { return }
         guard let bio = bioTextField.text else { return }
+        guard let uid = uid else { return }
+        guard let number = number else { return }
+        guard let currentLoggedInUser = Auth.auth().currentUser else { return }
         
 //     username regex:   ^[a-zA-Z0-9_-]*$   must match
         if username.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
@@ -261,16 +268,29 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
                 Auth.auth().fetchSignInMethods(forEmail: email, completion: {
                     (providers, error) in
                     if error != nil || providers == nil {
-                        // push SignUpTwoController
-                        let signUpTwoController = SignUpTwoController()
-                        signUpTwoController.email = email
-                        signUpTwoController.username = username
-                        signUpTwoController.name = name
-                        signUpTwoController.profileImage = self.profileImage
-                        signUpTwoController.bio = bio
-                        self.navigationController?.pushViewController(signUpTwoController, animated: true)
-//                        let signUpPhoneController = SignUpPhoneController()
-//                        self.navigationController?.pushViewController(signUpPhoneController, animated: true)
+                        // take to groupInviteController
+                        Auth.auth().createUserFromPhone(withUID: uid, withEmail: email, username: username, name: name, bio: bio, image: self.profileImage) { (err) in
+                            Database.database().doesNumberExist(number: number, completion: { (exists) in
+                               if !exists{
+                                   Database.database().updateUser(withUID: uid, phone: number) { (err) in
+                                       Database.database().addNumberToNumbers(number: number) { (err) in
+                                           Database.database().addNumberToGroupsInvited(number: number) { (err) in
+                                                let randomInt = Int.random(in: 1..<100000000000000)
+                                                let password = String(randomInt).sha512()
+                                                // since no password is set when signing up with phone number, create a temprary one
+                                                // just so the email can be linked
+                                                let credential = EmailAuthProvider.credential(withEmail: email, password: password)
+                                                currentLoggedInUser.link(with: credential) { (authResult, error) in
+                                                    let groupInviteController = GroupInviteController()
+                                                    groupInviteController.number = self.number
+                                                    self.navigationController?.pushViewController(groupInviteController, animated: true)
+                                                }
+                                           }
+                                       }
+                                   }
+                               }
+                           }) { (err) in return}
+                        }
                     }
                     else {
                         // email already exists, send to login
@@ -304,7 +324,7 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
 
 //MARK: UIImagePickerControllerDelegate
 
-extension SignUpController: UIImagePickerControllerDelegate {
+extension SignUpAfterPhoneController: UIImagePickerControllerDelegate {
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
 // Local variable inserted by Swift 4.2 migrator.
 let info = convertFromUIImagePickerControllerInfoKeyDictionary(info)
@@ -324,7 +344,7 @@ let info = convertFromUIImagePickerControllerInfoKeyDictionary(info)
 
 //MARK: - UITextFieldDelegate
 
-extension SignUpController: UITextFieldDelegate {
+extension SignUpAfterPhoneController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
@@ -343,5 +363,6 @@ extension SignUpController: UITextFieldDelegate {
 
 // Helper function inserted by Swift 4.2 migrator.
 fileprivate func convertFromUIImagePickerControllerInfoKeyDictionary(_ input: [UIImagePickerController.InfoKey: Any]) -> [String: Any] {
-	return Dictionary(uniqueKeysWithValues: input.map {key, value in (key.rawValue, value)})
+    return Dictionary(uniqueKeysWithValues: input.map {key, value in (key.rawValue, value)})
 }
+

@@ -59,29 +59,45 @@ class UserSearchController: UICollectionViewController {
     }
     
     private func searchForUser(username: String){
-        if username.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil || username == "" {
+        let formatted_search_word = username.removeCharacters(from: "@")
+        if formatted_search_word.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil || formatted_search_word == "" {
             return
         }
         collectionView?.refreshControl?.beginRefreshing()
         self.filteredUsers = []
-        Database.database().searchForUsers(username: username, completion: { (users) in
+        Database.database().searchForUsers(username: formatted_search_word, completion: { (users) in
             self.filteredUsers = users
-            self.collectionView?.reloadData()
-            self.collectionView?.refreshControl?.endRefreshing()
+            Database.database().searchForUsers(username: formatted_search_word.lowercased(), completion: { (lowercase_users) in
+                for user in lowercase_users {
+                    if !self.filteredUsers.contains(user) {
+                        self.filteredUsers.append(user)
+                    }
+                }
+                Database.database().searchForUsers(username: formatted_search_word.capitalizingFirstLetter(), completion: { (first_capitalized_users) in
+                    for user in first_capitalized_users {
+                        if !self.filteredUsers.contains(user) {
+                            self.filteredUsers.append(user)
+                        }
+                    }
+                    self.collectionView?.reloadData()
+                    self.collectionView?.refreshControl?.endRefreshing()
+                })
+            })
         })
     }
     
     private func searchForGroup(search_word: String){
-        if search_word.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil || search_word == "" {
+        let formatted_search_word = search_word.removeCharacters(from: "@")
+        if formatted_search_word.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil || formatted_search_word == "" {
             return
         }
         collectionView?.refreshControl?.beginRefreshing()
         self.filteredGroups = []
 
-        Database.database().inviteCodeExists(code: search_word, completion: { (exists) in
+        Database.database().inviteCodeExists(code: formatted_search_word, completion: { (exists) in
             if exists {
                 // search by invite code
-                Database.database().searchForGroupWithInviteCode(invite_code: search_word, completion: { (groups) in
+                Database.database().searchForGroupWithInviteCode(invite_code: formatted_search_word, completion: { (groups) in
                     self.filteredGroups.append(groups)
                     self.collectionView?.reloadData()
                     self.collectionView?.refreshControl?.endRefreshing()
@@ -89,10 +105,25 @@ class UserSearchController: UICollectionViewController {
             }
             else {
                 // search by group name
-                Database.database().searchForGroups(groupname: search_word, completion: { (groups) in
+                Database.database().searchForGroups(groupname: formatted_search_word, completion: { (groups) in
                     self.filteredGroups = groups
-                    self.collectionView?.reloadData()
-                    self.collectionView?.refreshControl?.endRefreshing()
+                    
+                    Database.database().searchForGroups(groupname: formatted_search_word.lowercased(), completion: { (lowercase_groups) in
+                        for group in lowercase_groups {
+                            if !self.filteredGroups.contains(group) {
+                                self.filteredGroups.append(group)
+                            }
+                        }
+                        Database.database().searchForGroups(groupname: formatted_search_word.capitalizingFirstLetter(), completion: { (first_capitalized_groups) in
+                            for group in first_capitalized_groups {
+                                if !self.filteredGroups.contains(group) {
+                                    self.filteredGroups.append(group)
+                                }
+                            }
+                            self.collectionView?.reloadData()
+                            self.collectionView?.refreshControl?.endRefreshing()
+                        })
+                    })
                 })
             }
         })
@@ -106,12 +137,16 @@ class UserSearchController: UICollectionViewController {
         searchBar.resignFirstResponder()
         if isUsersView {
             let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
-            userProfileController.user = filteredUsers[indexPath.item]
+            if indexPath.item < filteredUsers.count {
+                userProfileController.user = filteredUsers[indexPath.item]
+            }
             navigationController?.pushViewController(userProfileController, animated: true)
         }
         else {
             let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
-            groupProfileController.group = filteredGroups[indexPath.item]
+            if indexPath.item < filteredGroups.count {
+                groupProfileController.group = filteredGroups[indexPath.item]
+            }
 //            groupProfileController.modalPresentationCapturesStatusBarAppearance = true
             navigationController?.pushViewController(groupProfileController, animated: true)
         }

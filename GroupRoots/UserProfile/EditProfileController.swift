@@ -73,8 +73,8 @@ class EditProfileController: UIViewController, UINavigationControllerDelegate {
     private lazy var bioTextField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "Bio"
-        tf.autocorrectionType = .no
-        tf.autocapitalizationType = .none
+//        tf.autocorrectionType = .no
+//        tf.autocapitalizationType = .none
         tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .none
         tf.font = UIFont.systemFont(ofSize: 14)
@@ -268,11 +268,12 @@ extension EditProfileController: UITextFieldDelegate {
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let currentCharacterCount = textField.text?.count ?? 0
-        if range.length + range.location > currentCharacterCount {
-            return false
-        }
+//        if range.length + range.location > currentCharacterCount {
+//            return false
+//        }
         let newLength = currentCharacterCount + string.count - range.length
         return newLength <= 120
+//        return true
     }
 
 }

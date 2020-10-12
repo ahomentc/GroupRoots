@@ -59,6 +59,25 @@ class MainTabBarController: UITabBarController {
                         self.presentLoginController()
                     } else {
                         self.setupViewControllers()
+                        
+//                        Database.database().groupRootsUserExists(withUID: Auth.auth().currentUser!.uid, completion: { (exists) in
+//                            if exists {
+//        //                        self.setupViewControllers()
+//                                print("exists")
+//                            }
+//                            else {
+//                                print("doesn't exist")
+//                                do {
+//                                    try Auth.auth().signOut()
+//                                    let loginController = LoginPhoneController()
+//                                    let navController = UINavigationController(rootViewController: loginController)
+//                                    navController.modalPresentationStyle = .fullScreen
+//                                    self.present(navController, animated: true, completion: nil)
+//                                } catch let err {
+//                                    print("Failed to sign out:", err)
+//                                }
+//                            }
+//                        })
                     }
                 }
                 else {
@@ -73,6 +92,25 @@ class MainTabBarController: UITabBarController {
                 self.presentLoginController()
             } else {
                 self.setupViewControllers()
+                
+                // presentLoginController if GroupRoots non-auth user doesn't exist
+                Database.database().groupRootsUserExists(withUID: Auth.auth().currentUser!.uid, completion: { (exists) in
+                    if exists {
+                        print("exists")
+                    }
+                    else {
+                        print("doesn't exist")
+                        do {
+                            try Auth.auth().signOut()
+                            let loginController = LoginPhoneController()
+                            let navController = UINavigationController(rootViewController: loginController)
+                            navController.modalPresentationStyle = .fullScreen
+                            self.present(navController, animated: true, completion: nil)
+                        } catch let err {
+                            print("Failed to sign out:", err)
+                        }
+                    }
+                })
             }
         }
         

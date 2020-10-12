@@ -10,6 +10,10 @@ import UIKit
 import Firebase
 import FirebaseDatabase
 
+protocol AddedUserCellDelegate {
+    func remove_added_user(user: User)
+}
+
 class AddedUserCell: UICollectionViewCell {
     
     var user: User? {
@@ -36,7 +40,7 @@ class AddedUserCell: UICollectionViewCell {
         return label
     }()
     
-    static var cellId = "userSearchCellId"
+    static var cellId = "addedUserCellId"
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -63,6 +67,12 @@ class AddedUserCell: UICollectionViewCell {
         separatorView.anchor(top: topAnchor, left: usernameLabel.leftAnchor, right: rightAnchor, height: 0.5)
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        profileImageView.image = #imageLiteral(resourceName: "user")
+        user = nil
+    }
+    
     private func configureCell() {
         usernameLabel.text = user?.username
         if let profileImageUrl = user?.profileImageUrl {
@@ -70,6 +80,91 @@ class AddedUserCell: UICollectionViewCell {
         } else {
             profileImageView.image = #imageLiteral(resourceName: "user")
         }
+    }
+}
+
+
+class MiniAddedUserCell: UICollectionViewCell {
+    
+    var user: User? {
+        didSet {
+            configureCell()
+        }
+    }
+    
+    var group: Group?
+        
+    private let profileImageView: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.image = #imageLiteral(resourceName: "user")
+        iv.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        iv.layer.borderWidth = 0.5
+        return iv
+    }()
+    
+    private let usernameLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 14)
+        return label
+    }()
+    
+    private lazy var removeButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "x").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.addTarget(self, action: #selector(didRemove), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        return button
+    }()
+    
+    static var cellId = "miniAddedUserCellId"
+    
+    var delegate: AddedUserCellDelegate?
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        sharedInit()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        sharedInit()
+    }
+    
+    private func sharedInit() {
+        self.backgroundColor = UIColor.init(white: 0.9, alpha: 1)
+        
+        addSubview(profileImageView)
+        profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 30, height: 30)
+        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        profileImageView.layer.cornerRadius = 30 / 2
+        
+        addSubview(usernameLabel)
+        usernameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, paddingLeft: 8)
+                
+        addSubview(removeButton)
+        removeButton.anchor(top: topAnchor, bottom: bottomAnchor, right: rightAnchor, paddingRight: 5, width: 30, height: 30)
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        profileImageView.image = #imageLiteral(resourceName: "user")
+        user = nil
+    }
+    
+    private func configureCell() {
+        usernameLabel.text = user?.username
+        if let profileImageUrl = user?.profileImageUrl {
+            profileImageView.loadImage(urlString: profileImageUrl)
+        } else {
+            profileImageView.image = #imageLiteral(resourceName: "user")
+        }
+    }
+    
+    @objc private func didRemove() {
+        guard let user = user else { return }
+        delegate?.remove_added_user(user: user)
     }
 }
 

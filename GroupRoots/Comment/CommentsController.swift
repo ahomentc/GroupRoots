@@ -20,9 +20,10 @@ class CommentsController: UIViewController, UICollectionViewDataSource, UICollec
     }
     
     private var comments = [Comment]()
+    private var atUsers = [User]()
     
     var searchCollectionView: UICollectionView!
-    var collectionView: UICollectionView!
+    var commentsCollectionView: UICollectionView!
     
     private let emojiCover: UIView = {
         let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
@@ -123,33 +124,34 @@ class CommentsController: UIViewController, UICollectionViewDataSource, UICollec
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         
         let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
-        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-        layout.minimumLineSpacing = CGFloat(0)
+//        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: 60)
+//        layout.minimumLineSpacing = CGFloat(0)
         
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), collectionViewLayout: layout)
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-        collectionView?.register(CommentCell.self, forCellWithReuseIdentifier: CommentCell.cellId)
-        collectionView.backgroundColor = UIColor.white
-        self.view.insertSubview(collectionView, at: 5)
+        commentsCollectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), collectionViewLayout: layout)
+        commentsCollectionView.delegate = self
+        commentsCollectionView.dataSource = self
+        commentsCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        commentsCollectionView.register(CommentCell.self, forCellWithReuseIdentifier: CommentCell.cellId)
+        commentsCollectionView.backgroundColor = UIColor.white
+        commentsCollectionView.alwaysBounceVertical = true
+        commentsCollectionView.keyboardDismissMode = .interactive
+        self.view.insertSubview(commentsCollectionView, at: 5)
         
-        collectionView?.backgroundColor = UIColor.white
-        collectionView?.alwaysBounceVertical = true
-        collectionView?.keyboardDismissMode = .interactive
-        
-        searchCollectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), collectionViewLayout: layout)
+        let search_layout = UICollectionViewFlowLayout()
+        searchCollectionView = UICollectionView(frame: CGRect(x: 0, y: 70, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height/2), collectionViewLayout: search_layout)
         searchCollectionView.delegate = self
         searchCollectionView.dataSource = self
         searchCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-        searchCollectionView?.register(UserSearchCell.self, forCellWithReuseIdentifier: UserSearchCell.cellId)
+        searchCollectionView.register(UserSearchCell.self, forCellWithReuseIdentifier: UserSearchCell.cellId)
         searchCollectionView.backgroundColor = UIColor.white
-        self.view.insertSubview(collectionView, at: 5)
+        searchCollectionView.isHidden = true
+        searchCollectionView.alwaysBounceVertical = true
+        searchCollectionView.keyboardDismissMode = .interactive
+        self.view.insertSubview(searchCollectionView, at: 5)
         
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(fetchComments), for: .valueChanged)
-        collectionView?.refreshControl = refreshControl
+        commentsCollectionView?.refreshControl = refreshControl
         
         emojiCover.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 100, width: UIScreen.main.bounds.width, height: 50)
         self.view.insertSubview(emojiCover, at: 9)
@@ -187,25 +189,43 @@ class CommentsController: UIViewController, UICollectionViewDataSource, UICollec
     
     @objc private func fetchComments() {
         guard let postId = groupPost?.id else { return }
-        collectionView?.refreshControl?.beginRefreshing()
+        self.commentsCollectionView?.refreshControl?.beginRefreshing()
         Database.database().fetchCommentsForPost(withId: postId, completion: { (comments) in
             self.comments = comments
-            self.collectionView?.reloadData()
-            self.collectionView?.refreshControl?.endRefreshing()
-        }) { (err) in
-            self.collectionView?.refreshControl?.endRefreshing()
-        }
+            self.commentsCollectionView.reloadData()
+            self.commentsCollectionView?.refreshControl?.endRefreshing()
+        }) { (err) in }
     }
         
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return comments.count
+        if collectionView == self.commentsCollectionView {
+            return comments.count
+        }
+        else {
+            return atUsers.count
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CommentCell.cellId, for: indexPath) as! CommentCell
-        cell.comment = comments[indexPath.item]
-        cell.delegate = self
-        return cell
+        if collectionView == self.commentsCollectionView {
+            let cell = commentsCollectionView.dequeueReusableCell(withReuseIdentifier: CommentCell.cellId, for: indexPath) as! CommentCell
+            cell.comment = comments[indexPath.item]
+            cell.delegate = self
+            return cell
+        }
+        else {
+            let cell = searchCollectionView.dequeueReusableCell(withReuseIdentifier: UserSearchCell.cellId, for: indexPath) as! UserSearchCell
+            cell.user = atUsers[indexPath.item]
+            return cell
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if collectionView == self.searchCollectionView {
+            let user = atUsers[indexPath.item]
+            let username = user.username
+            self.commentInputAccessoryView.replaceWithUsername(username: username)
+        }
     }
     
     @objc private func commentLaugh(){
@@ -264,15 +284,20 @@ extension CommentsController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let dummyCell = CommentCell(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 50))
-        dummyCell.comment = comments[indexPath.item]
-        dummyCell.layoutIfNeeded()
-        
-        let targetSize = CGSize(width: view.frame.width, height: 1000)
-        let estimatedSize = dummyCell.systemLayoutSizeFitting(targetSize)
-        let height = max(40 + 8 + 8, estimatedSize.height)
-        
-        return CGSize(width: view.frame.width, height: height)
+        if collectionView == self.commentsCollectionView {
+            let dummyCell = CommentCell(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 50))
+            dummyCell.comment = comments[indexPath.item]
+            dummyCell.layoutIfNeeded()
+            
+            let targetSize = CGSize(width: view.frame.width, height: 1000)
+            let estimatedSize = dummyCell.systemLayoutSizeFitting(targetSize)
+            let height = max(40 + 8 + 8, estimatedSize.height)
+            
+            return CGSize(width: view.frame.width, height: height)
+        }
+        else {
+            return CGSize(width: view.frame.width, height: 60)
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize {
@@ -283,19 +308,34 @@ extension CommentsController: UICollectionViewDelegateFlowLayout {
 //MARK: - CommentInputAccessoryViewDelegate
 
 extension CommentsController: CommentInputAccessoryViewDelegate {
+    
     func didChangeAtStatus(isInAt: Bool) {
         if isInAt {
-            collectionView.isHidden = true
+            commentsCollectionView.isHidden = true
             searchCollectionView.isHidden = false
         }
         else {
-            collectionView.isHidden = false
+            commentsCollectionView.isHidden = false
             searchCollectionView.isHidden = true
         }
     }
     
     func displaySearchUsers(users: [User]) {
-        
+        self.atUsers = users
+        self.commentsCollectionView?.refreshControl?.beginRefreshing()
+        self.searchCollectionView.reloadData()
+        self.commentsCollectionView?.refreshControl?.endRefreshing()
+    }
+    
+    func submitAtUsers(users: [User]) {
+        guard let groupPost = groupPost else { return }
+        for user in users {
+            Database.database().createNotification(to: user, notificationType: NotificationType.mentionedInComment, group: groupPost.group, groupPost: groupPost) { (err) in
+                if err != nil {
+                    return
+                }
+            }
+        }
     }
     
     func didSubmit(comment: String) {

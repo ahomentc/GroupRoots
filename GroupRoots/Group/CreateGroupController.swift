@@ -218,7 +218,8 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
 //                self.delegate?.shouldOpenGroup(groupId: groupId)
 //            })
 //            NotificationCenter.default.post(name: NSNotification.Name("createdGroup"), object: nil)
-            
+            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name.updateGroupsToPostTo, object: nil)
             Database.database().groupExists(groupId: groupId, completion: { (exists) in
                 if exists {
                     Database.database().fetchGroup(groupId: groupId, completion: { (group) in
