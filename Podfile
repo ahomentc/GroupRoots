@@ -28,4 +28,5 @@ target 'GroupRoots' do
   pod 'Zoomy'
   pod 'SwiftGifOrigin', '~> 1.7.0'
   pod 'DGCollectionViewLeftAlignFlowLayout'
+  pod 'LocationPicker'
 end

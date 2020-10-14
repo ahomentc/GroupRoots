@@ -22,6 +22,7 @@ struct GroupPost: Equatable, Codable {
     let avgGreen: Double
     let avgBlue: Double
     let avgAlpha: Double
+    let location: PostLocation?
     
     var likes: Int = 0
     var likedByCurrentUser = false
@@ -41,6 +42,21 @@ struct GroupPost: Equatable, Codable {
         self.avgGreen = dictionary["avgGreen"] as? Double ?? 0
         self.avgBlue = dictionary["avgBlue"] as? Double ?? 0
         self.avgAlpha = dictionary["avgAlpha"] as? Double ?? 1
+
+        let location_data_string = (dictionary["location"] as? String ?? "").fromBase64()
+        let location_data = location_data_string?.data(using: .utf8)
+        let decoder = JSONDecoder()
+        do {
+            if location_data != nil {
+                self.location = try decoder.decode(PostLocation.self, from: location_data!)
+            }
+            else {
+                self.location = nil
+            }
+        }
+        catch {
+            self.location = nil
+        }
     }
     
     static func ==(lhs: GroupPost, rhs: GroupPost) -> Bool {

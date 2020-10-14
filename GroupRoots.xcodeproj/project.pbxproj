@@ -72,6 +72,7 @@
 		75D86CB82531AAFF00939301 /* ConnectAccountController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CB72531AAFF00939301 /* ConnectAccountController.swift */; };
 		75D86CBA2533063000939301 /* PlusCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CB92533063000939301 /* PlusCell.swift */; };
 		75D86CBC2533B51E00939301 /* NewGroupInPostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CBB2533B51E00939301 /* NewGroupInPostCell.swift */; };
+		75D86CC22536B8A300939301 /* PostLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CC12536B8A200939301 /* PostLocation.swift */; };
 		75DD552924A2F89800FE9E7D /* LoadMoreNotificationsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */; };
 		75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */; };
 		75E5CBB324FACC4B0080F815 /* ContactsInviteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */; };
@@ -192,6 +193,7 @@
 		75D86CB72531AAFF00939301 /* ConnectAccountController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectAccountController.swift; sourceTree = "<group>"; };
 		75D86CB92533063000939301 /* PlusCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlusCell.swift; sourceTree = "<group>"; };
 		75D86CBB2533B51E00939301 /* NewGroupInPostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewGroupInPostCell.swift; sourceTree = "<group>"; };
+		75D86CC12536B8A200939301 /* PostLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostLocation.swift; sourceTree = "<group>"; };
 		75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadMoreNotificationsCell.swift; sourceTree = "<group>"; };
 		75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpTwoController.swift; sourceTree = "<group>"; };
 		75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsInviteController.swift; sourceTree = "<group>"; };
@@ -516,6 +518,7 @@
 				7578BB2123D28F4B00AF9BFB /* GroupPost.swift */,
 				7582758E23DD65BC00D64D4C /* Notification.swift */,
 				75E5CBB424FACF550080F815 /* Contact.swift */,
+				75D86CC12536B8A200939301 /* PostLocation.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -660,6 +663,7 @@
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
 				"${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework",
 				"${BUILT_PRODUCTS_DIR}/InjectableLoggers/InjectableLoggers.framework",
+				"${BUILT_PRODUCTS_DIR}/LocationPicker/LocationPicker.framework",
 				"${BUILT_PRODUCTS_DIR}/MGEvents/MGEvents.framework",
 				"${BUILT_PRODUCTS_DIR}/NVActivityIndicatorView/NVActivityIndicatorView.framework",
 				"${BUILT_PRODUCTS_DIR}/PhoneNumberKit/PhoneNumberKit.framework",
@@ -690,6 +694,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/InjectableLoggers.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/LocationPicker.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MGEvents.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NVActivityIndicatorView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PhoneNumberKit.framework",
@@ -812,6 +817,7 @@
 				75B65DEB240A5594006CBA0B /* GroupFollowersHeader.swift in Sources */,
 				AD3164D02114F0A1001F5DA7 /* CommentsController.swift in Sources */,
 				AD32DEC5210BEF6F002F4973 /* PhotoSelectorController.swift in Sources */,
+				75D86CC22536B8A300939301 /* PostLocation.swift in Sources */,
 				75E5CBBD24FF895C0080F815 /* InviteToGroupWhenCreateController.swift in Sources */,
 				757B35D12474DBB200C9AFE1 /* ProfileFeedCellHeader.swift in Sources */,
 				754295C223DFFB6E00893EFD /* NotificationCell.swift in Sources */,

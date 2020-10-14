@@ -1091,9 +1091,25 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     func didTapImportContacts() {
         CNContactStore().requestAccess(for: .contacts) { (access, error) in
             guard access else {
-                let alert = UIAlertController(title: "Can't access contact", message: "Please go to Settings to enable contact permissions.", preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                let alert = UIAlertController(title: "GroupRoots does not have access to your contacts.\n\nEnable contacts in\nSettings > GroupRoots", message: "", preferredStyle: .alert)
+                
+                let okay_closure = { () in
+                    { (action: UIAlertAction!) -> Void in
+                        guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
+                            return
+                        }
+                        if UIApplication.shared.canOpenURL(settingsUrl) {
+                            UIApplication.shared.open(settingsUrl, completionHandler: { (success) in
+                                print("Settings opened: \(success)") // Prints true
+                            })
+                        }
+                    }
+                }
+                 
+                alert.addAction(UIAlertAction(title: "Close", style: .destructive, handler: nil))
+                alert.addAction(UIAlertAction(title: "Open Settings", style: .default, handler: okay_closure()))
                 self.present(alert, animated: true, completion: nil)
+                
                 return
             }
             importContactsToRecommended() { (err) in

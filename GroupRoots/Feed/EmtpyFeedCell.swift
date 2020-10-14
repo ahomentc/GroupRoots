@@ -134,7 +134,6 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         addSubview(logoImageView)
         logoImageView.frame = CGRect(x: frame.width/2 - 100, y: 80, width: 200, height: 200)
         
-        
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.itemSize = CGSize(width: 160, height: 200)

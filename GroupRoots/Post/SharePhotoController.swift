@@ -12,6 +12,8 @@ import Photos
 import YPImagePicker
 import FirebaseAuth
 import FirebaseDatabase
+import LocationPicker
+import MapKit
 
 class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
     
@@ -21,7 +23,11 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         }
     }
     
+    var selectedLocation: PostLocation?
+    
     var preSelectedGroup: Group?
+    
+    var suggestedLocation: CLLocation?
 
     var selectedVideoURL: URL?
     
@@ -98,7 +104,8 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         iv.image = #imageLiteral(resourceName: "user")
         iv.isHidden = true
         iv.layer.borderColor = UIColor.white.cgColor
-        iv.layer.borderWidth = 0
+        iv.layer.borderWidth = 1
+        iv.backgroundColor = .white
         return iv
     }()
     
@@ -109,7 +116,8 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         iv.image = #imageLiteral(resourceName: "user")
         iv.isHidden = true
         iv.layer.borderColor = UIColor.white.cgColor
-        iv.layer.borderWidth = 0
+        iv.layer.borderWidth = 1
+        iv.backgroundColor = .white
         return iv
     }()
     
@@ -128,6 +136,65 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitle("Post to a different group", for: .normal)
+        return button
+    }()
+    
+//    private lazy var locationButton: UIButton = {
+//        let button = UIButton()
+//        button.addTarget(self, action: #selector(pickLocation), for: .touchUpInside)
+//        button.layer.zPosition = 4;
+////        button.isHidden = true
+//        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+//        button.setTitleColor(.black, for: .normal)
+//        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+//        button.setTitle("Add location", for: .normal)
+//        button.layer.cornerRadius = 14
+//        button.isUserInteractionEnabled = true
+//        return button
+//    }()
+    
+    let separatorView: UIView = {
+        let view = UIView()
+//        view.isHidden = true
+        return view
+    }()
+    
+    private lazy var locationButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(pickLocation), for: .touchUpInside)
+        button.layer.zPosition = 4;
+//        button.isHidden = true
+        button.contentHorizontalAlignment = .left
+        button.backgroundColor = .white
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16)
+        button.setTitle("Add location", for: .normal)
+        button.layer.cornerRadius = 14
+        button.isUserInteractionEnabled = true
+        return button
+    }()
+    
+    let locationLabel: UILabel = {
+        let label = UILabel()
+        label.text = ""
+        label.textAlignment = .left
+        label.backgroundColor = UIColor.white
+        label.font = UIFont(name: "Avenir", size: 16)!
+        label.isHidden = true
+        return label
+    }()
+    
+    private lazy var newGroupButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(handleCreateGroup), for: .touchUpInside)
+        button.layer.zPosition = 4;
+        button.isHidden = true
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        button.setTitle("Post to a new group", for: .normal)
+        button.layer.cornerRadius = 14
+        button.isUserInteractionEnabled = true
         return button
     }()
     
@@ -171,11 +238,15 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
             if let firstItem = items.first {
                 switch firstItem {
                 case .photo(let photo):
+                    let location = photo.asset?.location
                     self.selectedImage = photo.image
+                    self.suggestedLocation = location
                     picker.dismiss(animated: true, completion: nil)
                 case .video(let video):
+                    let location = video.asset?.location
                     self.selectedVideoURL = video.url
                     self.selectedImage = video.thumbnail
+                    self.suggestedLocation = location
                     picker.dismiss(animated: true, completion: nil)
                 }
             }
@@ -226,37 +297,53 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         imageView.addGestureRecognizer(singleTap)
         imageView.layer.cornerRadius = 10
         
-        
         containerView.addSubview(textView)
         textView.anchor(top: containerView.topAnchor, left: imageView.rightAnchor, bottom: containerView.bottomAnchor, right: containerView.rightAnchor, paddingTop: 10, paddingLeft: 10)
         
         containerView.addSubview(selectGroupLabel)
         selectGroupLabel.anchor(top: textView.bottomAnchor, left: containerView.leftAnchor, right: containerView.rightAnchor, paddingTop: UIScreen.main.bounds.height/50)
         
-        self.view.addSubview(selectedGroupLabel)
-        selectedGroupLabel.anchor(top: containerView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/12)
+//        self.view.addSubview(locationButton)
+//        locationButton.anchor(top: containerView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/50, paddingLeft: 50, paddingRight: 50, height: 50)
         
+        self.view.addSubview(locationButton)
+        locationButton.anchor(top: containerView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/50 - 10, paddingLeft: 20, paddingRight: 50, height: 50)
+        
+        self.view.addSubview(locationLabel)
+        locationLabel.anchor(top: containerView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/50 - 10, paddingLeft: 20, height: 50)
+        
+        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.1)
+        self.view.addSubview(separatorView)
+        separatorView.anchor(top: containerView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/50 + 50, height: 0.5)
+        
+        self.view.addSubview(newGroupButton)
+        newGroupButton.anchor(top: containerView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/50 + 85, paddingLeft: 50, paddingRight: 50, height: 50)
+        
+        // only visible with preSelectedGroup
+        self.view.addSubview(selectedGroupLabel)
+        selectedGroupLabel.anchor(top: containerView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/4)
         self.selectedGroupLabel.attributedText = NSMutableAttributedString(string: "Posting to", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
         
         self.view.addSubview(groupImageView)
         groupImageView.anchor(top: selectedGroupLabel.bottomAnchor, left: self.view.leftAnchor, paddingTop: 15, paddingLeft: UIScreen.main.bounds.width/2 - 40, width: 80, height: 80)
-//        groupImageView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
         groupImageView.layer.cornerRadius = 80 / 2
         groupImageView.isHidden = true
         
-        self.view.addSubview(userOneImageView)
+//        self.view.addSubview(userOneImageView)
+        self.view.insertSubview(userOneImageView, at: 5)
         userOneImageView.anchor(top: selectedGroupLabel.bottomAnchor, left: self.view.leftAnchor, paddingTop: 20, paddingLeft: UIScreen.main.bounds.width/2 - 50, width: 70, height: 70)
 //        userOneImageView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
         userOneImageView.layer.cornerRadius = 70/2
         userOneImageView.isHidden = true
-        userOneImageView.image = UIImage()
+        userOneImageView.image = #imageLiteral(resourceName: "user")
         
-        self.view.addSubview(userTwoImageView)
-        userTwoImageView.anchor(top: selectedGroupLabel.bottomAnchor, left: self.view.leftAnchor, paddingTop: 17, paddingLeft: UIScreen.main.bounds.width/2 - 20, width: 75, height: 75)
+//        self.view.addSubview(userTwoImageView)
+        self.view.insertSubview(userTwoImageView, at: 4)
+        userTwoImageView.anchor(top: selectedGroupLabel.bottomAnchor, left: self.view.leftAnchor, paddingTop: 17, paddingLeft: UIScreen.main.bounds.width/2 - 20, width: 70, height: 70)
 //        userTwoImageView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
-        userTwoImageView.layer.cornerRadius = 75/2
+        userTwoImageView.layer.cornerRadius = 70/2
         userTwoImageView.isHidden = true
-        userTwoImageView.image = UIImage()
+        userTwoImageView.image = #imageLiteral(resourceName: "user")
         
         selectOtherGroupButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
         selectOtherGroupButton.layer.cornerRadius = 14
@@ -288,10 +375,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         }
         else {
             if indexPath.row == 0 {
-                let createGroupController = CreateGroupController()
-                let navController = UINavigationController(rootViewController: createGroupController)
-                navController.modalPresentationStyle = .fullScreen
-                present(navController, animated: true, completion: nil)
+                
             }
             else {
                 self.selectedGroupId = groups[indexPath.row - 1].groupId
@@ -350,6 +434,24 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         
     }
     
+    func setCollectionView(){
+        let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
+        let displayWidth: CGFloat = self.view.frame.width
+        let displayHeight: CGFloat = self.view.frame.height
+        
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
+        
+        self.collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/2.3, width: displayWidth, height: displayHeight - barHeight - UIScreen.main.bounds.height/2.3 + 10), collectionViewLayout: layout)
+        self.collectionView.delegate = self
+        self.collectionView.dataSource = self
+        self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
+        self.collectionView?.register(NewGroupInPostCell.self, forCellWithReuseIdentifier: NewGroupInPostCell.cellId)
+        self.collectionView.backgroundColor = UIColor.white
+        self.view.addSubview(self.collectionView)
+    }
+    
     @objc func handleRefresh() {
         fetchAllGroups()
     }
@@ -363,22 +465,12 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                 self.selectedGroupLabel.isHidden = true
                 self.selectedGroupnameLabel.isHidden = true
                 self.selectOtherGroupButton.isHidden = true
+                self.newGroupButton.isHidden = false
+//                self.locationButton.isHidden = false
+//                self.locationLabel.isHidden = true
+//                self.separatorView.isHidden = false
                 
-                let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
-                let displayWidth: CGFloat = self.view.frame.width
-                let displayHeight: CGFloat = self.view.frame.height
-                
-                let layout = UICollectionViewFlowLayout()
-                layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
-                
-                self.collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/4, width: displayWidth, height: displayHeight - barHeight - UIScreen.main.bounds.height/4 + 10), collectionViewLayout: layout)
-                self.collectionView.delegate = self
-                self.collectionView.dataSource = self
-                self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-                self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
-                self.collectionView?.register(NewGroupInPostCell.self, forCellWithReuseIdentifier: NewGroupInPostCell.cellId)
-                self.collectionView.backgroundColor = UIColor.white
-                self.view.addSubview(self.collectionView)
+                self.setCollectionView()
             }
             else {
                 Database.database().isInGroup(groupId: self.preSelectedGroup!.groupId, completion: { (inGroup) in
@@ -388,6 +480,11 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                         self.selectedGroupLabel.isHidden = false
                         self.selectedGroupnameLabel.isHidden = false
                         self.selectOtherGroupButton.isHidden = false
+                        self.newGroupButton.isHidden = true
+//                        self.locationButton.isHidden = true
+//                        self.locationLabel.isHidden = true
+//                        self.separatorView.isHidden = true
+                        
                         Database.database().fetchFirstNGroupMembers(groupId: self.preSelectedGroup!.groupId, n: 3, completion: { (first_n_users) in
                             self.loadGroupMembersIcon(group: self.preSelectedGroup!, first_n_users: first_n_users)
                             if self.preSelectedGroup!.groupname == "" {
@@ -426,21 +523,12 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                         self.selectedGroupLabel.isHidden = true
                         self.selectedGroupnameLabel.isHidden = true
                         self.selectOtherGroupButton.isHidden = true
+                        self.newGroupButton.isHidden = false
+//                        self.locationButton.isHidden = false
+//                        self.locationLabel.isHidden = true
+//                        self.separatorView.isHidden = false
                         
-                        let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
-                        let displayWidth: CGFloat = self.view.frame.width
-                        let displayHeight: CGFloat = self.view.frame.height
-                        
-                        let layout = UICollectionViewFlowLayout()
-                        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
-                        
-                        self.collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/4, width: displayWidth, height: displayHeight - barHeight - UIScreen.main.bounds.height/4 + 10), collectionViewLayout: layout)
-                        self.collectionView.delegate = self
-                        self.collectionView.dataSource = self
-                        self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-                        self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
-                        self.collectionView.backgroundColor = UIColor.white
-                        self.view.addSubview(self.collectionView)
+                        self.setCollectionView()
                     }
                 }) { (err) in
                     return
@@ -454,30 +542,89 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         self.selectedGroupLabel.isHidden = true
         self.selectedGroupnameLabel.isHidden = true
         self.selectOtherGroupButton.isHidden = true
+        self.newGroupButton.isHidden = false
+//        self.locationButton.isHidden = false
+//        self.locationLabel.isHidden = true
+//        self.separatorView.isHidden = false
         
-        let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
-        let displayWidth: CGFloat = self.view.frame.width
-        let displayHeight: CGFloat = self.view.frame.height
-        
-        let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
-        
-        self.collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/4, width: displayWidth, height: displayHeight - barHeight - UIScreen.main.bounds.height/4 + 10), collectionViewLayout: layout)
-        self.collectionView.delegate = self
-        self.collectionView.dataSource = self
-        self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-        self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
-        self.collectionView.backgroundColor = UIColor.white
-        self.view.addSubview(self.collectionView)
+        self.setCollectionView()
         
         self.collectionView.layoutIfNeeded()
         self.scrollToPreSelected()
     }
     
+    @objc private func handleCreateGroup(){
+        let createGroupController = CreateGroupController()
+        let navController = UINavigationController(rootViewController: createGroupController)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true, completion: nil)
+    }
     
-    // NEEDS WORK.
-    // Should work. Still to be tested.
-    // Clean it up make it better, make error detection too since its currently commented out
+    @objc private func pickLocation(){
+        let locationPicker = LocationPickerViewController()
+
+        // you can optionally set initial location
+//        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.331686, longitude: -122.030656), addressDictionary: nil)
+//        let location = Location(name: "1 Infinite Loop, Cupertino", location: nil, placemark: placemark)
+//        locationPicker.location = location
+        
+        if suggestedLocation != nil {
+            let geocoder = CLGeocoder()
+            geocoder.reverseGeocodeLocation(suggestedLocation!, completionHandler: {(placemarks, error)->Void in
+                if placemarks != nil && placemarks!.count > 0 {
+                    let placemark = placemarks![0]
+                    var name = placemark.name
+                    if placemark.areasOfInterest != nil && placemark.areasOfInterest!.count > 0 {
+                        name = placemark.areasOfInterest![0]
+                    }
+                    locationPicker.location = Location(name: name, location: self.suggestedLocation!, placemark: placemark)
+                }
+                else {
+                    let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: self.suggestedLocation!.coordinate.latitude, longitude: self.suggestedLocation!.coordinate.longitude), addressDictionary: nil)
+                    locationPicker.location = Location(name: "", location: self.suggestedLocation!, placemark: placemark)
+                }
+            })
+            
+        }
+
+        // button placed on right bottom corner
+        locationPicker.showCurrentLocationButton = false // default: true
+
+        // default: navigation bar's `barTintColor` or `UIColor.white`
+        locationPicker.currentLocationButtonBackground = .blue
+
+        // ignored if initial location is given, shows that location instead
+        locationPicker.showCurrentLocationInitially = true // default: true
+
+        locationPicker.mapType = .standard // default: .Hybrid
+
+        // for searching, see `MKLocalSearchRequest`'s `region` property
+        locationPicker.useCurrentLocationAsHint = true // default: false
+
+        locationPicker.searchBarPlaceholder = "Search places" // default: "Search or enter an address"
+
+        locationPicker.searchHistoryLabel = "Previously searched" // default: "Search History"
+
+        // optional region distance to be used for creation region when user selects place from search results
+        locationPicker.resultRegionDistance = 500 // default: 600
+
+        locationPicker.completion = { location in
+            self.locationLabel.text = location?.name
+            if location?.name == nil || location?.name == "" {
+                self.locationLabel.text = location?.address
+            }
+            self.locationLabel.isHidden = false
+            self.locationButton.isHidden = true
+            self.selectedLocation = PostLocation(name: location?.name, longitude: "\(location?.coordinate.longitude ?? 0)", latitude: "\(location?.coordinate.latitude ?? 0)", address: location?.address)
+        }
+        
+        locationPicker.title = "Add Location"
+
+        let navController = UINavigationController(rootViewController: locationPicker)
+        navController.modalPresentationStyle = .popover
+        present(navController, animated: true, completion: nil)
+    }
+    
     @objc private func handleShare() {
         guard let postImage = selectedImage else { return }
         let caption = textView.text
@@ -491,7 +638,15 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         navigationItem.rightBarButtonItem?.isEnabled = false
         textView.isUserInteractionEnabled = false
         
-        Database.database().createGroupPost(withImage: postImage, withVideo: self.selectedVideoURL, caption: caption ?? "", groupId: self.selectedGroupId, completion: { (postId) in
+        var postLocation = ""
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(self.selectedLocation)
+            postLocation = (String(data: data, encoding: .utf8) ?? "").toBase64()
+        }
+        catch {}
+        
+        Database.database().createGroupPost(withImage: postImage, withVideo: self.selectedVideoURL, caption: caption ?? "", groupId: self.selectedGroupId, location: postLocation, completion: { (postId) in
             if postId == "" {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
                 self.textView.isUserInteractionEnabled = true
@@ -501,6 +656,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                 self.dismiss(animated: true, completion: nil)
                 return
             }
+            Database.database().userPosted(completion: { _ in })
             Database.database().groupExists(groupId: self.selectedGroupId, completion: { (exists) in
                 if exists {
                     Database.database().fetchGroup(groupId: self.selectedGroupId, completion: { (group) in
@@ -542,7 +698,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
             } else {
                 self.groupImageView.isHidden = true
                 self.userOneImageView.isHidden = false
-                self.userTwoImageView.isHidden = true
+                self.userTwoImageView.isHidden = false
                 
                 if first_n_users.count > 0 {
                     if let userOneImageUrl = first_n_users[0].profileImageUrl {
@@ -573,6 +729,9 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
 
 extension SharePhotoController: UICollectionViewDelegateFlowLayout {
     internal func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        if indexPath.item == 0 {
+            return CGSize(width: view.frame.width, height: 40)
+        }
         return CGSize(width: view.frame.width, height: 80)
     }
 }

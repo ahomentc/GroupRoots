@@ -101,12 +101,25 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         postedByLabel.attributedText = attributedText
         captionLabel.attributedText = attributedText
         commentsLabel.attributedText = attributedText
+        locationLabel.attributedText = attributedText
         
 //        self.photoImageView.image = CustomImageView.imageWithColor(color: .black)
         self.player.pause()
         self.player.url = URL(string: "")
         self.activityIndicatorView.isHidden = true
     }
+    
+    private lazy var locationLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.white
+        label.layer.zPosition = 4;
+        label.numberOfLines = 0
+        label.isUserInteractionEnabled = true
+        let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)])
+        label.attributedText = attributedText
+        label.textAlignment = .right
+        return label
+    }()
     
     private lazy var postedByLabel: UILabel = {
         let label = UILabel()
@@ -293,6 +306,9 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         addSubview(postedByLabel)
         postedByLabel.anchor(bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: UIScreen.main.bounds.height/9, paddingRight: padding + 6)
         
+        addSubview(locationLabel)
+        locationLabel.anchor(top: postedByLabel.bottomAnchor, right: rightAnchor, paddingTop: padding - 10, paddingLeft: padding, paddingRight: padding + 6)
+        
         addSubview(newCommentButton)
         newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: 0, paddingBottom: UIScreen.main.bounds.height/9)
         
@@ -378,6 +394,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         setupAttributedCaption(groupPost: groupPost)
         setupGroupPoster(groupPost: groupPost)
         setupTimeLabel(groupPost: groupPost)
+        setupPostLocation(groupPost: groupPost)
         
         self.viewButton.isHidden = true
         let attributedText = NSAttributedString(string: "", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 17), NSAttributedString.Key.foregroundColor: UIColor.white])
@@ -546,6 +563,16 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
                 self.playButton.isHidden = true
             }
         }
+    }
+    
+    private func setupPostLocation(groupPost: GroupPost) {
+        guard let location = groupPost.location else { return }
+        var name = location.name
+        if location.name == "" {
+            name = location.address
+        }
+        let attributedText = NSAttributedString(string: name, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12), NSAttributedString.Key.foregroundColor: UIColor.white])
+        locationLabel.attributedText = attributedText
     }
     
     private func setupGroupPoster(groupPost: GroupPost) {

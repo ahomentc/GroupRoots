@@ -431,17 +431,21 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
             if let firstItem = items.first {
                 switch firstItem {
                 case .photo(let photo):
+                    let location = photo.asset?.location
                     // need to do self.scrollToPreSelected() too
                     let sharePhotoController = SharePhotoController()
                     sharePhotoController.preSelectedGroup = group
                     sharePhotoController.selectedImage = photo.image
+                    sharePhotoController.suggestedLocation = location
                     picker.pushViewController(sharePhotoController, animated: true)
                     
                 case .video(let video):
+                    let location = video.asset?.location
                     let sharePhotoController = SharePhotoController()
                     sharePhotoController.preSelectedGroup = group
                     sharePhotoController.selectedVideoURL = video.url
                     sharePhotoController.selectedImage = video.thumbnail
+                    sharePhotoController.suggestedLocation = location
                     picker.pushViewController(sharePhotoController, animated: true)
                 }
             }

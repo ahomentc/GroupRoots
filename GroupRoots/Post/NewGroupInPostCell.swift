@@ -21,6 +21,16 @@ class NewGroupInPostCell: UICollectionViewCell {
         return label
     }()
     
+    let selectGroupLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Select a Group"
+        label.textAlignment = .center
+        label.backgroundColor = UIColor.clear
+        label.font = UIFont(name: "Avenir", size: 22)!
+        label.isHidden = false
+        return label
+    }()
+    
     private lazy var newGroupButton: UIButton = {
         let button = UIButton()
 //        button.addTarget(self, action: #selector(didTapNewGroup), for: .touchUpInside)
@@ -53,7 +63,10 @@ class NewGroupInPostCell: UICollectionViewCell {
     }
     
     private func sharedInit() {
-        addSubview(newGroupButton)
-        newGroupButton.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 50, paddingBottom: 5, paddingRight: 50)
+//        addSubview(newGroupButton)
+//        newGroupButton.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 50, paddingBottom: 5, paddingRight: 50)
+        
+        addSubview(selectGroupLabel)
+        selectGroupLabel.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 5, paddingBottom: 5)
     }
 }

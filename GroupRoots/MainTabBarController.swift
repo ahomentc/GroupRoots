@@ -60,6 +60,8 @@ class MainTabBarController: UITabBarController {
                     } else {
                         self.setupViewControllers()
                         
+                        Database.database().openedApp(completion: { _ in })
+                        
 //                        Database.database().groupRootsUserExists(withUID: Auth.auth().currentUser!.uid, completion: { (exists) in
 //                            if exists {
 //        //                        self.setupViewControllers()
@@ -94,23 +96,23 @@ class MainTabBarController: UITabBarController {
                 self.setupViewControllers()
                 
                 // presentLoginController if GroupRoots non-auth user doesn't exist
-                Database.database().groupRootsUserExists(withUID: Auth.auth().currentUser!.uid, completion: { (exists) in
-                    if exists {
-                        print("exists")
-                    }
-                    else {
-                        print("doesn't exist")
-                        do {
-                            try Auth.auth().signOut()
-                            let loginController = LoginPhoneController()
-                            let navController = UINavigationController(rootViewController: loginController)
-                            navController.modalPresentationStyle = .fullScreen
-                            self.present(navController, animated: true, completion: nil)
-                        } catch let err {
-                            print("Failed to sign out:", err)
-                        }
-                    }
-                })
+//                Database.database().groupRootsUserExists(withUID: Auth.auth().currentUser!.uid, completion: { (exists) in
+//                    if exists {
+//                        print("exists")
+//                    }
+//                    else {
+//                        print("doesn't exist")
+//                        do {
+//                            try Auth.auth().signOut()
+//                            let loginController = LoginPhoneController()
+//                            let navController = UINavigationController(rootViewController: loginController)
+//                            navController.modalPresentationStyle = .fullScreen
+//                            self.present(navController, animated: true, completion: nil)
+//                        } catch let err {
+//                            print("Failed to sign out:", err)
+//                        }
+//                    }
+//                })
             }
         }
         
@@ -279,17 +281,21 @@ extension MainTabBarController: UITabBarControllerDelegate {
                 if let firstItem = items.first {
                     switch firstItem {
                     case .photo(let photo):
+                        let location = photo.asset?.location
                         // need to do self.scrollToPreSelected() too
                         let sharePhotoController = SharePhotoController()
                         sharePhotoController.preSelectedGroup = preSelectedGroup
                         sharePhotoController.selectedImage = photo.image
+                        sharePhotoController.suggestedLocation = location
                         picker.pushViewController(sharePhotoController, animated: true)
                         
                     case .video(let video):
+                        let location = video.asset?.location
                         let sharePhotoController = SharePhotoController()
                         sharePhotoController.preSelectedGroup = preSelectedGroup
                         sharePhotoController.selectedVideoURL = video.url
                         sharePhotoController.selectedImage = video.thumbnail
+                        sharePhotoController.suggestedLocation = location
                         picker.pushViewController(sharePhotoController, animated: true)
                     }
                 }

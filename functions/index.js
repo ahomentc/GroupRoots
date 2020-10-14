@@ -1417,13 +1417,106 @@ exports.reply = functions.https.onRequest((req, res) => {
 
 
 
+// ------------------------ Notifications ------------------------
 
+// for all users
+// if user lastVisited is greater than 5 days, then continue
+// if there is a post that the user hasn't seen yet, then continue
+// get the user's token
+// send the notification for the post and set lastVisited time ot current time
+exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day 09:00').timeZone('America/Los_Angeles').onRun((context) => {
+	return admin.database().ref('/users').once('value', users_snapshot => {
+		var current_time = parseFloat(Date.now()/1000) // in seconds
+		users_snapshot.forEach(function(user) {
+        	var uid = user.key;
+    		
+    		admin.database().ref('/lastOpenedApp/' + uid).once('value', last_opened_snapshot => {
+        		var last_opened_app = last_opened_snapshot.val();
+				last_opened_app = parseFloat(last_opened_app) 	// in seconds
 
+				// current_time - last_opened_app = number of seconds between
+				// convert number of seconds to nearest days
+				// continue only on days % 5 === 0 and days !== 0
+				let num_seconds = current_time - last_opened_app
+				let num_days = Math.floor(num_seconds / 86400)
 
+				if (num_days !== 0 && num_days % 5 === 0) { 
 
+					// retrieve the groups the user is subscribed to
+					// for each group
+					// check if they've seen the latest post
+					// send notification for that and set a boolean to true to stop checking the other groups
+					admin.database().ref('/groupsFollowing/' + uid).once('value', groups_following_snapshot => {
+						var groups_with_new_posts = []
 
+						let sync = new DispatchGroup();
+						var token_0 = sync.enter();
+						groups_following_snapshot.forEach(function(group) {
+							var token = sync.enter();
+							var group_id = group.key;
 
+							// if the lastPostedDate of the group is more recent than the last time the app was opened
+							// then continue
+							admin.database().ref('/groups/' + group_id + '/lastPostedDate').once('value', last_post_date => {
+								var group_post_date = parseFloat(last_post_date.val());
+								if(group_post_date > last_opened_app){
+									groups_with_new_posts.append(group_id)
+								}
+								sync.leave(token)
+							}).catch(() => {return null});
+						})
+						sync.leave(token_0)
 
+				        sync.notify(function() {
+				        	if (groups_with_new_posts.length > 0) {
+				        		admin.database().ref('/groups/' + groups_with_new_posts[0] + '/groupname').once('value', groupname_snapshot => {
+									var groupname = "";
+									if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
+										groupname = groupname_snapshot.val().toString().replace("_-a-_", " ");
+									}
+
+									// retrieve the token for the user
+									admin.database().ref('/users/' + uid + '/token').once('value', token_snapshot => {
+										var user_token = token_snapshot.val();
+
+										var message = ""
+										if (groups_with_new_posts.length === 1) {
+											if groupname == "" {
+												message = "A group you're subscribed to has recently posted"
+											}
+											else {
+												message = 'Group "' + groupname + '" has recently posted'
+											}
+										}
+										else if (groups_with_new_posts.length > 1) {
+											if groupname == "" {
+												message = "Groups you're subscribed to have recently posted"
+											}
+											else {
+												message = 'Group "' + groupname + '" and other groups have recently posted'
+											}
+											
+										}
+										const payload = {
+											notification: {
+												body: message
+											}
+										};
+										// admin.messaging().sendToDevice(user_token, payload)
+										admin.messaging().sendToDevice("cFek9UsXGk91r5rSv8gUJ9:APA91bGrGlzleyoA0zsbcw2vKHYnP-RZk5bEsz-0f9ArHgAax6LobtKvbvQZCL0K9U5Fvyb5jz-TfNr5NMBoIn4BC5bip8QAg_99t_pJ3QgOLUsGytAx52Wt7dKzB5qk2dQjM0YFBc-Z", payload)
+									})
+								}).catch(() => {return null});
+				        	}
+						})
+
+					}).catch(() => {return null});
+				}
+        	}).catch(() => {return null});
+    	});
+  	}).catch(() => {return null});
+
+	return null;
+});
 
 
 

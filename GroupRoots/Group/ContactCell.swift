@@ -30,6 +30,19 @@ class ContactCell: UICollectionViewCell {
         return iv
     }()
     
+    private let nameIconLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.text = ""
+        label.layer.borderColor = UIColor(white: 0, alpha: 0.35).cgColor
+        label.layer.borderWidth = 0.5
+        label.textAlignment = .center
+        label.textColor = .white
+        label.backgroundColor =  UIColor(white: 0, alpha: 0.3)
+        label.clipsToBounds = true
+        return label
+    }()
+    
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 14)
@@ -49,13 +62,19 @@ class ContactCell: UICollectionViewCell {
     }
     
     private func sharedInit() {
-        addSubview(profileImageView)
-        profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 50, height: 50)
-        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 50 / 2
+//        addSubview(profileImageView)
+//        profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 50, height: 50)
+//        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+//        profileImageView.layer.cornerRadius = 50 / 2
+        
+        addSubview(nameIconLabel)
+        nameIconLabel.anchor(left: leftAnchor, paddingLeft: 8, width: 50, height: 50)
+        nameIconLabel.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        nameIconLabel.layer.cornerRadius = 50 / 2
         
         addSubview(nameLabel)
-        nameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, paddingLeft: 8)
+//        nameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, paddingLeft: 8)
+        nameLabel.anchor(top: topAnchor, left: nameIconLabel.rightAnchor, bottom: bottomAnchor, paddingLeft: 8)
         
         let separatorView = UIView()
         separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
@@ -67,11 +86,21 @@ class ContactCell: UICollectionViewCell {
         super.prepareForReuse()
         profileImageView.image = #imageLiteral(resourceName: "user")
         contact = nil
+        nameIconLabel.text = ""
     }
     
     private func configureCell() {
         guard let contact = contact else { return }
         nameLabel.text = contact.given_name + " " + contact.family_name
+        var firstInitial = ""
+        var secondInitial = ""
+        if contact.given_name.first != nil {
+            firstInitial = String(contact.given_name.first!)
+        }
+        if contact.family_name.first != nil {
+            secondInitial = String(contact.family_name.first!)
+        }
+        nameIconLabel.text = firstInitial.uppercased() + secondInitial.uppercased()
     }
 }
 
@@ -91,6 +120,19 @@ class MiniContactCell: UICollectionViewCell {
         iv.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
         iv.layer.borderWidth = 0.5
         return iv
+    }()
+    
+    private let nameIconLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 11)
+        label.text = ""
+        label.layer.borderColor = UIColor(white: 0, alpha: 0.35).cgColor
+        label.layer.borderWidth = 0.5
+        label.textAlignment = .center
+        label.textColor = .white
+        label.backgroundColor =  UIColor(white: 0, alpha: 0.3)
+        label.clipsToBounds = true
+        return label
     }()
     
     private let nameLabel: UILabel = {
@@ -124,13 +166,19 @@ class MiniContactCell: UICollectionViewCell {
     private func sharedInit() {
         self.backgroundColor = UIColor.init(white: 0.9, alpha: 1)
         
-        addSubview(profileImageView)
-        profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 30, height: 30)
-        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        profileImageView.layer.cornerRadius = 30 / 2
+//        addSubview(profileImageView)
+//        profileImageView.anchor(left: leftAnchor, paddingLeft: 8, width: 30, height: 30)
+//        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+//        profileImageView.layer.cornerRadius = 30 / 2
+        
+        addSubview(nameIconLabel)
+        nameIconLabel.anchor(left: leftAnchor, paddingLeft: 8, width: 30, height: 30)
+        nameIconLabel.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        nameIconLabel.layer.cornerRadius = 30 / 2
         
         addSubview(nameLabel)
-        nameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, paddingLeft: 8)
+//        nameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, paddingLeft: 8)
+        nameLabel.anchor(top: topAnchor, left: nameIconLabel.rightAnchor, bottom: bottomAnchor, paddingLeft: 8)
         
         addSubview(removeButton)
         removeButton.anchor(top: topAnchor, bottom: bottomAnchor, right: rightAnchor, paddingRight: 5, width: 30, height: 30)
@@ -140,11 +188,22 @@ class MiniContactCell: UICollectionViewCell {
         super.prepareForReuse()
         profileImageView.image = #imageLiteral(resourceName: "user")
         contact = nil
+        nameIconLabel.text = ""
     }
     
     private func configureCell() {
         guard let contact = contact else { return }
         nameLabel.text = contact.given_name + " " + contact.family_name
+        
+        var firstInitial = ""
+        var secondInitial = ""
+        if contact.given_name.first != nil {
+            firstInitial = String(contact.given_name.first!)
+        }
+        if contact.family_name.first != nil {
+            secondInitial = String(contact.family_name.first!)
+        }
+        nameIconLabel.text = firstInitial.uppercased() + secondInitial.uppercased()
     }
     
     @objc private func didRemove() {
