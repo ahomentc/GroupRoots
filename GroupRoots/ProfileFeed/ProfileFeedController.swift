@@ -459,6 +459,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
+        self.navigationController?.navigationBar.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
+        self.navigationController?.navigationBar.barTintColor = UIColor.init(white: 0.98, alpha: 1)
+//        self.view.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
     }
     
     func requestZoomCapability(for cell: FeedPostCell) {

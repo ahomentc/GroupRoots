@@ -32,6 +32,15 @@ class GroupFollowersController: UICollectionViewController, loadMoreSubscribersC
         }
     }
     
+    var isModallyPresented: Bool = false {
+        didSet{
+            if isModallyPresented {
+                let btnDone = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(dismissView))
+                self.navigationItem.leftBarButtonItem = btnDone
+            }
+        }
+    }
+    
     var isInGroup: Bool? {
         didSet {
             collectionView.reloadData()
@@ -156,6 +165,10 @@ class GroupFollowersController: UICollectionViewController, loadMoreSubscribersC
                 self.collectionView?.refreshControl?.endRefreshing()
             }
         }
+    }
+    
+    @objc func dismissView() {
+        self.dismiss(animated: true, completion: nil)
     }
     
     // when an item is selected, go to that view controller

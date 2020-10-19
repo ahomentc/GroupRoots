@@ -505,6 +505,10 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         let commentsController = CommentsController()
         commentsController.groupPost = groupPost
         navigationController?.pushViewController(commentsController, animated: true)
+        
+//        let navController = UINavigationController(rootViewController: commentsController)
+//        navController.modalPresentationStyle = .popover
+//        self.present(navController, animated: true, completion: nil)
     }
     
     func didTapUser(user: User) {

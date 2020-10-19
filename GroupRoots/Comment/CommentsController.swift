@@ -109,6 +109,13 @@ class CommentsController: UIViewController, UICollectionViewDataSource, UICollec
     
     override var inputAccessoryView: UIView? { return commentInputAccessoryView }
     
+    override func viewDidAppear(_ animated: Bool) {
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = false
+        self.navigationController?.navigationBar.backgroundColor = UIColor.white
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         if #available(iOS 13.0, *) {
@@ -121,13 +128,19 @@ class CommentsController: UIViewController, UICollectionViewDataSource, UICollec
         let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = false
+        self.navigationController?.navigationBar.backgroundColor = UIColor.white
+        
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         
         let layout = UICollectionViewFlowLayout()
 //        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: 60)
 //        layout.minimumLineSpacing = CGFloat(0)
         
-        commentsCollectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), collectionViewLayout: layout)
+        let navbarHeight = self.navigationController?.navigationBar.frame.size.height ?? 0
+        commentsCollectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 70 - navbarHeight), collectionViewLayout: layout)
         commentsCollectionView.delegate = self
         commentsCollectionView.dataSource = self
         commentsCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -153,28 +166,28 @@ class CommentsController: UIViewController, UICollectionViewDataSource, UICollec
         refreshControl.addTarget(self, action: #selector(fetchComments), for: .valueChanged)
         commentsCollectionView?.refreshControl = refreshControl
         
-        emojiCover.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 100, width: UIScreen.main.bounds.width, height: 50)
+        emojiCover.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 120 - navbarHeight, width: UIScreen.main.bounds.width, height: 50)
         self.view.insertSubview(emojiCover, at: 9)
         
-        laughEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-122, y: UIScreen.main.bounds.height - 90, width: 24, height: 24)
+        laughEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-122, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
         self.view.insertSubview(laughEmoji, at: 10)
         
-        heartEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-67, y: UIScreen.main.bounds.height - 90, width: 24, height: 24)
+        heartEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-67, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
         self.view.insertSubview(heartEmoji, at: 10)
         
-        fireEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-12, y: UIScreen.main.bounds.height - 90, width: 24, height: 24)
+        fireEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-12, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
         self.view.insertSubview(fireEmoji, at: 10)
         
-        cryEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2+37, y: UIScreen.main.bounds.height - 90, width: 24, height: 24)
+        cryEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2+37, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
         self.view.insertSubview(cryEmoji, at: 10)
         
-        eyesEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2+92, y: UIScreen.main.bounds.height - 90, width: 24, height: 24)
+        eyesEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2+92, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
         self.view.insertSubview(eyesEmoji, at: 10)
         
-//        let lineSeparatorView = UIView()
-//        lineSeparatorView.backgroundColor = UIColor.rgb(red: 230, green: 230, blue: 230)
-//        lineSeparatorView.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 100, width: UIScreen.main.bounds.width, height: 0.5)
-//        self.view.insertSubview(lineSeparatorView, at: 11)
+        let lineSeparatorView = UIView()
+        lineSeparatorView.backgroundColor = UIColor.init(white: 0.9, alpha: 1)
+        lineSeparatorView.frame = CGRect(x: 25, y: UIScreen.main.bounds.height - 120.5 - navbarHeight, width: UIScreen.main.bounds.width - 50, height: 0.5)
+        self.view.insertSubview(lineSeparatorView, at: 11)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -370,5 +383,9 @@ extension CommentsController: CommentCellDelegate {
         userProfileController.user = user
         userProfileController.modalPresentationStyle = .fullScreen
         navigationController?.pushViewController(userProfileController, animated: true)
+    }
+    
+    func didTapReply(username: String) {
+        commentInputAccessoryView.addAtUser(username: username)
     }
 }

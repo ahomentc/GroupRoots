@@ -21,6 +21,15 @@ class MembersController: UICollectionViewController {
     }
     private var header: MembersHeader?
     
+    var isModallyPresented: Bool = false {
+        didSet{
+            if isModallyPresented {
+                let btnDone = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(dismissView))
+                self.navigationItem.leftBarButtonItem = btnDone
+            }
+        }
+    }
+    
     var hasGroupMemberRequestors: Bool? {
         didSet {
             if self.header != nil {
@@ -166,6 +175,10 @@ class MembersController: UICollectionViewController {
             header?.isMembersView = isMembersView ?? true
         }
         return header!
+    }
+    
+    @objc func dismissView() {
+        self.dismiss(animated: true, completion: nil)
     }
 }
 

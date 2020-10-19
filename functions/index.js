@@ -47,6 +47,25 @@ var DispatchGroup = (function() {
     return DispatchGroup;
 })()
 
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
 // ------- End helper ----------
 
 
@@ -927,21 +946,6 @@ exports.updateRecommendedUsersOnNumberTiedToAccount = functions.database.ref('/n
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ---------------- Updating counts ----------------
 
 exports.updateGroupFollowersCountOnSubscribe = functions.database.ref('/groupFollowers/{group_id}/{subscribing_user_id}').onCreate((snapshot, context) => {
@@ -1226,19 +1230,22 @@ exports.sendPostToInvited = functions.database.ref('/posts/{group_id}/{post_id}'
 							let twilio_number = twilio_number_snapshot.val().toString();
 
 							// get the id of the user that invited the user
-							snapshot.ref.root.child('/invitedContacts/' + number + "/" + group_id + "/invitedBy").once('value', invited_by_snapshot => {
-								var invited_by_id = "";
-								if (invited_by_snapshot !== null && invited_by_snapshot.val() !== null) {
-									invited_by_id = invited_by_snapshot.val().toString();
+							// snapshot.ref.root.child('/invitedContacts/' + number + "/" + group_id + "/invitedBy").once('value', invited_by_snapshot => {
+
+							// get the id of the user that posted the picture
+							snapshot.ref.root.child('/posts/' + group_id + "/" + post_id + "/userUploaded").once('value', user_uploaded_snapshot => {
+								var user_uploaded = "";
+								if (user_uploaded_snapshot !== null && user_uploaded_snapshot.val() !== null) {
+									user_uploaded = user_uploaded_snapshot.val().toString();
 								}
 
-								snapshot.ref.root.child('/users/' + invited_by_id + '/name').once('value', name_snapshot => {
+								snapshot.ref.root.child('/users/' + user_uploaded + '/name').once('value', name_snapshot => {
 									var name = "";
 									if (name_snapshot !== null && name_snapshot.val() !== null) {
 										name = name_snapshot.val().toString();
 									}
 
-									snapshot.ref.root.child('/users/' + invited_by_id + '/username').once('value', username_snapshot => {
+									snapshot.ref.root.child('/users/' + user_uploaded + '/username').once('value', username_snapshot => {
 										var username = "";
 										if (username_snapshot !== null && username_snapshot.val() !== null) {
 											username = username_snapshot.val().toString();
@@ -1310,6 +1317,110 @@ exports.sendPostToInvited = functions.database.ref('/posts/{group_id}/{post_id}'
 							return null;
 						}
 					}).catch(() => {return null});
+        		}
+        	}).catch(() => {return null});        	
+		})
+		sync.leave(token_0)
+		sync.notify(function() {
+			return null;
+		})
+	}).catch(() => {return null});
+});
+
+// whenever a user joins a group
+// get the contacts that are invited (and that haven't done STOP)
+// send them a message letting them know the user has joined: user name if available else username
+exports.sendGroupJoinToInvited = functions.database.ref('/groups/{group_id}/members/{member_id}').onCreate((snapshot, context) => {
+	// var imagesRef = functions.storage.bucket('group_post_images');
+	
+	const new_member_id = context.params.member_id;
+	const group_id = context.params.group_id;
+	const twilio = require('twilio');
+	const accountSid = functions.config().twilio.sid
+	const authToken  = functions.config().twilio.token
+	const client = new twilio(accountSid, authToken);
+	// var imageRef = imagesRef.child(group_id).child(post_id);
+	// var path = imageRef.fullPath
+
+	return snapshot.ref.root.child('/invitedContactsForGroup/' + group_id).once('value', invited_numbers => {
+
+		var sync = new DispatchGroup();
+		var token_0 = sync.enter();
+		invited_numbers.forEach(function(number_obj) {
+			var token = sync.enter();
+        	var number = number_obj.key;
+
+        	// check to see that the user hasn't said STOP
+        	snapshot.ref.root.child('/invitedContactsForGroup/' + group_id + '/' + number).once('value', invited_number_snapshot => {
+        		// if the number has value of false, then it has unsubscribed from recieving messages
+        		if (invited_number_snapshot !== null && invited_number_snapshot.val() !== null && invited_number_snapshot.val().toString() === "false") {
+        			// return null;
+        		}
+        		else {
+        			// get the number for the new_member_id if any, if matches existing number then don't send
+        			snapshot.ref.root.child('/users/' + new_member_id + '/phoneNumber').once('value', new_member_phone_snapshot => {
+	        			var new_member_phone = new_member_phone_snapshot.val();
+						if(new_member_phone_snapshot === null || new_member_phone_snapshot.val() === null){
+							new_member_phone = "+10000000000"
+						}
+						if (new_member_phone !== number) {
+							// get the number that was used to send the first message
+				        	snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').once('value', twilio_number_snapshot => {
+				        		if (twilio_number_snapshot !== null && twilio_number_snapshot.val() !== null && twilio_number_snapshot.val() !== "0") {
+									let twilio_number = twilio_number_snapshot.val().toString();
+
+
+									snapshot.ref.root.child('/users/' + new_member_id + '/name').once('value', name_snapshot => {
+										var name = "";
+										if (name_snapshot !== null && name_snapshot.val() !== null) {
+											name = name_snapshot.val().toString();
+										}
+
+										snapshot.ref.root.child('/users/' + new_member_id + '/username').once('value', username_snapshot => {
+											var username = "";
+											if (username_snapshot !== null && username_snapshot.val() !== null) {
+												username = username_snapshot.val().toString();
+											}
+											snapshot.ref.root.child('/groups/' + group_id + '/groupname').once('value', groupname_snapshot => {
+												var groupname = "";
+												if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
+													groupname = groupname_snapshot.val().toString();
+												}
+
+												if ( !validE164(number) ) {
+											        throw new Error('number must be E164 format!')
+											    }
+
+											    // create the message
+											    var message1 = ""
+
+											    if (name === "") { message1 += username }
+											    else { message1 += name }
+
+											    message1 += " has joined "
+											    
+											    if (groupname === "") { message1 += 'the group' }
+											    else { message1 += groupname.replace("_-a-_", " ") }
+
+												message1 += '... join with GroupRoots: https://apps.apple.com/us/app/id1525863510'
+
+											    const postedMessage = {
+											        body: message1,
+											        to: number,  // Text to this number
+											        from: twilio_number // From a valid Twilio number
+											    }
+											    client.messages.create(postedMessage)
+											    sync.leave(token)
+											}).catch(() => {return null});
+										}).catch(() => {return null});
+									}).catch(() => {return null});
+								}
+								else {
+									// return null;
+								}
+							}).catch(() => {return null});
+						}
+        			}).catch(() => {return null});
         		}
         	}).catch(() => {return null});        	
 		})
@@ -1429,10 +1540,11 @@ exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day
 		var current_time = parseFloat(Date.now()/1000) // in seconds
 		users_snapshot.forEach(function(user) {
         	var uid = user.key;
-    		
     		admin.database().ref('/lastOpenedApp/' + uid).once('value', last_opened_snapshot => {
-        		var last_opened_app = last_opened_snapshot.val();
-				last_opened_app = parseFloat(last_opened_app) 	// in seconds
+        		var last_opened_app =  1602658042
+        		if (last_opened_snapshot !== null && last_opened_snapshot.val() !== null) {
+					last_opened_app = parseFloat(last_opened_snapshot.val());
+				}
 
 				// current_time - last_opened_app = number of seconds between
 				// convert number of seconds to nearest days
@@ -1440,7 +1552,7 @@ exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day
 				let num_seconds = current_time - last_opened_app
 				let num_days = Math.floor(num_seconds / 86400)
 
-				if (num_days !== 0 && num_days % 5 === 0) { 
+				if (num_days !== 0 && num_days % 5 === 0) {
 
 					// retrieve the groups the user is subscribed to
 					// for each group
@@ -1458,9 +1570,12 @@ exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day
 							// if the lastPostedDate of the group is more recent than the last time the app was opened
 							// then continue
 							admin.database().ref('/groups/' + group_id + '/lastPostedDate').once('value', last_post_date => {
-								var group_post_date = parseFloat(last_post_date.val());
+								var group_post_date = 0
+								if (last_post_date !== null && last_post_date.val() !== null) {
+									group_post_date = parseFloat(last_post_date.val());
+								}
 								if(group_post_date > last_opened_app){
-									groups_with_new_posts.append(group_id)
+									groups_with_new_posts.push(group_id)
 								}
 								sync.leave(token)
 							}).catch(() => {return null});
@@ -1469,6 +1584,7 @@ exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day
 
 				        sync.notify(function() {
 				        	if (groups_with_new_posts.length > 0) {
+				        		shuffle(groups_with_new_posts);
 				        		admin.database().ref('/groups/' + groups_with_new_posts[0] + '/groupname').once('value', groupname_snapshot => {
 									var groupname = "";
 									if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
@@ -1481,7 +1597,7 @@ exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day
 
 										var message = ""
 										if (groups_with_new_posts.length === 1) {
-											if groupname == "" {
+											if (groupname === "") {
 												message = "A group you're subscribed to has recently posted"
 											}
 											else {
@@ -1489,7 +1605,7 @@ exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day
 											}
 										}
 										else if (groups_with_new_posts.length > 1) {
-											if groupname == "" {
+											if (groupname === "") {
 												message = "Groups you're subscribed to have recently posted"
 											}
 											else {
@@ -1514,8 +1630,79 @@ exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day
         	}).catch(() => {return null});
     	});
   	}).catch(() => {return null});
+});
 
-	return null;
+// https://us-central1-grouproots-1c51f.cloudfunctions.net/test_notif
+exports.test_notif = functions.https.onRequest((req, res) => {
+	const payload = {
+		notification: {
+			title: "test title",
+			body: "test message", // has no badge
+			click_action: "1"
+		}
+	};
+	// admin.messaging().sendToDevice(user_token, payload)
+	admin.messaging().sendToDevice("cFek9UsXGk91r5rSv8gUJ9:APA91bGrGlzleyoA0zsbcw2vKHYnP-RZk5bEsz-0f9ArHgAax6LobtKvbvQZCL0K9U5Fvyb5jz-TfNr5NMBoIn4BC5bip8QAg_99t_pJ3QgOLUsGytAx52Wt7dKzB5qk2dQjM0YFBc-Z", payload)
+});
+
+exports.new_post = functions.https.onRequest((req, res) => {
+	const payload = {
+		notification: {
+			title: "test title",
+			body: "test message", // has no badge
+			click_action: "new_post"
+		}
+	};
+	// admin.messaging().sendToDevice(user_token, payload)
+	admin.messaging().sendToDevice("cFek9UsXGk91r5rSv8gUJ9:APA91bGrGlzleyoA0zsbcw2vKHYnP-RZk5bEsz-0f9ArHgAax6LobtKvbvQZCL0K9U5Fvyb5jz-TfNr5NMBoIn4BC5bip8QAg_99t_pJ3QgOLUsGytAx52Wt7dKzB5qk2dQjM0YFBc-Z", payload)
+});
+
+exports.open_group = functions.https.onRequest((req, res) => {
+	const payload = {
+		notification: {
+			title: "test title",
+			body: "test message", // has no badge
+			click_action: "open_group_-MFNlTzu2pnegCPFqMyz"
+		}
+	};
+	// admin.messaging().sendToDevice(user_token, payload)
+	admin.messaging().sendToDevice("cFek9UsXGk91r5rSv8gUJ9:APA91bGrGlzleyoA0zsbcw2vKHYnP-RZk5bEsz-0f9ArHgAax6LobtKvbvQZCL0K9U5Fvyb5jz-TfNr5NMBoIn4BC5bip8QAg_99t_pJ3QgOLUsGytAx52Wt7dKzB5qk2dQjM0YFBc-Z", payload)
+});
+
+exports.open_group_requestors = functions.https.onRequest((req, res) => {
+	const payload = {
+		notification: {
+			title: "test title",
+			body: "test message", // has no badge
+			click_action: "open_group_member_requestors_-MFNlTzu2pnegCPFqMyz"
+		}
+	};
+	// admin.messaging().sendToDevice(user_token, payload)
+	admin.messaging().sendToDevice("cFek9UsXGk91r5rSv8gUJ9:APA91bGrGlzleyoA0zsbcw2vKHYnP-RZk5bEsz-0f9ArHgAax6LobtKvbvQZCL0K9U5Fvyb5jz-TfNr5NMBoIn4BC5bip8QAg_99t_pJ3QgOLUsGytAx52Wt7dKzB5qk2dQjM0YFBc-Z", payload)
+});
+
+exports.open_group_sub_requestors = functions.https.onRequest((req, res) => {
+	const payload = {
+		notification: {
+			title: "test title",
+			body: "test message", // has no badge
+			click_action: "open_group_subscribe_requestors_-MFNlTzu2pnegCPFqMyz"
+		}
+	};
+	// admin.messaging().sendToDevice(user_token, payload)
+	admin.messaging().sendToDevice("cFek9UsXGk91r5rSv8gUJ9:APA91bGrGlzleyoA0zsbcw2vKHYnP-RZk5bEsz-0f9ArHgAax6LobtKvbvQZCL0K9U5Fvyb5jz-TfNr5NMBoIn4BC5bip8QAg_99t_pJ3QgOLUsGytAx52Wt7dKzB5qk2dQjM0YFBc-Z", payload)
+});
+
+exports.open_post = functions.https.onRequest((req, res) => {
+	const payload = {
+		notification: {
+			title: "test title",
+			body: "test message", // has no badge
+			click_action: "open_post_-MGQvIvjQygTS6arDQJi_-MFNlTzu2pnegCPFqMyz"
+		}
+	};
+	// admin.messaging().sendToDevice(user_token, payload)
+	admin.messaging().sendToDevice("cFek9UsXGk91r5rSv8gUJ9:APA91bGrGlzleyoA0zsbcw2vKHYnP-RZk5bEsz-0f9ArHgAax6LobtKvbvQZCL0K9U5Fvyb5jz-TfNr5NMBoIn4BC5bip8QAg_99t_pJ3QgOLUsGytAx52Wt7dKzB5qk2dQjM0YFBc-Z", payload)
 });
 
 

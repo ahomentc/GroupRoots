@@ -91,16 +91,32 @@ class UserProfileHeader: UICollectionViewCell {
         return label
     }()
     
-    private let bioLabel: UITextView = {
-        let textView = UITextView()
-        textView.font = UIFont.systemFont(ofSize: 14)
-        textView.isScrollEnabled = false
-        textView.isUserInteractionEnabled = false
-        textView.backgroundColor = UIColor.clear
-        textView.isHidden = true
-        textView.textContainer.lineBreakMode = .byWordWrapping
-        return textView
+    private let nameLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 18)
+        label.textAlignment = .left
+        return label
     }()
+    
+    private let bioLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 18)
+        label.textAlignment = .left
+        label.numberOfLines = 0
+        return label
+    }()
+    
+//    private let bioLabel: UITextView = {
+//        let textView = UITextView()
+//        textView.font = UIFont.systemFont(ofSize: 14)
+//        textView.isScrollEnabled = false
+//        textView.isUserInteractionEnabled = false
+//        textView.backgroundColor = UIColor.clear
+//        textView.isHidden = true
+//        textView.textAlignment = .left
+//        textView.textContainer.lineBreakMode = .byWordWrapping
+//        return textView
+//    }()
     
     private let padding: CGFloat = 12
     
@@ -118,6 +134,13 @@ class UserProfileHeader: UICollectionViewCell {
     
     private func sharedInit() {
         NotificationCenter.default.addObserver(self, selector: #selector(reloadData), name: NSNotification.Name.updateUserProfile, object: nil)
+        
+        self.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
+        
+        let border = UIView()
+        border.backgroundColor = UIColor.init(white: 0.8, alpha: 1)
+        addSubview(border)
+        border.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 0.5)
     }
     
     @objc func setFirstData() {
@@ -139,20 +162,28 @@ class UserProfileHeader: UICollectionViewCell {
         let attributedText = NSMutableAttributedString(string: bio, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
         bioLabel.attributedText = attributedText
         
+        let name = user.name
+        nameLabel.isHidden = false
+        let attributedTextName = NSMutableAttributedString(string: name, attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
+        nameLabel.attributedText = attributedTextName
+        
         if bio != "" {
+            addSubview(nameLabel)
+            nameLabel.anchor(top: stackView.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding)
+            
             addSubview(bioLabel)
-            bioLabel.anchor(top: stackView.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding)
+            bioLabel.anchor(top: nameLabel.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: 5, paddingLeft: padding + 10, paddingRight: padding)
             
             if user.uid == currentLoggedInUserId {
                 addSubview(GroupButton)
-                GroupButton.anchor(top: bioLabel.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding, paddingRight: padding, height: 34)
+                GroupButton.anchor(top: bioLabel.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding + 5, paddingLeft: padding, paddingRight: padding, height: 34)
             }
             else {
                 addSubview(GroupButton)
-                GroupButton.anchor(top: bioLabel.bottomAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
+                GroupButton.anchor(top: bioLabel.bottomAnchor, right: rightAnchor, paddingTop: padding + 5, paddingLeft: padding + 10, paddingRight: padding, height: 34)
                 
                 addSubview(followButton)
-                followButton.anchor(top: bioLabel.bottomAnchor, left: profileImageView.rightAnchor, right: GroupButton.leftAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding, height: 34)
+                followButton.anchor(top: bioLabel.bottomAnchor, left: profileImageView.rightAnchor, right: GroupButton.leftAnchor, paddingTop: padding + 5, paddingLeft: padding + 10, paddingRight: padding, height: 34)
             }
         }
         else {

@@ -1,0 +1,28 @@
+[debug] [2020-10-19T03:34:01.518Z] ----------------------------------------------------------------------
+[debug] [2020-10-19T03:34:01.520Z] Command:       /usr/local/bin/node /usr/local/bin/firebase deploy --only functions
+[debug] [2020-10-19T03:34:01.521Z] CLI Version:   8.0.2
+[debug] [2020-10-19T03:34:01.521Z] Platform:      darwin
+[debug] [2020-10-19T03:34:01.521Z] Node Version:  v10.15.3
+[debug] [2020-10-19T03:34:01.526Z] Time:          Sun Oct 18 2020 20:34:01 GMT-0700 (Pacific Daylight Time)
+[debug] [2020-10-19T03:34:01.526Z] ----------------------------------------------------------------------
+[debug] [2020-10-19T03:34:01.526Z] 
+[debug] [2020-10-19T03:34:01.539Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2020-10-19T03:34:01.539Z] > authorizing via signed-in user
+[debug] [2020-10-19T03:34:01.540Z] [iam] checking project grouproots-1c51f for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2020-10-19T03:34:01.544Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2020-10-19T03:34:01.545Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+ <request body omitted>
+[debug] [2020-10-19T03:34:31.580Z] [iam] error while checking permissions, command may fail: FirebaseError: Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2020-10-19T03:34:31.582Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2020-10-19T03:34:31.582Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+ <request body omitted>
+[debug] [2020-10-19T03:35:01.589Z] [functions] service account IAM check errored, deploy may fail:Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci {"name":"FirebaseError","children":[],"exit":1,"message":"Authentication Error: Your credentials are no longer valid. Please run \u001b[1mfirebase login --reauth\u001b[22m\n\nFor CI servers and headless environments, generate a new token with \u001b[1mfirebase login:ci\u001b[22m","status":500}
+[debug] [2020-10-19T03:38:17.369Z] TypeError: Cannot read property 'wanted' of undefined
+    at /usr/local/lib/node_modules/firebase-tools/lib/checkFirebaseSDKVersion.js:38:51
+    at process._tickCallback (internal/process/next_tick.js:68:7)
+[error] 
+[error] Error: An unexpected error has occurred.

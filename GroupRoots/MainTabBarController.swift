@@ -16,6 +16,12 @@ class MainTabBarController: UITabBarController {
         }
     }
     
+    var newPost: Bool = false
+    var groupToOpen: String = ""
+    var groupMemberRequestorsToOpenFor: String = ""
+    var groupSubscribeRequestorsToOpenFor: String = ""
+    var postAndGroupToOpen: String = ""
+    
     private let loadingScreenView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
@@ -61,25 +67,22 @@ class MainTabBarController: UITabBarController {
                         self.setupViewControllers()
                         
                         Database.database().openedApp(completion: { _ in })
-                        
-//                        Database.database().groupRootsUserExists(withUID: Auth.auth().currentUser!.uid, completion: { (exists) in
-//                            if exists {
-//        //                        self.setupViewControllers()
-//                                print("exists")
-//                            }
-//                            else {
-//                                print("doesn't exist")
-//                                do {
-//                                    try Auth.auth().signOut()
-//                                    let loginController = LoginPhoneController()
-//                                    let navController = UINavigationController(rootViewController: loginController)
-//                                    navController.modalPresentationStyle = .fullScreen
-//                                    self.present(navController, animated: true, completion: nil)
-//                                } catch let err {
-//                                    print("Failed to sign out:", err)
-//                                }
-//                            }
-//                        })
+                        Database.database().groupRootsUserExists(withUID: Auth.auth().currentUser!.uid, completion: { (exists) in
+                            if exists {
+        //                        self.setupViewControllers()
+                            }
+                            else {
+                                do {
+                                    try Auth.auth().signOut()
+                                    let loginController = LoginPhoneController()
+                                    let navController = UINavigationController(rootViewController: loginController)
+                                    navController.modalPresentationStyle = .fullScreen
+                                    self.present(navController, animated: true, completion: nil)
+                                } catch let err {
+                                    print("Failed to sign out:", err)
+                                }
+                            }
+                        })
                     }
                 }
                 else {
@@ -96,23 +99,21 @@ class MainTabBarController: UITabBarController {
                 self.setupViewControllers()
                 
                 // presentLoginController if GroupRoots non-auth user doesn't exist
-//                Database.database().groupRootsUserExists(withUID: Auth.auth().currentUser!.uid, completion: { (exists) in
-//                    if exists {
-//                        print("exists")
-//                    }
-//                    else {
-//                        print("doesn't exist")
-//                        do {
-//                            try Auth.auth().signOut()
-//                            let loginController = LoginPhoneController()
-//                            let navController = UINavigationController(rootViewController: loginController)
-//                            navController.modalPresentationStyle = .fullScreen
-//                            self.present(navController, animated: true, completion: nil)
-//                        } catch let err {
-//                            print("Failed to sign out:", err)
-//                        }
-//                    }
-//                })
+                Database.database().groupRootsUserExists(withUID: Auth.auth().currentUser!.uid, completion: { (exists) in
+                    if exists {
+                    }
+                    else {
+                        do {
+                            try Auth.auth().signOut()
+                            let loginController = LoginPhoneController()
+                            let navController = UINavigationController(rootViewController: loginController)
+                            navController.modalPresentationStyle = .fullScreen
+                            self.present(navController, animated: true, completion: nil)
+                        } catch let err {
+                            print("Failed to sign out:", err)
+                        }
+                    }
+                })
             }
         }
         
@@ -179,10 +180,106 @@ class MainTabBarController: UITabBarController {
         }
         self.viewControllers = [homeNavController, searchNavController, plusNavController, likeNavController, userProfileNavController]
         
-        if loadedFromNotif {
+        
+//        let alert = UIAlertController(title: "test", message: "", preferredStyle: .alert)
+//        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+//        self.present(alert, animated: true)
+        
+        if self.loadedFromNotif {
             self.selectedIndex = 3
         }
+        else if self.newPost {
+            self.createNewPost()
+        }
+        else if self.groupToOpen != "" {
+            Database.database().groupExists(groupId: self.groupToOpen, completion: { (exists) in
+                if exists {
+                    Database.database().fetchGroup(groupId: self.groupToOpen, completion: { (group) in
+                        let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+                        groupProfileController.group = group
+                        groupProfileController.modalPresentationCapturesStatusBarAppearance = true
+                        groupProfileController.isModallyPresented = true
+                        let navController = UINavigationController(rootViewController: groupProfileController)
+                        navController.modalPresentationStyle = .popover
+                        self.present(navController, animated: true, completion: nil)
+                    })
+                }
+                else {
+                    return
+                }
+            })
+        }
+        else if self.groupMemberRequestorsToOpenFor != "" {
+            Database.database().groupExists(groupId: self.groupMemberRequestorsToOpenFor, completion: { (exists) in
+                if exists {
+                    Database.database().fetchGroup(groupId: self.groupMemberRequestorsToOpenFor, completion: { (group) in
+                        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+                            let membersController = MembersController(collectionViewLayout: UICollectionViewFlowLayout())
+                            membersController.group = group
+                            membersController.isInGroup = inGroup
+                            membersController.isMembersView = false
+                            membersController.isModallyPresented = true
+                            let navController = UINavigationController(rootViewController: membersController)
+                            navController.modalPresentationStyle = .popover
+                            self.present(navController, animated: true, completion: nil)
+                        }) { (err) in
+                            return
+                        }
+                    })
+                }
+                else {
+                    return
+                }
+            })
+        }
+        else if self.groupSubscribeRequestorsToOpenFor != "" {
+            Database.database().groupExists(groupId: self.groupSubscribeRequestorsToOpenFor, completion: { (exists) in
+                if exists {
+                    Database.database().fetchGroup(groupId: self.groupSubscribeRequestorsToOpenFor, completion: { (group) in
+                        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+                            let groupFollowersController = GroupFollowersController(collectionViewLayout: UICollectionViewFlowLayout())
+                            groupFollowersController.group = group
+                            groupFollowersController.isInGroup = inGroup
+                            groupFollowersController.isPrivate = group.isPrivate
+                            groupFollowersController.isModallyPresented = true
+                            if group.isPrivate ?? false {
+                                // if group is private enable go to the requestors page
+                                groupFollowersController.isFollowersView = false
+                            }
+                            let navController = UINavigationController(rootViewController: groupFollowersController)
+                            navController.modalPresentationStyle = .popover
+                            self.present(navController, animated: true, completion: nil)
+                        }) { (err) in
+                            return
+                        }
+                    })
+                }
+                else {
+                    return
+                }
+            })
+        }
+        else if self.postAndGroupToOpen != "" {
+            let layout = UICollectionViewFlowLayout()
+            layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
+            layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+            layout.minimumLineSpacing = CGFloat(0)
+            
+            let postIdAndGroupIdArr = self.postAndGroupToOpen.split(separator: "_")
+            let postId = String(postIdAndGroupIdArr[0])
+            let groupId = String(postIdAndGroupIdArr[1])
+            
+            Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
+                let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
+                largeImageViewController.group = post.group
+                largeImageViewController.postToScrollToId = post.id
+                let navController = UINavigationController(rootViewController: largeImageViewController)
+                navController.modalPresentationStyle = .overCurrentContext
+                self.present(navController, animated: true, completion: nil)
+            })
+        }
     }
+    
     
     private func presentLoginController() {
         DispatchQueue.main.async { // wait until MainTabBarController is inside UI
@@ -253,57 +350,61 @@ extension MainTabBarController: UITabBarControllerDelegate {
 //            tabBar.unselectedItemTintColor = UIColor.gray
         }
         if index == 2 {
-            var config = YPImagePickerConfiguration()
-            config.library.isSquareByDefault = false
-            config.shouldSaveNewPicturesToAlbum = false
-            config.library.mediaType = .photoAndVideo
-            config.hidesStatusBar = false
-            config.startOnScreen = YPPickerScreen.library
-            config.targetImageSize = .cappedTo(size: 600)
-            config.video.compression = AVAssetExportPresetMediumQuality
-            let picker = YPImagePicker(configuration: config)
-            
-            var preSelectedGroup: Group?
-            if let topController = UIApplication.topViewController() {
-                if type(of: topController) == GroupProfileController.self {
-                    let groupProfile = topController as? GroupProfileController
-                    preSelectedGroup = groupProfile?.group
-                }
-            }
-            
-            picker.didFinishPicking { [unowned picker] items, cancelled in
-                if cancelled {
-                    print("Picker was canceled")
-                    picker.dismiss(animated: true, completion: nil)
-                    return
-                }
-                _ = items.map { print("🧀 \($0)") }
-                if let firstItem = items.first {
-                    switch firstItem {
-                    case .photo(let photo):
-                        let location = photo.asset?.location
-                        // need to do self.scrollToPreSelected() too
-                        let sharePhotoController = SharePhotoController()
-                        sharePhotoController.preSelectedGroup = preSelectedGroup
-                        sharePhotoController.selectedImage = photo.image
-                        sharePhotoController.suggestedLocation = location
-                        picker.pushViewController(sharePhotoController, animated: true)
-                        
-                    case .video(let video):
-                        let location = video.asset?.location
-                        let sharePhotoController = SharePhotoController()
-                        sharePhotoController.preSelectedGroup = preSelectedGroup
-                        sharePhotoController.selectedVideoURL = video.url
-                        sharePhotoController.selectedImage = video.thumbnail
-                        sharePhotoController.suggestedLocation = location
-                        picker.pushViewController(sharePhotoController, animated: true)
-                    }
-                }
-            }
-            present(picker, animated: true, completion: nil)
+            self.createNewPost()
             return false
         }
         return true
+    }
+    
+    func createNewPost(){
+        var config = YPImagePickerConfiguration()
+        config.library.isSquareByDefault = false
+        config.shouldSaveNewPicturesToAlbum = false
+        config.library.mediaType = .photoAndVideo
+        config.hidesStatusBar = false
+        config.startOnScreen = YPPickerScreen.library
+        config.targetImageSize = .cappedTo(size: 600)
+        config.video.compression = AVAssetExportPresetMediumQuality
+        let picker = YPImagePicker(configuration: config)
+        
+        var preSelectedGroup: Group?
+        if let topController = UIApplication.topViewController() {
+            if type(of: topController) == GroupProfileController.self {
+                let groupProfile = topController as? GroupProfileController
+                preSelectedGroup = groupProfile?.group
+            }
+        }
+        
+        picker.didFinishPicking { [unowned picker] items, cancelled in
+            if cancelled {
+                print("Picker was canceled")
+                picker.dismiss(animated: true, completion: nil)
+                return
+            }
+            _ = items.map { print("🧀 \($0)") }
+            if let firstItem = items.first {
+                switch firstItem {
+                case .photo(let photo):
+                    let location = photo.asset?.location
+                    // need to do self.scrollToPreSelected() too
+                    let sharePhotoController = SharePhotoController()
+                    sharePhotoController.preSelectedGroup = preSelectedGroup
+                    sharePhotoController.selectedImage = photo.image
+                    sharePhotoController.suggestedLocation = location
+                    picker.pushViewController(sharePhotoController, animated: true)
+                    
+                case .video(let video):
+                    let location = video.asset?.location
+                    let sharePhotoController = SharePhotoController()
+                    sharePhotoController.preSelectedGroup = preSelectedGroup
+                    sharePhotoController.selectedVideoURL = video.url
+                    sharePhotoController.selectedImage = video.thumbnail
+                    sharePhotoController.suggestedLocation = location
+                    picker.pushViewController(sharePhotoController, animated: true)
+                }
+            }
+        }
+        present(picker, animated: true, completion: nil)
     }
 }
 

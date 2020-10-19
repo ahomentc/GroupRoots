@@ -135,7 +135,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         button.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
         button.layer.borderWidth = 0
         button.layer.cornerRadius = 5
-        button.backgroundColor = .white
+        button.backgroundColor = .clear
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         button.isUserInteractionEnabled = true
         button.addTarget(self, action: #selector(handleInviteTap), for: .touchUpInside)
@@ -191,6 +191,18 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
         self.addSubview(collectionView)
+        
+        self.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
+        
+        let above_border = UIView()
+        above_border.backgroundColor = UIColor.init(white: 0.8, alpha: 1)
+        addSubview(above_border)
+        above_border.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingBottom: 4, height: 0.5)
+        
+        let border = UIView()
+        border.backgroundColor = UIColor.white
+        addSubview(border)
+        border.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 4)
         
     }
     

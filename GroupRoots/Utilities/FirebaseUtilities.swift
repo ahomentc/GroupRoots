@@ -493,10 +493,12 @@ extension Database {
     
     func groupRootsUserExists(withUID uid: String, completion: @escaping (Bool) -> ()) {
         Database.database().reference().child("users").child(uid).child("username").observeSingleEvent(of: .value, with: { (snapshot) in
-            guard (snapshot.value as? [String: Any]) != nil else {
+            guard (snapshot.value as? String) != nil else {
                 completion(false)
+                print("false")
                 return
             }
+            print("true")
             completion(true)
         }) { (err) in
             print("Failed to fetch user from database:", err)

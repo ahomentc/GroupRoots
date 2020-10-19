@@ -11,6 +11,7 @@ import FirebaseDatabase
 
 protocol CommentCellDelegate {
     func didTapUser(user: User)
+    func didTapReply(username: String)
 }
 
 class CommentCell: UICollectionViewCell, UITextViewDelegate {
@@ -174,6 +175,12 @@ class CommentCell: UICollectionViewCell, UITextViewDelegate {
             let timeAgoDisplay = comment.creationDate.timeAgoDisplayShort()
             attributedText.append(NSMutableAttributedString(string: timeAgoDisplay, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.gray]))
             
+            let replyText = NSMutableAttributedString(string: "    reply", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.gray, .paragraphStyle: paragraphStyle])
+            replyText.addAttribute(NSAttributedString.Key.underlineStyle, value: 0, range: NSMakeRange(0,replyText.length))
+            replyText.addAttribute(NSAttributedString.Key.underlineColor, value: UIColor.black, range: NSMakeRange(0, replyText.length))
+            replyText.addAttribute(NSAttributedString.Key.link, value: "reply_" + comment.user.username, range: NSMakeRange(0,replyText.length))
+            attributedText.append(replyText)
+            
             self.textView.attributedText = attributedText
         }
         self.textView.linkTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
@@ -210,6 +217,12 @@ class CommentCell: UICollectionViewCell, UITextViewDelegate {
             return true
         }
         else {
+            // check if reply string
+            if URL_Interacted.absoluteString.contains("reply_") {
+                let username = URL_Interacted.absoluteString.replacingOccurrences(of: "reply_", with: "")
+                self.delegate?.didTapReply(username: username)
+            }
+            
             let data_string = URL_Interacted.absoluteString.fromBase64()
             let data = data_string?.data(using: .utf8)
             if data == nil { return false }

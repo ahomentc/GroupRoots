@@ -62,12 +62,27 @@ class CommentInputAccessoryView: UIView, UITextViewDelegate {
         addSubview(commentTextView)
         commentTextView.anchor(top: safeAreaLayoutGuide.topAnchor, left: safeAreaLayoutGuide.leftAnchor, bottom: safeAreaLayoutGuide.bottomAnchor, right: submitButton.leftAnchor, paddingTop: 8, paddingLeft: 12, paddingBottom: 8)
         
-//        let lineSeparatorView = UIView()
-//        lineSeparatorView.backgroundColor = UIColor.rgb(red: 230, green: 230, blue: 230)
-//        addSubview(lineSeparatorView)
-//        lineSeparatorView.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, height: 0.5)
+        let lineSeparatorView = UIView()
+        lineSeparatorView.backgroundColor = UIColor.init(white: 0.7, alpha: 1)
+        addSubview(lineSeparatorView)
+        lineSeparatorView.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, height: 0.5)
                 
         NotificationCenter.default.addObserver(self, selector: #selector(handleTextChange), name: UITextView.textDidChangeNotification, object: nil)
+    }
+    
+    public func addAtUser(username: String){
+        DispatchQueue.main.async {
+            self.commentTextView.becomeFirstResponder()
+            if username != "" && !username.contains(".") && !username.contains("#") {
+                Database.database().fetchUserFromUsername(username: username, completion: { (user) in
+                    if !self.atUsers.contains(user) {
+                        self.atUsers.append(user)
+                    }
+                })
+            }
+            self.commentTextView.placeholderLabel.isHidden = true
+            self.commentTextView.text = "@" + username + " "
+        }
     }
     
     func clearCommentTextField() {

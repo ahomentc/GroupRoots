@@ -25,8 +25,48 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDelegat
         window?.makeKeyAndVisible()
         window?.backgroundColor = .black
         let mainTabBarController = MainTabBarController()
-        if launchOptions?[UIApplication.LaunchOptionsKey.remoteNotification] != nil {
-            mainTabBarController.loadedFromNotif = true
+        let remoteNotif = launchOptions?[UIApplication.LaunchOptionsKey.remoteNotification] as? [String: Any]
+        if remoteNotif != nil {
+            let aps = remoteNotif!["aps"] as? [String:Any]
+            if aps != nil {
+                let category = aps!["category"] as? String
+                if category == nil {
+                    // default action when no category is to go to notifications page
+                    mainTabBarController.loadedFromNotif = true
+                }
+                else {
+                    // do custom action based on category
+                    if category!.contains("new_post") {
+                        // takes you to the new post page
+                        mainTabBarController.newPost = true
+                    }
+                    else if category!.contains("open_post") {
+                        // for viewed by notification
+                        // add a thing to open viewers directly too
+                        
+                        // opens a specific post
+                        // format of open_post_<post_id>_<group_id>
+                        let postIdAndGroupId = category!.replacingOccurrences(of: "open_post_", with: "")
+                        mainTabBarController.postAndGroupToOpen = postIdAndGroupId
+                    }
+                    else if category!.contains("open_group_member_requestors") {
+                        // format of open_group_member_requestors_<group_id>
+                        let group_id = category!.replacingOccurrences(of: "open_group_member_requestors_", with: "")
+                        mainTabBarController.groupMemberRequestorsToOpenFor = group_id
+                    }
+                    else if category!.contains("open_group_subscribe_requestors") {
+                        // format of open_group_subscribe_requestors_<group_id>
+                        let group_id = category!.replacingOccurrences(of: "open_group_subscribe_requestors_", with: "")
+                        mainTabBarController.groupSubscribeRequestorsToOpenFor = group_id
+                    }
+                    else if category!.contains("open_group") {
+                        // probably to click "join" button on group profile
+                        // format of open_group_<group_id>
+                        let group_id = category!.replacingOccurrences(of: "open_group_", with: "")
+                        mainTabBarController.groupToOpen = group_id
+                    }
+                }
+            }
         }
         window?.rootViewController = mainTabBarController
         return true

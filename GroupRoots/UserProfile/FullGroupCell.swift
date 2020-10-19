@@ -186,7 +186,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         collectionView?.register(PlusCell.self, forCellWithReuseIdentifier: PlusCell.cellId)
         collectionView.isUserInteractionEnabled = true
         
-        collectionView.backgroundColor = UIColor.clear
+        collectionView.backgroundColor = UIColor.white
         collectionView.showsHorizontalScrollIndicator = false
         insertSubview(collectionView, at: 5)
     }

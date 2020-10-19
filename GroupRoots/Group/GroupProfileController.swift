@@ -26,6 +26,15 @@ class GroupProfileController: HomePostCellViewController {
     var canView: Bool? = nil
     var isInFollowPending: Bool? = nil
     let padding: CGFloat = 12
+    
+    var isModallyPresented: Bool = false {
+        didSet{
+            if isModallyPresented {
+                let btnDone = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(dismissView))
+                self.navigationItem.leftBarButtonItem = btnDone
+            }
+        }
+    }
 
     private var header: GroupProfileHeader?
 
@@ -68,13 +77,16 @@ class GroupProfileController: HomePostCellViewController {
             overrideUserInterfaceStyle = .light
         }
         
-        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
-        navigationItem.backBarButtonItem?.tintColor = .black
+//        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
+//        navigationItem.backBarButtonItem?.tintColor = .black
         
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
         self.navigationController?.navigationBar.isTranslucent = false
-        self.navigationController?.navigationBar.backgroundColor = UIColor.white
+//        self.navigationController?.navigationBar.backgroundColor = UIColor.white
+        self.navigationController?.navigationBar.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
+        self.navigationController?.navigationBar.barTintColor = UIColor.init(white: 0.98, alpha: 1)
+        self.view.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
         
 //        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
         let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor.black]
@@ -90,6 +102,7 @@ class GroupProfileController: HomePostCellViewController {
 
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        refreshControl.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
         collectionView?.refreshControl = refreshControl
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name(rawValue: "updateMembers"), object: nil)
@@ -116,7 +129,10 @@ class GroupProfileController: HomePostCellViewController {
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
         self.navigationController?.navigationBar.isTranslucent = false
-        self.navigationController?.navigationBar.backgroundColor = UIColor.white
+//        self.navigationController?.navigationBar.backgroundColor = UIColor.white
+        self.navigationController?.navigationBar.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
+        self.navigationController?.navigationBar.barTintColor = UIColor.init(white: 0.98, alpha: 1)
+        self.view.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -384,6 +400,10 @@ class GroupProfileController: HomePostCellViewController {
     
     func handleDidView(groupPost: GroupPost) {
         Database.database().addToViewedPosts(postId: groupPost.id, completion: { _ in })
+    }
+    
+    @objc func dismissView() {
+        self.dismiss(animated: true, completion: nil)
     }
 }
 

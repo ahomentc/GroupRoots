@@ -265,14 +265,15 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
     }()
     
     private let upperCoverView: UIView = {
-//        let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 350))
-        let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 300))
+//        let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 300))
+        let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 170))
         let gradient = CAGradientLayer()
         gradient.frame = backgroundView.bounds
-        let startColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.4).cgColor
+        let startColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.6).cgColor
         let endColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0).cgColor
         gradient.colors = [startColor, endColor]
         backgroundView.layer.insertSublayer(gradient, at: 3)
+//        backgroundView.backgroundColor = .blue
         return backgroundView
     }()
     
@@ -339,9 +340,9 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         insertSubview(coverView, at: 3)
         
         // was 350
-        upperCoverView.heightAnchor.constraint(equalToConstant: 300).isActive = true
+        upperCoverView.heightAnchor.constraint(equalToConstant: 170).isActive = true
         upperCoverView.layer.cornerRadius = 0
-        upperCoverView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 300)
+        upperCoverView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 170)
         upperCoverView.isUserInteractionEnabled = false
         insertSubview(upperCoverView, at: 3)
         

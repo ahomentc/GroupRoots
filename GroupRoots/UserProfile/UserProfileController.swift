@@ -39,7 +39,10 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
         self.navigationController?.navigationBar.isTranslucent = false
-        self.navigationController?.navigationBar.backgroundColor = UIColor.white
+        self.navigationController?.navigationBar.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
+        self.navigationController?.navigationBar.barTintColor = UIColor.init(white: 0.98, alpha: 1)
+        self.view.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
+
         
 //        let textAttributes = [NSAttributedString.Key.font: UIFont(name: "Avenir", size: 18)!, NSAttributedString.Key.foregroundColor : UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)]
 //        navigationController?.navigationBar.titleTextAttributes = textAttributes
@@ -60,6 +63,7 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
 
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        refreshControl.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
         collectionView?.refreshControl = refreshControl
 
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name(rawValue: "createdGroup"), object: nil)
@@ -88,7 +92,7 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
         self.navigationController?.navigationBar.isTranslucent = false
-        self.navigationController?.navigationBar.backgroundColor = UIColor.white
+//        self.navigationController?.navigationBar.backgroundColor = UIColor.white
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -331,6 +335,7 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         }
         if indexPath.item == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MembershipLabelCell.cellId, for: indexPath) as! MembershipLabelCell
+            cell.numberOfGroups = groups.count
             return cell
         }
 //        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
@@ -357,17 +362,17 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         guard let user = user else { return CGSize(width: view.frame.width, height: 115) }
         let bio = user.bio
         if bio == "" {
-            return CGSize(width: view.frame.width, height: 115)
+            return CGSize(width: view.frame.width, height: 145)
         }
         else {
             if bio.count < 40 {
-                return CGSize(width: view.frame.width, height: 145)
+                return CGSize(width: view.frame.width, height: 175)
             }
             else if bio.count < 80 {
-                return CGSize(width: view.frame.width, height: 165)
+                return CGSize(width: view.frame.width, height: 195)
             }
             else {
-                return CGSize(width: view.frame.width, height: 185)
+                return CGSize(width: view.frame.width, height: 215)
             }
         }
     }
