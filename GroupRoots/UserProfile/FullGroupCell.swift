@@ -22,25 +22,56 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     
     var group: Group? {
         didSet {
-            configureCell()
+//            configureGroupCell()
+            configureGroupHeader()
         }
     }
     
     var user: User? {
         didSet {
-            configureCell()
+            configureGroupCell()
         }
     }
     
-    var isInGroup: Bool?
+    var isInGroup: Bool? {
+        didSet {
+            configureGroupCell()
+        }
+    }
     
-    var groupPosts = [GroupPost]()
-    var groupMembers = [User]()
-    var canView: Bool? = nil
+    var groupPosts: [GroupPost]? {
+        didSet {
+            configureGroupCell()
+        }
+    }
+    
+    var groupMembers: [User]? {
+        didSet {
+            configureGroupHeader()
+//            configureGroupCell()
+        }
+    }
+    
+    var canView: Bool? {
+        didSet {
+            configureGroupCell()
+        }
+    }
+    
+    var isInFollowPending: Bool? {
+        didSet {
+            configureGroupCell()
+        }
+    }
+    
+    var isGroupHidden: Bool? {
+        didSet {
+            configureGroupCell()
+        }
+    }
     
     var delegate: FullGroupCellDelegate?
     
-    var isInFollowPending: Bool? = nil
     
     private let hiddenIcon: UIButton = {
         let button = UIButton(type: .system)
@@ -53,9 +84,11 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 16)
         label.textAlignment = .center
-        let tap = UITapGestureRecognizer(target: self, action: #selector(handleGroupTap))
-        label.isUserInteractionEnabled = true
-        label.addGestureRecognizer(tap)
+//        let tap = UITapGestureRecognizer(target: self, action: #selector(handleGroupTap))
+//        label.isUserInteractionEnabled = true
+//        label.addGestureRecognizer(tap)
+        label.isUserInteractionEnabled = false
+        // ^^^ is false because the background to it (the whole cell) takes you to group
         return label
     }()
     
@@ -97,6 +130,23 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         return button
     }()
     
+    private lazy var emptyPostButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.addTarget(self, action: #selector(postToGroup), for: .touchUpInside)
+        button.setTitle("Post", for: .normal)
+        button.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
+        button.backgroundColor = UIColor.white
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+        button.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
+        button.layer.cornerRadius = 5
+        button.layer.borderWidth = 1
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.isUserInteractionEnabled = true
+        button.isHidden = true
+        return button
+    }()
+    
     var headerCollectionView: UICollectionView!
     var collectionView: UICollectionView!
     
@@ -111,18 +161,29 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         super.init(coder: aDecoder)
         sharedInit()
     }
-    
+
     override func prepareForReuse() {
         super.prepareForReuse()
         self.backgroundColor = UIColor(white: 0, alpha: 0)
         self.group = nil
+        
         self.groupnameLabel.text = ""
-        self.groupPosts = []
-        self.groupMembers = []
+        let emptyString = NSMutableAttributedString(string:"")
+        self.groupnameLabel.attributedText = emptyString
+        
+        self.groupPosts = nil
+        self.groupMembers = nil
+        self.isGroupHidden = nil
+        self.isInFollowPending = nil
+        self.canView = nil
+        self.isInGroup = nil
+        
         collectionView.isHidden = false
         noPostsLabel.isHidden = true
         privateLabel.isHidden = true
         subscribeButton.isHidden = true
+        emptyPostButton.isHidden = true
+        hiddenIcon.isHidden = true
         collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
     }
     
@@ -136,7 +197,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         groupnameLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 8)
         
         addSubview(noPostsLabel)
-        noPostsLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 200)
+        noPostsLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 170)
         
         addSubview(privateLabel)
         privateLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 170)
@@ -144,20 +205,23 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         addSubview(subscribeButton)
         subscribeButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 220, paddingLeft: UIScreen.main.bounds.width/3, paddingRight: UIScreen.main.bounds.width/3, height: 40)
         
+        addSubview(emptyPostButton)
+        emptyPostButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 220, paddingLeft: UIScreen.main.bounds.width/3, paddingRight: UIScreen.main.bounds.width/3, height: 40)
+        
         let separatorView = UIView()
         separatorView.backgroundColor = UIColor(white: 0, alpha: 0.25)
         addSubview(separatorView)
         separatorView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 50, paddingRight: 50, height: 0.5)
         
         // need this because group will already be loaded but order might change so need to reload cell
-        configureCell()
+//        configureCell()
         
         let header_layout = UICollectionViewFlowLayout()
         header_layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
 //        header_layout.itemSize = CGSize(width: 60, height: 60)
 //        header_layout.minimumLineSpacing = CGFloat(20)
         
-        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: 15, width: UIScreen.main.bounds.width, height: 120), collectionViewLayout: header_layout)
+        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: 35, width: UIScreen.main.bounds.width, height: 105), collectionViewLayout: header_layout)
         headerCollectionView.delegate = self
         headerCollectionView.dataSource = self
         headerCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -174,7 +238,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.minimumLineSpacing = CGFloat(0)
         
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: 140, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width/3), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 160, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width/3), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -186,148 +250,97 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         collectionView?.register(PlusCell.self, forCellWithReuseIdentifier: PlusCell.cellId)
         collectionView.isUserInteractionEnabled = true
         
-        collectionView.backgroundColor = UIColor.white
+        collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
         insertSubview(collectionView, at: 5)
     }
     
-    private func configureCell() {
+    // doing this here to load faster
+    private func configureGroupHeader(){
+        guard let groupMembers = groupMembers else { return }
         guard let group = group else { return }
-        guard let user = user else { return }
-        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
-        // then actually hide it, but can't use "isGroupHiddenOnProfile" because current user will be different
-        Database.database().isGroupHiddenOnProfile(groupId: group.groupId, completion: { (isHidden) in
-            // only allow this if is in group
-            if isHidden && currentLoggedInUserId == user.uid {
-                self.hiddenIcon.isHidden = false
-            }
-            else {
-               self.hiddenIcon.isHidden = true
-            }
-        }) { (err) in
-            return
-        }
-        
-        Database.database().fetchFirstNGroupMembers(groupId: group.groupId, n: 3, completion: { (first_n_users) in
-            let lockImage = #imageLiteral(resourceName: "lock")
-            let lockIcon = NSTextAttachment()
-            lockIcon.image = lockImage
-            let lockIconString = NSAttributedString(attachment: lockIcon)
+        let lockImage = #imageLiteral(resourceName: "lock")
+        let lockIcon = NSTextAttachment()
+        lockIcon.image = lockImage
+        let lockIconString = NSAttributedString(attachment: lockIcon)
 
-            let balanceFontSize: CGFloat = 16
-            let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
-            //Setting up font and the baseline offset of the string, so that it will be centered
-            let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.black, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
-            
-            if group.groupname != "" {
-                let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
+        let balanceFontSize: CGFloat = 16
+        let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
+        //Setting up font and the baseline offset of the string, so that it will be centered
+        let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.black, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
+        
+        if group.groupname != "" {
+            let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
+            if group.isPrivate ?? false {
+                balanceString.append(lockIconString)
+            }
+            self.groupnameLabel.attributedText = balanceString
+        }
+        else {
+            if groupMembers.count > 2 {
+                var usernames = groupMembers[0].username + " & " + groupMembers[1].username + " & " + groupMembers[2].username
+                if usernames.count > 21 {
+                    usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                    usernames = usernames + "..."
+                }
+                let balanceString = NSMutableAttributedString(string: usernames.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
                 if group.isPrivate ?? false {
                     balanceString.append(lockIconString)
                 }
                 self.groupnameLabel.attributedText = balanceString
             }
-            else {
-                if first_n_users.count > 2 {
-                    var usernames = first_n_users[0].username + " & " + first_n_users[1].username + " & " + first_n_users[2].username
-                    if usernames.count > 21 {
-                        usernames = String(usernames.prefix(21)) // keep only the first 21 characters
-                        usernames = usernames + "..."
-                    }
-                    let balanceString = NSMutableAttributedString(string: usernames.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
-                    if group.isPrivate ?? false {
-                        balanceString.append(lockIconString)
-                    }
-                    self.groupnameLabel.attributedText = balanceString
+            else if groupMembers.count == 2 {
+                var usernames = groupMembers[0].username + " & " + groupMembers[1].username
+                if usernames.count > 21 {
+                    usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                    usernames = usernames + "..."
                 }
-                else if first_n_users.count == 2 {
-                    var usernames = first_n_users[0].username + " & " + first_n_users[1].username
-                    if usernames.count > 21 {
-                        usernames = String(usernames.prefix(21)) // keep only the first 21 characters
-                        usernames = usernames + "..."
-                    }
-                    let balanceString = NSMutableAttributedString(string: usernames.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
-                    if group.isPrivate ?? false {
-                        balanceString.append(lockIconString)
-                    }
-                    self.groupnameLabel.attributedText = balanceString
+                let balanceString = NSMutableAttributedString(string: usernames.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
+                if group.isPrivate ?? false {
+                    balanceString.append(lockIconString)
                 }
-                else if first_n_users.count == 1 {
-                    var usernames = first_n_users[0].username
-                    if usernames.count > 21 {
-                        usernames = String(usernames.prefix(21)) // keep only the first 21 characters
-                        usernames = usernames + "..."
-                    }
-                    let balanceString = NSMutableAttributedString(string: usernames.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
-                    if group.isPrivate ?? false {
-                        balanceString.append(lockIconString)
-                    }
-                    self.groupnameLabel.attributedText = balanceString
-                }
+                self.groupnameLabel.attributedText = balanceString
             }
-        }) { (_) in }
-        
-        loadGroupPosts()
+            else if groupMembers.count == 1 {
+                var usernames = groupMembers[0].username
+                if usernames.count > 21 {
+                    usernames = String(usernames.prefix(21)) // keep only the first 21 characters
+                    usernames = usernames + "..."
+                }
+                let balanceString = NSMutableAttributedString(string: usernames.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
+                if group.isPrivate ?? false {
+                    balanceString.append(lockIconString)
+                }
+                self.groupnameLabel.attributedText = balanceString
+            }
+        }
+        self.headerCollectionView.reloadData()
     }
     
-    func loadGroupPosts(){
-        guard let group = group else { return }
+    private func configureGroupCell(){
+        guard isGroupHidden != nil else { return }
+        guard isInFollowPending != nil else { return }
+        guard canView != nil else { return }
+        guard isInGroup != nil else { return }
+        guard let groupPosts = groupPosts else { return }
+        guard let isGroupHidden = isGroupHidden else { return }
+        guard let user = user else { return }
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
-        groupPosts.removeAll()
-        Database.database().canViewGroupPosts(groupId: group.groupId, completion: { (canView) in
-            if canView{
-                self.canView = true
-                Database.database().fetchAllGroupPosts(groupId: group.groupId, completion: { (countAndPosts) in
-                    Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
-                        self.isInGroup = inGroup
-                        if countAndPosts.count > 0 {
-                            self.groupPosts = countAndPosts[1] as! [GroupPost]
-                            self.groupPosts.sort(by: { (p1, p2) -> Bool in
-                                return p1.creationDate.compare(p2.creationDate) == .orderedDescending
-                            })
-                        }
-                        else {
-                            self.setupEmpty()
-                        }
-                        self.collectionView?.reloadData()
-                        self.collectionView?.refreshControl?.endRefreshing()
-                    }) { (err) in
-                        return
-                    }
-//                    if countAndPosts.count > 0 {
-//                        self.groupPosts = countAndPosts[1] as! [GroupPost]
-//                        self.groupPosts.sort(by: { (p1, p2) -> Bool in
-//                            return p1.creationDate.compare(p2.creationDate) == .orderedDescending
-//                        })
-//                    }
-//                    else {
-//                        self.setupEmpty()
-//                    }
-//                    self.collectionView?.reloadData()
-//                    self.collectionView?.refreshControl?.endRefreshing()
-                }) { (err) in
-                    self.collectionView?.refreshControl?.endRefreshing()
-                }
-            }
-            else {
-                self.canView = false
-                self.setupEmpty()
-            }
-        }) { (err) in
-            return
+        if isGroupHidden && currentLoggedInUserId == user.uid {
+            self.hiddenIcon.isHidden = false
+        }
+        else {
+           self.hiddenIcon.isHidden = true
         }
         
-        Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
-            self.groupMembers = members
-            self.headerCollectionView.reloadData()
-        }) { (_) in }
-        
-        Database.database().isInGroupFollowPending(groupId: group.groupId, withUID: currentLoggedInUserId, completion: { (followPending) in
-            self.isInFollowPending = followPending
-        }) { (err) in
-            return
+        if groupPosts.count == 0 {
+            self.setupEmpty()
         }
+        
+        self.collectionView?.reloadData()
+        self.collectionView?.refreshControl?.endRefreshing()
     }
     
     func setupEmpty(){
@@ -336,6 +349,9 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         if canView ?? true { // no posts
 //            noPostsLabel.isHidden = false
             noPostsLabel.text = "No posts yet."
+            if isInGroup ?? false {
+                emptyPostButton.isHidden = false
+            }
         }
         else { // private so need to set the follow label thing
             if isInFollowPending ?? false {
@@ -353,18 +369,22 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         }
     }
     
+    @objc func postToGroup(){
+        guard let group = group else { return }
+        self.delegate?.postToGroup(group: group)
+    }
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == self.collectionView {
-//            if user != nil && user!.uid == Auth.auth().currentUser?.uid {
             if self.isInGroup != nil && self.isInGroup! {
-                return groupPosts.count + 1
+                return (groupPosts?.count ?? 0) + 1
             }
             else {
-                return groupPosts.count
+                return groupPosts?.count ?? 0
             }
         }
         else {
-            return groupMembers.count + 1
+            return (groupMembers?.count ?? 0) + 1
         }
     }
     
@@ -378,9 +398,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 }
                 else {
                     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfilePhotoGridCell.cellId, for: indexPath) as! GroupProfilePhotoGridCell
-                    if indexPath.item < groupPosts.count {
-                        cell.groupPost = groupPosts[indexPath.item]
-                    }
+                    cell.groupPost = groupPosts?[0]
                     cell.photoImageView.layer.cornerRadius = 12
                     return cell
                 }
@@ -388,13 +406,13 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             else {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfilePhotoGridCell.cellId, for: indexPath) as! GroupProfilePhotoGridCell
                 if self.isInGroup != nil && self.isInGroup! {
-                    if indexPath.item - 1 < groupPosts.count {
-                        cell.groupPost = groupPosts[indexPath.item - 1]
+                    if indexPath.item - 1 < groupPosts?.count ?? 0 {
+                        cell.groupPost = groupPosts?[indexPath.item - 1]
                     }
                 }
                 else {
-                    if indexPath.item < groupPosts.count {
-                        cell.groupPost = groupPosts[indexPath.item]
+                    if indexPath.item < groupPosts?.count ?? 0 {
+                        cell.groupPost = groupPosts?[indexPath.item]
                     }
                 }
                 cell.photoImageView.layer.cornerRadius = 12
@@ -418,9 +436,9 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
                     cell.profileImageUrl = group.groupProfileImageUrl
                     cell.groupname = group.groupname
-                    if groupMembers.count > 0 {
-                        if groupMembers[0].profileImageUrl != nil {
-                            cell.userOneImageUrl = groupMembers[0].profileImageUrl
+                    if groupMembers?.count ?? 0 > 0 {
+                        if groupMembers?[0].profileImageUrl != nil {
+                            cell.userOneImageUrl = groupMembers?[0].profileImageUrl
                         }
                         else {
                             cell.userOneImageUrl = ""
@@ -439,11 +457,11 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 }
                 else {
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: MemberHeaderCell.cellId, for: indexPath) as! MemberHeaderCell
-                    if groupMembers.count == 0 {
+                    if groupMembers?.count == 0 {
                         // do soemting
                     }
-                    if indexPath.item-1 < groupMembers.count {
-                        cell.user = groupMembers[indexPath.item-1]
+                    if indexPath.item-1 < groupMembers?.count ?? 0 {
+                        cell.user = groupMembers?[indexPath.item-1]
                     }
                     cell.group_has_profile_image = true
                     cell.layer.backgroundColor = UIColor.clear.cgColor
@@ -460,9 +478,9 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
                     cell.groupname = group.groupname
 //                    cell.group = group
-                    if groupMembers.count > 0 {
-                        if groupMembers[0].profileImageUrl != nil {
-                            cell.userOneImageUrl = groupMembers[0].profileImageUrl
+                    if groupMembers?.count ?? 0 > 0 {
+                        if groupMembers?[0].profileImageUrl != nil {
+                            cell.userOneImageUrl = groupMembers?[0].profileImageUrl
                         }
                         else {
                             cell.userOneImageUrl = ""
@@ -471,9 +489,9 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     else {
                         cell.userOneImageUrl = ""
                     }
-                    if groupMembers.count > 1 {
-                        if groupMembers[1].profileImageUrl != nil {
-                            cell.userTwoImageUrl = groupMembers[1].profileImageUrl
+                    if groupMembers?.count ?? 0 > 1 {
+                        if groupMembers?[1].profileImageUrl != nil {
+                            cell.userTwoImageUrl = groupMembers?[1].profileImageUrl
                         }
                         else {
                             cell.userTwoImageUrl = ""
@@ -491,14 +509,14 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 }
                 else {
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: MemberHeaderCell.cellId, for: indexPath) as! MemberHeaderCell
-                    if groupMembers.count == 0 {
+                    if groupMembers?.count == 0 {
                         // do something
                         
                         
                         
                         
                     }
-                    cell.user = groupMembers[indexPath.item-1]
+                    cell.user = groupMembers?[indexPath.item-1]
                     cell.group_has_profile_image = false
                     cell.layer.backgroundColor = UIColor.clear.cgColor
                     cell.layer.shadowColor = UIColor.black.cgColor
@@ -514,26 +532,28 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if collectionView == self.collectionView { // collectionview for posts
+            guard let groupPosts = self.groupPosts else { return }
+            guard let isInGroup = self.isInGroup else { return }
             if indexPath.row == 0 {
                 if self.isInGroup != nil && self.isInGroup! {
                     guard let group = group else { return }
                     self.delegate?.postToGroup(group: group)
                 }
                 else {
-                    if indexPath.row < self.groupPosts.count {
-                        delegate?.didTapGroupPost(groupPost: self.groupPosts[indexPath.row], index: indexPath.row)
+                    if indexPath.row < groupPosts.count {
+                        delegate?.didTapGroupPost(groupPost: groupPosts[indexPath.row], index: indexPath.row)
                     }
                 }
             }
-            else if self.groupPosts.count != 0 {
-                if self.isInGroup != nil && self.isInGroup! {
-                    if indexPath.row - 1 < self.groupPosts.count {
-                        delegate?.didTapGroupPost(groupPost: self.groupPosts[indexPath.row - 1], index: indexPath.row-1)
+            else if self.groupPosts?.count != 0 {
+                if isInGroup {
+                    if indexPath.row - 1 < groupPosts.count {
+                        delegate?.didTapGroupPost(groupPost: groupPosts[indexPath.row - 1], index: indexPath.row-1)
                     }
                 }
                 else {
-                    if indexPath.row < self.groupPosts.count {
-                        delegate?.didTapGroupPost(groupPost: self.groupPosts[indexPath.row], index: indexPath.row)
+                    if indexPath.row < self.groupPosts?.count ?? 0 {
+                        delegate?.didTapGroupPost(groupPost: groupPosts[indexPath.row], index: indexPath.row)
                     }
                 }
             }
@@ -544,7 +564,8 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 delegate?.didTapGroup(group: group)
             }
             else {
-                delegate?.didTapUser(user: self.groupMembers[indexPath.row - 1])
+                guard let groupMembers = self.groupMembers else { return }
+                delegate?.didTapUser(user: groupMembers[indexPath.row - 1])
             }
         }
     }
@@ -623,7 +644,7 @@ extension FullGroupCell: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if collectionView == self.collectionView { // for posts
             let width = (UIScreen.main.bounds.width - 16) / 3
-            if groupPosts.count == 0 {
+            if groupPosts?.count ?? 0 == 0 {
                 return CGSize(width: UIScreen.main.bounds.width, height: width)
             }
             if indexPath.item == 0 && self.isInGroup != nil && self.isInGroup! {
@@ -641,7 +662,7 @@ extension FullGroupCell: UICollectionViewDelegateFlowLayout {
             return UIEdgeInsets(top: 0, left: 5, bottom: 0, right: 0)
         }
         else {
-            if groupMembers.count == 1 {
+            if groupMembers?.count ?? 0 == 1 {
                 let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
                 let totalSpacingWidth = 10 * (collectionView.numberOfItems(inSection: 0) - 1)
 
@@ -650,7 +671,7 @@ extension FullGroupCell: UICollectionViewDelegateFlowLayout {
 
                 return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
             }
-            else if groupMembers.count == 2 {
+            else if groupMembers?.count ?? 0 == 2 {
                 let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
                 let totalSpacingWidth = 20 * (collectionView.numberOfItems(inSection: 0) - 1)
 

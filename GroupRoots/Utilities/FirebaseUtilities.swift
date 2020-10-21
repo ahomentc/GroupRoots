@@ -2265,29 +2265,25 @@ extension Database {
             Database.database().doesNumberExist(number: numberString, completion: { (exists) in
                 if exists {
                     Database.database().fetchUserIdFromNumber(number: numberString, completion: { (userId) in
-                        Database.database().acceptIntoGroup(withUID: userId, groupId: group.groupId){ (err) in
-                            if err != nil {
-                                return
-                            }
-
-                            // notification that member is now in group
-                            Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
-                                Database.database().fetchGroup(groupId: group.groupId, completion: { (group) in
-                                    Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
-                                        members.forEach({ (member) in
-                                            if member.uid != currentLoggedInUserId {
-                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
-                                                    if err != nil {
-                                                        return
-                                                    }
-                                                }
+                        self.userExists(withUID: userId, completion: { (exists) in
+                            if exists{
+                                Database.database().fetchUser(withUID: userId, completion: { (user) in
+                                    Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinInvitation, group: group) { (err) in
+                                        if err != nil {
+                                            completion(err)
+                                            return
+                                        }
+                                        Database.database().addUserToGroupInvited(withUID: user.uid, groupId: group.groupId) { (err) in
+                                            if err != nil {
+                                                completion(err)
+                                                return
                                             }
-                                        })
-                                    }) { (_) in}
+                                            completion(nil)
+                                        }
+                                    }
                                 })
-                            })
-                            completion(nil)
-                        }
+                            }
+                        })
                     })
                 }
                 else {

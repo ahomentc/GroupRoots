@@ -456,8 +456,18 @@ class NotificationCell: UICollectionViewCell {
                     self.actionButton.type = .hidden
                 }
                 else {
-                    self.actionButton.group = self.notification?.group
-                    self.actionButton.type = .join
+                    guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+                    Database.database().isUserInvitedToGroup(withUID: currentLoggedInUserId, groupId: (self.notification?.group!.groupId)!, completion: { (isInvited) in
+                        if isInvited {
+                            self.actionButton.group = self.notification?.group
+                            self.actionButton.type = .join
+                        }
+                        else {
+                            self.actionButton.type = .hidden
+                        }
+                    }) { (err) in
+                        return
+                    }
                 }
             }) { (err) in
                 return

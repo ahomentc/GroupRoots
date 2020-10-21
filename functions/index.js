@@ -594,7 +594,7 @@ exports.addToUsernamesOnCreate = functions.database.ref('/users/{user_id}/userna
 	const user_id = context.params.user_id;
 	const username = context.params.username;
 
-	return snapshot.ref.root.child('/usernames/' + username).set(user_id);
+	return snapshot.ref.root.child('/usernames').child(username).set(user_id);
 })
 
 exports.updateGroupsLastPostedWhenPostDeleted = functions.database.ref('/posts/{groupId}/{postId}/creationDate').onDelete((post_snapshot, context) => {
@@ -941,9 +941,6 @@ exports.updateRecommendedUsersOnNumberTiedToAccount = functions.database.ref('/n
 		// get all the users under the number in importedContacts
 	}).catch(() => {return null});
 });
-
-
-
 
 
 // ---------------- Updating counts ----------------
@@ -1526,6 +1523,50 @@ exports.reply = functions.https.onRequest((req, res) => {
   	return null
 });
 
+// ------------------------ Fixes ------------------------
+
+// function that sets username equal to userid in usernames if not equal
+exports.fixUsernames = functions.pubsub.schedule('every monday 02:00').timeZone('America/Los_Angeles').onRun((context) => {
+	let promises = []
+	return admin.database().ref('/users').once('value', users_snapshot => {
+		var sync = new DispatchGroup();
+		var token_0 = sync.enter();
+		users_snapshot.forEach(function(user) {
+        	var uid = user.key;
+    		var token = sync.enter();
+    		// fetch username from user table
+    		admin.database().ref('/users/' + uid + '/username').once('value', username_snapshot => {
+				var username = "";
+				if (username_snapshot !== null && username_snapshot.val() !== null) {
+					username = username_snapshot.val().toString();
+				}
+
+				// fetch uid from username from user table
+				admin.database().ref('/usernames/' + username).once('value', user_from_username_snapshot => {
+					var user_from_username = "";
+					if (user_from_username_snapshot !== null && user_from_username_snapshot.val() !== null) {
+						user_from_username = user_from_username_snapshot.val().toString();
+					}
+					// username entree in usernames table is empty or isn't equal to user who it actually belongs to
+					// add promise setting it
+					if (user_from_username === "" || user_from_username !== uid) {
+						promises.push(admin.database().ref('/usernames').child(username).set(uid));
+					}
+					sync.leave(token)
+				}).catch(() => {console.log("err1"); return null});
+			}).catch(() => {console.log("err2"); return null});
+    	});
+		sync.leave(token_0)
+		sync.notify(function() {
+			console.log("returning")
+			if (promises.length === 0) {
+				return null;
+			}
+			return Promise.all(promises);
+		})
+  	}).catch(() => {console.log("err3"); return null});
+});
+
 
 
 // ------------------------ Notifications ------------------------
@@ -1704,15 +1745,6 @@ exports.open_post = functions.https.onRequest((req, res) => {
 	// admin.messaging().sendToDevice(user_token, payload)
 	admin.messaging().sendToDevice("cFek9UsXGk91r5rSv8gUJ9:APA91bGrGlzleyoA0zsbcw2vKHYnP-RZk5bEsz-0f9ArHgAax6LobtKvbvQZCL0K9U5Fvyb5jz-TfNr5NMBoIn4BC5bip8QAg_99t_pJ3QgOLUsGytAx52Wt7dKzB5qk2dQjM0YFBc-Z", payload)
 });
-
-
-
-
-
-
-
-
-
 
 
 

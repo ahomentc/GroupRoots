@@ -147,11 +147,12 @@ class CommentsController: UIViewController, UICollectionViewDataSource, UICollec
         commentsCollectionView.register(CommentCell.self, forCellWithReuseIdentifier: CommentCell.cellId)
         commentsCollectionView.backgroundColor = UIColor.white
         commentsCollectionView.alwaysBounceVertical = true
-        commentsCollectionView.keyboardDismissMode = .interactive
+        commentsCollectionView.keyboardDismissMode = .onDrag
         self.view.insertSubview(commentsCollectionView, at: 5)
         
         let search_layout = UICollectionViewFlowLayout()
-        searchCollectionView = UICollectionView(frame: CGRect(x: 0, y: 70, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height/2), collectionViewLayout: search_layout)
+//        searchCollectionView = UICollectionView(frame: CGRect(x: 0, y: 70, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height/2), collectionViewLayout: search_layout)
+        searchCollectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 70 - navbarHeight), collectionViewLayout: search_layout)
         searchCollectionView.delegate = self
         searchCollectionView.dataSource = self
         searchCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -159,35 +160,44 @@ class CommentsController: UIViewController, UICollectionViewDataSource, UICollec
         searchCollectionView.backgroundColor = UIColor.white
         searchCollectionView.isHidden = true
         searchCollectionView.alwaysBounceVertical = true
-        searchCollectionView.keyboardDismissMode = .interactive
+//        searchCollectionView.keyboardDismissMode = .interactive
+        searchCollectionView.keyboardDismissMode = .onDrag
         self.view.insertSubview(searchCollectionView, at: 5)
         
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(fetchComments), for: .valueChanged)
         commentsCollectionView?.refreshControl = refreshControl
         
-        emojiCover.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 120 - navbarHeight, width: UIScreen.main.bounds.width, height: 50)
+//        emojiCover.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 120 - navbarHeight, width: UIScreen.main.bounds.width, height: 50)
+//        emojiCover.backgroundColor = .blue
         self.view.insertSubview(emojiCover, at: 9)
+        emojiCover.anchor(left: self.view.leftAnchor, bottom: self.view.safeAreaLayoutGuide.bottomAnchor, right: self.view.rightAnchor, paddingBottom: 0, height: 50)
         
-        laughEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-122, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
+//        laughEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-122, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
         self.view.insertSubview(laughEmoji, at: 10)
+        laughEmoji.anchor(left: self.view.leftAnchor, bottom: self.view.safeAreaLayoutGuide.bottomAnchor, paddingLeft: UIScreen.main.bounds.width/2-122, paddingBottom: 15, width: 24, height: 24)
         
-        heartEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-67, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
+//        heartEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-67, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
         self.view.insertSubview(heartEmoji, at: 10)
+        heartEmoji.anchor(left: self.view.leftAnchor, bottom: self.view.safeAreaLayoutGuide.bottomAnchor, paddingLeft: UIScreen.main.bounds.width/2-67, paddingBottom: 15, width: 24, height: 24)
         
-        fireEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-12, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
+//        fireEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2-12, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
         self.view.insertSubview(fireEmoji, at: 10)
+        fireEmoji.anchor(left: self.view.leftAnchor, bottom: self.view.safeAreaLayoutGuide.bottomAnchor, paddingLeft: UIScreen.main.bounds.width/2-12, paddingBottom: 15, width: 24, height: 24)
         
-        cryEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2+37, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
+//        cryEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2+37, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
         self.view.insertSubview(cryEmoji, at: 10)
+        cryEmoji.anchor(left: self.view.leftAnchor, bottom: self.view.safeAreaLayoutGuide.bottomAnchor, paddingLeft: UIScreen.main.bounds.width/2+37, paddingBottom: 15, width: 24, height: 24)
         
-        eyesEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2+92, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
+//        eyesEmoji.frame = CGRect(x: UIScreen.main.bounds.width/2+92, y: UIScreen.main.bounds.height - 110 - navbarHeight, width: 24, height: 24)
         self.view.insertSubview(eyesEmoji, at: 10)
+        eyesEmoji.anchor(left: self.view.leftAnchor, bottom: self.view.safeAreaLayoutGuide.bottomAnchor, paddingLeft: UIScreen.main.bounds.width/2+92, paddingBottom: 15, width: 24, height: 24)
         
         let lineSeparatorView = UIView()
         lineSeparatorView.backgroundColor = UIColor.init(white: 0.9, alpha: 1)
-        lineSeparatorView.frame = CGRect(x: 25, y: UIScreen.main.bounds.height - 120.5 - navbarHeight, width: UIScreen.main.bounds.width - 50, height: 0.5)
+//        lineSeparatorView.frame = CGRect(x: 25, y: UIScreen.main.bounds.height - 120.5 - navbarHeight, width: UIScreen.main.bounds.width - 50, height: 0.5)
         self.view.insertSubview(lineSeparatorView, at: 11)
+        lineSeparatorView.anchor(left: self.view.leftAnchor, bottom: self.view.safeAreaLayoutGuide.bottomAnchor, right: self.view.rightAnchor, paddingLeft: 25, paddingBottom: 50, paddingRight: 25, width: UIScreen.main.bounds.width - 50, height: 0.5)
     }
     
     override func viewWillAppear(_ animated: Bool) {

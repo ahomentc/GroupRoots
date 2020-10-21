@@ -103,7 +103,7 @@ class CommentInputAccessoryView: UIView, UITextViewDelegate {
             commentTextView.text = to_replace
             commentTextView.text = to_replace // need to do this again because autocorrect will mess it up the first time if it appears
             delegate?.didChangeAtStatus(isInAt: false)
-            
+            self.commentTextView.becomeFirstResponder()
             if username != "" && !username.contains(".") && !username.contains("#") {
                 Database.database().fetchUserFromUsername(username: username, completion: { (user) in
                     if !self.atUsers.contains(user) {

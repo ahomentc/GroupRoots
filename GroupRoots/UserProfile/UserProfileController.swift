@@ -27,6 +27,13 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
     
     private var isBlockedByThisUser = false
     
+    private var isGroupHiddenDict = [String: Bool]()
+    private var isInGroupFollowPendingDict = [String: Bool]()
+    private var canViewGroupPostsDict = [String: Bool]()
+    private var groupMembersDict = [String: [User]]()
+    private var groupPosts2DDict = [String: [GroupPost]]()
+    private var isInGroupDict = [String: Bool]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         if #available(iOS 13.0, *) {
@@ -238,8 +245,10 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
                             return g1.lastPostedDate > g2.lastPostedDate
                         })
                         self.fetchedGroups = true
-                        self.collectionView?.reloadData()
-                        self.collectionView?.refreshControl?.endRefreshing()
+                        self.fetchGroupMembers(groups: groups)
+                        self.fetchGroupInfo(groups: groups)
+//                        self.collectionView?.reloadData()
+//                        self.collectionView?.refreshControl?.endRefreshing()
                     }
                     else {
                         var visibleGroups = [Group]()
@@ -262,8 +271,10 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
                                 return g1.lastPostedDate > g2.lastPostedDate
                             })
                             self.fetchedGroups = true
-                            self.collectionView?.reloadData()
-                            self.collectionView?.refreshControl?.endRefreshing()
+                            self.fetchGroupMembers(groups: groups)
+                            self.fetchGroupInfo(groups: groups)
+//                            self.collectionView?.reloadData()
+//                            self.collectionView?.refreshControl?.endRefreshing()
                         }
                     }
                 }) { (_) in
@@ -274,6 +285,98 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
                 self.collectionView?.refreshControl?.endRefreshing()
             }
         })
+    }
+    
+    private func fetchGroupMembers(groups: [Group]){
+        let sync = DispatchGroup()
+        sync.enter()
+        for group in groups {
+            sync.enter()
+            let groupId = group.groupId
+            Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                self.groupMembersDict[groupId] = members
+                sync.leave()
+            }) { (_) in }
+        }
+        sync.leave()
+        sync.notify(queue: .main) {
+            self.collectionView?.reloadData()
+        }
+    }
+    
+    private func fetchGroupInfo(groups: [Group]){
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+//        private var isGroupHiddenDict = [String: Bool]()
+//        private var isInGroupFollowPendingDict = [String: Bool]()
+//        private var canViewGroupPostsDict = [String: Bool]()
+//        private var isInGroupDict = [String: Bool]()
+//        private var groupMembersDict = [String: [User]]()
+//        private var groupPosts2DDict = [String: [GroupPost]]()
+        
+        let sync = DispatchGroup()
+        sync.enter()
+        for group in groups {
+            sync.enter()
+            let groupId = group.groupId
+            Database.database().isGroupHiddenOnProfile(groupId: group.groupId, completion: { (isHidden) in
+                self.isGroupHiddenDict[groupId] = isHidden
+                
+                Database.database().isInGroupFollowPending(groupId: group.groupId, withUID: currentLoggedInUserId, completion: { (followPending) in
+                    self.isInGroupFollowPendingDict[groupId] = followPending
+                    
+                    Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+                        self.isInGroupDict[groupId] = inGroup
+                        
+                        Database.database().canViewGroupPosts(groupId: group.groupId, completion: { (canView) in
+                            self.canViewGroupPostsDict[groupId] = canView
+                            
+//                            Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
+//                                self.groupMembersDict[groupId] = members
+                                
+                                if canView {
+                                    Database.database().fetchAllGroupPosts(groupId: group.groupId, completion: { (countAndPosts) in
+                                        if countAndPosts.count > 0 {
+                                            self.groupPosts2DDict[groupId] = countAndPosts[1] as? [GroupPost]
+                                            if self.groupPosts2DDict[groupId] != nil {
+                                                self.groupPosts2DDict[groupId]!.sort(by: { (p1, p2) -> Bool in
+                                                    return p1.creationDate.compare(p2.creationDate) == .orderedDescending
+                                                })
+                                            }
+                                            else {
+                                                self.groupPosts2DDict[groupId] = []
+                                            }
+                                        }
+                                        else {
+                                            self.groupPosts2DDict[groupId] = []
+                                        }
+                                        sync.leave()
+                                    }) { (err) in
+                                        return
+                                    }
+                                }
+                                else {
+                                    self.groupPosts2DDict[groupId] = []
+                                    sync.leave()
+                                }
+//                            }) { (_) in }
+                        }) { (err) in
+                            return
+                        }
+                    }) { (err) in
+                       return
+                    }
+                }) { (err) in
+                    return
+                }
+            }) { (err) in
+                return
+            }
+        }
+        sync.leave()
+        sync.notify(queue: .main) {
+            self.collectionView?.reloadData()
+            self.collectionView?.refreshControl?.endRefreshing()
+        }
     }
     
     @objc private func reloadUser(){
@@ -338,13 +441,24 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
             cell.numberOfGroups = groups.count
             return cell
         }
-//        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupCell.cellId, for: indexPath) as! GroupCell
-//        cell.group = groups[indexPath.item - 1]
-//        cell.user = user
-//        return cell
+
+        //  isGroupHiddenDict
+        //  isInGroupFollowPendingDict -
+        //  canViewGroupPostsDict -
+        //  isInGroupDict -
+        //  groupMembersDict -
+        //  groupPosts2DDict -
+        
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FullGroupCell.cellId, for: indexPath) as! FullGroupCell
         cell.group = groups[indexPath.item - 1]
         cell.user = user
+        let groupId = groups[indexPath.item - 1].groupId
+        cell.isGroupHidden = isGroupHiddenDict[groupId]
+        cell.isInFollowPending = isInGroupFollowPendingDict[groupId]
+        cell.canView = canViewGroupPostsDict[groupId]
+        cell.isInGroup = isInGroupDict[groupId]
+        cell.groupMembers = groupMembersDict[groupId]
+        cell.groupPosts = groupPosts2DDict[groupId]
         cell.delegate = self
         return cell
     }
@@ -469,7 +583,7 @@ extension UserProfileController: UICollectionViewDelegateFlowLayout {
             return CGSize(width: view.frame.width, height: 60)
         }
 //        return CGSize(width: view.frame.width, height: 80)
-        return CGSize(width: view.frame.width, height: 300)
+        return CGSize(width: view.frame.width, height: 310)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {

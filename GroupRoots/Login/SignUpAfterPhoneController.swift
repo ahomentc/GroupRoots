@@ -232,7 +232,8 @@ class SignUpAfterPhoneController: UIViewController, UINavigationControllerDelega
     }
     
     @objc private func handleAlreadyHaveAccount() {
-        navigationController?.pushViewController(ConnectAccountController(), animated: true)
+//        navigationController?.pushViewController(ConnectAccountController(), animated: true)
+        navigationController?.pushViewController(LoginController(), animated: true)
     }
     
     @objc private func handleNext() {

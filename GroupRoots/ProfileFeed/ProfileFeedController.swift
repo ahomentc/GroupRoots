@@ -98,7 +98,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
         attributedText.append(NSMutableAttributedString(string: "When you subscribe to groups, you'll\nsee photos and videos they post here\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSMutableAttributedString(string: "When you join a group, you’ll\nbe able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
 //        attributedText.append(NSMutableAttributedString(string: "Following friends automatically\n subscribes you to their public groups", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
@@ -113,7 +113,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "No group posts yet\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
         attributedText.append(NSMutableAttributedString(string: "When you subscribe to groups, you'll\nsee photos and videos they post here\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSMutableAttributedString(string: "When you join a group, you’ll\nbe able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
     }()
@@ -1027,8 +1027,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     @objc internal func handleShowInviteCode() {
         let introCodeController = IntroCodeController()
-        let nacController = UINavigationController(rootViewController: introCodeController)
-        present(nacController, animated: true, completion: nil)
+        let navController = UINavigationController(rootViewController: introCodeController)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true, completion: nil)
     }
     
     @objc internal func handleFirstGo() {
