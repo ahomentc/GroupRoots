@@ -19,14 +19,7 @@ class GroupProfileEmptyStateCell: UICollectionViewCell {
     
     var group: Group? {
         didSet {
-            guard let group = group else { return }
-            Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
-                if inGroup {
-                    self.emptyPostButton.isHidden = false
-                }
-            }) { (err) in
-                return
-            }
+            configureNoPostsLabel()
         }
     }
     
@@ -92,6 +85,8 @@ class GroupProfileEmptyStateCell: UICollectionViewCell {
     private func configureNoPostsLabel(){
         guard let canView = self.canView else { return }
         guard let isInFollowPending = self.isInFollowPending else { return }
+        guard let group = group else { return }
+        
         if canView {
             noPostsLabel.text = "No posts yet."
         }
@@ -100,6 +95,14 @@ class GroupProfileEmptyStateCell: UICollectionViewCell {
         }
         else {
             noPostsLabel.text = "This group is private.\n Subscribe to see their posts."
+        }
+        
+        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+            if inGroup {
+                self.emptyPostButton.isHidden = false
+            }
+        }) { (err) in
+            return
         }
     }
     
