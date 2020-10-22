@@ -4078,6 +4078,21 @@ extension Database {
                         completion(err)
                         return
                     }
+                    // save to userDefaults of viewedPosts
+                    // first fetch those already viewed, then add to it, then save it
+                    var viewedPosts = [String: Bool]()
+                    if let viewedPostsRetrieved = UserDefaults.standard.object(forKey: "viewedPosts") as? Data {
+                        guard let allViewedPosts = try? JSONDecoder().decode([String: Bool].self, from: viewedPostsRetrieved) else {
+                            print("Error: Couldn't decode data into Blog")
+                            return
+                        }
+                        viewedPosts = allViewedPosts
+                    }
+                    viewedPosts[postId] = true
+                    if let viewedPostsEncodedData = try? JSONEncoder().encode(viewedPosts) {
+                        UserDefaults.standard.set(viewedPostsEncodedData, forKey: "viewedPosts")
+                    }
+                    
                     completion(nil)
                 }
             }

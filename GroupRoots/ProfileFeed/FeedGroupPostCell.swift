@@ -18,6 +18,18 @@ class FeedGroupPostCell: UICollectionViewCell {
     
     var readyToSetPicture = false
     
+    var viewedPost: Bool? {
+        didSet {
+            guard let viewedPost = viewedPost else { return }
+            if viewedPost {
+                self.newDot.isHidden = true
+            }
+            else {
+                self.newDot.isHidden = false
+            }
+        }
+    }
+    
     var groupPost: GroupPost? {
         didSet {
             guard var imageUrl = self.groupPost?.imageUrl else { return }
@@ -88,16 +100,9 @@ class FeedGroupPostCell: UICollectionViewCell {
                     }
                 }
                 
-                // set newDot as visible or not
-                guard let post_id = self.groupPost?.id else { return }
-                Database.database().hasViewedPost(postId: post_id, completion: { (hasViewed) in
-                    if hasViewed{
-                        self.newDot.isHidden = true
-                    }
-                    else {
-                        self.newDot.isHidden = false
-                    }
-                }) { (err) in return }
+                // for when the picture is loaded without the data above this being set
+                // viewing a picture wouldn't reload the whole collectionview so viewed info stored in viewdPosts
+                self.reloadNewDot()
             }
         }
     }
@@ -158,6 +163,7 @@ class FeedGroupPostCell: UICollectionViewCell {
         
         self.readyToSetPicture = false
         
+        NotificationCenter.default.addObserver(self, selector: #selector(reloadNewDot), name: NSNotification.Name(rawValue: "reloadViewedPosts"), object: nil)
     }
     
     override func prepareForReuse() {
@@ -172,7 +178,22 @@ class FeedGroupPostCell: UICollectionViewCell {
         playButton.isHidden = true
         newDot.isHidden = true
         groupPost = nil
+        viewedPost = nil
         
         self.readyToSetPicture = false
+    }
+    
+    @objc func reloadNewDot(){
+        guard let groupPost = groupPost else { return }
+        if let viewedPostsRetrieved = UserDefaults.standard.object(forKey: "viewedPosts") as? Data {
+            guard let allViewedPosts = try? JSONDecoder().decode([String: Bool].self, from: viewedPostsRetrieved) else {
+                print("Error: Couldn't decode data into Blog")
+                return
+            }
+            let viewedPost = allViewedPosts[groupPost.id] != nil
+            if viewedPost {
+                self.newDot.isHidden = true
+            }
+        }
     }
 }

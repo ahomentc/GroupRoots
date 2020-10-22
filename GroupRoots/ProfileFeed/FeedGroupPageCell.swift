@@ -22,9 +22,21 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     // only contains four group posts
     var groupPosts: [GroupPost]? {
         didSet {
-            DispatchQueue.main.async{
-                self.collectionView.reloadData()
-            }
+            loadCollectionView()
+        }
+    }
+    
+    var viewedPosts: [String: Bool]? {
+        didSet {
+            loadCollectionView()
+        }
+    }
+    
+    func loadCollectionView() {
+        guard groupPosts != nil else { return }
+        guard viewedPosts != nil else { return }
+        DispatchQueue.main.async{
+            self.collectionView.reloadData()
         }
     }
     
@@ -68,6 +80,9 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         if indexPath.row < self.groupPosts?.count ?? 0{
             cell.tag = indexPath.row
             cell.groupPost = self.groupPosts?[indexPath.row]
+            if cell.groupPost != nil {
+                cell.viewedPost = self.viewedPosts?[cell.groupPost!.id]
+            }
         }
         return cell
     }

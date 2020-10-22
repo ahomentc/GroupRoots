@@ -50,7 +50,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     var groupPostsTotalViewersDict = [String: [String: Int]]()          // Dict inside dict. First key is the groupId. Within the value is another key with postId
     var groupPostsVisibleViewersDict = [String: [String: [User]]]()     //    same   ^
     var groupPostsFirstCommentDict = [String: [String: Comment]]()      //    same   |
+    var hasViewedDict = [String: [String: Bool]]()                      //    same   |
     var groupPostsNumCommentsDict = [String: [String: Int]]()           // -- same --|
+    
     var numGroupsInFeed = 5
     var usingCachedData = true
     var fetchedAllGroups = false
@@ -446,6 +448,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         groupPostsVisibleViewersDict = [String: [String: [User]]]()
         groupPostsFirstCommentDict = [String: [String: Comment]]()
         groupPostsNumCommentsDict = [String: [String: Int]]()
+        hasViewedDict = [String: [String: Bool]]()
         oldestRetrievedDate = 10000000000000.0
         self.numGroupsInFeed = 5
         self.fetchedAllGroups = false
@@ -577,6 +580,18 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                                         lower_sync.leave()
                                     }
                                 }) { (err) in }
+                                
+                                lower_sync.enter()
+                                Database.database().hasViewedPost(postId: groupPost.id, completion: { (hasViewed) in
+                                    let existingHasViewedForGroup = self.hasViewedDict[groupId]
+                                    if existingHasViewedForGroup == nil {
+                                        self.hasViewedDict[groupId] = [groupPost.id: hasViewed]
+                                    }
+                                    else {
+                                        self.hasViewedDict[groupId]![groupPost.id] = hasViewed
+                                    }
+                                    lower_sync.leave()
+                                }) { (err) in return }
 
                                 // the following is only if the user is in a gorup
                                 lower_sync.enter()
@@ -773,6 +788,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             feedCell.groupPostsViewers = groupPostsVisibleViewersDict[groupId]
             feedCell.groupPostsFirstComment = groupPostsFirstCommentDict[groupId]
             feedCell.groupPostsNumComments = groupPostsNumCommentsDict[groupId]
+            feedCell.hasViewedPosts = hasViewedDict[groupId]
             feedCell.delegate = self
             feedCell.tag = indexPath.row
 //            feedCell.isScrollingVertically = isScrolling

@@ -111,6 +111,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                             }
                         })
                         self.sendCloseNotifications(animatedScroll: false)
+                        NotificationCenter.default.post(name: NSNotification.Name("reloadViewedPosts"), object: nil)
                         Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false) { timer in
                             self.collectionView.isHidden = true
                             self.view.backgroundColor = .clear
@@ -368,6 +369,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         // this is called when the button to close is pressed, no need to animate in that case
         // if animate it will look weird
         sendCloseNotifications(animatedScroll: false)
+        NotificationCenter.default.post(name: NSNotification.Name("reloadViewedPosts"), object: nil)
         self.dismiss(animated: true, completion: {})
     }
     

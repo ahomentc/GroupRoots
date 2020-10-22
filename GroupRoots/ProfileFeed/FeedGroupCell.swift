@@ -31,6 +31,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     var viewersForPosts = [String: [User]]()
     var numViewsForPost = [String: Int]()
     var numCommentsForPosts = [String: Int]()
+    var viewedPosts = [String: Bool]()
     
     
     // extremely ugly and bad bandaid solution so will explain in detail
@@ -63,6 +64,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         checkedIfCommentExists = false
         groupPostsFirstComment = nil
         groupPostsNumComments = nil
+        hasViewedPosts = nil
         headerCollectionView.reloadData()
         isFullScreen = false
         closeButton.isHidden = true
@@ -108,6 +110,14 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         didSet {
             guard let groupPostsNumComments = groupPostsNumComments else { return }
             numCommentsForPosts = groupPostsNumComments
+            self.reloadGroupData()
+        }
+    }
+    
+    var hasViewedPosts: [String: Bool]? {
+        didSet {
+            guard let hasViewedPosts = hasViewedPosts else { return }
+            viewedPosts = hasViewedPosts
             self.reloadGroupData()
         }
     }
@@ -159,6 +169,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         guard let groupPosts = groupPosts else { return }
         guard groupPostsNumComments != nil else { return }
         guard let groupMembers = groupMembers else { return }
+        guard hasViewedPosts != nil else { return }
         
         self.collectionView.reloadData() // this is causing or uncovering some problems where video is playing over itself
         self.collectionView.layoutIfNeeded()
@@ -377,6 +388,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedGroupPageCell.cellId, for: indexPath) as! FeedGroupPageCell
                 cell.groupPosts = Array(slicedArr)
+                cell.viewedPosts = viewedPosts
                 cell.delegate = self
                 cell.tag = indexPath.row
                 return cell
