@@ -64,6 +64,7 @@
 		75BE32DC24E22E1800310BA4 /* ResetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DB24E22E1800310BA4 /* ResetController.swift */; };
 		75BE32DE24E29A4200310BA4 /* IntroCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */; };
 		75CAD5FC243C527E006941B2 /* MemberHeaderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */; };
+		75D6CF46254930AB0098DE13 /* EmptySearchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D6CF45254930AB0098DE13 /* EmptySearchCell.swift */; };
 		75D86CAC252094E100939301 /* ImportContactsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CAB252094E100939301 /* ImportContactsCell.swift */; };
 		75D86CAE2524478A00939301 /* FullGroupCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CAD2524478A00939301 /* FullGroupCell.swift */; };
 		75D86CB025270BB600939301 /* Contacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CAF25270BB500939301 /* Contacts.swift */; };
@@ -185,6 +186,7 @@
 		75BE32DB24E22E1800310BA4 /* ResetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetController.swift; sourceTree = "<group>"; };
 		75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroCodeController.swift; sourceTree = "<group>"; };
 		75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberHeaderCell.swift; sourceTree = "<group>"; };
+		75D6CF45254930AB0098DE13 /* EmptySearchCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptySearchCell.swift; sourceTree = "<group>"; };
 		75D86CAB252094E100939301 /* ImportContactsCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportContactsCell.swift; sourceTree = "<group>"; };
 		75D86CAD2524478A00939301 /* FullGroupCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullGroupCell.swift; sourceTree = "<group>"; };
 		75D86CAF25270BB500939301 /* Contacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Contacts.swift; sourceTree = "<group>"; };
@@ -504,6 +506,7 @@
 				ADAC080C2110318400615E62 /* UserSearchCell.swift */,
 				7521D049243463480028FC9C /* GroupSearchCell.swift */,
 				7521D0472434506A0028FC9C /* SearchHeader.swift */,
+				75D6CF45254930AB0098DE13 /* EmptySearchCell.swift */,
 			);
 			path = Search;
 			sourceTree = "<group>";
@@ -763,6 +766,7 @@
 				ADE95AF7210D1D6E003D9A54 /* UserProfilePhotoGridCell.swift in Sources */,
 				AD32EF772114E21900BB7B56 /* CustomAnimationPresentor.swift in Sources */,
 				75BB488E23DAB1CD00CF008F /* FeedController.swift in Sources */,
+				75D6CF46254930AB0098DE13 /* EmptySearchCell.swift in Sources */,
 				75D86CB82531AAFF00939301 /* ConnectAccountController.swift in Sources */,
 				75ACAFC923F7DE8700DAE747 /* FollowPageCell.swift in Sources */,
 				754295C423E162F600893EFD /* InviteSelectionController.swift in Sources */,
@@ -968,11 +972,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GroupRoots.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				INFOPLIST_FILE = GroupRoots/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots;
 				PRODUCT_NAME = GroupRoots;
 				SWIFT_VERSION = 4.2;
@@ -987,11 +991,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GroupRoots.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				INFOPLIST_FILE = GroupRoots/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots;
 				PRODUCT_NAME = GroupRoots;
 				SWIFT_VERSION = 4.2;

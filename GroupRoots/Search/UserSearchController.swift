@@ -2,8 +2,60 @@ import UIKit
 import Firebase
 import FirebaseAuth
 import FirebaseDatabase
+import Contacts
 
-class UserSearchController: UICollectionViewController {
+class UserSearchController: UICollectionViewController, EmptySearchCellDelegate {
+    func didTapUser(user: User) {
+        let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+        userProfileController.user = user
+        userProfileController.modalPresentationCapturesStatusBarAppearance = true
+        navigationController?.pushViewController(userProfileController, animated: true)
+    }
+    
+    func didTapImportContacts() {
+        CNContactStore().requestAccess(for: .contacts) { (access, error) in
+            guard access else {
+                let alert = UIAlertController(title: "GroupRoots does not have access to your contacts.\n\nEnable contacts in\nSettings > GroupRoots", message: "", preferredStyle: .alert)
+                
+                let okay_closure = { () in
+                    { (action: UIAlertAction!) -> Void in
+                        guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
+                            return
+                        }
+                        if UIApplication.shared.canOpenURL(settingsUrl) {
+                            UIApplication.shared.open(settingsUrl, completionHandler: { (success) in
+                                print("Settings opened: \(success)") // Prints true
+                            })
+                        }
+                    }
+                }
+                 
+                alert.addAction(UIAlertAction(title: "Close", style: .destructive, handler: nil))
+                alert.addAction(UIAlertAction(title: "Open Settings", style: .default, handler: okay_closure()))
+                self.present(alert, animated: true, completion: nil)
+                
+                return
+            }
+            importContactsToRecommended() { (err) in
+                self.collectionView.visibleCells.forEach { cell in
+                    if cell is EmptySearchCell {
+                        (cell as! EmptySearchCell).collectionView.reloadData()
+                    }
+                }
+            }
+        }
+    }
+    
+    func requestImportContactsIfAuth() {
+        importContactsToRecommended() { (err) in
+            self.collectionView.visibleCells.forEach { cell in
+                if cell is EmptySearchCell {
+                    (cell as! EmptySearchCell).collectionView.reloadData()
+                }
+            }
+        }
+    }
+    
     
     private var header: SearchHeader?
     private var isUsersView: Bool = true
@@ -40,6 +92,7 @@ class UserSearchController: UICollectionViewController {
         collectionView?.register(UserSearchCell.self, forCellWithReuseIdentifier: UserSearchCell.cellId)
         collectionView?.register(GroupSearchCell.self, forCellWithReuseIdentifier: GroupSearchCell.cellId)
         collectionView?.register(SearchHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: SearchHeader.headerId)
+        collectionView?.register(EmptySearchCell.self, forCellWithReuseIdentifier: EmptySearchCell.cellId)
         
         searchBar.delegate = self
         
@@ -48,6 +101,8 @@ class UserSearchController: UICollectionViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.view.setNeedsLayout()
+        navigationController?.view.layoutIfNeeded()
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
     }
     
@@ -136,6 +191,9 @@ class UserSearchController: UICollectionViewController {
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         searchBar.resignFirstResponder()
         if isUsersView {
+            if filteredUsers.count == 0 {
+                return
+            }
             let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
             if indexPath.item < filteredUsers.count {
                 userProfileController.user = filteredUsers[indexPath.item]
@@ -143,6 +201,9 @@ class UserSearchController: UICollectionViewController {
             navigationController?.pushViewController(userProfileController, animated: true)
         }
         else {
+            if filteredGroups.count == 0 {
+                return
+            }
             let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
             if indexPath.item < filteredGroups.count {
                 groupProfileController.group = filteredGroups[indexPath.item]
@@ -154,7 +215,7 @@ class UserSearchController: UICollectionViewController {
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if isUsersView {
-            return filteredUsers.count
+            return filteredUsers.count > 0 || searchBar.text != "" ? filteredUsers.count : 1
         }
         else {
             return filteredGroups.count
@@ -163,9 +224,16 @@ class UserSearchController: UICollectionViewController {
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if isUsersView {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: UserSearchCell.cellId, for: indexPath) as! UserSearchCell
-            cell.user = filteredUsers[indexPath.item]
-            return cell
+            if filteredUsers.count == 0 && searchBar.text == "" {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: EmptySearchCell.cellId, for: indexPath) as! EmptySearchCell
+                cell.delegate = self
+                return cell
+            }
+            else {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: UserSearchCell.cellId, for: indexPath) as! UserSearchCell
+                cell.user = filteredUsers[indexPath.item]
+                return cell
+            }
         }
         else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupSearchCell.cellId, for: indexPath) as! GroupSearchCell
@@ -187,6 +255,9 @@ class UserSearchController: UICollectionViewController {
 
 extension UserSearchController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        if isUsersView && filteredUsers.count == 0 {
+            return CGSize(width: view.frame.width, height: view.frame.height/1.5)
+        }
         return CGSize(width: view.frame.width, height: 66)
     }
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
