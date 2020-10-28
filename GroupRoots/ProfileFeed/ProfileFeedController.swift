@@ -1077,7 +1077,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     func showBumpAnim(){
         collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 7) {
             // check if it hasn't already scrolled down
             if let hasScrolledRetrieved = UserDefaults.standard.object(forKey: "hasScrolled") as? Data {
                 guard let hasScrolled = try? JSONDecoder().decode(Bool.self, from: hasScrolledRetrieved) else {
@@ -1085,10 +1085,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     return
                 }
                 if !hasScrolled {
-                    UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.4, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
+                    UIView.animate(withDuration: 0.8, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
                         self.collectionView.transform = CGAffineTransform(translationX: 0, y: -100)
                     }, completion: nil)
-                    UIView.animate(withDuration: 0.5, delay: 1, usingSpringWithDamping: 0.4, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
+                    UIView.animate(withDuration: 0.5, delay: 1, usingSpringWithDamping: 0.6, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
                         self.collectionView.transform = CGAffineTransform(translationX: 0, y: 0)
                     }, completion: nil)
                     if let hasScrolled = try? JSONEncoder().encode(true) {
@@ -1098,10 +1098,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 }
             }
             else {
-                UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.4, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
+                UIView.animate(withDuration: 1, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
                     self.collectionView.transform = CGAffineTransform(translationX: 0, y: -100)
                 }, completion: nil)
-                UIView.animate(withDuration: 0.3, delay: 0.4, usingSpringWithDamping: 0.4, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
+                UIView.animate(withDuration: 1, delay: 1.5, usingSpringWithDamping: 0.4, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
                     self.collectionView.transform = CGAffineTransform(translationX: 0, y: 0)
                 }, completion: nil)
                 if let hasScrolled = try? JSONEncoder().encode(true) {
