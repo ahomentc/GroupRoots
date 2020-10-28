@@ -16,7 +16,7 @@ protocol UserProfileHeaderDelegate {
 
 //MARK: - UserProfileHeader
 
-class UserProfileHeader: UICollectionViewCell {
+class UserProfileHeader: UICollectionViewCell, UITextViewDelegate {
    
     var delegate: UserProfileHeaderDelegate?
     
@@ -98,12 +98,22 @@ class UserProfileHeader: UICollectionViewCell {
         return label
     }()
     
-    private let bioLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.boldSystemFont(ofSize: 18)
-        label.textAlignment = .left
-        label.numberOfLines = 0
-        return label
+//    private let bioLabel: UILabel = {
+//        let label = UILabel()
+//        label.font = UIFont.boldSystemFont(ofSize: 18)
+//        label.textAlignment = .left
+//        label.numberOfLines = 0
+//        return label
+//    }()
+    
+    private let bioLabel: UITextView = {
+        let textView = UITextView()
+        textView.font = UIFont.systemFont(ofSize: 14)
+        textView.isScrollEnabled = false
+        textView.isUserInteractionEnabled = false
+        textView.backgroundColor = UIColor.clear
+        textView.textAlignment = .left
+        return textView
     }()
     
 //    private let bioLabel: UITextView = {
@@ -159,8 +169,7 @@ class UserProfileHeader: UICollectionViewCell {
         
         let bio = user.bio
         bioLabel.isHidden = false
-        let attributedText = NSMutableAttributedString(string: bio, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
-        bioLabel.attributedText = attributedText
+        setBioLabelText(bio: bio)
         
         let name = user.name
         nameLabel.isHidden = false
@@ -172,18 +181,18 @@ class UserProfileHeader: UICollectionViewCell {
             nameLabel.anchor(top: stackView.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding + 10, paddingRight: padding)
             
             addSubview(bioLabel)
-            bioLabel.anchor(top: nameLabel.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: 5, paddingLeft: padding + 10, paddingRight: padding)
+            bioLabel.anchor(top: nameLabel.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: 5, paddingLeft: padding + 0, paddingRight: padding)
             
             if user.uid == currentLoggedInUserId {
                 addSubview(GroupButton)
-                GroupButton.anchor(top: bioLabel.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding + 5, paddingLeft: padding, paddingRight: padding, height: 34)
+                GroupButton.anchor(top: bioLabel.bottomAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: 0, paddingLeft: padding, paddingRight: padding, height: 34)
             }
             else {
                 addSubview(GroupButton)
-                GroupButton.anchor(top: bioLabel.bottomAnchor, right: rightAnchor, paddingTop: padding + 5, paddingLeft: padding + 10, paddingRight: padding, height: 34)
+                GroupButton.anchor(top: bioLabel.bottomAnchor, right: rightAnchor, paddingTop: 0, paddingLeft: padding + 10, paddingRight: padding, height: 34)
                 
                 addSubview(followButton)
-                followButton.anchor(top: bioLabel.bottomAnchor, left: profileImageView.rightAnchor, right: GroupButton.leftAnchor, paddingTop: padding + 5, paddingLeft: padding + 10, paddingRight: padding, height: 34)
+                followButton.anchor(top: bioLabel.bottomAnchor, left: profileImageView.rightAnchor, right: GroupButton.leftAnchor, paddingTop: 0, paddingLeft: padding + 10, paddingRight: padding, height: 34)
             }
         }
         else {
@@ -209,12 +218,98 @@ class UserProfileHeader: UICollectionViewCell {
         }
     }
     
+    func setBioLabelText(bio: String){
+        // set the basic label
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineBreakMode = NSLineBreakMode.byWordWrapping // this is new
+        var attributedText = NSMutableAttributedString(string: bio, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
+        bioLabel.attributedText = attributedText
+        attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
+        
+        let seperatedTextArr = bio.components(separatedBy: " ")
+        var wordOrderDict = [Int: NSMutableAttributedString]()
+        let sync = DispatchGroup()
+        sync.enter()
+        for (i, word) in seperatedTextArr.enumerated() {
+            if word.count > 0 {
+                sync.enter()
+                
+                let detector = try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+                let matches = detector.matches(in: word, options: [], range: NSRange(location: 0, length: word.utf16.count))
+                var url = ""
+                for match in matches {
+                    guard let range = Range(match.range, in: word) else { continue }
+                    url = String(word[range])
+                    break
+                }
+                
+                if url != "" {
+                    let selectablePart = NSMutableAttributedString(string: " " + word)
+                    selectablePart.addAttribute(NSAttributedString.Key.font, value: UIFont.boldSystemFont(ofSize: 14), range: NSMakeRange(0, selectablePart.length))
+                    // Add an underline to indicate this portion of text is selectable (optional)
+                    selectablePart.addAttribute(NSAttributedString.Key.underlineStyle, value: 0, range: NSMakeRange(0,selectablePart.length))
+                    selectablePart.addAttribute(NSAttributedString.Key.underlineColor, value: UIColor.black, range: NSMakeRange(0, selectablePart.length))
+                    selectablePart.addAttribute(NSAttributedString.Key.link, value: url, range: NSMakeRange(0,selectablePart.length))
+                    wordOrderDict[i] = selectablePart
+                    sync.leave()
+                }
+                else { //regular
+                    let attributedText = NSMutableAttributedString(string: " " + word, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
+                    wordOrderDict[i] = attributedText
+                    sync.leave()
+                }
+                // also add something for actual link
+            }
+        }
+        sync.leave()
+        sync.notify(queue: .main) {
+            for (i, _) in seperatedTextArr.enumerated(){
+                attributedText.append(wordOrderDict[i] ?? NSMutableAttributedString(string: ""))
+            }
+            attributedText.append(NSMutableAttributedString(string: "\n\n", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 4), NSAttributedString.Key.foregroundColor: UIColor.black]))
+            self.bioLabel.attributedText = attributedText
+        }
+        self.bioLabel.linkTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
+        self.bioLabel.isUserInteractionEnabled = true
+        self.bioLabel.isEditable = false
+        self.bioLabel.isSelectable = true
+        self.bioLabel.backgroundColor = .clear
+        self.bioLabel.delegate = self
+    }
+    
+    func textView(_ textView: UITextView, shouldInteractWith URL_Interacted: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+        // first detect a URL
+        let detector = try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let word = URL_Interacted.absoluteString
+        let matches = detector.matches(in: word, options: [], range: NSRange(location: 0, length: word.utf16.count))
+        if matches.count > 0 {
+            var urlString = word
+            if !word.contains("http://") && !word.contains("https://") {
+                urlString = "http://" + word
+            }
+            guard let url = URL(string: urlString) else {
+                return false
+            }
+            UIApplication.shared.open(url, completionHandler: { success in
+                if success {
+                    print("opened")
+                } else {
+                    print("failed")
+                    // showInvalidUrlAlert()
+                }
+            })
+            return true
+        }
+        return false
+    }
+    
     @objc func reloadData() {
         guard let user = user else { return }
         usernameLabel.text = user.username
         reloadFollowButton()
         reloadGroupButton()
         reloadUserStats()
+        setFirstData()
         if let profileImageUrl = user.profileImageUrl {
             profileImageView.loadImage(urlString: profileImageUrl)
         }

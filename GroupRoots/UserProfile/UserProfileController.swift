@@ -396,6 +396,8 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         
         navigationItem.title = user.username
         header?.user = user
+        header?.reloadData()
+        
         Database.database().isUserBlocked(withUID: user.uid, completion: { (isBlocked) in
             self.header?.isBlocked = isBlocked
         })
@@ -473,20 +475,21 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        guard let user = user else { return CGSize(width: view.frame.width, height: 115) }
+//        guard let user = user else { return CGSize(width: view.frame.width, height: 115) }
+        guard let user = user else { return CGSize(width: view.frame.width, height: 155) }
         let bio = user.bio
         if bio == "" {
-            return CGSize(width: view.frame.width, height: 145)
+            return CGSize(width: view.frame.width, height: 155)
         }
         else {
             if bio.count < 40 {
-                return CGSize(width: view.frame.width, height: 175)
+                return CGSize(width: view.frame.width, height: 185)
             }
             else if bio.count < 80 {
-                return CGSize(width: view.frame.width, height: 195)
+                return CGSize(width: view.frame.width, height: 205)
             }
             else {
-                return CGSize(width: view.frame.width, height: 215)
+                return CGSize(width: view.frame.width, height: 225)
             }
         }
     }

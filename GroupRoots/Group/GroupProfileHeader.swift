@@ -27,7 +27,7 @@ protocol GroupProfileHeaderDelegate {
 
 //MARK: - GroupProfileHeader
 
-class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate {
+class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, UITextViewDelegate {
 
     var delegate: GroupProfileHeaderDelegate?
 
@@ -304,8 +304,9 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
 //        let bio = "this is the bio. this is the second sentence. this is the second sentence. this is the second sentence"
 //        let bio = "this is the bio. this is the second sentence."
         bioLabel.isHidden = false
-        let attributedText = NSMutableAttributedString(string: bio, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
-        bioLabel.attributedText = attributedText
+//        let attributedText = NSMutableAttributedString(string: bio, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
+//        bioLabel.attributedText = attributedText
+        setBioLabelText(bio: bio)
         
         if bio != "" {
             addSubview(bioLabel)
@@ -315,7 +316,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
             buttonStackView.distribution = .fillProportionally
             buttonStackView.spacing = 15
             addSubview(buttonStackView)
-            buttonStackView.anchor(top: bioLabel.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 20, paddingLeft: 30, paddingRight: 30, height: 34)
+            buttonStackView.anchor(top: bioLabel.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 0, paddingLeft: 30, paddingRight: 30, height: 34)
             
             let stackView = UIStackView(arrangedSubviews: [membersLabel, totalFollowersLabel, inviteCodeButton])
             stackView.distribution = .fillEqually
@@ -377,6 +378,91 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         }) { (err) in
             return
         }
+    }
+    
+    func setBioLabelText(bio: String){
+        // set the basic label
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineBreakMode = NSLineBreakMode.byWordWrapping // this is new
+        var attributedText = NSMutableAttributedString(string: bio, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
+        bioLabel.attributedText = attributedText
+        attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
+        
+        let seperatedTextArr = bio.components(separatedBy: " ")
+        var wordOrderDict = [Int: NSMutableAttributedString]()
+        let sync = DispatchGroup()
+        sync.enter()
+        for (i, word) in seperatedTextArr.enumerated() {
+            if word.count > 0 {
+                sync.enter()
+                
+                let detector = try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+                let matches = detector.matches(in: word, options: [], range: NSRange(location: 0, length: word.utf16.count))
+                var url = ""
+                for match in matches {
+                    guard let range = Range(match.range, in: word) else { continue }
+                    url = String(word[range])
+                    break
+                }
+                
+                if url != "" {
+                    let selectablePart = NSMutableAttributedString(string: " " + word)
+                    selectablePart.addAttribute(NSAttributedString.Key.font, value: UIFont.boldSystemFont(ofSize: 14), range: NSMakeRange(0, selectablePart.length))
+                    // Add an underline to indicate this portion of text is selectable (optional)
+                    selectablePart.addAttribute(NSAttributedString.Key.underlineStyle, value: 0, range: NSMakeRange(0,selectablePart.length))
+                    selectablePart.addAttribute(NSAttributedString.Key.underlineColor, value: UIColor.black, range: NSMakeRange(0, selectablePart.length))
+                    selectablePart.addAttribute(NSAttributedString.Key.link, value: url, range: NSMakeRange(0,selectablePart.length))
+                    wordOrderDict[i] = selectablePart
+                    sync.leave()
+                }
+                else { //regular
+                    let attributedText = NSMutableAttributedString(string: " " + word, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
+                    wordOrderDict[i] = attributedText
+                    sync.leave()
+                }
+                // also add something for actual link
+            }
+        }
+        sync.leave()
+        sync.notify(queue: .main) {
+            for (i, _) in seperatedTextArr.enumerated(){
+                attributedText.append(wordOrderDict[i] ?? NSMutableAttributedString(string: ""))
+            }
+            attributedText.append(NSMutableAttributedString(string: "\n\n", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 4), NSAttributedString.Key.foregroundColor: UIColor.black]))
+            self.bioLabel.attributedText = attributedText
+        }
+        self.bioLabel.linkTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
+        self.bioLabel.isUserInteractionEnabled = true
+        self.bioLabel.isEditable = false
+        self.bioLabel.isSelectable = true
+        self.bioLabel.backgroundColor = .clear
+        self.bioLabel.delegate = self
+    }
+    
+    func textView(_ textView: UITextView, shouldInteractWith URL_Interacted: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+        // first detect a URL
+        let detector = try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let word = URL_Interacted.absoluteString
+        let matches = detector.matches(in: word, options: [], range: NSRange(location: 0, length: word.utf16.count))
+        if matches.count > 0 {
+            var urlString = word
+            if !word.contains("http://") && !word.contains("https://") {
+                urlString = "http://" + word
+            }
+            guard let url = URL(string: urlString) else {
+                return false
+            }
+            UIApplication.shared.open(url, completionHandler: { success in
+                if success {
+                    print("opened")
+                } else {
+                    print("failed")
+                    // showInvalidUrlAlert()
+                }
+            })
+            return true
+        }
+        return false
     }
     
     private func reloadJoinButton() {

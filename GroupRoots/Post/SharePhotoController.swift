@@ -50,6 +50,8 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         tv.placeholderLabel.font = UIFont.systemFont(ofSize: 14)
         tv.font = UIFont.systemFont(ofSize: 14)
         tv.autocorrectionType = .no
+        tv.backgroundColor = .white
+        tv.textColor = .black
         return tv
     }()
     
@@ -449,6 +451,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         self.collectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
         self.collectionView?.register(NewGroupInPostCell.self, forCellWithReuseIdentifier: NewGroupInPostCell.cellId)
         self.collectionView.backgroundColor = UIColor.white
+        self.collectionView.keyboardDismissMode = .onDrag
         self.view.addSubview(self.collectionView)
     }
     

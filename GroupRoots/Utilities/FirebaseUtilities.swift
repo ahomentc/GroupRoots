@@ -331,16 +331,15 @@ extension Database {
                                 // replace the username if there is a username and remove old one
                                 if username != nil {
                                     let values_inverted = [username: uid]
-                                    Database.database().reference().child("usernames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
+                                    // delete the old username
+                                    Database.database().reference().child("usernames").child(old_username).removeValue(completionBlock: { (err, _) in
                                         if let err = err {
-                                            print("Failed to upload user to database:", err)
+                                            print("Failed to remove username:", err)
                                             return
                                         }
-                                        
-                                        // delete the old username
-                                        Database.database().reference().child("usernames").child(old_username).removeValue(completionBlock: { (err, _) in
+                                        Database.database().reference().child("usernames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
                                             if let err = err {
-                                                print("Failed to remove username:", err)
+                                                print("Failed to upload user to database:", err)
                                                 return
                                             }
                                             updates_sync.leave()
@@ -1372,27 +1371,33 @@ extension Database {
                                         print("Failed to update username in database:", err)
                                         return
                                     }
-                                    // replace the groupna,e if there is a username and remove old one
+                                    // replace the groupname if there is a groupname and remove old one
                                     let values_inverted = [groupname: groupId]
-                                    Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
-                                        if let err = err {
-                                            print("Failed to upload user to database:", err)
-                                            return
-                                        }
-                                        // delete the old groupname
-                                        if old_groupname != "" {
-                                            Database.database().reference().child("groupnames").child(old_groupname).removeValue(completionBlock: { (err, _) in
+                                    // delete the old groupname
+                                    if old_groupname != "" {
+                                        Database.database().reference().child("groupnames").child(old_groupname).removeValue(completionBlock: { (err, _) in
+                                            if let err = err {
+                                                print("Failed to remove groupname:", err)
+                                                return
+                                            }
+                                            Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
                                                 if let err = err {
-                                                    print("Failed to remove groupname:", err)
+                                                    print("Failed to upload user to database:", err)
                                                     return
                                                 }
                                                 updates_sync.leave()
                                             })
-                                        }
-                                        else {
+                                        })
+                                    }
+                                    else {
+                                        Database.database().reference().child("groupnames").updateChildValues(values_inverted, withCompletionBlock: { (err, ref) in
+                                            if let err = err {
+                                                print("Failed to upload user to database:", err)
+                                                return
+                                            }
                                             updates_sync.leave()
-                                        }
-                                    })
+                                        })
+                                    }
                                 })
                             }
                             else {

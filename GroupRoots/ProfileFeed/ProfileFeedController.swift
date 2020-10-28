@@ -795,6 +795,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             feedCell.maxDistanceScrolled = CGFloat(0)
             feedCell.numPicsScrolled = 1
         }
+        
         return feedCell
     }
 
@@ -842,6 +843,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         let endPos = scrollView.contentOffset.y
         if !decelerate {
             self.stoppedScrolling(endPos: endPos)
+        }
+        if let hasScrolled = try? JSONEncoder().encode(true) {
+            print("hasScrolled 3")
+            UserDefaults.standard.set(hasScrolled, forKey: "hasScrolled")
         }
     }
 
@@ -1070,6 +1075,43 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
 //        self.handleRefresh()
     }
     
+    func showBumpAnim(){
+        collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: true)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            // check if it hasn't already scrolled down
+            if let hasScrolledRetrieved = UserDefaults.standard.object(forKey: "hasScrolled") as? Data {
+                guard let hasScrolled = try? JSONDecoder().decode(Bool.self, from: hasScrolledRetrieved) else {
+                    print("Error: Couldn't decode data into Blog")
+                    return
+                }
+                if !hasScrolled {
+                    UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.4, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
+                        self.collectionView.transform = CGAffineTransform(translationX: 0, y: -100)
+                    }, completion: nil)
+                    UIView.animate(withDuration: 0.5, delay: 1, usingSpringWithDamping: 0.4, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
+                        self.collectionView.transform = CGAffineTransform(translationX: 0, y: 0)
+                    }, completion: nil)
+                    if let hasScrolled = try? JSONEncoder().encode(true) {
+                        print("hasScrolled 1")
+                        UserDefaults.standard.set(hasScrolled, forKey: "hasScrolled")
+                    }
+                }
+            }
+            else {
+                UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.4, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
+                    self.collectionView.transform = CGAffineTransform(translationX: 0, y: -100)
+                }, completion: nil)
+                UIView.animate(withDuration: 0.3, delay: 0.4, usingSpringWithDamping: 0.4, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
+                    self.collectionView.transform = CGAffineTransform(translationX: 0, y: 0)
+                }, completion: nil)
+                if let hasScrolled = try? JSONEncoder().encode(true) {
+                    print("hasScrolled 2")
+                    UserDefaults.standard.set(hasScrolled, forKey: "hasScrolled")
+                }
+            }
+        }
+    }
+    
     @objc internal func showSecondAnim() {
         self.animationsButton.isHidden = true
         self.animationsButton2.isHidden = false
@@ -1088,6 +1130,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         
         self.activityIndicatorView.isHidden = false
         self.handleRefresh()
+        
+        self.showBumpAnim()
     }
     
     func shouldOpenGroup(groupId: String) {
