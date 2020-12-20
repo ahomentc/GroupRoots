@@ -165,7 +165,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         let button = UIButton()
         button.addTarget(self, action: #selector(pickLocation), for: .touchUpInside)
         button.layer.zPosition = 4;
-//        button.isHidden = true
+        button.isHidden = true
         button.contentHorizontalAlignment = .left
         button.backgroundColor = .white
         button.setTitleColor(.black, for: .normal)
@@ -176,13 +176,17 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         return button
     }()
     
-    let locationLabel: UILabel = {
+    private lazy var locationLabel: UILabel = {
         let label = UILabel()
-        label.text = ""
+        label.text = "Add location"
         label.textAlignment = .left
         label.backgroundColor = UIColor.white
-        label.font = UIFont(name: "Avenir", size: 16)!
-        label.isHidden = true
+//        label.font = UIFont(name: "Avenir", size: 16)!
+        label.font = UIFont.systemFont(ofSize: 16)
+        label.isHidden = false
+        let tap = UITapGestureRecognizer(target: self, action: #selector(pickLocation))
+        label.isUserInteractionEnabled = true
+        label.addGestureRecognizer(tap)
         return label
     }()
     
@@ -276,12 +280,16 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         if index > 2 {
             // scroll to the cell that is before the preselected one
             let previousOfNewIndexPath = IndexPath(row: index-1, section: 0)
-            self.collectionView.scrollToItem(at: previousOfNewIndexPath, at: .top, animated: false)
+            if self.collectionView != nil {
+                self.collectionView.scrollToItem(at: previousOfNewIndexPath, at: .top, animated: false)
+            }
         }
         self.selectedGroupId = preSelected.groupId
         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { timer in
-            let cell = self.collectionView.cellForItem(at: newIndexPath)
-            cell?.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
+            if self.collectionView != nil {
+                let cell = self.collectionView.cellForItem(at: newIndexPath)
+                cell?.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
+            }
             self.last_selected_indexpath = newIndexPath
         })
     }
@@ -616,8 +624,8 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
             if location?.name == nil || location?.name == "" {
                 self.locationLabel.text = location?.address
             }
-            self.locationLabel.isHidden = false
-            self.locationButton.isHidden = true
+//            self.locationLabel.isHidden = false
+//            self.locationButton.isHidden = true
             self.selectedLocation = PostLocation(name: location?.name, longitude: "\(location?.coordinate.longitude ?? 0)", latitude: "\(location?.coordinate.latitude ?? 0)", address: location?.address)
         }
         

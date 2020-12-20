@@ -397,9 +397,17 @@ class InviteToGroupController: UIViewController, UICollectionViewDataSource, UIC
     
     func importAllContacts() {
         CNContactStore().requestAccess(for: .contacts) { (access, error) in
+            let authorizationStatus = CNContactStore.authorizationStatus(for: .contacts)
             guard access else {
+                if authorizationStatus == .denied {
+                    DispatchQueue.main.async {
+                        if !self.hasClickedSelectContacts {
+                            self.explainSelectContactLabel.isHidden = false
+                        }
+                    }
+                    return
+                }
                 let alert = UIAlertController(title: "GroupRoots does not have access to your contacts.\n\nEnable contacts in\nSettings > GroupRoots", message: "", preferredStyle: .alert)
-
                 let cancel_closure = { () in
                     { (action: UIAlertAction!) -> Void in
 //                         let alert = UIAlertController(title: "Add contacts without giving access", message: "Only add contacts you select with \"Add Selected Contacts\". GroupRoots will not access to all of your contacts", preferredStyle: .alert)

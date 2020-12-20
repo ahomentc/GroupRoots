@@ -225,7 +225,7 @@ class GroupProfileController: HomePostCellViewController {
 
             //Setting up font and the baseline offset of the string, so that it will be centered
             let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
-            let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
+            let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") + " ", attributes: balanceAttr)
             
             if group.isPrivate ?? false {
                 balanceString.append(lockIconString)
@@ -240,7 +240,7 @@ class GroupProfileController: HomePostCellViewController {
 //            // moved this to GroupProfileHeader and then with delegate calls setNavigationTitle
 //        }
 //        else {
-//            navigationItem.title = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
+//            navigationItem.title = group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
 //        }
         header?.group = group
         handleRefresh()
@@ -565,7 +565,7 @@ extension GroupProfileController: GroupProfileHeaderDelegate {
         guard let group = group else { return }
         self.acceptInviteButton.isHidden = true
         
-        var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
+        var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
         if group.groupname == "" {
             groupname = " a group"
         }

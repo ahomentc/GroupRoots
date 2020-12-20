@@ -33,7 +33,7 @@ let phoneNumberKit = PhoneNumberKit()
 
 func importContactsToRecommended(completion: @escaping (Error?) -> ()) {
     let store = CNContactStore()
-    if CNContactStore.authorizationStatus(for: .contacts) != .authorized {
+    if CNContactStore.authorizationStatus(for: .contacts) != .authorized{
         completion(nil)
         return
     }

@@ -14,7 +14,11 @@ class UserSearchController: UICollectionViewController, EmptySearchCellDelegate 
     
     func didTapImportContacts() {
         CNContactStore().requestAccess(for: .contacts) { (access, error) in
+            let authorizationStatus = CNContactStore.authorizationStatus(for: .contacts)
             guard access else {
+                if authorizationStatus == .denied {
+                    return
+                }
                 let alert = UIAlertController(title: "GroupRoots does not have access to your contacts.\n\nEnable contacts in\nSettings > GroupRoots", message: "", preferredStyle: .alert)
                 
                 let okay_closure = { () in
@@ -33,7 +37,6 @@ class UserSearchController: UICollectionViewController, EmptySearchCellDelegate 
                 alert.addAction(UIAlertAction(title: "Close", style: .destructive, handler: nil))
                 alert.addAction(UIAlertAction(title: "Open Settings", style: .default, handler: okay_closure()))
                 self.present(alert, animated: true, completion: nil)
-                
                 return
             }
             importContactsToRecommended() { (err) in
@@ -279,7 +282,7 @@ extension UserSearchController: UISearchBarDelegate {
                 searchForUser(username: searchText)
             }
             else {
-                searchForGroup(search_word: searchText.replacingOccurrences(of: " ", with: "_-a-_"))
+                searchForGroup(search_word: searchText.replacingOccurrences(of: " ", with: "_-a-_").replacingOccurrences(of: "‘", with: "_-b-_").replacingOccurrences(of: "'", with: "_-b-_").replacingOccurrences(of: "’", with: "_-b-_"))
             }
         }
         self.collectionView?.reloadData()

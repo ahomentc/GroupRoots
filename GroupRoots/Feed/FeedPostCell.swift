@@ -619,7 +619,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         }
         var groupname = "Group"
         if groupPost.group.groupname != "" { // if groupname is not empty
-            groupname =  groupPost.group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
+            groupname =  groupPost.group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
         }
         else if groupPost.caption == "" { // if groupname is empty and caption empty
             groupname = ""

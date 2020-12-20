@@ -25,6 +25,7 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         if #available(iOS 13.0, *) {
             overrideUserInterfaceStyle = .light
         }
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
         
         UIApplication.shared.applicationIconBadgeNumber = 0
         
@@ -208,7 +209,7 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
     }
     
     func groupJoinAlert(group: Group) {
-        var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
+        var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
         if groupname == "" {
             groupname = "a group"
         }

@@ -192,14 +192,15 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         
         
         if groupname != nil && groupname != "" {
-            if groupname!.range(of: #"^[a-zA-Z0-9_ -]*$"#, options: .regularExpression) == nil {
+            formatedGroupname = groupname!.replacingOccurrences(of: " ", with: "_-a-_").replacingOccurrences(of: "‘", with: "_-b-_").replacingOccurrences(of: "'", with: "_-b-_").replacingOccurrences(of: "’", with: "_-b-_")
+            print(formatedGroupname)
+            if formatedGroupname.range(of: #"^[a-zA-Z0-9‘_ -]*$"#, options: .regularExpression) == nil {
                 let alert = UIAlertController(title: "Group name invalid", message: "Please enter a Group name with no symbols", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 self.present(alert, animated: true)
                 self.resetInputFields()
                 return
             }
-            formatedGroupname = groupname!.replacingOccurrences(of: " ", with: "_-a-_")
         }
 
         Database.database().createGroup(groupname: formatedGroupname, bio: bio ?? "", image: profileImage, isPrivate: isPrivate) { (err, groupId) in

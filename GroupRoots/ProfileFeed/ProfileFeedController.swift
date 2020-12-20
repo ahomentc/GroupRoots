@@ -99,9 +99,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.isHidden = true
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
-        attributedText.append(NSMutableAttributedString(string: "When you subscribe to groups, you'll\nsee photos and videos they post here\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "Photos and videos of groups you're\nsubscribed to will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "When you follow friends, you’ll get auto\nsubscribed to their public groups.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-//        attributedText.append(NSMutableAttributedString(string: "Following friends automatically\n subscribes you to their public groups", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
     }()
@@ -113,8 +113,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.numberOfLines = 0
         label.isHidden = true
         label.textAlignment = .center
-        let attributedText = NSMutableAttributedString(string: "No group posts yet\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
-        attributedText.append(NSMutableAttributedString(string: "When you subscribe to groups, you'll\nsee photos and videos they post here\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
+        attributedText.append(NSMutableAttributedString(string: "Photos and videos of groups you're\nsubscribed to will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "When you follow friends, you’ll get auto\nsubscribed to their public groups.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
@@ -175,6 +176,26 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         button.layer.zPosition = 10;
         button.setImage(#imageLiteral(resourceName: "group_plus").withRenderingMode(UIImage.RenderingMode.alwaysTemplate), for: .normal)
         button.tintColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
+        return button
+    }()
+    
+    private lazy var followingPageButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Following", for: .normal)
+        button.layer.zPosition = 10
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        return button
+    }()
+    
+    private lazy var schoolPageButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("My School", for: .normal)
+        button.layer.zPosition = 10
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         return button
     }()
     
@@ -240,7 +261,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.numberOfLines = 0
         label.isHidden = true
         label.textAlignment = .center
-        let attributedText = NSMutableAttributedString(string: "Swipe up to cycle through groups.\nGroups appear by the last time they posted.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)])
+        let attributedText = NSMutableAttributedString(string: "\nSwipe up to go through groups.\nGroups appear by the last time they posted.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)])
+//        let attributedText = NSMutableAttributedString(string: "Swipe up to cycle through groups.\nGroups appear by the last time they posted.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)])
+//        Swipe up to cycle through groups that friends you follow are in
         label.attributedText = attributedText
         return label
     }()
@@ -365,7 +388,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         horizontalGifView.loadGif(name: "horiz")
         self.view.addSubview(horizontalGifView)
         
-        verticalGifView.frame = CGRect(x: view.frame.width/2 - 101.25, y: UIScreen.main.bounds.height/3 - 50, width: 202.5, height: 300.15)
+        verticalGifView.frame = CGRect(x: view.frame.width/2 - 101.25, y: UIScreen.main.bounds.height/3 - 30, width: 202.5, height: 300.15)
         verticalGifView.loadGif(name: "vert")
         self.view.addSubview(verticalGifView)
         
@@ -383,9 +406,18 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         animationsButton2.layer.cornerRadius = 14
         self.view.insertSubview(animationsButton2, at: 4)
         
-        createGroupIconButton.frame = CGRect(x: UIScreen.main.bounds.width-50, y: 30, width: 40, height: 40)
+        createGroupIconButton.frame = CGRect(x: UIScreen.main.bounds.width-50, y: UIScreen.main.bounds.height/23 + 0, width: 40, height: 40)
         createGroupIconButton.layer.cornerRadius = 14
         self.view.insertSubview(createGroupIconButton, at: 10)
+        
+//        followingPageButton
+//        schoolPageButton
+        
+        followingPageButton.frame = CGRect(x: UIScreen.main.bounds.width/2 - 110, y: UIScreen.main.bounds.height/23 + 0, width: 100, height: 40)
+        self.view.insertSubview(followingPageButton, at: 10)
+        
+        schoolPageButton.frame = CGRect(x: UIScreen.main.bounds.width/2 + 10, y: UIScreen.main.bounds.height/23 + 0, width: 100, height: 40)
+        self.view.insertSubview(schoolPageButton, at: 10)
         
         collectionView?.register(FeedGroupCell.self, forCellWithReuseIdentifier: "cellId")
         collectionView?.register(EmptyFeedPostCell.self, forCellWithReuseIdentifier: EmptyFeedPostCell.cellId)
@@ -845,7 +877,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.stoppedScrolling(endPos: endPos)
         }
         if let hasScrolled = try? JSONEncoder().encode(true) {
-            print("hasScrolled 3")
             UserDefaults.standard.set(hasScrolled, forKey: "hasScrolled")
         }
     }
@@ -1092,7 +1123,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                         self.collectionView.transform = CGAffineTransform(translationX: 0, y: 0)
                     }, completion: nil)
                     if let hasScrolled = try? JSONEncoder().encode(true) {
-                        print("hasScrolled 1")
                         UserDefaults.standard.set(hasScrolled, forKey: "hasScrolled")
                     }
                 }
@@ -1105,7 +1135,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.collectionView.transform = CGAffineTransform(translationX: 0, y: 0)
                 }, completion: nil)
                 if let hasScrolled = try? JSONEncoder().encode(true) {
-                    print("hasScrolled 2")
                     UserDefaults.standard.set(hasScrolled, forKey: "hasScrolled")
                 }
             }
@@ -1154,9 +1183,12 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     func didTapImportContacts() {
         CNContactStore().requestAccess(for: .contacts) { (access, error) in
+            let authorizationStatus = CNContactStore.authorizationStatus(for: .contacts)
             guard access else {
+                if authorizationStatus == .denied {
+                    return
+                }
                 let alert = UIAlertController(title: "GroupRoots does not have access to your contacts.\n\nEnable contacts in\nSettings > GroupRoots", message: "", preferredStyle: .alert)
-                
                 let okay_closure = { () in
                     { (action: UIAlertAction!) -> Void in
                         guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
@@ -1169,11 +1201,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                         }
                     }
                 }
-                 
                 alert.addAction(UIAlertAction(title: "Close", style: .destructive, handler: nil))
                 alert.addAction(UIAlertAction(title: "Open Settings", style: .default, handler: okay_closure()))
                 self.present(alert, animated: true, completion: nil)
-                
                 return
             }
             importContactsToRecommended() { (err) in

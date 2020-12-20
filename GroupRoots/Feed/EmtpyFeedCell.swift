@@ -187,7 +187,7 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     func setRecommendedVisibility() {
         guard let recommendedUsers = recommendedUsers else { return }
         guard let fetchedAllGroups = fetchedAllGroups else { return }
-        if recommendedUsers.count == 0 && CNContactStore.authorizationStatus(for: .contacts) == .authorized && fetchedAllGroups {
+        if recommendedUsers.count == 0 && (CNContactStore.authorizationStatus(for: .contacts) == .authorized || CNContactStore.authorizationStatus(for: .contacts) == .denied) && fetchedAllGroups {
             collectionView.isHidden = true
             recommendedLabel.isHidden = true
             endLabel.isHidden = true
@@ -197,14 +197,14 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if CNContactStore.authorizationStatus(for: .contacts) != .authorized {
+        if CNContactStore.authorizationStatus(for: .contacts) != .authorized && CNContactStore.authorizationStatus(for: .contacts) != .denied {
             return (recommendedUsers?.count ?? 0) + 1
         }
         return recommendedUsers?.count ?? 0
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if CNContactStore.authorizationStatus(for: .contacts) != .authorized && indexPath.row == 0 {
+        if CNContactStore.authorizationStatus(for: .contacts) != .authorized && CNContactStore.authorizationStatus(for: .contacts) != .denied && indexPath.row == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImportContactsCell.cellId, for: indexPath) as! ImportContactsCell
             cell.layer.cornerRadius = 10
             cell.layer.borderWidth = 1.0
@@ -216,7 +216,7 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: EmptyFeedUserCell.cellId, for: indexPath) as! EmptyFeedUserCell
             if recommendedUsers != nil && recommendedUsers!.count > 0 {
-                if CNContactStore.authorizationStatus(for: .contacts) != .authorized {
+                if CNContactStore.authorizationStatus(for: .contacts) != .authorized && CNContactStore.authorizationStatus(for: .contacts) != .denied {
                     // need to do minus 1 here because first cell is taken up by the import contact cell
                     // so all are shifted right by 1
                     cell.user = recommendedUsers![indexPath.row - 1]

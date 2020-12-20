@@ -160,7 +160,7 @@ class GroupCell: UICollectionViewCell {
         
         Database.database().fetchFirstNGroupMembers(groupId: group.groupId, n: 3, completion: { (first_n_users) in
             if group.groupname != "" {
-                self.groupnameLabel.text = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
+                self.groupnameLabel.text = group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
             }
             else {
                 if first_n_users.count > 2 {

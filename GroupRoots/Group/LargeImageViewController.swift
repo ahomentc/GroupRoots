@@ -13,6 +13,8 @@ import FirebaseDatabase
 import UPCarouselFlowLayout
 import Zoomy
 import NVActivityIndicatorView
+import SGImageCache
+import Photos
 
 class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate, ViewersControllerDelegate {
     
@@ -172,7 +174,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
 
             //Setting up font and the baseline offset of the string, so that it will be centered
             let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.white, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
-            let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
+            let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") + " ", attributes: balanceAttr)
 
             if group.isPrivate ?? false {
                 balanceString.append(lockIconString)
@@ -471,6 +473,85 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
        return action
    }
     
+    private func saveImageAction(forPost groupPost: GroupPost) -> UIAlertAction? {
+        let action = UIAlertAction(title: "Share", style: .destructive, handler: { (_) in
+            
+            // check if groupPost has a video
+            if groupPost.videoUrl != "" {
+                // Create destination URL
+                let documentsUrl:URL =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                let destinationFileUrl = documentsUrl.appendingPathComponent("video.mp4")
+                
+//                if FileManager.default.fileExists(atPath: destinationFileUrl.absoluteString){
+//                    do {
+//                        try FileManager.default.removeItem(atPath: destinationFileUrl.absoluteString)
+//                    }catch let error {
+//                        print("error occurred, here are the details:\n \(error)")
+//                    }
+//                }
+
+                // Create URL to the source file you want to download
+                let fileURL = URL(string: groupPost.videoUrl)
+
+                let sessionConfig = URLSessionConfiguration.default
+                let session = URLSession(configuration: sessionConfig)
+
+                let request = URLRequest(url:fileURL!)
+
+                let task = session.downloadTask(with: request) { (tempLocalUrl, response, error) in
+                   if let tempLocalUrl = tempLocalUrl, error == nil {
+                       do {
+                            try FileManager.default.copyItem(at: tempLocalUrl, to: destinationFileUrl)
+                            let activityViewController : UIActivityViewController = UIActivityViewController(
+                                activityItems: [destinationFileUrl as Any], applicationActivities: nil)
+                            DispatchQueue.main.async {
+                                self.present(activityViewController, animated: true, completion: nil)
+                            }
+                       } catch (let writeError) {
+                           print("Destination already exists. Will try to replace. \(destinationFileUrl) : \(writeError)")
+                            do {
+                                 try FileManager.default.replaceItemAt(destinationFileUrl, withItemAt: tempLocalUrl)
+                                 
+                                 let activityViewController : UIActivityViewController = UIActivityViewController(
+                                     activityItems: [destinationFileUrl as Any], applicationActivities: nil)
+                                 DispatchQueue.main.async {
+                                     self.present(activityViewController, animated: true, completion: nil)
+                                 }
+                            } catch (let writeError) {
+                                print("Error creating a file \(destinationFileUrl) : \(writeError)")
+                            }
+                       }
+                       
+                   } else {
+                        print("Error took place while downloading a file. Error description: %@", error?.localizedDescription as Any);
+                   }
+                }
+                task.resume()
+            }
+            else {
+                // its jsut a picture
+                if let image = SGImageCache.image(forURL: groupPost.imageUrl) {
+                    let activityViewController : UIActivityViewController = UIActivityViewController(
+                    activityItems: [image], applicationActivities: nil)
+                    if #available(iOS 13.0, *) {
+                        activityViewController.isModalInPresentation = true
+                    }
+                    self.present(activityViewController, animated: true, completion: nil)
+                } else {
+                    SGImageCache.slowGetImage(url: groupPost.imageUrl) { [weak self] image in
+                        let activityViewController : UIActivityViewController = UIActivityViewController(
+                            activityItems: [image!], applicationActivities: nil)
+                        if #available(iOS 13.0, *) {
+                            activityViewController.isModalInPresentation = true
+                        }
+                        self?.present(activityViewController, animated: true, completion: nil)
+                    }
+                }
+            }
+        })
+        return action
+   }
+    
     func goToFirstImage() {
         collectionView.scrollToItem(at: IndexPath(item: 1, section: 0), at: .centeredHorizontally, animated: true)
     }
@@ -551,6 +632,9 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         
         Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
             if inGroup {
+                if let saveImageAction = self.saveImageAction(forPost: groupPost) {
+                    alertController.addAction(saveImageAction)
+                }
                 if let deleteAction = self.deleteAction(forPost: groupPost) {
                     alertController.addAction(deleteAction)
                 }
@@ -563,7 +647,6 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         }) { (err) in
             return
         }
-        
         present(alertController, animated: true, completion: nil)
     }
     

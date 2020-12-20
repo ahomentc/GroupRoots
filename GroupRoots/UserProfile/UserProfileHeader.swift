@@ -153,7 +153,22 @@ class UserProfileHeader: UICollectionViewCell, UITextViewDelegate {
         border.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 0.5)
     }
     
+    func setUserAttributes() {
+        guard let user = user else { return }
+        print(user.name)
+        let bio = user.bio
+        setBioLabelText(bio: bio)
+        let name = user.name
+        let attributedTextName = NSMutableAttributedString(string: name, attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.black])
+        nameLabel.attributedText = attributedTextName
+        usernameLabel.text = user.username
+        if let profileImageUrl = user.profileImageUrl {
+            profileImageView.loadImage(urlString: profileImageUrl)
+        }
+    }
+    
     @objc func setFirstData() {
+        
         guard let user = user else { return }
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
@@ -309,10 +324,8 @@ class UserProfileHeader: UICollectionViewCell, UITextViewDelegate {
         reloadFollowButton()
         reloadGroupButton()
         reloadUserStats()
-        setFirstData()
-        if let profileImageUrl = user.profileImageUrl {
-            profileImageView.loadImage(urlString: profileImageUrl)
-        }
+
+        setUserAttributes()
     }
     
     private func reloadFollowButton() {

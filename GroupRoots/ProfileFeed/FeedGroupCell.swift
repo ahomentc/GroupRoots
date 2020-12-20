@@ -222,7 +222,6 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 self.groupnameButton.setAttributedTitle(balanceString, for: .normal)
             }
             else {
-//                groupnameButton.setTitle(group.groupname.replacingOccurrences(of: "_-a-_", with: " "), for: .normal)
                 
                 let lockImage = #imageLiteral(resourceName: "lock")
                 let lockIcon = NSTextAttachment()
@@ -234,7 +233,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
 
                 //Setting up font and the baseline offset of the string, so that it will be centered
                 let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.black, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
-                let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ") + " ", attributes: balanceAttr)
+                let balanceString = NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") + " ", attributes: balanceAttr)
 
                 if group.isPrivate ?? false {
                     balanceString.append(lockIconString)

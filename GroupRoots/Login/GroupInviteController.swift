@@ -90,6 +90,19 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
         return label
     }()
     
+    private let tipLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.init(white: 0.2, alpha: 1)
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+//        label.isHidden = true
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "Tip\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
+        attributedText.append(NSMutableAttributedString(string: "If a group is public, followers of the group\nmembers are auto subscribed to the group,\nand the group will appear in their feed.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)]))
+        label.attributedText = attributedText
+        return label
+    }()
+    
     private let profileImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFill
@@ -193,6 +206,9 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
         view.addSubview(invitedLabel)
         invitedLabel.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/4, height: 110)
         
+        tipLabel.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 120, width: UIScreen.main.bounds.width, height: 100)
+        self.view.insertSubview(tipLabel, at: 4)
+        
         let screen_width = UIScreen.main.bounds.width
         let center = screen_width/2 - 35
         self.view.addSubview(profileImageView)
@@ -218,9 +234,13 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
 //        view.addSubview(doneButton)
 //        doneButton.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/4, height: 110)
         
-        doneButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
+//        doneButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 - 90, width: 300, height: 50)
+//        doneButton.layer.cornerRadius = 14
+//        self.view.insertSubview(doneButton, at: 4)
+        
+        self.view.addSubview(doneButton)
+        doneButton.anchor(top: userTwoImageView.bottomAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: 30, paddingLeft: (UIScreen.main.bounds.width - 300)/2, paddingRight: (UIScreen.main.bounds.width - 300)/2, width: 300, height: 50)
         doneButton.layer.cornerRadius = 14
-        self.view.insertSubview(doneButton, at: 4)
     }
     
     @objc private func doneSelected(){
@@ -242,7 +262,7 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
         if group.groupname != "" {
             let attributedText = NSMutableAttributedString(string: "Group Membership\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
             attributedText.append(NSMutableAttributedString(string: userInvitedBy.username + " added you as a member of\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-            attributedText.append(NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " "), attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)]))
+            attributedText.append(NSMutableAttributedString(string: group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘"), attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)]))
             self.invitedLabel.attributedText = attributedText
         }
         self.loadGroupMembersIcon(group: group)

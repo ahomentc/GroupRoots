@@ -409,8 +409,14 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
     
     @objc private func handleRefresh() {
         fetchAllGroups()
-        configureUser()
-        configureAlertController()
+//        configureUser()
+//        configureAlertController()
+        
+        guard let existing_user = user else { return }
+        Database.database().fetchUser(withUID: existing_user.uid, completion: { (updated_user) in
+            self.user = updated_user
+            self.configureAlertController()
+        })
     }
     
     // when an item is selected, go to that view controller

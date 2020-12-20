@@ -146,7 +146,7 @@ class EditGroupController: UIViewController, UINavigationControllerDelegate {
     
     private func setupInputFields() {
         guard let group = group else { return }
-        groupnameTextField.text = group.groupname.replacingOccurrences(of: "_-a-_", with: " ")
+        groupnameTextField.text = group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
         bioTextField.text = group.bio
         
         if group.isPrivate! {
@@ -242,14 +242,14 @@ class EditGroupController: UIViewController, UINavigationControllerDelegate {
                 
 //     username regex:   ^[a-zA-Z0-9_-]*$   must match
         if groupname != nil && groupname != "" {
-            if groupname!.range(of: #"^[a-zA-Z0-9_ -]*$"#, options: .regularExpression) == nil {
+            groupnameFormatted = groupname!.replacingOccurrences(of: " ", with: "_-a-_").replacingOccurrences(of: "‘", with: "_-b-_").replacingOccurrences(of: "'", with: "_-b-_").replacingOccurrences(of: "’", with: "_-b-_")
+            if groupnameFormatted.range(of: #"^[a-zA-Z0-9’_ -]*$"#, options: .regularExpression) == nil {
                 let alert = UIAlertController(title: "Group Name invalid", message: "Please enter a group name with no symbols", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 self.present(alert, animated: true)
                 self.resetInputFields()
                 return
             }
-            groupnameFormatted = groupname!.replacingOccurrences(of: " ", with: "_-a-_")
         }
         
         // notifications sent from updateGroup too

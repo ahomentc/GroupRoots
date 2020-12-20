@@ -1134,12 +1134,6 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 						    }
 
 						    var message = ""
-						    if (groupname === "") {
-						    	message = 'You\'ve been added to a group with '
-						    }
-						    else {
-						    	message = 'You\'ve been added to "' + groupname.replace("_-a-_", " ") + '" with '
-						    }
 						    
 						    if (name !== "") {
 						    	message += name
@@ -1147,6 +1141,14 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 						    else {
 						    	message += username
 						    }
+
+						    if (groupname === "") {
+						    	message += ' just added you to a group'
+						    }
+						    else {
+						    	message += ' just added you to group "' + groupname.replace("_-a-_", " ").replace("_-b-_", "'") + '"'
+						    }
+
 						    message += " on GroupRoots! Download the app from https://apps.apple.com/us/app/id1525863510"
 
 						    const textMessageFirst = {
@@ -1155,7 +1157,10 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 						        from: twilioNumber // From a valid Twilio number
 						    }
 						    const textMessageSecond = {
-						        body: "Share your best group moments collectively and see what groups your friends belong to... GroupRoots!",
+						        // body: "Share your best group moments collectively and see what groups your friends belong to",
+						        // share group moments to your followers through group profiles
+						        // body: "Share your group moments to your followers through group profiles. Show your followers what groups you belong to",
+						        body: "Share photos and videos to your groups, for your followers to see. Show your friends what groups you belong to",
 						        to: number,  // Text to this number
 						        from: twilioNumber // From a valid Twilio number
 						    }
@@ -1286,7 +1291,7 @@ exports.sendPostToInvited = functions.database.ref('/posts/{group_id}/{post_id}'
 													    else { message1 += " posted a video in " }
 													    
 													    if (groupname === "") { message1 += 'the group' }
-													    else { message1 += groupname.replace("_-a-_", " ") }
+													    else { message1 += groupname.replace("_-a-_", " ").replace("_-b-_", "'") }
 
 													    if (caption !== ""){
 													    	message1 += ': "' + caption + '"'
@@ -1397,7 +1402,7 @@ exports.sendGroupJoinToInvited = functions.database.ref('/groups/{group_id}/memb
 											    message1 += " has joined "
 											    
 											    if (groupname === "") { message1 += 'the group' }
-											    else { message1 += groupname.replace("_-a-_", " ") }
+											    else { message1 += groupname.replace("_-a-_", " ").replace("_-b-_", "'") }
 
 												message1 += '... join with GroupRoots: https://apps.apple.com/us/app/id1525863510'
 
@@ -1526,57 +1531,62 @@ exports.reply = functions.https.onRequest((req, res) => {
 // ------------------------ Fixes ------------------------
 
 // function that sets username equal to userid in usernames if not equal
-exports.fixUsernames = functions.pubsub.schedule('every monday 02:00').timeZone('America/Los_Angeles').onRun((context) => {
-	let promises = []
-	return admin.database().ref('/users').once('value', users_snapshot => {
-		var sync = new DispatchGroup();
-		var token_0 = sync.enter();
-		users_snapshot.forEach(function(user) {
-        	var uid = user.key;
-    		var token = sync.enter();
-    		// fetch username from user table
-    		admin.database().ref('/users/' + uid + '/username').once('value', username_snapshot => {
-				var username = "";
-				if (username_snapshot !== null && username_snapshot.val() !== null) {
-					username = username_snapshot.val().toString();
-				}
+// exports.fixUsernames = functions.pubsub.schedule('every monday 02:00').timeZone('America/Los_Angeles').onRun((context) => {
+// 	let promises = []
+// 	return admin.database().ref('/users').once('value', users_snapshot => {
+// 		var sync = new DispatchGroup();
+// 		var token_0 = sync.enter();
+// 		users_snapshot.forEach(function(user) {
+//         	var uid = user.key;
+//     		var token = sync.enter();
+//     		// fetch username from user table
+//     		admin.database().ref('/users/' + uid + '/username').once('value', username_snapshot => {
+// 				var username = "";
+// 				if (username_snapshot !== null && username_snapshot.val() !== null) {
+// 					username = username_snapshot.val().toString();
+// 				}
 
-				// fetch uid from username from user table
-				admin.database().ref('/usernames/' + username).once('value', user_from_username_snapshot => {
-					var user_from_username = "";
-					if (user_from_username_snapshot !== null && user_from_username_snapshot.val() !== null) {
-						user_from_username = user_from_username_snapshot.val().toString();
-					}
-					// username entree in usernames table is empty or isn't equal to user who it actually belongs to
-					// add promise setting it
-					if (user_from_username === "" || user_from_username !== uid) {
-						promises.push(admin.database().ref('/usernames').child(username).set(uid));
-					}
-					sync.leave(token)
-				}).catch(() => {console.log("err1"); return null});
-			}).catch(() => {console.log("err2"); return null});
-    	});
-		sync.leave(token_0)
-		sync.notify(function() {
-			console.log("returning")
-			if (promises.length === 0) {
-				return null;
-			}
-			return Promise.all(promises);
-		})
-  	}).catch(() => {console.log("err3"); return null});
-});
+// 				// fetch uid from username from user table
+// 				admin.database().ref('/usernames/' + username).once('value', user_from_username_snapshot => {
+// 					var user_from_username = "";
+// 					if (user_from_username_snapshot !== null && user_from_username_snapshot.val() !== null) {
+// 						user_from_username = user_from_username_snapshot.val().toString();
+// 					}
+// 					// username entree in usernames table is empty or isn't equal to user who it actually belongs to
+// 					// add promise setting it
+// 					if (user_from_username === "" || user_from_username !== uid) {
+// 						promises.push(admin.database().ref('/usernames').child(username).set(uid));
+// 					}
+// 					sync.leave(token)
+// 				}).catch(() => {console.log("err1"); return null});
+// 			}).catch(() => {console.log("err2"); return null});
+//     	});
+// 		sync.leave(token_0)
+// 		sync.notify(function() {
+// 			console.log("returning")
+// 			if (promises.length === 0) {
+// 				return null;
+// 			}
+// 			return Promise.all(promises);
+// 		})
+//   	}).catch(() => {console.log("err3"); return null});
+// });
 
 
 
 // ------------------------ Notifications ------------------------
+
+const runtimeOpts = {
+  timeoutSeconds: 540
+  // memory: '1GB'
+}
 
 // for all users
 // if user lastVisited is greater than 5 days, then continue
 // if there is a post that the user hasn't seen yet, then continue
 // get the user's token
 // send the notification for the post and set lastVisited time ot current time
-exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day 09:00').timeZone('America/Los_Angeles').onRun((context) => {
+exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day 09:00').timeZone('America/Los_Angeles').runWith(runtimeOpts).onRun((context) => {
 	return admin.database().ref('/users').once('value', users_snapshot => {
 		var current_time = parseFloat(Date.now()/1000) // in seconds
 		users_snapshot.forEach(function(user) {
@@ -1629,7 +1639,7 @@ exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day
 				        		admin.database().ref('/groups/' + groups_with_new_posts[0] + '/groupname').once('value', groupname_snapshot => {
 									var groupname = "";
 									if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
-										groupname = groupname_snapshot.val().toString().replace("_-a-_", " ");
+										groupname = groupname_snapshot.val().toString().replace("_-a-_", " ").replace("_-b-_", "'");
 									}
 
 									// retrieve the token for the user
@@ -1659,8 +1669,8 @@ exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day
 												body: message
 											}
 										};
-										// admin.messaging().sendToDevice(user_token, payload)
-										admin.messaging().sendToDevice("cFek9UsXGk91r5rSv8gUJ9:APA91bGrGlzleyoA0zsbcw2vKHYnP-RZk5bEsz-0f9ArHgAax6LobtKvbvQZCL0K9U5Fvyb5jz-TfNr5NMBoIn4BC5bip8QAg_99t_pJ3QgOLUsGytAx52Wt7dKzB5qk2dQjM0YFBc-Z", payload)
+										admin.messaging().sendToDevice(user_token, payload)
+										// admin.messaging().sendToDevice("cFek9UsXGk91r5rSv8gUJ9:APA91bGrGlzleyoA0zsbcw2vKHYnP-RZk5bEsz-0f9ArHgAax6LobtKvbvQZCL0K9U5Fvyb5jz-TfNr5NMBoIn4BC5bip8QAg_99t_pJ3QgOLUsGytAx52Wt7dKzB5qk2dQjM0YFBc-Z", payload)
 									})
 								}).catch(() => {return null});
 				        	}
@@ -1745,6 +1755,76 @@ exports.open_post = functions.https.onRequest((req, res) => {
 	// admin.messaging().sendToDevice(user_token, payload)
 	admin.messaging().sendToDevice("cFek9UsXGk91r5rSv8gUJ9:APA91bGrGlzleyoA0zsbcw2vKHYnP-RZk5bEsz-0f9ArHgAax6LobtKvbvQZCL0K9U5Fvyb5jz-TfNr5NMBoIn4BC5bip8QAg_99t_pJ3QgOLUsGytAx52Wt7dKzB5qk2dQjM0YFBc-Z", payload)
 });
+
+
+
+// * don't do this one *
+// don't do it because it makes users have to choose a group. It should be suggested to them already like reminderToPostNotificationForGroup.
+// for all users
+// if user hasn't posted in 15 days send message to post
+// message: You haven't posted in a while. Post to a group
+// - "Remember that one time?" Share a throwback with one of your groups
+// - Do something new? Share a picture with one of your groups
+// - Recent get together? Share a picture with your groups
+// - Make your curated group profile better. Share a group picture
+// - Something about how post will be sent to those invited too... maybe
+// - You haven't posted to _group_ in a while. Post a funny picture of _user1_ or _user2_
+// exports.reminderToPostNotificationForUser = functions.pubsub.schedule('every day 19:00').timeZone('America/Los_Angeles').onRun((context) => {
+
+// });
+
+// for all groups
+// if no one in the group has posted in the last 7 days
+// randomly select someone from the group to send a message to remind to post
+// message: You haven't posted to [_group_ || your group with _user_ and _user_] in a while. Post something to keep your group's profile alive
+exports.reminderToPostNotificationForGroup = functions.pubsub.schedule('every day 18:00').timeZone('America/Los_Angeles').runWith(runtimeOpts).onRun((context) => {
+	var groupname = ""
+	var messages = [
+		"\"Remember when...?\" Share a funny throwback to " + groupname + "!",
+		"\"Remember when...?\" Remind your friends in " + groupname + " with something funny!",
+		"Do something new? Share a picture with " + groupname + "!",
+		"You haven't posted to " + groupname + " in a while. Post something to keep your group's profile alive!",
+		"Help make " + groupname "'s profile better. Share a group picture!",
+		"You haven't posted to " + groupname + " in a while. Post something to show your followers!"
+	]
+});
+
+// reminder to follow people (might need new notification opener -> search tab)
+// Follow user1, user2, and others to have their groups appear in your feed 
+exports.reminderToFollowUsers = functions.pubsub.schedule('every day 19:00').timeZone('America/Los_Angeles').runWith(runtimeOpts).onRun((context) => {
+	var user1 = ""
+	var user2 = ""
+	var message = "Follow " + user1 + ", " + user2 + ", and others to have their groups appear in your feed!"
+
+});
+
+// exports.reminderToFollowBack = functions.pubsub.schedule('every day 19:00').timeZone('America/Los_Angeles').runWith(runtimeOpts).onRun((context) => {
+// 	var user = ""
+// 	var message = user + "follows you. Follow him back!"
+// }); 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
