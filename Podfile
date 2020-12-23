@@ -29,4 +29,5 @@ target 'GroupRoots' do
   pod 'SwiftGifOrigin', '~> 1.7.0'
   pod 'DGCollectionViewLeftAlignFlowLayout'
   pod 'LocationPicker'
+  pod 'SearchTextField'
 end

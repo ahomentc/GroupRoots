@@ -83,7 +83,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     private lazy var groupnameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 16)
-        label.textAlignment = .center
+        label.textAlignment = .left
 //        let tap = UITapGestureRecognizer(target: self, action: #selector(handleGroupTap))
 //        label.isUserInteractionEnabled = true
 //        label.addGestureRecognizer(tap)
@@ -194,7 +194,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         hiddenIcon.anchor(top: topAnchor, right: rightAnchor, paddingTop: 6, paddingRight: 12)
         
         addSubview(groupnameLabel)
-        groupnameLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 8)
+        groupnameLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 125, paddingLeft: 22)
         
         addSubview(noPostsLabel)
         noPostsLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 170)
@@ -221,7 +221,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
 //        header_layout.itemSize = CGSize(width: 60, height: 60)
 //        header_layout.minimumLineSpacing = CGFloat(20)
         
-        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: 35, width: UIScreen.main.bounds.width, height: 105), collectionViewLayout: header_layout)
+        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: 5, width: UIScreen.main.bounds.width, height: 105), collectionViewLayout: header_layout)
         headerCollectionView.delegate = self
         headerCollectionView.dataSource = self
         headerCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -348,7 +348,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         noPostsLabel.isHidden = false
         if canView ?? true { // no posts
 //            noPostsLabel.isHidden = false
-            noPostsLabel.text = "No posts yet."
+            noPostsLabel.text = "No posts yet"
             if isInGroup ?? false {
                 emptyPostButton.isHidden = false
             }
@@ -662,27 +662,28 @@ extension FullGroupCell: UICollectionViewDelegateFlowLayout {
             return UIEdgeInsets(top: 0, left: 5, bottom: 0, right: 0)
         }
         else {
-            if groupMembers?.count ?? 0 == 1 {
-                let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
-                let totalSpacingWidth = 10 * (collectionView.numberOfItems(inSection: 0) - 1)
-
-                let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
-                let rightInset = leftInset
-
-                return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
-            }
-            else if groupMembers?.count ?? 0 == 2 {
-                let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
-                let totalSpacingWidth = 20 * (collectionView.numberOfItems(inSection: 0) - 1)
-
-                let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
-                let rightInset = leftInset
-
-                return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
-            }
-            else {
-                return UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
-            }
+            return UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
+//            if groupMembers?.count ?? 0 == 1 {
+//                let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
+//                let totalSpacingWidth = 10 * (collectionView.numberOfItems(inSection: 0) - 1)
+//
+//                let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
+//                let rightInset = leftInset
+//
+//                return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
+//            }
+//            else if groupMembers?.count ?? 0 == 2 {
+//                let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
+//                let totalSpacingWidth = 20 * (collectionView.numberOfItems(inSection: 0) - 1)
+//
+//                let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
+//                let rightInset = leftInset
+//
+//                return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
+//            }
+//            else {
+//                return UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
+//            }
         }
     }
 

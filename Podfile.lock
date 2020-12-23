@@ -145,6 +145,7 @@ PODS:
   - PromisesObjC (1.2.10)
   - Protobuf (3.12.0)
   - PryntTrimmerView (4.0.0)
+  - SearchTextField (1.2.4)
   - SGHTTPRequest/Core (1.9.0):
     - AFNetworking/NSURLSession (~> 3.0)
     - AFNetworking/Reachability (~> 3.0)
@@ -176,6 +177,7 @@ DEPENDENCIES:
   - NVActivityIndicatorView
   - PhoneNumberKit (~> 3.1)
   - Player (~> 0.13.2)
+  - SearchTextField
   - SGImageCache
   - SwiftGifOrigin (~> 1.7.0)
   - UPCarouselFlowLayout
@@ -183,26 +185,12 @@ DEPENDENCIES:
   - Zoomy
 
 SPEC REPOS:
-  https://github.com/CocoaPods/Specs.git:
+  trunk:
     - AFNetworking
     - AppAuth
     - BSGridCollectionViewLayout
     - BSImagePicker
     - BSImageView
-    - GoogleSignIn
-    - GTMAppAuth
-    - GTMSessionFetcher
-    - MGEvents
-    - NVActivityIndicatorView
-    - Player
-    - PromiseKit
-    - PryntTrimmerView
-    - SGHTTPRequest
-    - SGImageCache
-    - SteviaLayout
-    - UPCarouselFlowLayout
-    - YPImagePicker
-  trunk:
     - DGCollectionViewLeftAlignFlowLayout
     - Firebase
     - FirebaseAnalytics
@@ -216,15 +204,29 @@ SPEC REPOS:
     - FirebaseStorage
     - GoogleAppMeasurement
     - GoogleDataTransport
+    - GoogleSignIn
     - GoogleUtilities
+    - GTMAppAuth
+    - GTMSessionFetcher
     - InjectableLoggers
     - leveldb-library
     - LocationPicker
+    - MGEvents
     - nanopb
+    - NVActivityIndicatorView
     - PhoneNumberKit
+    - Player
+    - PromiseKit
     - PromisesObjC
     - Protobuf
+    - PryntTrimmerView
+    - SearchTextField
+    - SGHTTPRequest
+    - SGImageCache
+    - SteviaLayout
     - SwiftGifOrigin
+    - UPCarouselFlowLayout
+    - YPImagePicker
     - Zoomy
 
 SPEC CHECKSUMS:
@@ -262,6 +264,7 @@ SPEC CHECKSUMS:
   PromisesObjC: b14b1c6b68e306650688599de8a45e49fae81151
   Protobuf: 2793fcd0622a00b546c60e7cbbcc493e043e9bb9
   PryntTrimmerView: 67e67573ffd4c073f1308effa66aefd0cfa667a0
+  SearchTextField: 40dc3cc57def5a211f263cac263622c163bbc25a
   SGHTTPRequest: 93646208528eafd758052a92ee4dcf04e0d263c5
   SGImageCache: ef7daf2cb76a67a79c25a1c1f71fa675c5fc9672
   SteviaLayout: c2ecdcff57d44e38fd2f65e54ad52aeae28ca0c4
@@ -270,6 +273,6 @@ SPEC CHECKSUMS:
   YPImagePicker: 7a34eabd0ef544ae8fbf9785c3df9ec5bbf242e3
   Zoomy: 598d7a6d52567e4f8bf2e557907bbd9d7e725664
 
-PODFILE CHECKSUM: 4760751503e45eeaad23ed3832b4977f4bffa3d3
+PODFILE CHECKSUM: cb9323595e30151d017be6044facd2f353d12b29
 
 COCOAPODS: 1.9.3

@@ -86,6 +86,9 @@
 		75E5CBC32503793F0080F815 /* SignUpPhoneController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBC22503793F0080F815 /* SignUpPhoneController.swift */; };
 		75E5CBC52504B67A0080F815 /* SignUpPhoneVerifyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBC42504B67A0080F815 /* SignUpPhoneVerifyController.swift */; };
 		75E5CBC72504CE950080F815 /* LoginPhoneVerifyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBC62504CE950080F815 /* LoginPhoneVerifyController.swift */; };
+		75E6257B2590B00D004262D9 /* SchoolLabelCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E6257A2590B00D004262D9 /* SchoolLabelCell.swift */; };
+		75E6257E2592D2A3004262D9 /* SchoolEmptyStateCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E6257D2592D2A3004262D9 /* SchoolEmptyStateCell.swift */; };
+		75E62581259334A2004262D9 /* InstaPromoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E62580259334A2004262D9 /* InstaPromoCell.swift */; };
 		75EFCCFA23F11D9D00B7580D /* EmtpyFeedCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */; };
 		75F2C2A923DD220C0037C76D /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */; };
 		9D7187601A438FC40FBC4D15 /* Pods_GroupRoots.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F29BE71F40760917CD1E06D5 /* Pods_GroupRoots.framework */; };
@@ -208,6 +211,9 @@
 		75E5CBC22503793F0080F815 /* SignUpPhoneController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpPhoneController.swift; sourceTree = "<group>"; };
 		75E5CBC42504B67A0080F815 /* SignUpPhoneVerifyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpPhoneVerifyController.swift; sourceTree = "<group>"; };
 		75E5CBC62504CE950080F815 /* LoginPhoneVerifyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginPhoneVerifyController.swift; sourceTree = "<group>"; };
+		75E6257A2590B00D004262D9 /* SchoolLabelCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolLabelCell.swift; sourceTree = "<group>"; };
+		75E6257D2592D2A3004262D9 /* SchoolEmptyStateCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolEmptyStateCell.swift; sourceTree = "<group>"; };
+		75E62580259334A2004262D9 /* InstaPromoCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstaPromoCell.swift; sourceTree = "<group>"; };
 		75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmtpyFeedCell.swift; sourceTree = "<group>"; };
 		75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationManager.swift; sourceTree = "<group>"; };
 		813799D4A56F45A1373EAB69 /* Pods-GroupRoots.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GroupRoots.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GroupRoots/Pods-GroupRoots.debug.xcconfig"; sourceTree = "<group>"; };
@@ -332,6 +338,9 @@
 				757B35CE24724A4300C9AFE1 /* FeedGroupPostCell.swift */,
 				757B35D02474DBB200C9AFE1 /* ProfileFeedCellHeader.swift */,
 				75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */,
+				75E6257A2590B00D004262D9 /* SchoolLabelCell.swift */,
+				75E6257D2592D2A3004262D9 /* SchoolEmptyStateCell.swift */,
+				75E62580259334A2004262D9 /* InstaPromoCell.swift */,
 			);
 			path = ProfileFeed;
 			sourceTree = "<group>";
@@ -677,6 +686,7 @@
 				"${BUILT_PRODUCTS_DIR}/PryntTrimmerView/PryntTrimmerView.framework",
 				"${BUILT_PRODUCTS_DIR}/SGHTTPRequest/SGHTTPRequest.framework",
 				"${BUILT_PRODUCTS_DIR}/SGImageCache/SGImageCache.framework",
+				"${BUILT_PRODUCTS_DIR}/SearchTextField/SearchTextField.framework",
 				"${BUILT_PRODUCTS_DIR}/SteviaLayout/Stevia.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftGifOrigin/SwiftGifOrigin.framework",
 				"${BUILT_PRODUCTS_DIR}/UPCarouselFlowLayout/UPCarouselFlowLayout.framework",
@@ -708,6 +718,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PryntTrimmerView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SGHTTPRequest.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SGImageCache.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SearchTextField.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Stevia.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftGifOrigin.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/UPCarouselFlowLayout.framework",
@@ -740,6 +751,7 @@
 				75E5CBB324FACC4B0080F815 /* ContactsInviteController.swift in Sources */,
 				75F2C2A923DD220C0037C76D /* PushNotificationManager.swift in Sources */,
 				75ACAFCB23FBADD000DAE747 /* FeedMemberCell.swift in Sources */,
+				75E6257B2590B00D004262D9 /* SchoolLabelCell.swift in Sources */,
 				75E5CBC32503793F0080F815 /* SignUpPhoneController.swift in Sources */,
 				AD32DECB210C18E6002F4973 /* SharePhotoController.swift in Sources */,
 				75E5CBC72504CE950080F815 /* LoginPhoneVerifyController.swift in Sources */,
@@ -770,6 +782,7 @@
 				75D86CB82531AAFF00939301 /* ConnectAccountController.swift in Sources */,
 				75ACAFC923F7DE8700DAE747 /* FollowPageCell.swift in Sources */,
 				754295C423E162F600893EFD /* InviteSelectionController.swift in Sources */,
+				75E62581259334A2004262D9 /* InstaPromoCell.swift in Sources */,
 				75D86CB62530329C00939301 /* GroupInviteController.swift in Sources */,
 				756E3D17243980BD00E167BA /* EditProfileController.swift in Sources */,
 				75BB489523DB00E800CF008F /* MembersCell.swift in Sources */,
@@ -835,6 +848,7 @@
 				AD3164D421152D00001F5DA7 /* Comment.swift in Sources */,
 				7521D0482434506A0028FC9C /* SearchHeader.swift in Sources */,
 				7578BB1E23D27CEE00AF9BFB /* GroupProfileHeader.swift in Sources */,
+				75E6257E2592D2A3004262D9 /* SchoolEmptyStateCell.swift in Sources */,
 				AD2CC6DA21215B220091E7D9 /* HomeEmptyStateView.swift in Sources */,
 				ADE95AFC210D6DFF003D9A54 /* HomeController.swift in Sources */,
 			);

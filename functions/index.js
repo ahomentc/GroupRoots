@@ -220,6 +220,21 @@ exports.autoSubscribeFollowers = functions.database.ref('/groups/{groupId}/membe
 	}).catch(() => {return null});
 });
 
+
+
+// exports.createSchoolToGroup = functions.database.ref('/groups/{groupId}/selectedSchool/{selectedSchool}}').onCreate((snapshot, context) => {
+// 	const group_id = context.params.groupId;
+// 	const selected_school = context.params.selectedSchool;
+// 	var creation_time = parseFloat(Date.now()/1000)
+
+// 	console.log("hi")
+
+// 	// create school -> group_id
+// 	return snapshot.ref.root.child('/schools/' + selected_school + '/groups/' + group_id).set(creation_time);
+// });
+
+
+
 // when follower_user unfollows following_user,
 // remove follower_user from folliwng_user's membersFollowing under groupsFollowing
 exports.removeFromMembersFollowingOnUnfollow = functions.database.ref('/followers/{following_user}/{follower_user}').onDelete((snapshot, context) => {
@@ -1043,6 +1058,15 @@ exports.updateNumNotificationsCountOnNew = functions.database.ref('/notification
 	}).catch(() => {return null});
 })
 
+// '/schools/' + selected_school + '/groups/' + group_id).set(creation_time);
+exports.updateNumGroupsInSchoolOnNew = functions.database.ref('/schools/{selected_school}/groups/{group_id}').onCreate((snapshot, context) => {
+	const selected_school = context.params.selected_school;
+
+	return snapshot.ref.root.child('/groupsInSchoolCount/' + selected_school).transaction(counter_value => {
+		return (counter_value || 0) + 1;
+	}).catch(() => {return null});
+})
+
 
 // ----------- Invite text messages ----------
 
@@ -1586,7 +1610,8 @@ const runtimeOpts = {
 // if there is a post that the user hasn't seen yet, then continue
 // get the user's token
 // send the notification for the post and set lastVisited time ot current time
-exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day 09:00').timeZone('America/Los_Angeles').runWith(runtimeOpts).onRun((context) => {
+// exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day 09:00').timeZone('America/Los_Angeles').runWith(runtimeOpts).onRun((context) => {
+exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day 09:00').timeZone('America/Los_Angeles').onRun((context) => {
 	return admin.database().ref('/users').once('value', users_snapshot => {
 		var current_time = parseFloat(Date.now()/1000) // in seconds
 		users_snapshot.forEach(function(user) {
@@ -1777,26 +1802,28 @@ exports.open_post = functions.https.onRequest((req, res) => {
 // if no one in the group has posted in the last 7 days
 // randomly select someone from the group to send a message to remind to post
 // message: You haven't posted to [_group_ || your group with _user_ and _user_] in a while. Post something to keep your group's profile alive
-exports.reminderToPostNotificationForGroup = functions.pubsub.schedule('every day 18:00').timeZone('America/Los_Angeles').runWith(runtimeOpts).onRun((context) => {
-	var groupname = ""
-	var messages = [
-		"\"Remember when...?\" Share a funny throwback to " + groupname + "!",
-		"\"Remember when...?\" Remind your friends in " + groupname + " with something funny!",
-		"Do something new? Share a picture with " + groupname + "!",
-		"You haven't posted to " + groupname + " in a while. Post something to keep your group's profile alive!",
-		"Help make " + groupname "'s profile better. Share a group picture!",
-		"You haven't posted to " + groupname + " in a while. Post something to show your followers!"
-	]
-});
+// !!!!!!!!!
+// exports.reminderToPostNotificationForGroup = functions.pubsub.schedule('every day 18:00').timeZone('America/Los_Angeles').runWith(runtimeOpts).onRun((context) => {
+// 	var groupname = ""
+// 	var messages = [
+// 		"\"Remember when...?\" Share a funny throwback to " + groupname + "!",
+// 		"\"Remember when...?\" Remind your friends in " + groupname + " with something funny!",
+// 		"Do something new? Share a picture with " + groupname + "!",
+// 		"You haven't posted to " + groupname + " in a while. Post something to keep your group's profile alive!",
+// 		"Help make " + groupname "'s profile better. Share a group picture!",
+// 		"You haven't posted to " + groupname + " in a while. Post something to show your followers!"
+// 	]
+// });
 
 // reminder to follow people (might need new notification opener -> search tab)
 // Follow user1, user2, and others to have their groups appear in your feed 
-exports.reminderToFollowUsers = functions.pubsub.schedule('every day 19:00').timeZone('America/Los_Angeles').runWith(runtimeOpts).onRun((context) => {
-	var user1 = ""
-	var user2 = ""
-	var message = "Follow " + user1 + ", " + user2 + ", and others to have their groups appear in your feed!"
+// !!!!!!!!!
+// exports.reminderToFollowUsers = functions.pubsub.schedule('every day 19:00').timeZone('America/Los_Angeles').runWith(runtimeOpts).onRun((context) => {
+// 	var user1 = ""
+// 	var user2 = ""
+// 	var message = "Follow " + user1 + ", " + user2 + ", and others to have their groups appear in your feed!"
 
-});
+// });
 
 // exports.reminderToFollowBack = functions.pubsub.schedule('every day 19:00').timeZone('America/Los_Angeles').runWith(runtimeOpts).onRun((context) => {
 // 	var user = ""

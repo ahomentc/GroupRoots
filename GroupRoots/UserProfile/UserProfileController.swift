@@ -306,12 +306,6 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
     
     private func fetchGroupInfo(groups: [Group]){
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-//        private var isGroupHiddenDict = [String: Bool]()
-//        private var isInGroupFollowPendingDict = [String: Bool]()
-//        private var canViewGroupPostsDict = [String: Bool]()
-//        private var isInGroupDict = [String: Bool]()
-//        private var groupMembersDict = [String: [User]]()
-//        private var groupPosts2DDict = [String: [GroupPost]]()
         
         let sync = DispatchGroup()
         sync.enter()
@@ -329,36 +323,32 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
                         
                         Database.database().canViewGroupPosts(groupId: group.groupId, completion: { (canView) in
                             self.canViewGroupPostsDict[groupId] = canView
-                            
-//                            Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
-//                                self.groupMembersDict[groupId] = members
                                 
-                                if canView {
-                                    Database.database().fetchAllGroupPosts(groupId: group.groupId, completion: { (countAndPosts) in
-                                        if countAndPosts.count > 0 {
-                                            self.groupPosts2DDict[groupId] = countAndPosts[1] as? [GroupPost]
-                                            if self.groupPosts2DDict[groupId] != nil {
-                                                self.groupPosts2DDict[groupId]!.sort(by: { (p1, p2) -> Bool in
-                                                    return p1.creationDate.compare(p2.creationDate) == .orderedDescending
-                                                })
-                                            }
-                                            else {
-                                                self.groupPosts2DDict[groupId] = []
-                                            }
+                            if canView {
+                                Database.database().fetchAllGroupPosts(groupId: group.groupId, completion: { (countAndPosts) in
+                                    if countAndPosts.count > 0 {
+                                        self.groupPosts2DDict[groupId] = countAndPosts[1] as? [GroupPost]
+                                        if self.groupPosts2DDict[groupId] != nil {
+                                            self.groupPosts2DDict[groupId]!.sort(by: { (p1, p2) -> Bool in
+                                                return p1.creationDate.compare(p2.creationDate) == .orderedDescending
+                                            })
                                         }
                                         else {
                                             self.groupPosts2DDict[groupId] = []
                                         }
-                                        sync.leave()
-                                    }) { (err) in
-                                        return
                                     }
-                                }
-                                else {
-                                    self.groupPosts2DDict[groupId] = []
+                                    else {
+                                        self.groupPosts2DDict[groupId] = []
+                                    }
                                     sync.leave()
+                                }) { (err) in
+                                    return
                                 }
-//                            }) { (_) in }
+                            }
+                            else {
+                                self.groupPosts2DDict[groupId] = []
+                                sync.leave()
+                            }
                         }) { (err) in
                             return
                         }
@@ -449,14 +439,6 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
             cell.numberOfGroups = groups.count
             return cell
         }
-
-        //  isGroupHiddenDict
-        //  isInGroupFollowPendingDict -
-        //  canViewGroupPostsDict -
-        //  isInGroupDict -
-        //  groupMembersDict -
-        //  groupPosts2DDict -
-        
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FullGroupCell.cellId, for: indexPath) as! FullGroupCell
         cell.group = groups[indexPath.item - 1]
         cell.user = user
@@ -591,7 +573,6 @@ extension UserProfileController: UICollectionViewDelegateFlowLayout {
         if indexPath.item == 0 {
             return CGSize(width: view.frame.width, height: 60)
         }
-//        return CGSize(width: view.frame.width, height: 80)
         return CGSize(width: view.frame.width, height: 310)
     }
     

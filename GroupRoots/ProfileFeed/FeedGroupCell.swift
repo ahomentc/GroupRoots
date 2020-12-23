@@ -177,14 +177,14 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         
         
         // set the layout according to isFullScreen
-        if isFullScreen {
-            self.delegate?.didChangeViewType(isFullscreen: true)
-            self.collectionView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-        }
-        else {
-            self.delegate?.didChangeViewType(isFullscreen: false)
-            self.collectionView.frame = CGRect(x: 0, y: 175, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 175)
-        }
+//        if isFullScreen {
+//            self.delegate?.didChangeViewType(isFullscreen: true)
+//            self.collectionView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+//        }
+//        else {
+//            self.delegate?.didChangeViewType(isFullscreen: false)
+//            self.collectionView.frame = CGRect(x: 0, y: 220, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 220)
+//        }
         
         if groupPosts.count > 0 {
             let group = groupPosts[0].group
@@ -250,7 +250,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         header_layout.itemSize = CGSize(width: 60, height: 60)
         header_layout.minimumLineSpacing = CGFloat(20)
         
-        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height - UIScreen.main.bounds.height/9*8, width: UIScreen.main.bounds.width, height: 120), collectionViewLayout: header_layout)
+        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/10, width: UIScreen.main.bounds.width, height: 120), collectionViewLayout: header_layout)
         headerCollectionView.delegate = self
         headerCollectionView.dataSource = self
         headerCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -268,7 +268,9 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         layout.minimumLineSpacing = CGFloat(0)
         
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 220, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 220), collectionViewLayout: layout)
+//        CGRect(x: 0, y: 220, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 220)
+        
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -282,17 +284,19 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         insertSubview(collectionView, at: 5)
         
         insertSubview(groupnameButton, at: 6)
-        groupnameButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingLeft: 50, paddingRight: 50)
+        groupnameButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: UIScreen.main.bounds.height/3.5, paddingLeft: 20)
         groupnameButton.backgroundColor = .clear
         groupnameButton.isUserInteractionEnabled = true
         
         insertSubview(closeButton, at: 7)
         closeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingRight: 20)
         
-        pageControlSwipe = UIPageControl(frame: CGRect(x: 0, y: UIScreen.main.bounds.height - UIScreen.main.bounds.height/8, width: UIScreen.main.bounds.width, height: 10))
+//        pageControlSwipe = UIPageControl()
+        pageControlSwipe = UIPageControl(frame: CGRect(x: 0, y: UIScreen.main.bounds.height - UIScreen.main.bounds.height/10, width: UIScreen.main.bounds.width, height: 10))
         pageControlSwipe.pageIndicatorTintColor = UIColor.lightGray
         pageControlSwipe.currentPageIndicatorTintColor = UIColor.darkGray
         self.addSubview(pageControlSwipe)
+//        pageControlSwipe.anchor(top: collectionView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 20, height: 10)
         
         self.groupnameButton.isHidden = false
         self.closeButton.isHidden = false
@@ -724,27 +728,28 @@ extension FeedGroupCell: UICollectionViewDelegateFlowLayout {
             return UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         }
         else {
-            if groupMembers?.count == 1 {
-                let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
-                let totalSpacingWidth = 10 * (collectionView.numberOfItems(inSection: 0) - 1)
-
-                let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
-                let rightInset = leftInset
-
-                return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
-            }
-            else if groupMembers?.count == 2 {
-                let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
-                let totalSpacingWidth = 20 * (collectionView.numberOfItems(inSection: 0) - 1)
-
-                let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
-                let rightInset = leftInset
-
-                return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
-            }
-            else {
-                return UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
-            }
+            return UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
+//            if groupMembers?.count == 1 {
+//                let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
+//                let totalSpacingWidth = 10 * (collectionView.numberOfItems(inSection: 0) - 1)
+//
+//                let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
+//                let rightInset = leftInset
+//
+//                return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
+//            }
+//            else if groupMembers?.count == 2 {
+//                let totalCellWidth = 60 * collectionView.numberOfItems(inSection: 0)
+//                let totalSpacingWidth = 20 * (collectionView.numberOfItems(inSection: 0) - 1)
+//
+//                let leftInset = (collectionView.layer.frame.size.width - CGFloat(totalCellWidth + totalSpacingWidth)) / 2
+//                let rightInset = leftInset
+//
+//                return UIEdgeInsets(top: 0, left: leftInset, bottom: 0, right: rightInset)
+//            }
+//            else {
+//                return UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
+//            }
         }
     }
 }

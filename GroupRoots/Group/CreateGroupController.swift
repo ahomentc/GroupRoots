@@ -10,6 +10,8 @@ import UIKit
 import Firebase
 import FirebaseAuth
 import FirebaseDatabase
+import SearchTextField
+import FirebaseStorage
 
 protocol CreateGroupControllerDelegate {
     func shouldOpenGroup(groupId: String)
@@ -21,6 +23,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     var delegateForInvite: InviteToGroupWhenCreateControllerDelegate?
     
     private var isPrivate: Bool = false
+    private var schoolSelected: Bool = false
     
     private let plusPhotoButton: UIButton = {
         let button = UIButton(type: .system)
@@ -39,7 +42,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         tf.autocapitalizationType = .none
         tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = UIFont.systemFont(ofSize: 16)
         tf.delegate = self as UITextFieldDelegate
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -52,7 +55,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         tf.autocapitalizationType = .none
         tf.backgroundColor = UIColor(white: 0, alpha: 0)
         tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 14)
+        tf.font = UIFont.systemFont(ofSize: 16)
         tf.delegate = self as UITextFieldDelegate
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -96,6 +99,8 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         return button
     }()
     
+    var linkSchools = SearchTextField()
+    
     private var profileImage: UIImage?
     
     override func viewDidLoad() {
@@ -125,20 +130,74 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         self.dismiss(animated: true, completion: nil)
     }
     
+    struct Response: Codable { // or Decodable
+      let foo: String
+    }
+    
     private func setupInputFields() {
+        
+        let storageRef = Storage.storage().reference()
+        let highSchoolsRef = storageRef.child("high_schools.json")
+        highSchoolsRef.downloadURL { url, error in
+            if let error = error {
+                print(error)
+            } else {
+                let hs_url = url!.absoluteString
+                if let url = URL(string: hs_url) {
+                   URLSession.shared.dataTask(with: url) { data, response, error in
+                      if let data = data {
+                          do {
+                            let json_string = String(data: data, encoding: .utf8)
+                            guard let data = json_string?.data(using: String.Encoding.utf8 ),
+                              let high_schools = try JSONSerialization.jsonObject(with: data, options: []) as? [String] else {
+                                fatalError()
+                                }
+                            DispatchQueue.main.async {
+                                self.linkSchools.filterStrings(high_schools)
+                            }
+                          } catch let error {
+                             print(error)
+                          }
+                       }
+                   }.resume()
+                }
+            }
+        }
+    
+        linkSchools.borderStyle = .none
+        linkSchools.theme.cellHeight = 50
+        linkSchools.comparisonOptions = [.caseInsensitive]
+        linkSchools.placeholder = "Link to your school (optional)"
+        linkSchools.backgroundColor = .white
+        linkSchools.startVisible = true
+        linkSchools.autocorrectionType = .no
+        linkSchools.textAlignment = .center
+        linkSchools.theme.bgColor = .white
+        linkSchools.theme.font = UIFont.systemFont(ofSize: 14)
+        linkSchools.itemSelectionHandler = { filteredResults, itemPosition in
+            // Just in case you need the item position
+            let item = filteredResults[itemPosition]
+            print("Item at position \(itemPosition): \(item.title)")
+
+            // Do whatever you want with the picked item
+            self.linkSchools.text = item.title
+            self.schoolSelected = true
+            self.linkSchools.resignFirstResponder()
+        }
         
         let radioButtonsStack = UIStackView(arrangedSubviews: [publicGroupButton, privateGroupButton])
         radioButtonsStack.distribution = .fillEqually
         radioButtonsStack.axis = .horizontal
         radioButtonsStack.spacing = 10
         
-        let stackView = UIStackView(arrangedSubviews: [groupnameTextField, bioTextField, radioButtonsStack, createGroupButton])
+        let stackView = UIStackView(arrangedSubviews: [linkSchools, groupnameTextField, bioTextField, radioButtonsStack, createGroupButton])
         stackView.distribution = .fillEqually
         stackView.axis = .vertical
-        stackView.spacing = 25
+//        stackView.spacing = 25
+        stackView.spacing = 15
         
         view.addSubview(stackView)
-        stackView.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 50, paddingLeft: 40, paddingRight: 40, height: 250)
+        stackView.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 40, paddingLeft: 40, paddingRight: 40, height: 300)
     }
     
     private func resetInputFields() {
@@ -155,6 +214,11 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     @objc private func handleTapOnView(_ sender: UITextField) {
         groupnameTextField.resignFirstResponder()
         bioTextField.resignFirstResponder()
+        linkSchools.resignFirstResponder()
+        
+        if !schoolSelected {
+            linkSchools.text = ""
+        }
     }
     
     @objc private func handlePlusPhoto() {
@@ -203,7 +267,8 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
             }
         }
 
-        Database.database().createGroup(groupname: formatedGroupname, bio: bio ?? "", image: profileImage, isPrivate: isPrivate) { (err, groupId) in
+        let selectedSchool = linkSchools.text?.replacingOccurrences(of: " ", with: "_-a-_") ?? ""
+        Database.database().createGroup(groupname: formatedGroupname, bio: bio ?? "", image: profileImage, isPrivate: isPrivate, selectedSchool: selectedSchool) { (err, groupId) in
             if err != nil {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
                 guard let error = err else { self.resetInputFields(); return }
@@ -291,3 +356,4 @@ extension CreateGroupController: UITextFieldDelegate {
 fileprivate func convertFromUIImagePickerControllerInfoKeyDictionary(_ input: [UIImagePickerController.InfoKey: Any]) -> [String: Any] {
     return Dictionary(uniqueKeysWithValues: input.map {key, value in (key.rawValue, value)})
 }
+

@@ -1900,6 +1900,40 @@ extension Database {
             cancel?(err)
         }
     }
+    
+    func fetchSchoolGroups(school: String, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
+        
+        let selectedSchool = school.replacingOccurrences(of: " ", with: "_-a-_")
+        let ref = Database.database().reference().child("schools").child(selectedSchool).child("groups")
+        
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            var groups = [Group]()
+
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let groupId = child.key
+                sync.enter()
+                print(groupId)
+                self.groupExists(groupId: groupId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                            groups.append(group)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                completion(groups)
+            }
+        }) { (err) in
+            print("Failed to fetch posts:", err)
+            cancel?(err)
+        }
+    }
 
     func hasGroupRequestUsers(groupId: String, completion: @escaping (Bool) -> ()) {
         Database.database().reference().child("groups").child(groupId).child("requestedMembers").queryLimited(toFirst: 1).observeSingleEvent(of: .value, with: { (snapshot) in
@@ -2094,12 +2128,13 @@ extension Database {
             }
         })
     }
-    func createGroup(groupname: String?, bio: String?, image: UIImage?, isPrivate: Bool, completion: @escaping (Error?,String) -> ()) {
+    
+    func createGroup(groupname: String?, bio: String?, image: UIImage?, isPrivate: Bool, selectedSchool: String, completion: @escaping (Error?,String) -> ()) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         var userGroupRef: DatabaseReference?
         let isPrivateString = isPrivate ? "true" : "false"
         
-        var values = ["creationDate": Date().timeIntervalSince1970, "private": isPrivateString, "lastPostedDate": 0] as [String : Any]
+        var values = ["creationDate": Date().timeIntervalSince1970, "private": isPrivateString, "lastPostedDate": 0, "selectedSchool": selectedSchool] as [String : Any]
         let sync = DispatchGroup()
         // set the groupname if it exists
         if groupname != nil && groupname != "" {
@@ -2179,38 +2214,32 @@ extension Database {
                             completion(err, "")
                             return
                         }
-                        // add invitation code with groupId as value
-                        // increment value under groupId when user signs up with it until gets to 100 users
-                        // ^^ but do this later
-                        let values = [groupId: 1]
-                        let code = String(groupId.suffix(6))
-                        let stripped_code = code.replacingOccurrences(of: "_", with: "a", options: .literal, range: nil)
-                        let stripped_code2 = stripped_code.replacingOccurrences(of: "-", with: "b", options: .literal, range: nil)
-                        let invitationRef = Database.database().reference().child("inviteCodes").child(stripped_code2)
-                        invitationRef.updateChildValues(values) { (err, ref) in
+                        
+                        // add groupId to schools
+                        let values = [groupId: Date().timeIntervalSince1970]
+                        Database.database().reference().child("schools").child(selectedSchool).child("groups").updateChildValues(values) { (err, ref) in
                             if let err = err {
                                 completion(err, "")
                                 return
                             }
-                            completion(nil,groupId)
-//                            Don't need this anymore because of cloud function
-//                            // auto subscribe user to group
-//                            Database.database().addToGroupFollowers(groupId: groupId, withUID: uid) { (err) in
-//                                if err != nil {
-//                                    completion(err);return
-//                                }
-//                                Database.database().addToGroupsFollowing(groupId: groupId, withUID: uid, autoSubscribed: false) { (err) in
-//                                    if err != nil {
-//                                        completion(err);return
-//                                    }
-//                                    Database.database().removeFromGroupFollowPending(groupId: groupId, withUID: uid, completion: { (err) in
-//                                        if err != nil {
-//                                            completion(err);return
-//                                        }
-//                                        completion(nil)
-//                                    })
-//                                }
-//                            }
+                            
+                            // add groupId to schools
+                            
+                            // add invitation code with groupId as value
+                            // increment value under groupId when user signs up with it until gets to 100 users
+                            // ^^ but do this later
+                            let values = [groupId: 1]
+                            let code = String(groupId.suffix(6))
+                            let stripped_code = code.replacingOccurrences(of: "_", with: "a", options: .literal, range: nil)
+                            let stripped_code2 = stripped_code.replacingOccurrences(of: "-", with: "b", options: .literal, range: nil)
+                            let invitationRef = Database.database().reference().child("inviteCodes").child(stripped_code2)
+                            invitationRef.updateChildValues(values) { (err, ref) in
+                                if let err = err {
+                                    completion(err, "")
+                                    return
+                                }
+                                completion(nil,groupId)
+                            }
                         }
                     }
                 }
