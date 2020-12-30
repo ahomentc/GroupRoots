@@ -84,9 +84,10 @@ class InstaPromoController: UIViewController {
         
         self.view.backgroundColor = .black
         
-        let school = "Alameda_-a-_Community_-a-_Learning_-a-_Center"
+//        let school = "Alameda_-a-_Community_-a-_Learning_-a-_Center"
+        let school = "Alameda_-a-_Science_-a-_and_-a-_Technology_-a-_Institute"
         
-        navigationItem.title = "Amazon Code Promo"
+//        navigationItem.title = "Amazon Code Promo"
         let textAttributes = [NSAttributedString.Key.foregroundColor:UIColor.white, NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneSelected))
@@ -109,53 +110,84 @@ class InstaPromoController: UIViewController {
         self.view.insertSubview(savedLabel, at: 4)
         savedLabel.anchor(top: promoImageView.bottomAnchor, left: view.leftAnchor, paddingTop: 5, paddingLeft: UIScreen.main.bounds.width/2-75, width: 150, height: 40)
         
-        Database.database().fetchSchoolPromoPayout(school: school, completion: { (payout) in
-            let navLabel = UILabel()
-            navLabel.text = "$" + String(payout) + " Amazon Code Promo"
-            navLabel.font = UIFont.boldSystemFont(ofSize: 18)
-            navLabel.textColor = .white
-            self.navigationItem.titleView = navLabel
-        }) { (_) in}
-        
-        let school_name = school.replacingOccurrences(of: "_-a-_", with: " ").components(separatedBy: ",")[0]
-        let acronym = getAcronymFromSchool(name: school_name)
-        
-        let attributedText = NSMutableAttributedString(string: "Share this picture on your Instagram\nStory and tag @" + acronym, attributes: [NSAttributedString.Key.foregroundColor:UIColor.white, NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
-        attributedText.append(NSMutableAttributedString(string: "\n\n(If your Instagram is private, also send a DM to @" + acronym + " with a screenshot of your story)", attributes: [NSAttributedString.Key.foregroundColor:UIColor.lightGray, NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
-        self.explainPromoLabel.attributedText = attributedText
-        
-        let school_lines = getLines(text: school_name, maxCharsInLine: 30)
-        let school_text = convertLinesToString(lines: school_lines)
-        let imageWithSchool = textToImage(drawText: "Your group is reserved\non GroupRoots for\n" + school_text as NSString, inImage: #imageLiteral(resourceName: "story5"), atPoint: CGPoint(x: 0, y: 150), fontSize: 42, fontColor: .white, shouldCenter: true)
-        
-        var yForReservedFor = 350
-        if school_lines.count > 1 {
-            yForReservedFor = 380
-        }
-        
-        if group != nil {
-            var names = [String]()
-            Database.database().fetchGroupMembers(groupId: group!.groupId, completion: { (members) in
-                members.forEach({ (member) in
-                    if member.name != "" {
-                        names.append(member.name.capitalized)
-                    }
-                    else {
-                        names.append(member.username)
-                    }
-                })
-                let namesInString = self.convertNamesToString(names: names)
-                let reserved_for_lines = self.getLines(text: namesInString, maxCharsInLine: 40)
-                let reserved_for_text = self.convertLinesToString(lines: reserved_for_lines)
-                let imageWithMembers = self.textToImage(drawText: "Reserved for:\n" + reserved_for_text as NSString, inImage: imageWithSchool, atPoint: CGPoint(x: 0, y: yForReservedFor), fontSize: 30, fontColor: .lightGray, shouldCenter: true)
+        Database.database().isPromoActive(school: school, completion: { (isActive) in
+            if isActive {
+                Database.database().fetchSchoolPromoPayout(school: school, completion: { (payout) in
+                    let navLabel = UILabel()
+                    navLabel.text = "$" + String(payout) + " Amazon Code Promo"
+                    navLabel.font = UIFont.boldSystemFont(ofSize: 18)
+                    navLabel.textColor = .white
+                    self.navigationItem.titleView = navLabel
+                }) { (_) in}
+            }
+//            else {
+//                let navLabel = UILabel()
+//                navLabel.text = "Group Reservation Complete"
+//                navLabel.font = UIFont.boldSystemFont(ofSize: 18)
+//                navLabel.textColor = .white
+//                self.navigationItem.titleView = navLabel
+//            }
+            
+            if !isActive {
+                self.explainPromoLabel.frame = CGRect(x: 20, y: UIScreen.main.bounds.height/14, width: UIScreen.main.bounds.width - 40, height: 140)
+                self.view.insertSubview(self.explainPromoLabel, at: 4)
                 
-                let currentLoggedInUserId = Auth.auth().currentUser?.uid ?? ""
-                Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    let imageWithUserCode = self.textToImage(drawText: (school + " " + user.username) as NSString, inImage: imageWithMembers, atPoint: CGPoint(x: 0, y: 1540), fontSize: 12, fontColor: .darkGray, shouldCenter: true)
-                    self.promoImageView.image = imageWithUserCode
-                }
-            }) { (_) in}
-        }
+                self.promoImageView.frame = CGRect(x: UIScreen.main.bounds.width * 0.2, y: UIScreen.main.bounds.height/11 + 100, width: UIScreen.main.bounds.width * 0.6, height: UIScreen.main.bounds.height * 0.6)
+            }
+            
+            let school_name = school.replacingOccurrences(of: "_-a-_", with: " ").components(separatedBy: ",")[0]
+            let acronym = self.getAcronymFromSchool(name: school_name)
+            
+            if isActive {
+                let attributedText = NSMutableAttributedString(string: "Share this picture on your Instagram\nStory and tag @" + acronym, attributes: [NSAttributedString.Key.foregroundColor:UIColor.white, NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
+                attributedText.append(NSMutableAttributedString(string: "\n\n(If your Instagram is private, also send a DM to @" + acronym + " with a screenshot of your story)", attributes: [NSAttributedString.Key.foregroundColor:UIColor.lightGray, NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
+                self.explainPromoLabel.attributedText = attributedText
+            }
+            else {
+                let attributedText = NSMutableAttributedString(string: "Group Reservation Complete!", attributes: [NSAttributedString.Key.foregroundColor:UIColor.white, NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
+                self.explainPromoLabel.attributedText = attributedText
+            }
+            
+            let school_lines = self.getLines(text: school_name, maxCharsInLine: 30)
+            let school_text = self.convertLinesToString(lines: school_lines)
+            let imageWithSchool = self.textToImage(drawText: "Your group is reserved\non GroupRoots for\n" + school_text as NSString, inImage: #imageLiteral(resourceName: "story5"), atPoint: CGPoint(x: 0, y: 150), fontSize: 42, fontColor: .white, shouldCenter: true)
+            
+            var yForReservedFor = 350
+            if school_lines.count > 1 {
+                yForReservedFor = 380
+            }
+            
+            if self.group != nil {
+                var names = [String]()
+                Database.database().fetchGroupMembers(groupId: self.group!.groupId, completion: { (members) in
+                    members.forEach({ (member) in
+                        if member.name != "" {
+                            names.append(member.name.capitalized)
+                        }
+                        else {
+                            names.append(member.username)
+                        }
+                    })
+                    let namesInString = self.convertNamesToString(names: names)
+                    let reserved_for_lines = self.getLines(text: namesInString, maxCharsInLine: 40)
+                    let reserved_for_text = self.convertLinesToString(lines: reserved_for_lines)
+                    
+                    let imageWithMembers = self.textToImage(drawText: "Reserved for:\n" + reserved_for_text as NSString, inImage: imageWithSchool, atPoint: CGPoint(x: 0, y: yForReservedFor), fontSize: 30, fontColor: .lightGray, shouldCenter: true)
+                    
+                    let currentLoggedInUserId = Auth.auth().currentUser?.uid ?? ""
+                    Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
+                        let imageWithUserCode = self.textToImage(drawText: (school + " " + user.username) as NSString, inImage: imageWithMembers, atPoint: CGPoint(x: 0, y: 1540), fontSize: 12, fontColor: .darkGray, shouldCenter: true)
+                        if isActive {
+                            self.promoImageView.image = imageWithUserCode
+                        }
+                        else {
+                            self.promoImageView.image = imageWithMembers
+                        }
+                        
+                    }
+                }) { (_) in}
+            }
+        }) { (_) in}
     }
     
     @objc private func doneSelected(){

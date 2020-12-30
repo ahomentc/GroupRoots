@@ -24,7 +24,10 @@ class SchoolLabelCell: UICollectionViewCell {
     var selectedSchool: String? {
         didSet {
             guard let selectedSchool = selectedSchool else { return }
-            self.schoolLabel.text = selectedSchool.replacingOccurrences(of: "_-a-_", with: " ").components(separatedBy: ",")[0]
+            let name = selectedSchool.replacingOccurrences(of: "_-a-_", with: " ").components(separatedBy: ",")[0]
+            let name_lines = getLines(text: name, maxCharsInLine: 32)
+            let name_string = convertLinesToString(lines: name_lines)
+            self.schoolLabel.text = name_string
         }
     }
     
@@ -44,11 +47,36 @@ class SchoolLabelCell: UICollectionViewCell {
         self.backgroundColor = .clear
         
         addSubview(schoolLabel)
-        schoolLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 0, paddingLeft: 15, paddingRight: 15, height: 40)
+        schoolLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 0, paddingLeft: 15, paddingRight: 15, height: 60)
 
-//        let separatorView = UIView()
-//        separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
-//        addSubview(separatorView)
-//        separatorView.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 10, paddingRight: 10, height: 0.5)
+    }
+    
+    func getLines(text: String, maxCharsInLine: Int) -> [String] {
+        let words = text.components(separatedBy: " ")
+        var lines = [String]()
+        
+        var currentLine = ""
+        
+        for word in words {
+            let numChars = (currentLine + word).count
+            if numChars < maxCharsInLine {
+                currentLine += " " + word
+            }
+            else {
+                lines.append(currentLine)
+                currentLine = word
+            }
+        }
+        lines.append(currentLine)
+        return lines
+    }
+    
+    func convertLinesToString(lines: [String]) -> String {
+        var text = ""
+        for line in lines {
+            text += line + "\n"
+        }
+        text.removeLast()
+        return text
     }
 }

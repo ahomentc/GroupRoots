@@ -516,6 +516,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         schoolCollectionView?.register(SchoolUsersCell.self, forCellWithReuseIdentifier: SchoolUsersCell.cellId)
         schoolCollectionView?.register(CreateGroupCell.self, forCellWithReuseIdentifier: CreateGroupCell.cellId)
         schoolCollectionView?.register(YourGroupsCell.self, forCellWithReuseIdentifier: YourGroupsCell.cellId)
+        schoolCollectionView?.register(NoGroupsInSchoolCell.self, forCellWithReuseIdentifier: NoGroupsInSchoolCell.cellId)
         schoolCollectionView.backgroundColor = UIColor.clear
         schoolCollectionView.showsVerticalScrollIndicator = false
 //        schoolCollectionView.isPagingEnabled = true
@@ -1002,7 +1003,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     private func fetchSchoolPromoIsActive(school: String) {
         Database.database().isPromoActive(school: school, completion: { (isActive) in
-            print("hi")
             self.schoolPromoIsActive = isActive
             self.schoolPromoIsActiveFetched = true
             self.reloadSchoolCollectionView()
@@ -1134,14 +1134,16 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             if fetchedSchoolGroups == false {
                 return 0
             }
-            if school_groups.count == 0 {
-                return 1
-            }
+//            if school_groups.count == 0 {
+//                return 1
+//            }
+            var groupCells = school_groups.count
+            if groupCells == 0 { groupCells = 1 }
             if self.schoolPromoIsActive {
-                return school_groups.count + 5
+                return groupCells + 5
             }
             else {
-                return school_groups.count + 4
+                return groupCells + 4
             }
         }
         else {
@@ -1154,13 +1156,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if collectionView == self.schoolCollectionView {
-            if school_groups.count == 0 {
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SchoolEmptyStateCell.cellId, for: indexPath) as! SchoolEmptyStateCell
-                cell.selectedSchool = self.selectedSchool
-                cell.delegate = self
-                return cell
-            }
-            
+
             if indexPath.item == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SchoolLabelCell.cellId, for: indexPath) as! SchoolLabelCell
                 cell.selectedSchool = self.selectedSchool
@@ -1203,6 +1199,11 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: YourGroupsCell.cellId, for: indexPath) as! YourGroupsCell
                     return cell
                 }
+            }
+            
+            if school_groups.count == 0 {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NoGroupsInSchoolCell.cellId, for: indexPath) as! NoGroupsInSchoolCell
+                return cell
             }
             
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FullGroupCell.cellId, for: indexPath) as! FullGroupCell
@@ -1248,12 +1249,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if collectionView == self.schoolCollectionView {
-            if school_groups.count == 0 {
-                let emptyStateCellHeight = view.safeAreaLayoutGuide.layoutFrame.height
-                return CGSize(width: view.frame.width, height: emptyStateCellHeight)
-            }
             if indexPath.item == 0 {
-                return CGSize(width: view.frame.width, height: 40)
+                return CGSize(width: view.frame.width, height: 60)
             }
             if indexPath.item == 1 {
                 return CGSize(width: view.frame.width, height: 135)
@@ -1261,7 +1258,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             
             if self.schoolPromoIsActive {
                 if indexPath.item == 2 {
-                    return CGSize(width: view.frame.width, height: 80)
+                    return CGSize(width: view.frame.width, height: 100)
                 }
                 if indexPath.item == 3 {
                     return CGSize(width: view.frame.width, height: 60)
@@ -1278,6 +1275,11 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     return CGSize(width: view.frame.width, height: 40)
                 }
             }
+            
+            if school_groups.count == 0 {
+                return CGSize(width: view.frame.width, height: 50)
+            }
+            
             return CGSize(width: view.frame.width, height: 310)
         }
         else {
@@ -1287,12 +1289,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
         if collectionView == self.schoolCollectionView {
-            if school_groups.count == 0  {
-                return 0
-            }
-            else {
-                return 5
-            }
+            return 5
         }
         else {
             return 0

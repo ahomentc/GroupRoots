@@ -11,35 +11,25 @@ import UIKit
 import FirebaseDatabase
 
 class InstaPromoCell: UICollectionViewCell {
-    
-//    private let promoLabel: UILabel = {
-//        let label = UILabel()
-//        let attributedText = NSMutableAttributedString(string: "You're one of first people from your school!", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
-//        attributedText.append(NSAttributedString(string: "\nWe're giving $20 Amazon codes to the first 10\npeople who create or join a friend group.", attributes: [NSAttributedString.Key.foregroundColor: UIColor.init(white: 0.1, alpha: 1), NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)]))
-//        label.attributedText = attributedText
-//        label.numberOfLines = 0
-//        label.textAlignment = .center
-//        return label
-//    }()
-    
+
     var selectedSchool: String? {
         didSet {
             guard let selectedSchool = selectedSchool else { return }
             print(selectedSchool)
             Database.database().fetchSchoolPromoPayout(school: selectedSchool, completion: { (payout) in
                 if payout > 0 {
-                    let attributedText = NSMutableAttributedString(string: "Post the group you create on your Instagram\nStory for a $" + String(payout) + " Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)])
+                    let attributedText = NSMutableAttributedString(string: "You're one of the first people in your school!\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
+                    attributedText.append(NSMutableAttributedString(string: "Post the group you create on your Instagram\nStory for a $" + String(payout) + " Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)]))
                     self.promoLabel.attributedText = attributedText
                 }
             }) { (_) in}
-            
-//            self.schoolLabel.text = selectedSchool.replacingOccurrences(of: "_-a-_", with: " ").components(separatedBy: ",")[0]
         }
     }
     
     private let promoLabel: UILabel = {
         let label = UILabel()
-        let attributedText = NSMutableAttributedString(string: "Post the group you create on your Instagram\nStory for a Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)])
+        let attributedText = NSMutableAttributedString(string: "You're one of the first people in your school!\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
+        attributedText.append(NSMutableAttributedString(string: "Post the group you create on your Instagram\nStory for a Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)]))
         label.attributedText = attributedText
         label.numberOfLines = 0
         label.textAlignment = .center
@@ -73,8 +63,37 @@ class InstaPromoCell: UICollectionViewCell {
         separatorViewBottom.backgroundColor = UIColor(white: 0, alpha: 0.2)
         addSubview(separatorViewBottom)
         separatorViewBottom.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 20, paddingBottom: 10, paddingRight: 20, height: 0.5)
-        
-        
+    }
+}
+
+class NoGroupsInSchoolCell: UICollectionViewCell {
+    
+    private let noGroupsLabel: UILabel = {
+        let label = UILabel()
+        let attributedText = NSMutableAttributedString(string: "No groups created yet.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.lightGray])
+        label.attributedText = attributedText
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        return label
+    }()
+    
+    static var cellId = "NoGroupsInSchoolCellId"
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        sharedInit()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        sharedInit()
+    }
+    
+    private func sharedInit() {
+        self.backgroundColor = .white
+
+        addSubview(noGroupsLabel)
+        noGroupsLabel.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 15, paddingRight: 15)
     }
 }
 

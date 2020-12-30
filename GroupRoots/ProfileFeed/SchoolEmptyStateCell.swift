@@ -90,14 +90,6 @@ class SchoolEmptyStateCell: UICollectionViewCell {
         self.insertSubview(newGroupButton, at: 4)
         newGroupButton.anchor(top: firstOneLabel.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 30, paddingLeft: UIScreen.main.bounds.width/2-150, paddingRight: UIScreen.main.bounds.width/2-150, height: 50)
         
-//        instaPicture.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height/3).isActive = true
-//        instaPicture.layer.cornerRadius = 0
-//        instaPicture.image =  #imageLiteral(resourceName: "story5")
-//        instaPicture.backgroundColor = .white
-//        instaPicture.contentMode = .scaleAspectFit
-//        insertSubview(instaPicture, at: 10)
-//        instaPicture.anchor(top: newGroupButton.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 15, paddingLeft: 10, paddingRight: 10)
-        
     }
     
     @objc private func handleShowNewGroup() {
