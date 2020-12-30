@@ -1856,14 +1856,14 @@ exports.open_post = functions.https.onRequest((req, res) => {
 // 	const group_id = context.params.groupId;
 
 // 	// get the school the group is in
-// 	return snapshot.after.ref.root.child('/groups/' + group_id + "/selectedSchool").once('value', selected_school_snapshot => {
+// 	return snapshot.ref.root.child('/groups/' + group_id + "/selectedSchool").once('value', selected_school_snapshot => {
 // 		if (selected_school_snapshot === null || selected_school_snapshot.val() === null || selected_school_snapshot.val() == "") {
 // 			return null;
 // 		}
 // 		var selected_school = selected_school_snapshot.val()
 
 // 		// get groupsWithMultipleMembers for the school
-// 		return snapshot.after.ref.root.child('/schools/' + selected_school + "/groupsWithMultipleMembers").once('value', muliple_member_groups_snapshot => {
+// 		return snapshot.ref.root.child('/schools/' + selected_school + "/groupsWithMultipleMembers").once('value', muliple_member_groups_snapshot => {
 // 			var continue_with_promo = false
 // 			if (muliple_member_groups_snapshot === null || muliple_member_groups_snapshot.val() === null) {
 // 				continue_with_promo = true
@@ -1890,8 +1890,8 @@ exports.open_post = functions.https.onRequest((req, res) => {
 
 	
 // 	// get the number of groups in the school
-// 	return snapshot.after.ref.root.child('/groupsInSchoolCount/' + selected_school).once('value', num_groups_snaphshot => {
-// 		var num_groups = Int(num_groups_snaphshot.val());
+// 	return snapshot.ref.root.child('/groupsInSchoolCount/' + selected_school).once('value', num_groups_snaphshot => {
+// 		var num_groups = parseInt(num_groups_snaphshot.val());
 
 // 		// get the first user in the group
 	// 	return snapshot.ref.root.child('/groups/' + group_id + '/members/').once('value', members_snapshot => {
@@ -1921,40 +1921,45 @@ exports.open_post = functions.https.onRequest((req, res) => {
 
 
 
-exports.updateUserAmountOnPromo = functions.database.ref('/promo/{schoolName}/postedToInsta/{username}').onCreate((snapshot, context) => {
-
+exports.updateUserAmountOnPromo = functions.database.ref("/promos/{schoolName}/postedToInsta/{username}").onCreate((snapshot, context) => {
 	const username = context.params.username;
-	const school_name = context.params.school_name;
+	const school_name = context.params.schoolName;
 
 	var promises = []
 	
 	// get the number of groups in the school
-	return snapshot.after.ref.root.child('/promo/' + school_name + "/currentInstaPayout").once('value', current_payout_snapshot => {
-		var payout = 50
+	return admin.database().ref('/promos/' + school_name + "/currentInstaPayout").once('value', current_payout_snapshot => {
+		var payout = 0
+
 		if (current_payout_snapshot === null || current_payout_snapshot.val() === null) {
 			// it's null so set it to 50
-			promises.push(snapshot.ref.root.child('/promo/' + school_name + '/currentInstaPayout/').set(50));
+			payout = 50
+			promises.push(admin.database().ref('/promos/' + school_name + '/currentInstaPayout/').set(50));
+			promises.push(admin.database().ref('/promos/' + school_name + '/isActive').set(true));
 		}
 		else {
-		 	payout = Int(current_payout_snapshot.val());
+		 	payout = parseInt(current_payout_snapshot.val());
 		}
-		promises.push(snapshot.ref.root.child('/promo/' + school_name + '/postedToInsta/' + username + "/amount").set(payout));
+		promises.push(admin.database().ref('/promos/' + school_name + '/postedToInsta/' + username + "/amount").set(payout));
 
 		// get postedToInsta for the school and look at its count
-		return snapshot.ref.root.child('/promo/' + school_name + '/postedToInsta').once('value', posted_snapshot => {
+		return admin.database().ref('/promos/' + school_name + '/postedToInsta').once('value', posted_snapshot => {
 			var count = 0;
 			posted_snapshot.forEach(function(member) {
 				count += 1;
 			})
 
 			if ( count < 5 ) {
-				promises.push(snapshot.ref.root.child('/promo/' + school_name + '/currentInstaPayout/').set(50));
+				promises.push(admin.database().ref('/promos/' + school_name + '/currentInstaPayout/').set(50));
 			}
 			else if (count < 10) {
-				promises.push(snapshot.ref.root.child('/promo/' + school_name + '/currentInstaPayout/').set(20));
+				promises.push(admin.database().ref('/promos/' + school_name + '/currentInstaPayout/').set(20));
 			}
 			else if (count < 20 ) {
-				promises.push(snapshot.ref.root.child('/promo/' + school_name + '/currentInstaPayout/').set(10));
+				promises.push(admin.database().ref('/promos/' + school_name + '/currentInstaPayout/').set(10));
+			}
+			else {
+				promises.push(admin.database().ref('/promos/' + school_name + '/isActive').set(false));
 			}
 			if (promises.length === 0) {
 				return null;

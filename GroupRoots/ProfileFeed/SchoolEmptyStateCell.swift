@@ -32,8 +32,7 @@ class SchoolEmptyStateCell: UICollectionViewCell {
     private let firstOneLabel: UILabel = {
         let label = UILabel()
         let attributedText = NSMutableAttributedString(string: "You're the first person from your school!", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 17)])
-        attributedText.append(NSAttributedString(string: "\n\nWe're giving $50 Amazon codes to the first 2 people who create a friend group and have their friends join.", attributes: [NSAttributedString.Key.foregroundColor: UIColor.init(white: 0.1, alpha: 1), NSAttributedString.Key.font: UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSAttributedString(string: "\n\nThe first 3 friends that join each group get $20.", attributes: [NSAttributedString.Key.foregroundColor: UIColor.init(white: 0.1, alpha: 1), NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)]))
+        attributedText.append(NSAttributedString(string: "\n\nWe're giving $50 Amazon codes to the first 4 people who post the group they create on their Instagram story.", attributes: [NSAttributedString.Key.foregroundColor: UIColor.init(white: 0.1, alpha: 1), NSAttributedString.Key.font: UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         label.numberOfLines = 0
         label.textAlignment = .center

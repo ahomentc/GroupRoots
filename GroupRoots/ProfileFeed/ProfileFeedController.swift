@@ -62,6 +62,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     private var school_members_group_count = [String: Int]() // uid: number of groups
     var schoolCollectionView: UICollectionView!
     var user: User?
+    var schoolPromoIsActive = false
     
     private let loadingScreenView: CustomImageView = {
         let iv = CustomImageView()
@@ -965,6 +966,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.fetchSchoolMembers(school: school)
             self.fetchSchoolGroupMembers(groups: groups)
             self.fetchSchoolGroupInfo(groups: groups)
+            self.fetchSchoolPromoIsActive(school: school)
             
         }) { (_) in }
     }
@@ -972,8 +974,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     var schoolMembersFetched = false
     var schoolGroupInfoFetched = false
     var schoolGroupMembersFetched = false
+    var schoolPromoIsActiveFetched = false
     private func reloadSchoolCollectionView(){
-        if schoolMembersFetched && schoolGroupInfoFetched && schoolGroupMembersFetched {
+        if schoolMembersFetched && schoolGroupInfoFetched && schoolGroupMembersFetched && schoolPromoIsActiveFetched {
             let refreshControlSchool = UIRefreshControl()
             refreshControlSchool.addTarget(self, action: #selector(self.handleRefresh), for: .valueChanged)
             self.schoolCollectionView.refreshControl = refreshControlSchool
@@ -995,6 +998,15 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             activityIndicatorView.isHidden = true
             self.schoolCollectionView?.refreshControl?.endRefreshing()
         }
+    }
+    
+    private func fetchSchoolPromoIsActive(school: String) {
+        Database.database().isPromoActive(school: school, completion: { (isActive) in
+            print("hi")
+            self.schoolPromoIsActive = isActive
+            self.schoolPromoIsActiveFetched = true
+            self.reloadSchoolCollectionView()
+        }) { (_) in}
     }
     
     private func fetchSchoolMembers(school: String){
@@ -1125,7 +1137,12 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             if school_groups.count == 0 {
                 return 1
             }
-            return school_groups.count + 5
+            if self.schoolPromoIsActive {
+                return school_groups.count + 5
+            }
+            else {
+                return school_groups.count + 4
+            }
         }
         else {
             if groupPosts2D.count == 0 {
@@ -1143,6 +1160,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 cell.delegate = self
                 return cell
             }
+            
             if indexPath.item == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SchoolLabelCell.cellId, for: indexPath) as! SchoolLabelCell
                 cell.selectedSchool = self.selectedSchool
@@ -1156,19 +1174,35 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 cell.delegate = self
                 return cell
             }
-            if indexPath.item == 2 {
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: InstaPromoCell.cellId, for: indexPath) as! InstaPromoCell
-                return cell
+            
+            if self.schoolPromoIsActive {
+                if indexPath.item == 2 {
+                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: InstaPromoCell.cellId, for: indexPath) as! InstaPromoCell
+                    cell.selectedSchool = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
+                    return cell
+                }
+                if indexPath.item == 3 {
+                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CreateGroupCell.cellId, for: indexPath) as! CreateGroupCell
+                    cell.selectedSchool = self.selectedSchool
+                    cell.delegate = self
+                    return cell
+                }
+                if indexPath.item == 4 {
+                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: YourGroupsCell.cellId, for: indexPath) as! YourGroupsCell
+                    return cell
+                }
             }
-            if indexPath.item == 3 {
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CreateGroupCell.cellId, for: indexPath) as! CreateGroupCell
-                cell.selectedSchool = self.selectedSchool
-                cell.delegate = self
-                return cell
-            }
-            if indexPath.item == 4 {
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: YourGroupsCell.cellId, for: indexPath) as! YourGroupsCell
-                return cell
+            else {
+                if indexPath.item == 2 {
+                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CreateGroupCell.cellId, for: indexPath) as! CreateGroupCell
+                    cell.selectedSchool = self.selectedSchool
+                    cell.delegate = self
+                    return cell
+                }
+                if indexPath.item == 3 {
+                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: YourGroupsCell.cellId, for: indexPath) as! YourGroupsCell
+                    return cell
+                }
             }
             
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FullGroupCell.cellId, for: indexPath) as! FullGroupCell
@@ -1224,16 +1258,26 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             if indexPath.item == 1 {
                 return CGSize(width: view.frame.width, height: 135)
             }
-            if indexPath.item == 2 {
-                return CGSize(width: view.frame.width, height: 80)
-            }
-            if indexPath.item == 3 {
-                return CGSize(width: view.frame.width, height: 60)
-            }
-            if indexPath.item == 4 {
-                return CGSize(width: view.frame.width, height: 40)
-            }
             
+            if self.schoolPromoIsActive {
+                if indexPath.item == 2 {
+                    return CGSize(width: view.frame.width, height: 80)
+                }
+                if indexPath.item == 3 {
+                    return CGSize(width: view.frame.width, height: 60)
+                }
+                if indexPath.item == 4 {
+                    return CGSize(width: view.frame.width, height: 40)
+                }
+            }
+            else {
+                if indexPath.item == 2 {
+                    return CGSize(width: view.frame.width, height: 60)
+                }
+                if indexPath.item == 3 {
+                    return CGSize(width: view.frame.width, height: 40)
+                }
+            }
             return CGSize(width: view.frame.width, height: 310)
         }
         else {
@@ -1725,6 +1769,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     @objc private func changeToFollowing() {
         self.isSchoolView = false
         self.loadData()
+        self.searchSchoolField.resignFirstResponder()
     }
     
     @objc private func changeToMySchool() {

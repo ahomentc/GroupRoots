@@ -33,9 +33,9 @@ class InstaPromoController: UIViewController {
         label.backgroundColor = UIColor.clear
         label.numberOfLines = 0
         label.textAlignment = .center
-        let attributedText = NSMutableAttributedString(string: "Share this picture on your Instagram\nStory and tag @srvhs_grouproots", attributes: [NSAttributedString.Key.foregroundColor:UIColor.white, NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
-        attributedText.append(NSMutableAttributedString(string: "\n\n(If your Instagram is private, also send a DM to @srvhs_grouproots with a screenshot of your story)", attributes: [NSAttributedString.Key.foregroundColor:UIColor.lightGray, NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
-        label.attributedText = attributedText
+//        let attributedText = NSMutableAttributedString(string: "Share this picture on your Instagram\nStory and tag @srvhs_grouproots", attributes: [NSAttributedString.Key.foregroundColor:UIColor.white, NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
+//        attributedText.append(NSMutableAttributedString(string: "\n\n(If your Instagram is private, also send a DM to @srvhs_grouproots with a screenshot of your story)", attributes: [NSAttributedString.Key.foregroundColor:UIColor.lightGray, NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
+//        label.attributedText = attributedText
         return label
     }()
     
@@ -84,7 +84,9 @@ class InstaPromoController: UIViewController {
         
         self.view.backgroundColor = .black
         
-        navigationItem.title = "$50 Amazon Code Promo"
+        let school = "Alameda_-a-_Community_-a-_Learning_-a-_Center"
+        
+        navigationItem.title = "Amazon Code Promo"
         let textAttributes = [NSAttributedString.Key.foregroundColor:UIColor.white, NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18)]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneSelected))
@@ -94,11 +96,9 @@ class InstaPromoController: UIViewController {
         explainPromoLabel.frame = CGRect(x: 20, y: UIScreen.main.bounds.height/11, width: UIScreen.main.bounds.width - 40, height: 140)
         self.view.insertSubview(explainPromoLabel, at: 4)
         
-//        promoImageView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height * 0.6).isActive = true
         promoImageView.layer.cornerRadius = 5
         promoImageView.frame = CGRect(x: UIScreen.main.bounds.width * 0.2, y: UIScreen.main.bounds.height/11 + 140, width: UIScreen.main.bounds.width * 0.6, height: UIScreen.main.bounds.height * 0.6)
         promoImageView.contentMode = .scaleAspectFit
-//        promoImageView.center = CGPoint(x: UIScreen.main.bounds.width * 0.8, y: UIScreen.main.bounds.height * 0.8)
         self.view.insertSubview(promoImageView, at: 2)
         promoImageView.isHidden = false
         
@@ -109,7 +109,22 @@ class InstaPromoController: UIViewController {
         self.view.insertSubview(savedLabel, at: 4)
         savedLabel.anchor(top: promoImageView.bottomAnchor, left: view.leftAnchor, paddingTop: 5, paddingLeft: UIScreen.main.bounds.width/2-75, width: 150, height: 40)
         
-        let school_lines = getLines(text: "San Ramon Valley High School", maxCharsInLine: 30)
+        Database.database().fetchSchoolPromoPayout(school: school, completion: { (payout) in
+            let navLabel = UILabel()
+            navLabel.text = "$" + String(payout) + " Amazon Code Promo"
+            navLabel.font = UIFont.boldSystemFont(ofSize: 18)
+            navLabel.textColor = .white
+            self.navigationItem.titleView = navLabel
+        }) { (_) in}
+        
+        let school_name = school.replacingOccurrences(of: "_-a-_", with: " ").components(separatedBy: ",")[0]
+        let acronym = getAcronymFromSchool(name: school_name)
+        
+        let attributedText = NSMutableAttributedString(string: "Share this picture on your Instagram\nStory and tag @" + acronym, attributes: [NSAttributedString.Key.foregroundColor:UIColor.white, NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
+        attributedText.append(NSMutableAttributedString(string: "\n\n(If your Instagram is private, also send a DM to @" + acronym + " with a screenshot of your story)", attributes: [NSAttributedString.Key.foregroundColor:UIColor.lightGray, NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
+        self.explainPromoLabel.attributedText = attributedText
+        
+        let school_lines = getLines(text: school_name, maxCharsInLine: 30)
         let school_text = convertLinesToString(lines: school_lines)
         let imageWithSchool = textToImage(drawText: "Your group is reserved\non GroupRoots for\n" + school_text as NSString, inImage: #imageLiteral(resourceName: "story5"), atPoint: CGPoint(x: 0, y: 150), fontSize: 42, fontColor: .white, shouldCenter: true)
         
@@ -136,7 +151,7 @@ class InstaPromoController: UIViewController {
                 
                 let currentLoggedInUserId = Auth.auth().currentUser?.uid ?? ""
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    let imageWithUserCode = self.textToImage(drawText: user.username as NSString, inImage: imageWithMembers, atPoint: CGPoint(x: 0, y: 1560), fontSize: 5, fontColor: .darkGray, shouldCenter: true)
+                    let imageWithUserCode = self.textToImage(drawText: (school + " " + user.username) as NSString, inImage: imageWithMembers, atPoint: CGPoint(x: 0, y: 1540), fontSize: 12, fontColor: .darkGray, shouldCenter: true)
                     self.promoImageView.image = imageWithUserCode
                 }
             }) { (_) in}
@@ -206,6 +221,16 @@ class InstaPromoController: UIViewController {
             text += name + ", "
         }
         return String(text.dropLast(2))
+    }
+    
+    func getAcronymFromSchool(name: String) -> String {
+        let arr = name.components(separatedBy: " ")
+        var acronym = ""
+        for word in arr {
+            let firstChar = Array(word.lowercased())[0]
+            acronym = acronym + String(firstChar)
+        }
+        return acronym + "_grouproots"
     }
 
     func textToImage(drawText: NSString, inImage: UIImage, atPoint: CGPoint, fontSize: Int, fontColor: UIColor, shouldCenter: Bool) -> UIImage{

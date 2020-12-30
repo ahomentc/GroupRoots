@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import FirebaseDatabase
 
 class InstaPromoCell: UICollectionViewCell {
     
@@ -21,9 +22,24 @@ class InstaPromoCell: UICollectionViewCell {
 //        return label
 //    }()
     
+    var selectedSchool: String? {
+        didSet {
+            guard let selectedSchool = selectedSchool else { return }
+            print(selectedSchool)
+            Database.database().fetchSchoolPromoPayout(school: selectedSchool, completion: { (payout) in
+                if payout > 0 {
+                    let attributedText = NSMutableAttributedString(string: "Post the group you create on your Instagram\nStory for a $" + String(payout) + " Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)])
+                    self.promoLabel.attributedText = attributedText
+                }
+            }) { (_) in}
+            
+//            self.schoolLabel.text = selectedSchool.replacingOccurrences(of: "_-a-_", with: " ").components(separatedBy: ",")[0]
+        }
+    }
+    
     private let promoLabel: UILabel = {
         let label = UILabel()
-        let attributedText = NSMutableAttributedString(string: "Post the group you create on your Instagram\nStory for a $50 Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)])
+        let attributedText = NSMutableAttributedString(string: "Post the group you create on your Instagram\nStory for a Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)])
         label.attributedText = attributedText
         label.numberOfLines = 0
         label.textAlignment = .center
@@ -57,6 +73,7 @@ class InstaPromoCell: UICollectionViewCell {
         separatorViewBottom.backgroundColor = UIColor(white: 0, alpha: 0.2)
         addSubview(separatorViewBottom)
         separatorViewBottom.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 20, paddingBottom: 10, paddingRight: 20, height: 0.5)
+        
         
     }
 }

@@ -3008,6 +3008,39 @@ extension Database {
         }
     }
     
+    func fetchSchoolPromoPayout(school: String, completion: @escaping (Int) -> (), withCancel cancel: ((Error) -> ())?) {
+        let ref = Database.database().reference().child("promos").child(school).child("currentInstaPayout")
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            if let val = snapshot.value as? Int {
+                completion(val)
+            }
+            else {
+                completion(-1)
+            }
+        }) { (err) in
+            print("Failed to fetch all users from database:", (err))
+            cancel?(err)
+        }
+    }
+    
+    func isPromoActive(school: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+        Database.database().reference().child("promos").child(school).child("isActive").observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(snapshot.value as! Bool)
+                }
+            } else {
+                completion(false)
+            }
+        }) { (err) in
+            print("Failed to check if following:", err)
+            cancel?(err)
+        }
+    }
+    
     
     //MARK: GroupFollowers
     
