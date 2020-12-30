@@ -99,7 +99,7 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTapOnView)))
         
         view.addSubview(backLabel)
-        backLabel.anchor(top: view.topAnchor, left: view.leftAnchor, paddingTop: 35, paddingLeft: 25)
+        backLabel.anchor(top: view.topAnchor, left: view.leftAnchor, paddingTop: 45, paddingLeft: 25)
         
         view.addSubview(alreadyHaveAccountButton)
         alreadyHaveAccountButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 50)

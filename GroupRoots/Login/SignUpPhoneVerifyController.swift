@@ -79,7 +79,7 @@ class SignUpPhoneVerifyController: UIViewController, UINavigationControllerDeleg
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTapOnView)))
         
         view.addSubview(backLabel)
-        backLabel.anchor(top: view.topAnchor, left: view.leftAnchor, paddingTop: 35, paddingLeft: 25)
+        backLabel.anchor(top: view.topAnchor, left: view.leftAnchor, paddingTop: 45, paddingLeft: 25)
         
         phoneExpLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: 20, width: 300, height: 300)
         self.view.insertSubview(phoneExpLabel, at: 4)

@@ -195,7 +195,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
     
     private lazy var playButton: UIButton = {
         let button = UIButton(type: .system)
-        button.frame = CGRect(x: UIScreen.main.bounds.width/2 - 100, y: UIScreen.main.bounds.height/2 - 100, width: 200, height: 200)
+        button.frame = CGRect(x: UIScreen.main.bounds.width/2 - 100, y: UIScreen.main.bounds.height/2 - 125, width: 200, height: 200)
         button.tintColor = UIColor.white
         button.isUserInteractionEnabled = false
         button.setImage(#imageLiteral(resourceName: "play").withRenderingMode(.alwaysOriginal), for: .normal)
@@ -288,7 +288,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         return button
     }()
     
-    let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
+    let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 25, y: UIScreen.main.bounds.height/2 - 50, width: 50, height: 50), type: NVActivityIndicatorType.lineScale)
     
     static var cellId = "homePostCellId"
     
@@ -305,16 +305,16 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
     private func sharedInit() {
         
         addSubview(postedByLabel)
-        postedByLabel.anchor(bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: UIScreen.main.bounds.height/9, paddingRight: padding + 6)
+        postedByLabel.anchor(bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding, paddingBottom: UIScreen.main.bounds.height/9 + 10, paddingRight: padding + 6)
         
         addSubview(locationLabel)
         locationLabel.anchor(top: postedByLabel.bottomAnchor, right: rightAnchor, paddingTop: padding - 10, paddingLeft: padding, paddingRight: padding + 6)
         
         addSubview(newCommentButton)
-        newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: 0, paddingBottom: UIScreen.main.bounds.height/9)
+        newCommentButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: 0, paddingBottom: UIScreen.main.bounds.height/9  + 10)
         
         addSubview(commentsButton)
-        commentsButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding + 3, paddingBottom: UIScreen.main.bounds.height/9)
+        commentsButton.anchor(left: leftAnchor, bottom:bottomAnchor, paddingLeft: padding + 3, paddingBottom: UIScreen.main.bounds.height/9  + 10)
         
         addSubview(timeLabel)
         timeLabel.anchor(bottom: postedByLabel.topAnchor, right: rightAnchor, paddingBottom: padding - 10, paddingRight: padding + 6)
@@ -348,8 +348,8 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         
         photoImageView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
         photoImageView.layer.cornerRadius = 5
-        photoImageView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-        photoImageView.center = CGPoint(x: UIScreen.main.bounds.width  / 2, y: UIScreen.main.bounds.height / 2)
+        photoImageView.frame = CGRect(x: 0, y: 0, width: self.frame.width, height: self.frame.height)
+        photoImageView.center = CGPoint(x: self.frame.width  / 2, y: self.frame.height / 2)
         insertSubview(photoImageView, at: 2)
         photoImageView.isHidden = false
         
@@ -513,22 +513,22 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         if width != nil && height != nil {
             if width! >= height! {
                 self.photoImageView.contentMode = .scaleToFill
-                self.photoImageView.frame.size.width = UIScreen.main.bounds.width - 20
+                self.photoImageView.frame.size.width = self.frame.width - 20
                 self.photoImageView.frame.size.height = self.photoImageView.frame.size.width * (height!/width!)
-                self.photoImageView.frame.origin.y = (UIScreen.main.bounds.height - self.photoImageView.frame.size.height) / 2
+                self.photoImageView.frame.origin.y = (self.frame.height - self.photoImageView.frame.size.height) / 2
                 self.photoImageView.frame.origin.x = 10
             }
             else {
                 self.photoImageView.contentMode = .scaleToFill
-                self.photoImageView.frame.size.width = UIScreen.main.bounds.width - 20
+                self.photoImageView.frame.size.width = self.frame.width - 20
                 self.photoImageView.frame.size.height = self.photoImageView.frame.size.width * (height!/width!)
                 
-                var y_offset = UIScreen.main.bounds.height - self.photoImageView.frame.size.height - UIScreen.main.bounds.height/9 - 100
+                var y_offset = UIScreen.main.bounds.height - self.photoImageView.frame.size.height - self.frame.height/9 - 100
                 if y_offset < 28 {
-                    y_offset = UIScreen.main.bounds.height/9 - 30
+                    y_offset = self.frame.height/9 - 50
                 }
                 else {
-                    y_offset = y_offset + 15
+                    y_offset = y_offset - 15
                 }
                 self.photoImageView.frame.origin.y = y_offset
                 self.photoImageView.frame.origin.x = 10

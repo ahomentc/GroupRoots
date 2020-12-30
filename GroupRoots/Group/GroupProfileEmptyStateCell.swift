@@ -91,10 +91,10 @@ class GroupProfileEmptyStateCell: UICollectionViewCell {
             noPostsLabel.text = "No posts yet."
         }
         else if isInFollowPending {
-            noPostsLabel.text = "This group is private.\n Your subscription is pending."
+            noPostsLabel.text = "This group is private.\n Your follow is pending."
         }
         else {
-            noPostsLabel.text = "This group is private.\n Subscribe to see their posts."
+            noPostsLabel.text = "This group is private.\n Follow to see their posts."
         }
         
         Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in

@@ -76,9 +76,8 @@ class EmptySearchCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
         collectionView.register(ImportContactsCell.self, forCellWithReuseIdentifier: ImportContactsCell.cellId)
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.isUserInteractionEnabled = true
-        collectionView.backgroundColor = .white
+        collectionView.backgroundColor = .clear
 //        collectionView.allowsSelection = true
-        collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.isHidden = true
         insertSubview(collectionView, at: 10)

@@ -39,24 +39,27 @@ class UserProfileHeader: UICollectionViewCell, UITextViewDelegate {
     }()
     
     private lazy var followersLabel: UserProfileStatsLabel = {
-        let label = UserProfileStatsLabel(value: 0, title: "followers")
+        let label = UserProfileStatsLabel(value: 0, title: "followers", isGroup: false)
         label.isUserInteractionEnabled = true
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowFollowersPage))
         label.addGestureRecognizer(gestureRecognizer)
+        label.numberOfLines = 0
         return label
     }()
     
     private lazy var followingLabel: UserProfileStatsLabel = {
-        let label = UserProfileStatsLabel(value: 0, title: "following")
+        let label = UserProfileStatsLabel(value: 0, title: "following", isGroup: false)
         label.isUserInteractionEnabled = true
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowFollowingPage))
         label.addGestureRecognizer(gestureRecognizer)
+        label.numberOfLines = 0
         return label
     }()
     
     private lazy var subscriptionsLabel: UserProfileStatsLabel = {
-        let label = UserProfileStatsLabel(value: 0, title: "subscriptions")
+        let label = UserProfileStatsLabel(value: 0, title: "following", isGroup: true)
         label.isUserInteractionEnabled = true
+        label.numberOfLines = 0
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowSubscriptionsPage))
         label.addGestureRecognizer(gestureRecognizer)
         return label
@@ -464,11 +467,13 @@ private class UserProfileStatsLabel: UILabel {
     
     private var value: Int = 0
     private var title: String = ""
+    private var isGroup: Bool = false
     
-    init(value: Int, title: String) {
+    init(value: Int, title: String, isGroup: Bool) {
         super.init(frame: .zero)
         self.value = value
         self.title = title
+        self.isGroup = isGroup
         sharedInit()
     }
     
@@ -496,7 +501,13 @@ private class UserProfileStatsLabel: UILabel {
     
     private func setAttributedText() {
         let attributedText = NSMutableAttributedString(string: "\(value)\n", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14)])
-        attributedText.append(NSAttributedString(string: title, attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)]))
+        attributedText.append(NSAttributedString(string: title, attributes: [NSAttributedString.Key.foregroundColor: UIColor.black, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)]))
+        if isGroup {
+            attributedText.append(NSAttributedString(string: "\ngroups", attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)]))
+        }
+        else {
+            attributedText.append(NSAttributedString(string: "\nusers", attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)]))
+        }
         self.attributedText = attributedText
     }
 }

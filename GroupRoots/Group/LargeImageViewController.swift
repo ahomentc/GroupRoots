@@ -16,6 +16,10 @@ import NVActivityIndicatorView
 import SGImageCache
 import Photos
 
+protocol LargeImageViewControllerDelegate {
+    func didTapGroup(group: Group)
+}
+
 class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate, ViewersControllerDelegate {
     
     override var prefersStatusBarHidden: Bool { return true }
@@ -29,6 +33,8 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
             configureGroup()
         }
     }
+    
+    var delegate: LargeImageViewControllerDelegate?
 
     var indexPath: IndexPath!
     
@@ -85,6 +91,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         if #available(iOS 13.0, *) {
             overrideUserInterfaceStyle = .light
         }
+        
         setupViews()
         view.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handleDismiss)))
     }
@@ -140,6 +147,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         super.viewWillDisappear(animated)
         self.isScrolling = true
         self.navigationController?.isNavigationBarHidden = false
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
 //        handleCloseFullscreen()
     }
     
@@ -279,6 +287,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     
     func scrollToIndexPath() {
         if self.indexPath != nil{
+            print("attempting to scroll")
             self.collectionView?.scrollToItem(at: self.indexPath, at: [.centeredVertically, .centeredHorizontally], animated: false)
             self.indexPath = nil
         }
@@ -294,6 +303,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.isPagingEnabled = true
+        collectionView.contentInsetAdjustmentBehavior = .never
         
         self.configureNavigationBar()
         
@@ -529,7 +539,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                 task.resume()
             }
             else {
-                // its jsut a picture
+                // its just a picture
                 if let image = SGImageCache.image(forURL: groupPost.imageUrl) {
                     let activityViewController : UIActivityViewController = UIActivityViewController(
                     activityItems: [image], applicationActivities: nil)
@@ -576,10 +586,15 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     
     @objc func handleGroupTap(){
         guard let group = group else { return }
-        let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
-        groupProfileController.group = group
-        groupProfileController.modalPresentationCapturesStatusBarAppearance = true
-        navigationController?.pushViewController(groupProfileController, animated: true)
+//        let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+//        groupProfileController.group = group
+//        groupProfileController.modalPresentationCapturesStatusBarAppearance = true
+//        navigationController?.pushViewController(groupProfileController, animated: true)
+        
+        self.dismiss(animated: true, completion: {
+            NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+            self.delegate?.didTapGroup(group: group)
+        })
     }
     
     //MARK: - InnerPostCellDelegate
@@ -665,7 +680,9 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
 
 extension LargeImageViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+//        return CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+//        return CGSize(width: view.frame.width , height: view.frame.height - (view.safeAreaInsets.top + view.safeAreaInsets.bottom))
+        return CGSize(width: view.frame.width , height: view.frame.height)
     }
 }
 

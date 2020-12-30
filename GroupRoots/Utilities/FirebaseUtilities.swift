@@ -1900,40 +1900,6 @@ extension Database {
             cancel?(err)
         }
     }
-    
-    func fetchSchoolGroups(school: String, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
-        
-        let selectedSchool = school.replacingOccurrences(of: " ", with: "_-a-_")
-        let ref = Database.database().reference().child("schools").child(selectedSchool).child("groups")
-        
-        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
-            var groups = [Group]()
-
-            let sync = DispatchGroup()
-            for child in snapshot.children.allObjects as! [DataSnapshot] {
-                let groupId = child.key
-                sync.enter()
-                print(groupId)
-                self.groupExists(groupId: groupId, completion: { (exists) in
-                    if exists {
-                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                            groups.append(group)
-                            sync.leave()
-                        })
-                    }
-                    else {
-                        sync.leave()
-                    }
-                })
-            }
-            sync.notify(queue: .main) {
-                completion(groups)
-            }
-        }) { (err) in
-            print("Failed to fetch posts:", err)
-            cancel?(err)
-        }
-    }
 
     func hasGroupRequestUsers(groupId: String, completion: @escaping (Bool) -> ()) {
         Database.database().reference().child("groups").child(groupId).child("requestedMembers").queryLimited(toFirst: 1).observeSingleEvent(of: .value, with: { (snapshot) in
@@ -2216,18 +2182,34 @@ extension Database {
                         }
                         
                         // add groupId to schools
-                        let values = [groupId: Date().timeIntervalSince1970]
-                        Database.database().reference().child("schools").child(selectedSchool).child("groups").updateChildValues(values) { (err, ref) in
-                            if let err = err {
-                                completion(err, "")
-                                return
+                        if selectedSchool != "" {
+                            let values = [groupId: Date().timeIntervalSince1970]
+                            Database.database().reference().child("schools").child(selectedSchool).child("groups").updateChildValues(values) { (err, ref) in
+                                if let err = err {
+                                    completion(err, "")
+                                    return
+                                }
+                                
+                                // add groupId to schools
+                                
+                                // add invitation code with groupId as value
+                                // increment value under groupId when user signs up with it until gets to 100 users
+                                // ^^ but do this later
+                                let values = [groupId: 1]
+                                let code = String(groupId.suffix(6))
+                                let stripped_code = code.replacingOccurrences(of: "_", with: "a", options: .literal, range: nil)
+                                let stripped_code2 = stripped_code.replacingOccurrences(of: "-", with: "b", options: .literal, range: nil)
+                                let invitationRef = Database.database().reference().child("inviteCodes").child(stripped_code2)
+                                invitationRef.updateChildValues(values) { (err, ref) in
+                                    if let err = err {
+                                        completion(err, "")
+                                        return
+                                    }
+                                    completion(nil,groupId)
+                                }
                             }
-                            
-                            // add groupId to schools
-                            
-                            // add invitation code with groupId as value
-                            // increment value under groupId when user signs up with it until gets to 100 users
-                            // ^^ but do this later
+                        }
+                        else {
                             let values = [groupId: 1]
                             let code = String(groupId.suffix(6))
                             let stripped_code = code.replacingOccurrences(of: "_", with: "a", options: .literal, range: nil)
@@ -2926,6 +2908,106 @@ extension Database {
             cancel?(err)
         }
     }
+    
+    //MARK: School
+    
+    func addUserToSchool(withUID uid: String, selectedSchool: String, completion: @escaping (Error?) -> ()) {
+        let values = [uid: Date().timeIntervalSince1970]
+        Database.database().reference().child("schools").child(selectedSchool).child("users").updateChildValues(values) { (err, ref) in
+            if let err = err {
+                completion(err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
+    func addSchoolToUser(withUID uid: String, selectedSchool: String, completion: @escaping (Error?) -> ()) {
+        let values = ["school": selectedSchool]
+        Database.database().reference().child("users").child(uid).updateChildValues(values) { (err, ref) in
+            if let err = err {
+                completion(err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
+    func fetchSchoolGroups(school: String, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
+        
+        let selectedSchool = school.replacingOccurrences(of: " ", with: "_-a-_")
+        let ref = Database.database().reference().child("schools").child(selectedSchool).child("groups")
+        
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            var groups = [Group]()
+
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let groupId = child.key
+                sync.enter()
+                print(groupId)
+                self.groupExists(groupId: groupId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                            groups.append(group)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                completion(groups)
+            }
+        }) { (err) in
+            print("Failed to fetch posts:", err)
+            cancel?(err)
+        }
+    }
+    
+    func fetchSchoolMembers(school: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
+//        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let ref = Database.database().reference().child("schools").child(school).child("users")
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            var users = [User]()
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let userId = child.key
+                sync.enter()
+                self.userExists(withUID: userId, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchUser(withUID: userId, completion: { (user) in
+                            users.append(user)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                users.sort(by: { (u1, u2) -> Bool in
+                    return u1.uid.compare(u2.uid) == .orderedAscending
+                })
+                
+//                // put current user to top of the list
+//                for (i,user) in users.enumerated() {
+//                    if user.uid == currentLoggedInUserId {
+//                        users.swapAt(0, i)
+//                    }
+//                }
+                
+                completion(users)
+            }
+        }) { (err) in
+            print("Failed to fetch all users from database:", (err))
+            cancel?(err)
+        }
+    }
+    
     
     //MARK: GroupFollowers
     

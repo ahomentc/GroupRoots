@@ -31,7 +31,7 @@ class SubscriptionsController: UICollectionViewController {
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
-        navigationItem.title = "Subscriptions"
+        navigationItem.title = "Groups Following"
         self.navigationController?.navigationBar.shadowImage = UIColor.white.as1ptImage()
 //        navigationItem.title = "Subscriptions"
         

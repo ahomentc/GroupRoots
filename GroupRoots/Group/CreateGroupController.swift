@@ -25,6 +25,15 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     private var isPrivate: Bool = false
     private var schoolSelected: Bool = false
     
+    var preSetSchool: String? {
+        didSet {
+            guard let presetSchool = preSetSchool else { return }
+            self.linkSchools.text = presetSchool
+            self.schoolSelected = true
+        }
+    }
+    
+    
     private let plusPhotoButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(#imageLiteral(resourceName: "plus_photo"), for: .normal)

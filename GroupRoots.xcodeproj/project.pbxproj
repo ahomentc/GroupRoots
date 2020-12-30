@@ -10,6 +10,7 @@
 		750FA44A23D3055900D33CF8 /* NotificationsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750FA44923D3055900D33CF8 /* NotificationsController.swift */; };
 		750FA45223D41B3600D33CF8 /* MembersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750FA45123D41B3600D33CF8 /* MembersController.swift */; };
 		750FA45423D4201E00D33CF8 /* UserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750FA45323D4201E00D33CF8 /* UserCell.swift */; };
+		751E3163259AEDC3001BECCB /* InstaPromoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751E3162259AEDC3001BECCB /* InstaPromoController.swift */; };
 		7521C74E24BD428E003FCFB4 /* ForceUpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521C74D24BD428E003FCFB4 /* ForceUpdateController.swift */; };
 		7521D0482434506A0028FC9C /* SearchHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521D0472434506A0028FC9C /* SearchHeader.swift */; };
 		7521D04A243463480028FC9C /* GroupSearchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521D049243463480028FC9C /* GroupSearchCell.swift */; };
@@ -89,6 +90,8 @@
 		75E6257B2590B00D004262D9 /* SchoolLabelCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E6257A2590B00D004262D9 /* SchoolLabelCell.swift */; };
 		75E6257E2592D2A3004262D9 /* SchoolEmptyStateCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E6257D2592D2A3004262D9 /* SchoolEmptyStateCell.swift */; };
 		75E62581259334A2004262D9 /* InstaPromoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E62580259334A2004262D9 /* InstaPromoCell.swift */; };
+		75E6258425955B31004262D9 /* SchoolUsersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E6258325955B30004262D9 /* SchoolUsersCell.swift */; };
+		75E6258725956AAD004262D9 /* SchoolUserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E6258625956AAC004262D9 /* SchoolUserCell.swift */; };
 		75EFCCFA23F11D9D00B7580D /* EmtpyFeedCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */; };
 		75F2C2A923DD220C0037C76D /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */; };
 		9D7187601A438FC40FBC4D15 /* Pods_GroupRoots.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F29BE71F40760917CD1E06D5 /* Pods_GroupRoots.framework */; };
@@ -135,6 +138,7 @@
 		750FA44923D3055900D33CF8 /* NotificationsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsController.swift; sourceTree = "<group>"; };
 		750FA45123D41B3600D33CF8 /* MembersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersController.swift; sourceTree = "<group>"; };
 		750FA45323D4201E00D33CF8 /* UserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCell.swift; sourceTree = "<group>"; };
+		751E3162259AEDC3001BECCB /* InstaPromoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstaPromoController.swift; sourceTree = "<group>"; };
 		7521C74D24BD428E003FCFB4 /* ForceUpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForceUpdateController.swift; sourceTree = "<group>"; };
 		7521D0472434506A0028FC9C /* SearchHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchHeader.swift; sourceTree = "<group>"; };
 		7521D049243463480028FC9C /* GroupSearchCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSearchCell.swift; sourceTree = "<group>"; };
@@ -214,6 +218,8 @@
 		75E6257A2590B00D004262D9 /* SchoolLabelCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolLabelCell.swift; sourceTree = "<group>"; };
 		75E6257D2592D2A3004262D9 /* SchoolEmptyStateCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolEmptyStateCell.swift; sourceTree = "<group>"; };
 		75E62580259334A2004262D9 /* InstaPromoCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstaPromoCell.swift; sourceTree = "<group>"; };
+		75E6258325955B30004262D9 /* SchoolUsersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolUsersCell.swift; sourceTree = "<group>"; };
+		75E6258625956AAC004262D9 /* SchoolUserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolUserCell.swift; sourceTree = "<group>"; };
 		75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmtpyFeedCell.swift; sourceTree = "<group>"; };
 		75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationManager.swift; sourceTree = "<group>"; };
 		813799D4A56F45A1373EAB69 /* Pods-GroupRoots.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GroupRoots.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GroupRoots/Pods-GroupRoots.debug.xcconfig"; sourceTree = "<group>"; };
@@ -325,6 +331,7 @@
 				75E5CBB624FAD5240080F815 /* ContactCell.swift */,
 				75E5CBB824FB6F280080F815 /* SearchUserForInvitationController.swift */,
 				75E5CBBA24FB84800080F815 /* AddedUserCell.swift */,
+				751E3162259AEDC3001BECCB /* InstaPromoController.swift */,
 			);
 			path = Group;
 			sourceTree = "<group>";
@@ -341,6 +348,8 @@
 				75E6257A2590B00D004262D9 /* SchoolLabelCell.swift */,
 				75E6257D2592D2A3004262D9 /* SchoolEmptyStateCell.swift */,
 				75E62580259334A2004262D9 /* InstaPromoCell.swift */,
+				75E6258325955B30004262D9 /* SchoolUsersCell.swift */,
+				75E6258625956AAC004262D9 /* SchoolUserCell.swift */,
 			);
 			path = ProfileFeed;
 			sourceTree = "<group>";
@@ -740,6 +749,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ADAC080D2110318400615E62 /* UserSearchCell.swift in Sources */,
+				751E3163259AEDC3001BECCB /* InstaPromoController.swift in Sources */,
 				75D86CB42530307A00939301 /* SignUpAfterPhoneController.swift in Sources */,
 				7521D04A243463480028FC9C /* GroupSearchCell.swift in Sources */,
 				756D72CB242B3247008B6F42 /* InviteToGroupCell.swift in Sources */,
@@ -799,6 +809,7 @@
 				75E5CBC125036ACE0080F815 /* LoginPhoneController.swift in Sources */,
 				757B35CF24724A4300C9AFE1 /* FeedGroupPostCell.swift in Sources */,
 				75B65DE52408FB32006CBA0B /* ViewerCell.swift in Sources */,
+				75E6258425955B31004262D9 /* SchoolUsersCell.swift in Sources */,
 				75ACAFC723F677BD00DAE747 /* FollowPageHeader.swift in Sources */,
 				75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */,
 				75E5CBB924FB6F280080F815 /* SearchUserForInvitationController.swift in Sources */,
@@ -838,6 +849,7 @@
 				75E5CBBD24FF895C0080F815 /* InviteToGroupWhenCreateController.swift in Sources */,
 				757B35D12474DBB200C9AFE1 /* ProfileFeedCellHeader.swift in Sources */,
 				754295C223DFFB6E00893EFD /* NotificationCell.swift in Sources */,
+				75E6258725956AAD004262D9 /* SchoolUserCell.swift in Sources */,
 				7522E43C24B07A520013A351 /* LoadMoreGroupFollowersCell.swift in Sources */,
 				75B65DE7240A506C006CBA0B /* GroupFollowersController.swift in Sources */,
 				75BB489323DACF2000CF008F /* FeedPostCellHeader.swift in Sources */,

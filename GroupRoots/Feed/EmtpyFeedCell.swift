@@ -114,31 +114,31 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
 
     private func sharedInit() {
         addSubview(endLabel)
-        endLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/8)
+        endLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/8 - 40)
         
         addSubview(endLabelNoRecommended)
-        endLabelNoRecommended.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/2.2)
+        endLabelNoRecommended.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/2.2 - 60)
         
-        insertSubview(activityIndicatorView, at: 20)
-        activityIndicatorView.isHidden = true
-        activityIndicatorView.color = .black
-        activityIndicatorView.startAnimating()
+//        insertSubview(activityIndicatorView, at: 20)
+//        activityIndicatorView.isHidden = true
+//        activityIndicatorView.color = .black
+//        activityIndicatorView.startAnimating()
         
         addSubview(newGroupButton)
-        newGroupButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
+        newGroupButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30 - 60, width: 300, height: 50)
         newGroupButton.layer.cornerRadius = 14
         
         addSubview(recommendedLabel)
-        recommendedLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/3 - 40, width: 300, height: 60)
+        recommendedLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/3 - 40 - 60, width: 300, height: 60)
         
         addSubview(logoImageView)
-        logoImageView.frame = CGRect(x: frame.width/2 - 100, y: 80, width: 200, height: 200)
+        logoImageView.frame = CGRect(x: frame.width/2 - 100, y: 80 - 60, width: 200, height: 200)
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.itemSize = CGSize(width: 160, height: 200)
         layout.minimumLineSpacing = CGFloat(15)
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/3 + 20, width: UIScreen.main.bounds.width, height: 210), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/3 + 20 - 60, width: UIScreen.main.bounds.width, height: 210), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")

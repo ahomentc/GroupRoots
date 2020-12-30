@@ -8,9 +8,16 @@
 
 import UIKit
 
+protocol SchoolEmptyStateCellDelegate {
+    func handleShowNewGroupForSchool(school: String)
+}
+
+
 class SchoolEmptyStateCell: UICollectionViewCell {
     
     let scrollView = UIScrollView()
+    
+    var delegate: SchoolEmptyStateCellDelegate?
     
     private let groupsLabel: UILabel = {
         let label = UILabel()
@@ -25,7 +32,8 @@ class SchoolEmptyStateCell: UICollectionViewCell {
     private let firstOneLabel: UILabel = {
         let label = UILabel()
         let attributedText = NSMutableAttributedString(string: "You're the first person from your school!", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 17)])
-        attributedText.append(NSAttributedString(string: "\n\nWe're giving $20 Amazon codes to the first 10 people who create or join a group and share it on their Instagram story!", attributes: [NSAttributedString.Key.foregroundColor: UIColor.init(white: 0.1, alpha: 1), NSAttributedString.Key.font: UIFont.systemFont(ofSize: 17)]))
+        attributedText.append(NSAttributedString(string: "\n\nWe're giving $50 Amazon codes to the first 2 people who create a friend group and have their friends join.", attributes: [NSAttributedString.Key.foregroundColor: UIColor.init(white: 0.1, alpha: 1), NSAttributedString.Key.font: UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSAttributedString(string: "\n\nThe first 3 friends that join each group get $20.", attributes: [NSAttributedString.Key.foregroundColor: UIColor.init(white: 0.1, alpha: 1), NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)]))
         label.attributedText = attributedText
         label.numberOfLines = 0
         label.textAlignment = .center
@@ -34,12 +42,12 @@ class SchoolEmptyStateCell: UICollectionViewCell {
     
     private lazy var newGroupButton: UIButton = {
         let button = UIButton()
-//        button.addTarget(self, action: #selector(handleShowNewGroup), for: .touchUpInside)
+        button.addTarget(self, action: #selector(handleShowNewGroup), for: .touchUpInside)
         button.layer.zPosition = 4;
         button.backgroundColor = UIColor(white: 0.9, alpha: 1)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        button.setTitle("Create a Group", for: .normal)
+        button.setTitle("Create a group", for: .normal)
         return button
     }()
     
@@ -55,7 +63,7 @@ class SchoolEmptyStateCell: UICollectionViewCell {
     var selectedSchool: String? {
         didSet {
             guard let selectedSchool = selectedSchool else { return }
-            let attributedText = NSMutableAttributedString(string: selectedSchool, attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
+            let attributedText = NSMutableAttributedString(string: selectedSchool.replacingOccurrences(of: "_-a-_", with: " ").components(separatedBy: ",")[0], attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
             self.groupsLabel.attributedText = attributedText
         }
     }
@@ -77,11 +85,11 @@ class SchoolEmptyStateCell: UICollectionViewCell {
         groupsLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 25, paddingLeft: 15, paddingRight: 15)
         
         addSubview(firstOneLabel)
-        firstOneLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/6, paddingLeft: 15, paddingRight: 15, height: 120)
+        firstOneLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/6, paddingLeft: 15, paddingRight: 15, height: 180)
     
         newGroupButton.layer.cornerRadius = 14
         self.insertSubview(newGroupButton, at: 4)
-        newGroupButton.anchor(top: firstOneLabel.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 10, paddingLeft: UIScreen.main.bounds.width/2-150, paddingRight: UIScreen.main.bounds.width/2-150, height: 50)
+        newGroupButton.anchor(top: firstOneLabel.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 30, paddingLeft: UIScreen.main.bounds.width/2-150, paddingRight: UIScreen.main.bounds.width/2-150, height: 50)
         
 //        instaPicture.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height/3).isActive = true
 //        instaPicture.layer.cornerRadius = 0
@@ -91,5 +99,10 @@ class SchoolEmptyStateCell: UICollectionViewCell {
 //        insertSubview(instaPicture, at: 10)
 //        instaPicture.anchor(top: newGroupButton.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 15, paddingLeft: 10, paddingRight: 10)
         
+    }
+    
+    @objc private func handleShowNewGroup() {
+        guard let selectedSchool = selectedSchool else { return }
+        self.delegate?.handleShowNewGroupForSchool(school: selectedSchool)
     }
 }

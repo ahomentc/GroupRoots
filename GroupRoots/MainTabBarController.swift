@@ -6,7 +6,7 @@ import FirebaseDatabase
 import YPImagePicker
 import Photos
 
-class MainTabBarController: UITabBarController {
+class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate {
     
     var loadedFromNotif: Bool = false {
         didSet {
@@ -273,6 +273,7 @@ class MainTabBarController: UITabBarController {
                 let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
                 largeImageViewController.group = post.group
                 largeImageViewController.postToScrollToId = post.id
+                largeImageViewController.delegate = self
                 let navController = UINavigationController(rootViewController: largeImageViewController)
                 navController.modalPresentationStyle = .overCurrentContext
                 self.present(navController, animated: true, completion: nil)
@@ -280,6 +281,12 @@ class MainTabBarController: UITabBarController {
         }
     }
     
+    func didTapGroup(group: Group) {
+        let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+        groupProfileController.group = group
+        groupProfileController.modalPresentationCapturesStatusBarAppearance = true
+        navigationController?.pushViewController(groupProfileController, animated: true)
+    }
     
     private func presentLoginController() {
         DispatchQueue.main.async { // wait until MainTabBarController is inside UI

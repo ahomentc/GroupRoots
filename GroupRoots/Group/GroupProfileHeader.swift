@@ -973,7 +973,7 @@ private class GroupJoinButton: UIButton {
     }
     
     private func setupSubscribeStyle() {
-        setTitle("Subscribe", for: .normal)
+        setTitle("Follow", for: .normal)
         setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         backgroundColor = UIColor.white
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
@@ -985,7 +985,7 @@ private class GroupJoinButton: UIButton {
     }
     
     private func setupUnsubscribeStyle() {
-        setTitle("Unsubscribe", for: .normal)
+        setTitle("Unfollow", for: .normal)
         setTitleColor(.black, for: .normal)
         layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
         layer.borderWidth = 1

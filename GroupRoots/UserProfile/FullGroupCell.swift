@@ -84,10 +84,10 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 16)
         label.textAlignment = .left
-//        let tap = UITapGestureRecognizer(target: self, action: #selector(handleGroupTap))
-//        label.isUserInteractionEnabled = true
-//        label.addGestureRecognizer(tap)
-        label.isUserInteractionEnabled = false
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleGroupTap))
+        label.isUserInteractionEnabled = true
+        label.addGestureRecognizer(tap)
+//        label.isUserInteractionEnabled = false
         // ^^^ is false because the background to it (the whole cell) takes you to group
         return label
     }()
@@ -117,7 +117,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         let button = UIButton(type: .system)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.addTarget(self, action: #selector(handleSubscribeTap), for: .touchUpInside)
-        button.setTitle("Subscribe", for: .normal)
+        button.setTitle("Follow", for: .normal)
         button.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         button.backgroundColor = UIColor.white
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
@@ -190,27 +190,27 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     private func sharedInit() {
         self.backgroundColor = UIColor(white: 0, alpha: 0)
                         
-        addSubview(hiddenIcon)
+        contentView.addSubview(hiddenIcon)
         hiddenIcon.anchor(top: topAnchor, right: rightAnchor, paddingTop: 6, paddingRight: 12)
         
-        addSubview(groupnameLabel)
+        contentView.addSubview(groupnameLabel)
         groupnameLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 125, paddingLeft: 22)
         
-        addSubview(noPostsLabel)
+        contentView.addSubview(noPostsLabel)
         noPostsLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 170)
         
-        addSubview(privateLabel)
+        contentView.addSubview(privateLabel)
         privateLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 170)
         
-        addSubview(subscribeButton)
+        contentView.addSubview(subscribeButton)
         subscribeButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 220, paddingLeft: UIScreen.main.bounds.width/3, paddingRight: UIScreen.main.bounds.width/3, height: 40)
         
-        addSubview(emptyPostButton)
+        contentView.addSubview(emptyPostButton)
         emptyPostButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 220, paddingLeft: UIScreen.main.bounds.width/3, paddingRight: UIScreen.main.bounds.width/3, height: 40)
         
         let separatorView = UIView()
         separatorView.backgroundColor = UIColor(white: 0, alpha: 0.25)
-        addSubview(separatorView)
+        contentView.addSubview(separatorView)
         separatorView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 50, paddingRight: 50, height: 0.5)
         
         // need this because group will already be loaded but order might change so need to reload cell
@@ -221,7 +221,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
 //        header_layout.itemSize = CGSize(width: 60, height: 60)
 //        header_layout.minimumLineSpacing = CGFloat(20)
         
-        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: 5, width: UIScreen.main.bounds.width, height: 105), collectionViewLayout: header_layout)
+        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 105), collectionViewLayout: header_layout)
         headerCollectionView.delegate = self
         headerCollectionView.dataSource = self
         headerCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -232,13 +232,13 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         headerCollectionView.allowsSelection = true
         headerCollectionView.backgroundColor = UIColor.clear
         headerCollectionView.showsHorizontalScrollIndicator = false
-        insertSubview(headerCollectionView, at: 5)
+        contentView.insertSubview(headerCollectionView, at: 5)
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.minimumLineSpacing = CGFloat(0)
         
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: 160, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width/3), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 155, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width/3), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -252,7 +252,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
-        insertSubview(collectionView, at: 5)
+        contentView.insertSubview(collectionView, at: 5)
     }
     
     // doing this here to load faster
@@ -357,13 +357,13 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             if isInFollowPending ?? false {
                 noPostsLabel.isHidden = false
                 privateLabel.isHidden = true
-                noPostsLabel.text = "This group is private.\n Your subscription is pending."
+                noPostsLabel.text = "This group is private.\n Your follow is pending."
                 subscribeButton.isHidden = true
             }
             else {
                 noPostsLabel.isHidden = true
                 privateLabel.isHidden = false
-                privateLabel.text = "This group is private.\n Subscribe to see their posts."
+                privateLabel.text = "This group is private.\n Follow to see their posts."
                 subscribeButton.isHidden = false
             }
         }

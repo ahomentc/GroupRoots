@@ -1833,6 +1833,138 @@ exports.open_post = functions.https.onRequest((req, res) => {
 
 
 
+// ------------------------ Promotion stuff -----------------------
+
+
+// When join the group:
+// 	get the school the group is in and continue only if it is in a school
+// 	if less than 10 groups in the groupsWithMultipleMembers for school:
+// 		if group is not in groupsWithMultipleMembers:
+// 			if less than 2 groups in groupsCompletedPromo for school:
+// 				get the other member (first member) and add to rewardUser with value of 50
+// 			else:
+// 				get the other member (first member) and add to rewardUser with value of 20
+// 			add group to groupsWithMultipleMembers for school
+// 			add joining_user to rewardUser with value of 20
+// 		else:
+// 			if less than 4 members in the group:
+// 				add joining_user to rewardUser with value of 20
+
+// exports.joinGroupInSchoolPromo = functions.database.ref('/groups/{groupId}/members/{uid}').onCreate((snapshot, context) => {
+
+// 	const joining_member = context.params.uid;
+// 	const group_id = context.params.groupId;
+
+// 	// get the school the group is in
+// 	return snapshot.after.ref.root.child('/groups/' + group_id + "/selectedSchool").once('value', selected_school_snapshot => {
+// 		if (selected_school_snapshot === null || selected_school_snapshot.val() === null || selected_school_snapshot.val() == "") {
+// 			return null;
+// 		}
+// 		var selected_school = selected_school_snapshot.val()
+
+// 		// get groupsWithMultipleMembers for the school
+// 		return snapshot.after.ref.root.child('/schools/' + selected_school + "/groupsWithMultipleMembers").once('value', muliple_member_groups_snapshot => {
+// 			var continue_with_promo = false
+// 			if (muliple_member_groups_snapshot === null || muliple_member_groups_snapshot.val() === null) {
+// 				continue_with_promo = true
+// 			}
+// 			else {
+// 				var num_groups = 0;
+// 				muliple_member_groups_snapshot.forEach(function(member) {
+// 					num_groups += 1;
+// 				})
+// 				if (num_groups < 10) {
+// 					continue_with_promo = true
+// 				}
+// 			}
+
+// 			if (continue_with_promo) {
+
+// 			}
+// 			else {
+// 				return null;
+// 			}	
+// 		})
+// 	})
+
+
+	
+// 	// get the number of groups in the school
+// 	return snapshot.after.ref.root.child('/groupsInSchoolCount/' + selected_school).once('value', num_groups_snaphshot => {
+// 		var num_groups = Int(num_groups_snaphshot.val());
+
+// 		// get the first user in the group
+	// 	return snapshot.ref.root.child('/groups/' + group_id + '/members/').once('value', members_snapshot => {
+	// 	var sync = new DispatchGroup();
+	// 	var token_0 = sync.enter();
+
+	// 	members_snapshot.forEach(function(member) {
+	// 		var member_id = member.key;
+	// 		// return snapshot.ref.root.child('/schools/' + selected_school + '/groupCreators/' + member_id).set(false)
+
+
+	// 		// don't have this
+	// 		// if(num_groups < 2) {
+	// 		// 	// return snapshot.ref.root.child('/schools/' + selected_school + '/groupCreators/' + member_id).set(false)
+	// 		// }
+	// 		// else if(num_groups < 10) {
+
+	// 		// }
+	// 		else {
+	// 			return null;
+	// 		}
+	// 	})
+	// 	// create school -> group_id
+	// 	// return snapshot.ref.root.child('/schools/' + selected_school + '/groups/' + group_id).set(creation_time);
+	// }).catch(() => {return null});
+// });
+
+
+
+exports.updateUserAmountOnPromo = functions.database.ref('/promo/{schoolName}/postedToInsta/{username}').onCreate((snapshot, context) => {
+
+	const username = context.params.username;
+	const school_name = context.params.school_name;
+
+	var promises = []
+	
+	// get the number of groups in the school
+	return snapshot.after.ref.root.child('/promo/' + school_name + "/currentInstaPayout").once('value', current_payout_snapshot => {
+		var payout = 50
+		if (current_payout_snapshot === null || current_payout_snapshot.val() === null) {
+			// it's null so set it to 50
+			promises.push(snapshot.ref.root.child('/promo/' + school_name + '/currentInstaPayout/').set(50));
+		}
+		else {
+		 	payout = Int(current_payout_snapshot.val());
+		}
+		promises.push(snapshot.ref.root.child('/promo/' + school_name + '/postedToInsta/' + username + "/amount").set(payout));
+
+		// get postedToInsta for the school and look at its count
+		return snapshot.ref.root.child('/promo/' + school_name + '/postedToInsta').once('value', posted_snapshot => {
+			var count = 0;
+			posted_snapshot.forEach(function(member) {
+				count += 1;
+			})
+
+			if ( count < 5 ) {
+				promises.push(snapshot.ref.root.child('/promo/' + school_name + '/currentInstaPayout/').set(50));
+			}
+			else if (count < 10) {
+				promises.push(snapshot.ref.root.child('/promo/' + school_name + '/currentInstaPayout/').set(20));
+			}
+			else if (count < 20 ) {
+				promises.push(snapshot.ref.root.child('/promo/' + school_name + '/currentInstaPayout/').set(10));
+			}
+			if (promises.length === 0) {
+				return null;
+			}
+			return Promise.all(promises);
+		}).catch(() => {return null});
+
+	}).catch(() => {return null});
+});
+
 
 
 

@@ -57,18 +57,18 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     
     func setupViews() {
         let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - UIScreen.main.bounds.height/9)
         layout.minimumLineSpacing = CGFloat(0)
 
         // obviously not good cuz would be different on different screens but just for visual purposes
-        collectionView = UICollectionView(frame: CGRect(x: 15, y: UIScreen.main.bounds.height - UIScreen.main.bounds.height/5*4, width: self.frame.width - 30, height: self.frame.height), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 15, y: UIScreen.main.bounds.height/8, width: self.frame.width - 30, height: self.frame.height), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         collectionView?.register(FeedGroupPostCell.self, forCellWithReuseIdentifier: FeedGroupPostCell.cellId)
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
-        self.addSubview(collectionView)        
+        contentView.addSubview(collectionView)        
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {

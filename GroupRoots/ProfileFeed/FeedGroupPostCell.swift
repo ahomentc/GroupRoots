@@ -145,7 +145,7 @@ class FeedGroupPostCell: UICollectionViewCell {
     }
     
     private func sharedInit() {
-        insertSubview(photoImageView, at: 4)
+        contentView.insertSubview(photoImageView, at: 4)
         photoImageView.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: CGFloat(1), paddingLeft: CGFloat(1), paddingBottom: CGFloat(1), paddingRight: CGFloat(1), width: 0, height: 0)
         photoImageView.layer.cornerRadius = 10
         photoImageView.layer.borderColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1).cgColor

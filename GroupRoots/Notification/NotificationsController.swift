@@ -12,7 +12,7 @@ import UPCarouselFlowLayout
 import FirebaseAuth
 import FirebaseDatabase
 
-class NotificationsController: HomePostCellViewController, NotificationCellDelegate, loadMoreNotificationsCellDelegate {
+class NotificationsController: HomePostCellViewController, NotificationCellDelegate, loadMoreNotificationsCellDelegate, LargeImageViewControllerDelegate {
     func handleLoadMoreNotifications() {
         fetchMoreNotifications()
     }
@@ -202,6 +202,7 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
         largeImageViewController.group = group
         largeImageViewController.postToScrollToId = post.id
+        largeImageViewController.delegate = self
         let navController = UINavigationController(rootViewController: largeImageViewController)
 //        navController.modalPresentationStyle = .fullScreen
         navController.modalPresentationStyle = .overCurrentContext

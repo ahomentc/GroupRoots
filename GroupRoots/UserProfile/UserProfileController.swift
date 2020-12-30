@@ -5,7 +5,7 @@ import FirebaseDatabase
 import YPImagePicker
 import Photos
 
-class UserProfileController: HomePostCellViewController, CreateGroupControllerDelegate, FullGroupCellDelegate {
+class UserProfileController: HomePostCellViewController, CreateGroupControllerDelegate, FullGroupCellDelegate, LargeImageViewControllerDelegate {
 
     var user: User? {
         didSet {
@@ -464,20 +464,20 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
 //        guard let user = user else { return CGSize(width: view.frame.width, height: 115) }
-        guard let user = user else { return CGSize(width: view.frame.width, height: 155) }
+        guard let user = user else { return CGSize(width: view.frame.width, height: 235) }
         let bio = user.bio
         if bio == "" {
-            return CGSize(width: view.frame.width, height: 155)
+            return CGSize(width: view.frame.width, height: 165)
         }
         else {
             if bio.count < 40 {
-                return CGSize(width: view.frame.width, height: 185)
+                return CGSize(width: view.frame.width, height: 195)
             }
             else if bio.count < 80 {
-                return CGSize(width: view.frame.width, height: 205)
+                return CGSize(width: view.frame.width, height: 215)
             }
             else {
-                return CGSize(width: view.frame.width, height: 225)
+                return CGSize(width: view.frame.width, height: 235)
             }
         }
     }
@@ -506,9 +506,9 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         
         let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
         largeImageViewController.group = groupPost.group
+        largeImageViewController.delegate = self
         largeImageViewController.indexPath = IndexPath(item: index, section: 0)
         let navController = UINavigationController(rootViewController: largeImageViewController)
-//        navController.modalPresentationStyle = .fullScreen
         navController.modalPresentationStyle = .overCurrentContext
         
         self.present(navController, animated: true, completion: nil)

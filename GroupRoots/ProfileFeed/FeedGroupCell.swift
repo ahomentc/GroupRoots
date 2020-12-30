@@ -56,6 +56,9 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     
     var usingCachedData: Bool?
     
+    var collectionViewOffset = CGPoint(x: 0, y: 0)
+    var hasDisappeared = false
+    
     override func prepareForReuse() {
         super.prepareForReuse()
         groupMembers = nil
@@ -175,17 +178,6 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         self.collectionView.layoutIfNeeded()
         self.headerCollectionView.reloadData()
         
-        
-        // set the layout according to isFullScreen
-//        if isFullScreen {
-//            self.delegate?.didChangeViewType(isFullscreen: true)
-//            self.collectionView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-//        }
-//        else {
-//            self.delegate?.didChangeViewType(isFullscreen: false)
-//            self.collectionView.frame = CGRect(x: 0, y: 220, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 220)
-//        }
-        
         if groupPosts.count > 0 {
             let group = groupPosts[0].group
             if group.groupname == "" {
@@ -250,7 +242,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         header_layout.itemSize = CGSize(width: 60, height: 60)
         header_layout.minimumLineSpacing = CGFloat(20)
         
-        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/10, width: UIScreen.main.bounds.width, height: 120), collectionViewLayout: header_layout)
+        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 120), collectionViewLayout: header_layout)
         headerCollectionView.delegate = self
         headerCollectionView.dataSource = self
         headerCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -261,14 +253,14 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         headerCollectionView.allowsSelection = true
         headerCollectionView.backgroundColor = UIColor.clear
         headerCollectionView.showsHorizontalScrollIndicator = false
-        insertSubview(headerCollectionView, at: 10)
+        contentView.insertSubview(headerCollectionView, at: 10)
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
-        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 9 * 8 )
         layout.minimumLineSpacing = CGFloat(0)
         
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: 220, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 220), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 160, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 9 * 8 - 160), collectionViewLayout: layout)
 //        CGRect(x: 0, y: 220, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 220)
         
         collectionView.delegate = self
@@ -281,32 +273,26 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.isPagingEnabled = true
-        insertSubview(collectionView, at: 5)
+        contentView.insertSubview(collectionView, at: 5)
         
-        insertSubview(groupnameButton, at: 6)
-        groupnameButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: UIScreen.main.bounds.height/3.5, paddingLeft: 20)
+        contentView.insertSubview(groupnameButton, at: 6)
+        groupnameButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: 85 + UIScreen.main.bounds.height / 14 , paddingLeft: 20, height: 10)
         groupnameButton.backgroundColor = .clear
         groupnameButton.isUserInteractionEnabled = true
         
-        insertSubview(closeButton, at: 7)
-        closeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingRight: 20)
+//        insertSubview(closeButton, at: 7)
+//        closeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingRight: 20)
         
-//        pageControlSwipe = UIPageControl()
-        pageControlSwipe = UIPageControl(frame: CGRect(x: 0, y: UIScreen.main.bounds.height - UIScreen.main.bounds.height/10, width: UIScreen.main.bounds.width, height: 10))
+        pageControlSwipe = UIPageControl(frame: CGRect(x: 0, y: 130 +  UIScreen.main.bounds.height / 1.7, width: UIScreen.main.bounds.width, height: 10))
         pageControlSwipe.pageIndicatorTintColor = UIColor.lightGray
         pageControlSwipe.currentPageIndicatorTintColor = UIColor.darkGray
         self.addSubview(pageControlSwipe)
-//        pageControlSwipe.anchor(top: collectionView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 20, height: 10)
+//        pageControlSwipe.anchor(left: leftAnchor, bottom: collectionView.bottomAnchor, right: rightAnchor, paddingBottom: 50, height: 10)
         
         self.groupnameButton.isHidden = false
         self.closeButton.isHidden = false
         
         self.backgroundColor = .white
-          
-//        Last resort
-//        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false, block: { timer in
-//            self.reloadGroupData()
-//        })
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleCloseFullscreen), name: NSNotification.Name(rawValue: "closeFullScreen"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.closeFullScreenWithRow(_:)), name: NSNotification.Name(rawValue: "closeFullScreenWithRow"), object: nil)
@@ -319,24 +305,19 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == self.collectionView { // collectionview for pictures with page cell
             if groupPosts?.count ?? 0 > 0 {
-                if isFullScreen {
-                    return groupPosts?.count ?? 0
+                let count = Int(ceil(Double(groupPosts?.count ?? 0)/4))
+                if count < 5 {
+                    self.pageControlSwipe.numberOfPages = count
+                } else {
+                    self.pageControlSwipe.numberOfPages = 5
+                }
+                if count == 1 {
+                    self.pageControlSwipe.isHidden = true
                 }
                 else {
-                    let count = Int(ceil(Double(groupPosts?.count ?? 0)/4))
-                    if count < 5 {
-                        self.pageControlSwipe.numberOfPages = count
-                    } else {
-                        self.pageControlSwipe.numberOfPages = 5
-                    }
-                    if count == 1 {
-                        self.pageControlSwipe.isHidden = true
-                    }
-                    else {
-                        self.pageControlSwipe.isHidden = false
-                    }
-                    return count
+                    self.pageControlSwipe.isHidden = false
                 }
+                return count
             }
             else {
                 return 0
@@ -352,50 +333,30 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     // so maybe just have an X instead to exit full screen view and don't use LargeImageViewController
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if collectionView == self.collectionView { // collectionview for pictures with page cell
-            if isFullScreen {
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedPostCell.cellId, for: indexPath) as! FeedPostCell
-//                cell.isScrolling = isScrolling
-                cell.delegate = self
-                cell.emptyComment = true
-                cell.groupPost = groupPosts?[indexPath.item]
-                let post_id = groupPosts?[indexPath.item].id ?? ""
-                if firstCommentForPosts[post_id] != nil {
-                    cell.firstComment = firstCommentForPosts[post_id]
-                }
-                if numCommentsForPosts[post_id] != nil {
-                    cell.numComments = numCommentsForPosts[post_id]
-                }
-                if numViewsForPost[post_id] != nil {
-                    cell.numViewsForPost = numViewsForPost[post_id]
-                }
-                return cell
+            // only show 4 pictures in page
+            let startPos = indexPath.row * 4
+            var endPos = indexPath.row * 4 + 4
+            
+            let groupPostsCount = (groupPosts ?? []).count
+            if endPos > groupPostsCount {
+                endPos = groupPostsCount
             }
-            else {
-                // only show 4 pictures in page
-                let startPos = indexPath.row * 4
-                var endPos = indexPath.row * 4 + 4
-                
-                let groupPostsCount = (groupPosts ?? []).count
-                if endPos > groupPostsCount {
-                    endPos = groupPostsCount
-                }
-                
-                if endPos == 0 {
-                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedGroupPageCell.cellId, for: indexPath) as! FeedGroupPageCell
-                    cell.delegate = self
-                    cell.tag = indexPath.row
-                    return cell
-                }
-                
-                let slicedArr = (groupPosts ?? [])[startPos..<endPos]
-                
+            
+            if endPos == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedGroupPageCell.cellId, for: indexPath) as! FeedGroupPageCell
-                cell.groupPosts = Array(slicedArr)
-                cell.viewedPosts = viewedPosts
                 cell.delegate = self
                 cell.tag = indexPath.row
                 return cell
             }
+            
+            let slicedArr = (groupPosts ?? [])[startPos..<endPos]
+            
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedGroupPageCell.cellId, for: indexPath) as! FeedGroupPageCell
+            cell.groupPosts = Array(slicedArr)
+            cell.viewedPosts = viewedPosts
+            cell.delegate = self
+            cell.tag = indexPath.row
+            return cell
         }
         else { // collectionview with group members
             let group = groupPosts?[0].group
@@ -557,55 +518,18 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     func didTapPostCell(for_cell cell: FeedGroupPageCell, cell_number: Int) {
         guard let group = groupPosts?[0].group else { return }
         let cell_tapped_index = (4 * cell.tag) + cell_number
+        
+        self.collectionViewOffset = self.collectionView.contentOffset;
+        self.hasDisappeared = true
+        
         delegate?.viewFullScreen(group: group, indexPath: IndexPath(item: cell_tapped_index, section: 0))
         NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
-        isFullScreen = true
-        
-        //---
-        
-//        let cell_tapped_index = (4 * cell.tag) + cell_number
-//        if isFullScreen == false {
-//            // still doesn't work... but if this isn't here then for fullscreen it would just be at the index of the page.
-//            // so rn it just loads full screen of index 0 first, which is a video which breaks it.
-//            collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
-//            isFullScreen = true
-//            self.delegate?.didChangeViewType(isFullscreen: true)
-//            reloadGroupData()
-//            NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
-//            self.collectionView.scrollToItem(at: IndexPath(item: cell_tapped_index, section: 0), at: .centeredHorizontally, animated: false)
-//
-//            // band aid solution to videourl still being there problem which causes picture to disappear
-//            // only do this if not a video
-//
-//            Timer.scheduledTimer(withTimeInterval: 2, repeats: false, block: { timer in
-//                self.safeToScroll = true
-//            })
-//
-//            closeButton.isHidden = false
-//            pageControlSwipe.isHidden = true
-//            headerCollectionView.isHidden = true
-//            let lockImage = #imageLiteral(resourceName: "lock")
-//            let balanceFontSize: CGFloat = 20
-//            let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
-//            let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.white, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
-//            let balanceString = NSMutableAttributedString(string: self.groupnameButton.titleLabel?.attributedText?.string ?? "", attributes: balanceAttr)
-//            self.groupnameButton.setAttributedTitle(balanceString, for: .normal)
-//        }
     }
     
     func goToImage(for cell: FeedPostCell, isRight: Bool) {
-        
     }
     
     func requestPlay(for cell: FeedPostCell) {
-//        guard let usingCachedData = usingCachedData else { return }
-//        if !isScrolling && !usingCachedData  {
-//            collectionView.visibleCells.forEach { cell2 in  // check if cell is still visible
-//                if cell2 == cell {
-//                    delegate?.requestPlay(for_lower: cell, for_upper: self)
-//                }
-//            }
-//        }
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
@@ -619,37 +543,12 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     }
 
     func stoppedScrolling() {
-        // set current post as viewed
-        if isFullScreen {
-            if !safeToScroll {
-                Timer.scheduledTimer(withTimeInterval: 1, repeats: false, block: { timer in
-                    self.collectionView.reloadData()
-//                    self.groupnameButton.setTitleColor(.white, for: .normal)
-
-                    let lockImage = #imageLiteral(resourceName: "lock")
-                    let balanceFontSize: CGFloat = 20
-                    let balanceFont = UIFont.boldSystemFont(ofSize: balanceFontSize)
-                    let balanceAttr: [NSAttributedString.Key: Any] = [.font: balanceFont, .foregroundColor: UIColor.white, .baselineOffset: (lockImage.size.height - balanceFontSize) / 2 - balanceFont.descender / 2]
-                    let balanceString = NSMutableAttributedString(string: self.groupnameButton.titleLabel?.attributedText?.string ?? "", attributes: balanceAttr)
-                    self.groupnameButton.setAttributedTitle(balanceString, for: .normal)
-                })
-            }
-            
-            collectionView.visibleCells.forEach { cell in
-                if cell is FeedPostCell {
-                    let groupPost = (cell as! FeedPostCell).groupPost
-                    if groupPost != nil {
-                        delegate?.didView(groupPost: groupPost!)
-                    }
-                }
-            }
-        }
     }
     
     @objc private func closeFullScreenWithRow(_ notification: NSNotification){
+        
         guard let groupPosts = groupPosts else { return }
         if groupPosts.count == 0 { return }
-        let group = groupPosts[0].group
         
         if collectionView.visibleCells.count == 0 { return }
         
@@ -659,44 +558,51 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             }
         }
         
-        isFullScreen = false
-        self.delegate?.didChangeViewType(isFullscreen: false)
         closeButton.isHidden = true
         pageControlSwipe.isHidden = false
         headerCollectionView.isHidden = false
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
         safeToScroll = false
         
-        if let dict = notification.userInfo as NSDictionary? {
-            if let indexPathRow = dict["indexPathRow"] as? Int, let animatedScroll = dict["animatedScroll"] as? Bool, let groupId = dict["groupId"] as? String{
-                let page = Int(floor(Double(indexPathRow) / 4))
-                if groupId == group.groupId {
-                    collectionView.scrollToItem(at: IndexPath(item: page, section: 0), at: .centeredHorizontally, animated: animatedScroll)
-                }
-            }
+        if self.hasDisappeared {
+            self.collectionView.contentOffset = self.collectionViewOffset
+            self.hasDisappeared = false
         }
     }
     
+//    @objc private func closeFullScreenWithRow(_ notification: NSNotification){
+//
+//        guard let groupPosts = groupPosts else { return }
+//        if groupPosts.count == 0 { return }
+//        let group = groupPosts[0].group
+//
+//        if collectionView.visibleCells.count == 0 { return }
+//
+//        collectionView.visibleCells.forEach { cell in // pause video
+//            if cell is FeedPostCell {
+//                (cell as! FeedPostCell).player.pause()
+//            }
+//        }
+//
+//        isFullScreen = false
+//        self.delegate?.didChangeViewType(isFullscreen: false)
+//        closeButton.isHidden = true
+//        pageControlSwipe.isHidden = false
+//        headerCollectionView.isHidden = false
+//        NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+//        safeToScroll = false
+//
+//        if let dict = notification.userInfo as NSDictionary? {
+//            if let indexPathRow = dict["indexPathRow"] as? Int, let animatedScroll = dict["animatedScroll"] as? Bool, let groupId = dict["groupId"] as? String{
+//                let page = Int(floor(Double(indexPathRow) / 4))
+//                if groupId == group.groupId {
+//                    collectionView.scrollToItem(at: IndexPath(item: page, section: 0), at: .centeredHorizontally, animated: animatedScroll)
+//                }
+//            }
+//        }
+//    }
+    
     @objc func handleCloseFullscreen(){
-        if isFullScreen {
-            if collectionView.visibleCells.count == 0 { return }
-            
-            // pause video
-            collectionView.visibleCells.forEach { cell in
-                if cell is FeedPostCell {
-                    (cell as! FeedPostCell).player.pause()
-                }
-            }
-            
-            isFullScreen = false
-            self.delegate?.didChangeViewType(isFullscreen: false)
-//            reloadGroupData()
-            closeButton.isHidden = true
-            pageControlSwipe.isHidden = false
-            headerCollectionView.isHidden = false
-            NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
-            safeToScroll = false
-        }
     }
     
     func pauseVisibleVideo() {

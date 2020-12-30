@@ -37,6 +37,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>This lets you take photos and record video.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save photos to camera roll.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Contact access needed to find friends who are on GroupRoots</string>
 	<key>NSPhotoLibraryUsageDescription</key>

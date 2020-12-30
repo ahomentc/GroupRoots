@@ -81,17 +81,17 @@ class EmptyFeedUserCell: UICollectionViewCell {
     }
 
     private func sharedInit() {
-        addSubview(profileImageView)
+        contentView.addSubview(profileImageView)
         profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 20, paddingLeft: 40, width: 80, height: 80)
         profileImageView.layer.cornerRadius = 40
         
-        addSubview(usernameLabel)
+        contentView.addSubview(usernameLabel)
         usernameLabel.anchor(top: profileImageView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 12)
 
-        addSubview(followButton)
+        contentView.addSubview(followButton)
         followButton.anchor(top: usernameLabel.bottomAnchor, left: leftAnchor, paddingTop: 12, paddingLeft: 40)
         
-        addSubview(cancelButton)
+        contentView.addSubview(cancelButton)
         cancelButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 5, paddingRight: 5, width: 44, height: 44)
         
         self.backgroundColor = .white
