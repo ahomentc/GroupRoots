@@ -32,6 +32,13 @@ class SchoolUsersCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
         }
     }
     
+    // group_id to is_following
+    var is_following_groups_in_school: [String: Bool]? {
+        didSet {
+            configureGroupHeader()
+        }
+    }
+    
     var delegate: SchoolUsersCellDelegate?
     
     var finishedLoading = false
@@ -74,7 +81,7 @@ class SchoolUsersCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
         addSubview(schoolMembersLabel)
         schoolMembersLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 5, paddingLeft: 20)
 
-        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: 30, width: UIScreen.main.bounds.width, height: 105), collectionViewLayout: header_layout)
+        headerCollectionView = UICollectionView(frame: CGRect(x: 0, y: 30, width: UIScreen.main.bounds.width, height: 155), collectionViewLayout: header_layout)
         headerCollectionView.delegate = self
         headerCollectionView.dataSource = self
         headerCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -97,34 +104,38 @@ class SchoolUsersCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         guard var schoolMembers = self.schoolMembers else { return }
         guard let school_members_group_count = school_members_group_count else { return }
+        guard let is_following_groups_in_school = is_following_groups_in_school else { return }
+        
+        self.orderedSchoolMembers = self.schoolMembers!
         
         // order the members by number of groups
         // randomize the first 10
         // make the user be in position 1 of array if array length is > 1
         // else make user be in position 0
-        
-        schoolMembers.sort(by: { (u1, u2) -> Bool in
-            return school_members_group_count[u1.uid]! > school_members_group_count[u2.uid]!
-        })
-        
-        // get array with just the first 10
-        var firstAfterSort = schoolMembers.prefix(6)
-        firstAfterSort.shuffle()
-        
-        self.orderedSchoolMembers = firstAfterSort + Array(schoolMembers.dropFirst(6))
-        
-        // put current user to top of the list
-        var indexToSwap = -1
-        for (i,user) in self.orderedSchoolMembers.enumerated() {
-            if user.uid == currentLoggedInUserId {
-                indexToSwap = i
-                break
-            }
-        }
-        if indexToSwap > -1 && self.orderedSchoolMembers.count > 1 {
-            self.orderedSchoolMembers.swapAt(1, indexToSwap)
-        }
-        
+//
+//        schoolMembers.sort(by: { (u1, u2) -> Bool in
+//            return school_members_group_count[u1.uid]! > school_members_group_count[u2.uid]!
+//        })
+//
+//        // get array with just the first 10
+//        var firstAfterSort = schoolMembers.prefix(6)
+//
+//        firstAfterSort.shuffle()
+//
+//        self.orderedSchoolMembers = firstAfterSort + Array(schoolMembers.dropFirst(6))
+//
+//        // put current user to top of the list
+//        var indexToSwap = -1
+//        for (i,user) in self.orderedSchoolMembers.enumerated() {
+//            if user.uid == currentLoggedInUserId {
+//                indexToSwap = i
+//                break
+//            }
+//        }
+//        if indexToSwap > -1 && self.orderedSchoolMembers.count > 1 {
+//            self.orderedSchoolMembers.swapAt(1, indexToSwap)
+//        }
+//
         
         self.finishedLoading = true
         self.headerCollectionView.reloadData()
@@ -142,13 +153,19 @@ class SchoolUsersCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
         if indexPath.item < orderedSchoolMembers.count {
             cell.user = orderedSchoolMembers[indexPath.item]
             cell.num_groups = school_members_group_count?[cell.user?.uid ?? ""]
+            cell.is_following = is_following_groups_in_school?[cell.user?.uid ?? ""]
         }
         cell.group_has_profile_image = true
         cell.layer.backgroundColor = UIColor.clear.cgColor
-        cell.layer.shadowColor = UIColor.black.cgColor
-        cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
-        cell.layer.shadowOpacity = 0.2
-        cell.layer.shadowRadius = 2.0
+        
+//        cell.layer.shadowColor = UIColor.black.cgColor
+//        cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+//        cell.layer.shadowOpacity = 0.2
+//        cell.layer.shadowRadius = 2.0
+        
+        cell.layer.borderWidth = 1
+        cell.layer.cornerRadius = 5
+        cell.layer.borderColor = UIColor.init(white: 0.9, alpha: 1).cgColor
         return cell
     }
     
@@ -164,11 +181,11 @@ extension SchoolUsersCell: UICollectionViewDelegateFlowLayout {
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 5
+        return 7
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 70, height: 85)
+        return CGSize(width: 100, height: 145)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {

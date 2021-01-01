@@ -111,6 +111,7 @@ class InstaPromoController: UIViewController {
         savedLabel.anchor(top: promoImageView.bottomAnchor, left: view.leftAnchor, paddingTop: 5, paddingLeft: UIScreen.main.bounds.width/2-75, width: 150, height: 40)
         
         Database.database().isPromoActive(school: school, completion: { (isActive) in
+            
             if isActive {
                 Database.database().fetchSchoolPromoPayout(school: school, completion: { (payout) in
                     let navLabel = UILabel()
@@ -120,13 +121,6 @@ class InstaPromoController: UIViewController {
                     self.navigationItem.titleView = navLabel
                 }) { (_) in}
             }
-//            else {
-//                let navLabel = UILabel()
-//                navLabel.text = "Group Reservation Complete"
-//                navLabel.font = UIFont.boldSystemFont(ofSize: 18)
-//                navLabel.textColor = .white
-//                self.navigationItem.titleView = navLabel
-//            }
             
             if !isActive {
                 self.explainPromoLabel.frame = CGRect(x: 20, y: UIScreen.main.bounds.height/14, width: UIScreen.main.bounds.width - 40, height: 140)

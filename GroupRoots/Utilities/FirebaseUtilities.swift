@@ -3041,6 +3041,24 @@ extension Database {
         }
     }
     
+    func hasUserDonePromo(school: String, username: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+        Database.database().reference().child("promos").child(school).child("postedToInsta").child(username).observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(true)
+                }
+            } else {
+                completion(false)
+            }
+        }) { (err) in
+            print("Failed to check if following:", err)
+            cancel?(err)
+        }
+    }
+    
     
     //MARK: GroupFollowers
     

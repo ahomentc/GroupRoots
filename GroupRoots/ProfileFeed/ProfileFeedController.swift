@@ -60,9 +60,11 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     private var school_groups = [Group]()
     private var school_members = [User]()
     private var school_members_group_count = [String: Int]() // uid: number of groups
+    private var is_following_groups_in_school = [String: Bool]()
     var schoolCollectionView: UICollectionView!
     var user: User?
     var schoolPromoIsActive = false
+    var userHasDonePromo = false
     
     private let loadingScreenView: CustomImageView = {
         let iv = CustomImageView()
@@ -321,7 +323,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         button.backgroundColor = UIColor(white: 0.9, alpha: 1)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        button.setTitle("Join School", for: .normal)
+        button.setTitle("Select School", for: .normal)
         return button
     }()
     
@@ -511,6 +513,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         schoolCollectionView?.register(SchoolEmptyStateCell.self, forCellWithReuseIdentifier: SchoolEmptyStateCell.cellId)
         schoolCollectionView?.register(SchoolLabelCell.self, forCellWithReuseIdentifier: SchoolLabelCell.cellId)
         schoolCollectionView?.register(InstaPromoCell.self, forCellWithReuseIdentifier: InstaPromoCell.cellId)
+        schoolCollectionView?.register(InstaPromoExistingGroupCell.self, forCellWithReuseIdentifier: InstaPromoExistingGroupCell.cellId)
         schoolCollectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
         schoolCollectionView?.register(FullGroupCell.self, forCellWithReuseIdentifier: FullGroupCell.cellId)
         schoolCollectionView?.register(SchoolUsersCell.self, forCellWithReuseIdentifier: SchoolUsersCell.cellId)
@@ -968,6 +971,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.fetchSchoolGroupMembers(groups: groups)
             self.fetchSchoolGroupInfo(groups: groups)
             self.fetchSchoolPromoIsActive(school: school)
+            self.checkIfUserHasDonePromo(uid: currentLoggedInUserId, school: school)
             
         }) { (_) in }
     }
@@ -976,8 +980,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     var schoolGroupInfoFetched = false
     var schoolGroupMembersFetched = false
     var schoolPromoIsActiveFetched = false
+    var hasUserDonePromoFetched = false
     private func reloadSchoolCollectionView(){
-        if schoolMembersFetched && schoolGroupInfoFetched && schoolGroupMembersFetched && schoolPromoIsActiveFetched {
+        if schoolMembersFetched && schoolGroupInfoFetched && schoolGroupMembersFetched && schoolPromoIsActiveFetched && hasUserDonePromoFetched {
             let refreshControlSchool = UIRefreshControl()
             refreshControlSchool.addTarget(self, action: #selector(self.handleRefresh), for: .valueChanged)
             self.schoolCollectionView.refreshControl = refreshControlSchool
@@ -1001,6 +1006,24 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         }
     }
     
+    func checkIfUserHasDonePromo(uid: String, school: String) {
+        Database.database().userExists(withUID: uid, completion: { (exists) in
+            if exists{
+                Database.database().fetchUser(withUID: uid, completion: { (user) in
+                    Database.database().hasUserDonePromo(school: school, username: user.username, completion: { (hasDone) in
+                        self.hasUserDonePromoFetched = true
+                        self.userHasDonePromo = hasDone
+                        self.reloadSchoolCollectionView()
+                    }) { (_) in}
+                })
+            }
+            else {
+                self.hasUserDonePromoFetched = true
+                self.reloadSchoolCollectionView()
+            }
+        })
+    }
+    
     private func fetchSchoolPromoIsActive(school: String) {
         Database.database().isPromoActive(school: school, completion: { (isActive) in
             self.schoolPromoIsActive = isActive
@@ -1011,7 +1034,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     private func fetchSchoolMembers(school: String){
         Database.database().fetchSchoolMembers(school: school, completion: { (members) in
-            self.school_members = members
+//            self.school_members = members
             
             // fill a dictionary for how many groups each user is in
             let sync = DispatchGroup()
@@ -1022,9 +1045,18 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.school_members_group_count[member.uid] = groupsCount
                     sync.leave()
                 })
+                
+                sync.enter()
+                Database.database().isFollowingUser(withUID: member.uid, completion: { (following) in
+                    self.is_following_groups_in_school[member.uid] = following
+                    sync.leave()
+                }) { (err) in
+                    sync.leave()
+                }
             }
             sync.leave()
             sync.notify(queue: .main) {
+                self.school_members = self.orderSchoolMembers(school_members: members, school_members_group_count: self.school_members_group_count)
                 self.schoolMembersFetched = true
                 self.reloadSchoolCollectionView()
             }
@@ -1109,6 +1141,37 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         }
     }
     
+    func orderSchoolMembers(school_members: [User], school_members_group_count: [String: Int]) -> [User] {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return [] }
+        
+        var schoolMembers = school_members
+        
+        schoolMembers.sort(by: { (u1, u2) -> Bool in
+            return school_members_group_count[u1.uid]! > school_members_group_count[u2.uid]!
+        })
+        
+        // get array with just the first 10
+        var firstAfterSort = schoolMembers.prefix(6)
+        
+        firstAfterSort.shuffle()
+        
+        var orderedSchoolMembers = firstAfterSort + Array(schoolMembers.dropFirst(6))
+        
+        // put current user to top of the list
+        var indexToSwap = -1
+        for (i,user) in orderedSchoolMembers.enumerated() {
+            if user.uid == currentLoggedInUserId {
+                indexToSwap = i
+                break
+            }
+        }
+        if indexToSwap > -1 && orderedSchoolMembers.count > 1 {
+            orderedSchoolMembers.swapAt(1, indexToSwap)
+        }
+        
+        return Array(orderedSchoolMembers)
+    }
+    
     
     func configureNavBar() {
         self.navigationController?.navigationBar.height(CGFloat(0))
@@ -1167,15 +1230,24 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SchoolUsersCell.cellId, for: indexPath) as! SchoolUsersCell
                 cell.schoolMembers = self.school_members
                 cell.school_members_group_count = self.school_members_group_count
+                cell.is_following_groups_in_school = self.is_following_groups_in_school
                 cell.delegate = self
                 return cell
             }
             
-            if self.schoolPromoIsActive {
+            if self.schoolPromoIsActive && !self.userHasDonePromo {
                 if indexPath.item == 2 {
-                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: InstaPromoCell.cellId, for: indexPath) as! InstaPromoCell
-                    cell.selectedSchool = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
-                    return cell
+                    let currentLoggedInUserId = Auth.auth().currentUser?.uid
+                    if currentLoggedInUserId != nil && self.school_members_group_count[currentLoggedInUserId!] != nil && self.school_members_group_count[currentLoggedInUserId!]! > 0 {
+                        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: InstaPromoExistingGroupCell.cellId, for: indexPath) as! InstaPromoExistingGroupCell
+                        cell.selectedSchool = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
+                        return cell
+                    }
+                    else {
+                        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: InstaPromoCell.cellId, for: indexPath) as! InstaPromoCell
+                        cell.selectedSchool = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
+                        return cell
+                    }
                 }
                 if indexPath.item == 3 {
                     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CreateGroupCell.cellId, for: indexPath) as! CreateGroupCell
@@ -1207,9 +1279,15 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             }
             
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FullGroupCell.cellId, for: indexPath) as! FullGroupCell
-            cell.group = school_groups[indexPath.item - 5]
+            
+            var num_to_adjust = 4
+            if self.schoolPromoIsActive && !self.userHasDonePromo{
+                num_to_adjust = 5
+            }
+            
+            cell.group = school_groups[indexPath.item - num_to_adjust]
             cell.user = user
-            let groupId = school_groups[indexPath.item - 5].groupId
+            let groupId = school_groups[indexPath.item - num_to_adjust].groupId
             cell.isGroupHidden = false
             cell.isInFollowPending = isInGroupFollowPendingDict[groupId]
             cell.canView = canViewGroupPostsDict[groupId]
@@ -1253,15 +1331,15 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 return CGSize(width: view.frame.width, height: 60)
             }
             if indexPath.item == 1 {
-                return CGSize(width: view.frame.width, height: 135)
+                return CGSize(width: view.frame.width, height: 175)
             }
             
-            if self.schoolPromoIsActive {
+            if self.schoolPromoIsActive && !self.userHasDonePromo {
                 if indexPath.item == 2 {
-                    return CGSize(width: view.frame.width, height: 100)
+                    return CGSize(width: view.frame.width, height: 120)
                 }
                 if indexPath.item == 3 {
-                    return CGSize(width: view.frame.width, height: 60)
+                    return CGSize(width: view.frame.width, height: 70)
                 }
                 if indexPath.item == 4 {
                     return CGSize(width: view.frame.width, height: 40)
@@ -1269,7 +1347,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             }
             else {
                 if indexPath.item == 2 {
-                    return CGSize(width: view.frame.width, height: 60)
+                    return CGSize(width: view.frame.width, height: 70)
                 }
                 if indexPath.item == 3 {
                     return CGSize(width: view.frame.width, height: 40)
@@ -1284,6 +1362,30 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         }
         else {
             return CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - UIScreen.main.bounds.height/8)
+        }
+    }
+    
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        if collectionView == self.schoolCollectionView {
+            if self.schoolPromoIsActive && !self.userHasDonePromo && indexPath.row == 2 {
+                if self.school_members_group_count[currentLoggedInUserId] != nil && self.school_members_group_count[currentLoggedInUserId]! > 0 {
+                    // get the groups of the user and select the first one
+                    Database.database().fetchAllGroups(withUID: currentLoggedInUserId, completion: { (groups) in
+                        let instaPromoController = InstaPromoController()
+                        instaPromoController.group = groups[0]
+                        let navController = UINavigationController(rootViewController: instaPromoController)
+                        navController.modalPresentationStyle = .fullScreen
+                        self.present(navController, animated: true, completion: nil)
+                    }) { (_) in
+                        self.collectionView?.refreshControl?.endRefreshing()
+                    }
+                }
+                else {
+//                    let formatted_school = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
+                    self.handleShowNewGroupForSchool(school: self.selectedSchool)
+                }
+            }
         }
     }
     

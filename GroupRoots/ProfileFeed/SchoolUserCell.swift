@@ -25,6 +25,12 @@ class SchoolUserCell: UICollectionViewCell {
         }
     }
     
+    var is_following: Bool? {
+        didSet {
+            configureCell()
+        }
+    }
+    
     var group_has_profile_image: Bool? {
         didSet {
             configureCell()
@@ -50,10 +56,17 @@ class SchoolUserCell: UICollectionViewCell {
     
     private let numGroupsLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 10)
+        label.font = UIFont.systemFont(ofSize: 11)
         label.textColor = .lightGray
         label.textAlignment = .center
         return label
+    }()
+    
+    private lazy var followButton: UserProfileFollowButton = {
+        let button = UserProfileFollowButton(type: .system)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.addTarget(self, action: #selector(handleTap), for: .touchUpInside)
+        return button
     }()
     
     static var cellId = "schoolUserCellId"
@@ -76,17 +89,26 @@ class SchoolUserCell: UICollectionViewCell {
         guard group_has_profile_image != nil else { return }
         guard let user = user else { return }
         guard let num_groups = num_groups else { return }
+        guard let is_following = is_following else { return }
         
         addSubview(profileImageView)
-        profileImageView.anchor(top: topAnchor, left: leftAnchor, width: 60, height: 60)
-//        profileImageView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 10, paddingLeft: 20, width: 60, height: 60)
         profileImageView.layer.cornerRadius = 60 / 2
+        profileImageView.layer.shadowColor = UIColor.black.cgColor
+        profileImageView.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        profileImageView.layer.shadowOpacity = 0.2
+        profileImageView.layer.shadowRadius = 5.0
+        profileImageView.layer.masksToBounds = true
+        profileImageView.layer.backgroundColor = UIColor.white.cgColor
         
         addSubview(usernameLabel)
         usernameLabel.anchor(top: profileImageView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 5, paddingRight: 0)
         
         addSubview(numGroupsLabel)
         numGroupsLabel.anchor(top: usernameLabel.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 2, paddingRight: 0)
+        
+        addSubview(followButton)
+        followButton.anchor(top: numGroupsLabel.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 0, paddingLeft: 5, paddingRight: 5, height: 34)
         
         var username = user.username
         if username.count > 10 { // change to 10
@@ -107,5 +129,187 @@ class SchoolUserCell: UICollectionViewCell {
         } else {
             profileImageView.image = #imageLiteral(resourceName: "user")
         }
+        
+        reloadFollowButton(isFollowing: is_following)
+    }
+    
+    private func reloadFollowButton(isFollowing: Bool) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        guard let userId = user?.uid else { return }
+
+        if currentLoggedInUserId == userId {
+            followButton.type = .hidden
+            return
+        }
+        
+        if isFollowing {
+            self.followButton.type = .unfollow
+        }
+        else {
+            self.followButton.type = .follow
+        }
+    }
+    
+    @objc private func handleTap() {
+        guard let userId = user?.uid else { return }
+//        guard let isBlocked = isBlocked else { return }
+//
+//        if isBlocked {
+//            return
+//        }
+                
+        let previousButtonType = followButton.type
+        followButton.type = .loading
+        
+        if previousButtonType == .follow {
+            Database.database().followUser(withUID: userId) { (err) in
+                if err != nil {
+                    self.followButton.type = previousButtonType
+                    return
+                }
+                self.loadFollowButtonData()
+                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfile, object: nil) // updates user who tapped's profile
+                Database.database().createNotification(to: self.user!, notificationType: NotificationType.newFollow) { (err) in
+                    if err != nil {
+                        return
+                    }
+                }
+            }
+            
+        } else if previousButtonType == .unfollow {
+            Database.database().unfollowUser(withUID: userId) { (err) in
+                if err != nil {
+                    self.followButton.type = previousButtonType
+                    return
+                }
+                self.loadFollowButtonData()
+                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfile, object: nil) // updates user who tapped's profile
+            }
+        }
+        NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
+    }
+    
+    private func loadFollowButtonData() {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        guard let userId = user?.uid else { return }
+
+        if currentLoggedInUserId == userId {
+            followButton.type = .hidden
+            return
+        }
+
+        let previousButtonType = followButton.type
+        followButton.type = .loading
+        Database.database().isFollowingUser(withUID: userId, completion: { (following) in
+            if following {
+                self.followButton.type = .unfollow
+            } else {
+                self.followButton.type = .follow
+            }
+        }) { (err) in
+            self.followButton.type = previousButtonType
+        }
     }
 }
+
+private enum UserProfileFollowButtonType {
+    case loading, follow, unfollow, hidden, edit
+}
+
+//MARK: - ActionButton
+
+private class UserProfileFollowButton: UIButton {
+    
+    var type: UserProfileFollowButtonType = .hidden {
+        didSet {
+            configureButton()
+        }
+    }
+        
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        sharedInit()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        sharedInit()
+    }
+    
+    private func sharedInit() {
+        titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        layer.borderWidth = 1
+        layer.cornerRadius = 3
+        configureButton()
+    }
+    
+    private func configureButton() {
+        switch type {
+        case .loading:
+            setupLoadingStyle()
+        case .follow:
+            setupFollowStyle()
+        case .unfollow:
+            setupUnfollowStyle()
+        case .hidden:
+            setupHiddenStyle()
+        case .edit:
+            setupEditStyle()
+        }
+    }
+    
+    private func setupLoadingStyle() {
+        setTitle("Loading", for: .normal)
+        setTitleColor(.black, for: .normal)
+        backgroundColor = .clear
+//        layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        layer.cornerRadius = 5
+        contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+        titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        isUserInteractionEnabled = false
+        setImage(UIImage(), for: .normal)
+    }
+    
+    private func setupFollowStyle() {
+        setTitle("Follow", for: .normal)
+        setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
+        backgroundColor = .clear
+        contentEdgeInsets = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
+//        layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
+        layer.cornerRadius = 5
+//        layer.borderWidth = 1.4
+        titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        isUserInteractionEnabled = true
+        setImage(UIImage(), for: .normal)
+    }
+    
+    private func setupUnfollowStyle() {
+        setTitle("Unfollow", for: .normal)
+        setTitleColor(.black, for: .normal)
+        contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+//        layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        backgroundColor = .white
+        isUserInteractionEnabled = true
+    }
+    
+    private func setupEditStyle() {
+        setTitle("Edit", for: .normal)
+        setTitleColor(.black, for: .normal)
+        backgroundColor = .white
+        contentEdgeInsets = UIEdgeInsets(top: 0, left: 5, bottom: 0, right: 5)
+//        layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        layer.cornerRadius = 5
+        isUserInteractionEnabled = true
+    }
+    
+    private func setupHiddenStyle() {
+        setTitle("", for: .normal)
+        backgroundColor = .clear
+        setImage(UIImage(), for: .normal)
+        layer.borderColor = UIColor(white: 0, alpha: 0).cgColor
+        isUserInteractionEnabled = false
+    }
+    
+}
+
