@@ -582,13 +582,14 @@ exports.notificationOnGroupAddedToSchool = functions.database.ref('/schools/{for
 					admin.database().ref('/users/' + uid + '/token').once('value', token_snapshot => {
 						var user_token = token_snapshot.val();
 
-						var school = formatted_school.replace("_-a-_", " ");
+						var school = formatted_school.replaceAll("_-a-_", " ");
 						school_for_group_arr = school.split(",");
+						var stripped_school = ""
 						if (school_for_group_arr.length > 0) {
-							school = school_for_group_arr[0];
+							stripped_school = school_for_group_arr[0];
 						}
 
-						var message = "A friend group has been added to " + school
+						var message = "A friend group has been added to " + stripped_school
 						const payload = {
 							notification: {
 								body: message
@@ -1155,7 +1156,7 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 				school_for_group = school_for_group_snapshot.val().toString();
 			}
 			if (school_for_group !== "") {
-				school_for_group = school_for_group.replace("_-a-_", " ");
+				school_for_group = school_for_group.replaceAll("_-a-_", " ");
 				school_for_group_arr = school_for_group.split(",");
 				if (school_for_group_arr.length > 0) {
 					school_for_group = school_for_group_arr[0];
@@ -1231,7 +1232,7 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 							    	message += ' just added you to a group'
 							    }
 							    else {
-							    	message += ' just added you to group "' + groupname.replace("_-a-_", " ").replace("_-b-_", "'") + '"'
+							    	message += ' just added you to group "' + groupname.replaceAll("_-a-_", " ").replaceAll("_-b-_", "'") + '"'
 							    }
 
 							    message += " on GroupRoots! Download the app from https://apps.apple.com/us/app/id1525863510"
@@ -1250,7 +1251,7 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 							        from: twilioNumber // From a valid Twilio number
 							    }
 							    if (school_for_group !== "") {
-							    	textMessageSecond.body = "See the friend groups in " + school_for_group + " and build up your group's profile together."
+							    	textMessageSecond.body = "See the friend groups in " + school_for_group + " and build up your group's profile together with photos and videos."
 							    }
 
 							    const stopMessage = {
@@ -1381,7 +1382,7 @@ exports.sendPostToInvited = functions.database.ref('/posts/{group_id}/{post_id}'
 													    else { message1 += " posted a video in " }
 													    
 													    if (groupname === "") { message1 += 'the group' }
-													    else { message1 += groupname.replace("_-a-_", " ").replace("_-b-_", "'") }
+													    else { message1 += groupname.replaceAll("_-a-_", " ").replaceAll("_-b-_", "'") }
 
 													    if (caption !== ""){
 													    	message1 += ': "' + caption + '"'
@@ -1492,7 +1493,7 @@ exports.sendGroupJoinToInvited = functions.database.ref('/groups/{group_id}/memb
 											    message1 += " has joined "
 											    
 											    if (groupname === "") { message1 += 'the group' }
-											    else { message1 += groupname.replace("_-a-_", " ").replace("_-b-_", "'") }
+											    else { message1 += groupname.replaceAll("_-a-_", " ").replaceAll("_-b-_", "'") }
 
 												message1 += '... join with GroupRoots: https://apps.apple.com/us/app/id1525863510'
 
@@ -1730,7 +1731,7 @@ exports.sendSubscriptionPostNotifications = functions.pubsub.schedule('every day
 				        		admin.database().ref('/groups/' + groups_with_new_posts[0] + '/groupname').once('value', groupname_snapshot => {
 									var groupname = "";
 									if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
-										groupname = groupname_snapshot.val().toString().replace("_-a-_", " ").replace("_-b-_", "'");
+										groupname = groupname_snapshot.val().toString().replaceAll("_-a-_", " ").replaceAll("_-b-_", "'");
 									}
 
 									// retrieve the token for the user

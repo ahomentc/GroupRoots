@@ -1,0 +1,13 @@
+[debug] [2021-01-03T11:50:49.359Z] ----------------------------------------------------------------------
+[debug] [2021-01-03T11:50:49.361Z] Command:       /usr/local/bin/node /usr/local/bin/firebase deploy --only functions
+[debug] [2021-01-03T11:50:49.362Z] CLI Version:   9.1.0
+[debug] [2021-01-03T11:50:49.362Z] Platform:      darwin
+[debug] [2021-01-03T11:50:49.362Z] Node Version:  v10.15.3
+[debug] [2021-01-03T11:50:49.366Z] Time:          Sun Jan 03 2021 03:50:49 GMT-0800 (Pacific Standard Time)
+[debug] [2021-01-03T11:50:49.367Z] ----------------------------------------------------------------------
+[debug] [2021-01-03T11:50:49.367Z] 
+[debug] [2021-01-03T11:50:49.395Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2021-01-03T11:50:49.396Z] > authorizing via signed-in user
+[debug] [2021-01-03T11:50:49.396Z] [iam] checking project grouproots-1c51f for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2021-01-03T11:50:49.402Z] >>> HTTP REQUEST POST https://cloudresourcemanager.googleapis.com/v1/projects/grouproots-1c51f:testIamPermissions  
+ {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
