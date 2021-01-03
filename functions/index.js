@@ -555,6 +555,53 @@ exports.removeGroupSubscribersOnProfileHideUpdate = functions.database.ref('/use
 	}).catch(() => {return null});
 })
 
+// send notification to all school members when a group is created
+exports.notificationOnGroupAddedToSchool = functions.database.ref('/schools/{formatted_school}/groups/{group_id}').onCreate((snapshot, context) => {
+	const group_id = context.params.group_id;
+	const formatted_school = context.params.formatted_school;
+
+	// A. get the users in the group and add to a list
+	// B. get the people in the school and for each (excluding users in group):
+	// C. send a notification saying that the a group was added to "school name". Notification just a push notification (not in notifications page)
+
+	// A
+	return snapshot.ref.root.child('/groupFollowers/' + group_id).once('value', subscribers_snapshot => {
+		var subscribers = []
+		subscribers_snapshot.forEach(function(subscriber) {
+			var subscriber_id = subscriber.key;
+			subscribers.push(subscriber_id)
+		});
+
+		// B
+		return snapshot.ref.root.child('/schools/' + formatted_school + '/users').once('value', school_users_snapshot => {
+			school_users_snapshot.forEach(function(school_user) {
+				var uid = school_user.key;
+				
+				// C
+				if (!subscribers.includes(uid)) {
+					admin.database().ref('/users/' + uid + '/token').once('value', token_snapshot => {
+						var user_token = token_snapshot.val();
+
+						var school = formatted_school.replace("_-a-_", " ");
+						school_for_group_arr = school.split(",");
+						if (school_for_group_arr.length > 0) {
+							school = school_for_group_arr[0];
+						}
+
+						var message = "A friend group has been added to " + school
+						const payload = {
+							notification: {
+								body: message
+							}
+						};
+						admin.messaging().sendToDevice(user_token, payload)
+					})
+				}
+			});			
+		})
+	})
+})
+
 exports.transferToMembersFollowingOnSubscribe = functions.database.ref('/groupsFollowing/{user_id}/{group_id}').onCreate((snapshot, context) => {
 	const user_id = context.params.user_id;
 	const group_id = context.params.group_id;
