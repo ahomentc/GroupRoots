@@ -1107,7 +1107,7 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 			if (school_for_group_snapshot !== null && school_for_group_snapshot.val() !== null) {
 				school_for_group = school_for_group_snapshot.val().toString();
 			}
-			if (school_for_group != "") {
+			if (school_for_group !== "") {
 				school_for_group = school_for_group.replace("_-a-_", " ");
 				school_for_group_arr = school_for_group.split(",");
 				if (school_for_group_arr.length > 0) {
@@ -1202,7 +1202,7 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 							        to: number,  // Text to this number
 							        from: twilioNumber // From a valid Twilio number
 							    }
-							    if (school_for_group != "") {
+							    if (school_for_group !== "") {
 							    	textMessageSecond.body = "See the friend groups in " + school_for_group + " and build up your group's profile together."
 							    }
 
