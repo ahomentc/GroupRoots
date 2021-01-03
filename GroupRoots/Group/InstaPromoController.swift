@@ -11,6 +11,7 @@ import Firebase
 import FirebaseAuth
 import FirebaseDatabase
 import Photos
+import NVActivityIndicatorView
 
 // database architecture:
 // - Recieve insta dm with picture
@@ -24,9 +25,29 @@ class InstaPromoController: UIViewController {
     
     var group: Group? {
         didSet {
-//            self.addedCollectionView.reloadData()
+            // not very good but here is how this works
+            // instead of calling setupPromo here too, we just assume that
+            // group will be set by the time its used
+            // This is because sometimes group won't be set since we can get groups[0] of user's groups
         }
     }
+    
+    var school: String? {
+        didSet {
+            self.setupPromo()
+        }
+    }
+    
+    var wasNavPushed: Bool? {
+        didSet{
+            guard let wasNavPushed = wasNavPushed else { return }
+            if wasNavPushed {
+                NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
+            }
+        }
+    }
+    
+    let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
     
     private lazy var explainPromoLabel: UILabel = {
         let label = UILabel()
@@ -84,8 +105,6 @@ class InstaPromoController: UIViewController {
         
         self.view.backgroundColor = .black
         
-//        let school = "Alameda_-a-_Community_-a-_Learning_-a-_Center"
-        let school = "Alameda_-a-_Science_-a-_and_-a-_Technology_-a-_Institute"
         
 //        navigationItem.title = "Amazon Code Promo"
         let textAttributes = [NSAttributedString.Key.foregroundColor:UIColor.white, NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18)]
@@ -101,7 +120,6 @@ class InstaPromoController: UIViewController {
         promoImageView.frame = CGRect(x: UIScreen.main.bounds.width * 0.2, y: UIScreen.main.bounds.height/11 + 140, width: UIScreen.main.bounds.width * 0.6, height: UIScreen.main.bounds.height * 0.6)
         promoImageView.contentMode = .scaleAspectFit
         self.view.insertSubview(promoImageView, at: 2)
-        promoImageView.isHidden = false
         
         saveImageButton.layer.cornerRadius = 12
         self.view.insertSubview(saveImageButton, at: 4)
@@ -110,7 +128,21 @@ class InstaPromoController: UIViewController {
         self.view.insertSubview(savedLabel, at: 4)
         savedLabel.anchor(top: promoImageView.bottomAnchor, left: view.leftAnchor, paddingTop: 5, paddingLeft: UIScreen.main.bounds.width/2-75, width: 150, height: 40)
         
+        self.promoImageView.isHidden = true
+        activityIndicatorView.isHidden = false
+        activityIndicatorView.color = .white
+        self.view.insertSubview(activityIndicatorView, at: 20)
+        activityIndicatorView.startAnimating()
+        
+    }
+    
+    func setupPromo() {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        guard let school = school else { return }
+        
         Database.database().isPromoActive(school: school, completion: { (isActive) in
+            
+            Database.database().userHasSeenPromoPage(school: school, uid: currentLoggedInUserId) { (err) in }
             
             if isActive {
                 Database.database().fetchSchoolPromoPayout(school: school, completion: { (payout) in
@@ -151,41 +183,56 @@ class InstaPromoController: UIViewController {
                 yForReservedFor = 380
             }
             
-            if self.group != nil {
-                var names = [String]()
-                Database.database().fetchGroupMembers(groupId: self.group!.groupId, completion: { (members) in
-                    members.forEach({ (member) in
-                        if member.name != "" {
-                            names.append(member.name.capitalized)
-                        }
-                        else {
-                            names.append(member.username)
-                        }
-                    })
-                    let namesInString = self.convertNamesToString(names: names)
-                    let reserved_for_lines = self.getLines(text: namesInString, maxCharsInLine: 40)
-                    let reserved_for_text = self.convertLinesToString(lines: reserved_for_lines)
+            let currentLoggedInUserId = Auth.auth().currentUser?.uid ?? ""
+            Database.database().fetchAllGroups(withUID: currentLoggedInUserId, completion: { (groups) in
+                if groups.count > 0 {
+                    var group = groups[0]
                     
-                    let imageWithMembers = self.textToImage(drawText: "Reserved for:\n" + reserved_for_text as NSString, inImage: imageWithSchool, atPoint: CGPoint(x: 0, y: yForReservedFor), fontSize: 30, fontColor: .lightGray, shouldCenter: true)
-                    
-                    let currentLoggedInUserId = Auth.auth().currentUser?.uid ?? ""
-                    Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                        let imageWithUserCode = self.textToImage(drawText: (school + " " + user.username) as NSString, inImage: imageWithMembers, atPoint: CGPoint(x: 0, y: 1540), fontSize: 12, fontColor: .darkGray, shouldCenter: true)
-                        if isActive {
-                            self.promoImageView.image = imageWithUserCode
-                        }
-                        else {
-                            self.promoImageView.image = imageWithMembers
-                        }
-                        
+                    if self.group != nil {
+                        group = self.group!
                     }
-                }) { (_) in}
-            }
+                    
+                    var names = [String]()
+                    Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
+                        members.forEach({ (member) in
+                            if member.name != "" {
+                                names.append(member.name.capitalized)
+                            }
+                            else {
+                                names.append(member.username)
+                            }
+                        })
+                        let namesInString = self.convertNamesToString(names: names)
+                        let reserved_for_lines = self.getLines(text: namesInString, maxCharsInLine: 40)
+                        let reserved_for_text = self.convertLinesToString(lines: reserved_for_lines)
+                        
+                        let imageWithMembers = self.textToImage(drawText: "Reserved for:\n" + reserved_for_text as NSString, inImage: imageWithSchool, atPoint: CGPoint(x: 0, y: yForReservedFor), fontSize: 30, fontColor: .lightGray, shouldCenter: true)
+                        
+                        Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
+                            let imageWithUserCode = self.textToImage(drawText: (school + " " + user.username) as NSString, inImage: imageWithMembers, atPoint: CGPoint(x: 0, y: 1540), fontSize: 12, fontColor: .darkGray, shouldCenter: true)
+                            if isActive {
+                                self.promoImageView.image = imageWithUserCode
+                            }
+                            else {
+                                self.promoImageView.image = imageWithMembers
+                            }
+                            self.promoImageView.isHidden = false
+                            self.activityIndicatorView.isHidden = true
+                        }
+                    }) { (_) in}
+                }
+            }) { (_) in }
         }) { (_) in}
     }
     
     @objc private func doneSelected(){
-        self.dismiss(animated: true, completion: nil)
+        if self.wasNavPushed != nil && self.wasNavPushed! == true {
+            NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+            self.navigationController?.popViewController(animated: true)
+        }
+        else {
+            self.dismiss(animated: true, completion: nil)
+        }
     }
     
     @objc private func saveImage(){

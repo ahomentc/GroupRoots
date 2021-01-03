@@ -1101,111 +1101,130 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 			groupname = groupname_snapshot.val().toString();
 		}
 
-		return snapshot.ref.root.child('/invitedContacts/' + number + "/" + group_id + "/invitedBy").once('value', invited_by_snapshot => {
-			var invited_by_id = "";
-			if (invited_by_snapshot !== null && invited_by_snapshot.val() !== null) {
-				invited_by_id = invited_by_snapshot.val().toString();
+		// check if the group has a school and get the school if so
+		return snapshot.ref.root.child('/groups/' + group_id + '/selectedSchool').once('value', school_for_group_snapshot => {
+			var school_for_group = "";
+			if (school_for_group_snapshot !== null && school_for_group_snapshot.val() !== null) {
+				school_for_group = school_for_group_snapshot.val().toString();
+			}
+			if (school_for_group != "") {
+				school_for_group = school_for_group.replace("_-a-_", " ");
+				school_for_group_arr = school_for_group.split(",");
+				if (school_for_group_arr.length > 0) {
+					school_for_group = school_for_group_arr[0];
+				}
 			}
 
-			return snapshot.ref.root.child('/invitedContacts/' + number).once('value', groups_for_contact => {
-				var sync = new DispatchGroup();
-				var token_0 = sync.enter();
-				let used_twilio_numbers = []
+			return snapshot.ref.root.child('/invitedContacts/' + number + "/" + group_id + "/invitedBy").once('value', invited_by_snapshot => {
+				var invited_by_id = "";
+				if (invited_by_snapshot !== null && invited_by_snapshot.val() !== null) {
+					invited_by_id = invited_by_snapshot.val().toString();
+				}
 
-				groups_for_contact.forEach(function(post) {
-		        	var post_id = post.key;
-		        	var token = sync.enter()
-		        	return snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').once('value', twilio_number_snapshot => {
-		        		if (twilio_number_snapshot !== null && twilio_number_snapshot.val() !== null && twilio_number_snapshot.val() !== "0") {
-							twilio_number = twilio_number_snapshot.val().toString();
-			        		used_twilio_numbers.push(twilio_number);
+				return snapshot.ref.root.child('/invitedContacts/' + number).once('value', groups_for_contact => {
+					var sync = new DispatchGroup();
+					var token_0 = sync.enter();
+					let used_twilio_numbers = []
+
+					groups_for_contact.forEach(function(post) {
+			        	var post_id = post.key;
+			        	var token = sync.enter()
+			        	return snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').once('value', twilio_number_snapshot => {
+			        		if (twilio_number_snapshot !== null && twilio_number_snapshot.val() !== null && twilio_number_snapshot.val() !== "0") {
+								twilio_number = twilio_number_snapshot.val().toString();
+				        		used_twilio_numbers.push(twilio_number);
+							}
+							sync.leave(token);
+							
+					  	}).catch(() => {return null});
+					})
+					sync.leave(token_0);
+
+					sync.notify(function() {
+						var promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+13232501061");
+						if (used_twilio_numbers.indexOf("+13232501061") < 0) { // number not used yet
+							twilioNumber = "+13232501061"
+							promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+13232501061");
 						}
-						sync.leave(token);
-						
-				  	}).catch(() => {return null});
-				})
-				sync.leave(token_0);
-
-				sync.notify(function() {
-					var promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+13232501061");
-					if (used_twilio_numbers.indexOf("+13232501061") < 0) { // number not used yet
-						twilioNumber = "+13232501061"
-						promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+13232501061");
-					}
-					else if (used_twilio_numbers.indexOf("+19252814881") < 0) { // number not used yet
-						twilioNumber = "+19252814881"
-						promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+19252814881");
-					}
-					else if (used_twilio_numbers.indexOf("+12023041217") < 0) { // number not used yet
-						twilioNumber = "+12023041217"
-						promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+12023041217");
-					}
-
-					return snapshot.ref.root.child('/users/' + invited_by_id + '/name').once('value', name_snapshot => {
-						var name = "";
-						if (name_snapshot !== null && name_snapshot.val() !== null) {
-							name = name_snapshot.val().toString();
+						else if (used_twilio_numbers.indexOf("+19252814881") < 0) { // number not used yet
+							twilioNumber = "+19252814881"
+							promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+19252814881");
+						}
+						else if (used_twilio_numbers.indexOf("+12023041217") < 0) { // number not used yet
+							twilioNumber = "+12023041217"
+							promise = snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').set("+12023041217");
 						}
 
-						return snapshot.ref.root.child('/users/' + invited_by_id + '/username').once('value', username_snapshot => {
-							var username = "";
-							if (username_snapshot !== null && username_snapshot.val() !== null) {
-								username = username_snapshot.val().toString();
+						return snapshot.ref.root.child('/users/' + invited_by_id + '/name').once('value', name_snapshot => {
+							var name = "";
+							if (name_snapshot !== null && name_snapshot.val() !== null) {
+								name = name_snapshot.val().toString();
 							}
 
-							if ( !validE164(number) ) {
-						        throw new Error('number must be E164 format!')
-						    }
+							return snapshot.ref.root.child('/users/' + invited_by_id + '/username').once('value', username_snapshot => {
+								var username = "";
+								if (username_snapshot !== null && username_snapshot.val() !== null) {
+									username = username_snapshot.val().toString();
+								}
 
-						    var message = ""
-						    
-						    if (name !== "") {
-						    	message += name
-						    }
-						    else {
-						    	message += username
-						    }
+								if ( !validE164(number) ) {
+							        throw new Error('number must be E164 format!')
+							    }
 
-						    if (groupname === "") {
-						    	message += ' just added you to a group'
-						    }
-						    else {
-						    	message += ' just added you to group "' + groupname.replace("_-a-_", " ").replace("_-b-_", "'") + '"'
-						    }
+							    var message = ""
+							    
+							    if (name !== "") {
+							    	message += name
+							    }
+							    else {
+							    	message += username
+							    }
 
-						    message += " on GroupRoots! Download the app from https://apps.apple.com/us/app/id1525863510"
+							    if (groupname === "") {
+							    	message += ' just added you to a group'
+							    }
+							    else {
+							    	message += ' just added you to group "' + groupname.replace("_-a-_", " ").replace("_-b-_", "'") + '"'
+							    }
 
-						    const textMessageFirst = {
-						        body: message,
-						        to: number,  // Text to this number
-						        from: twilioNumber // From a valid Twilio number
-						    }
-						    const textMessageSecond = {
-						        // body: "Share your best group moments collectively and see what groups your friends belong to",
-						        // share group moments to your followers through group profiles
-						        // body: "Share your group moments to your followers through group profiles. Show your followers what groups you belong to",
-						        body: "Share photos and videos to your groups, for your followers to see. Show your friends what groups you belong to",
-						        to: number,  // Text to this number
-						        from: twilioNumber // From a valid Twilio number
-						    }
-						    const stopMessage = {
-						        body: 'Group post messaging by GroupRoots. Message and data rates may apply. Reply STOP to stop receiving group post messages',
-						        to: number,  // Text to this number
-						        from: twilioNumber // From a valid Twilio number
-						    }
+							    message += " on GroupRoots! Download the app from https://apps.apple.com/us/app/id1525863510"
 
-						    client.messages.create(textMessageFirst)
-						    setTimeout(function(){ 
-						    	client.messages.create(textMessageSecond);
-						    	setTimeout(function(){ 
-							    	client.messages.create(stopMessage)
+							    const textMessageFirst = {
+							        body: message,
+							        to: number,  // Text to this number
+							        from: twilioNumber // From a valid Twilio number
+							    }
+							    const textMessageSecond = {
+							        // body: "Share your best group moments collectively and see what groups your friends belong to",
+							        // share group moments to your followers through group profiles
+							        // body: "Share your group moments to your followers through group profiles. Show your followers what groups you belong to",
+							        body: "Share photos and videos to your groups, for your followers to see! Show your friends what groups you belong to",
+							        to: number,  // Text to this number
+							        from: twilioNumber // From a valid Twilio number
+							    }
+							    if (school_for_group != "") {
+							    	textMessageSecond.body = "See the friend groups in " + school_for_group + " and build up your group's profile together."
+							    }
+
+							    const stopMessage = {
+							        body: 'Group post messaging by GroupRoots. Message and data rates may apply. Reply STOP to stop receiving group post messages',
+							        to: number,  // Text to this number
+							        from: twilioNumber // From a valid Twilio number
+							    }
+
+							    client.messages.create(textMessageFirst)
+							    setTimeout(function(){ 
+							    	client.messages.create(textMessageSecond);
+							    	setTimeout(function(){ 
+								    	client.messages.create(stopMessage)
+								    }, 2000);
 							    }, 2000);
-						    }, 2000);
 
-						    return promise;
+							    return promise;
+							}).catch(() => {return null});
 						}).catch(() => {return null});
-					}).catch(() => {return null});
-				})
+					})
+				}).catch(() => {return null});
 			}).catch(() => {return null});
 		}).catch(() => {return null});
 	}).catch(() => {return null});

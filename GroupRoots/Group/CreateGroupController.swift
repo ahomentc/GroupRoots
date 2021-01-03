@@ -28,11 +28,25 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     var preSetSchool: String? {
         didSet {
             guard let presetSchool = preSetSchool else { return }
-            self.linkSchools.text = presetSchool
+            self.linkSchools.text = presetSchool.replacingOccurrences(of: "_-a-_", with: " ")
             self.schoolSelected = true
         }
     }
     
+    private let schoolLabel: UILabel = {
+        let label = UILabel()
+        let attributedText = NSMutableAttributedString(string: "Link to a school (optional)", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)])
+        label.textColor = .gray
+        label.attributedText = attributedText
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        return label
+    }()
+    
+    let searchSchoolBottomBorder: UIView = {
+        let view = UIView()
+        return view
+    }()
     
     private let plusPhotoButton: UIButton = {
         let button = UIButton(type: .system)
@@ -176,11 +190,11 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         linkSchools.borderStyle = .none
         linkSchools.theme.cellHeight = 50
         linkSchools.comparisonOptions = [.caseInsensitive]
-        linkSchools.placeholder = "Link to your school (optional)"
-        linkSchools.backgroundColor = .white
+        linkSchools.placeholder = "Search"
+        linkSchools.backgroundColor = .clear
         linkSchools.startVisible = true
         linkSchools.autocorrectionType = .no
-        linkSchools.textAlignment = .center
+        linkSchools.textAlignment = .left
         linkSchools.theme.bgColor = .white
         linkSchools.theme.font = UIFont.systemFont(ofSize: 14)
         linkSchools.itemSelectionHandler = { filteredResults, itemPosition in
@@ -194,19 +208,29 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
             self.linkSchools.resignFirstResponder()
         }
         
+        view.addSubview(schoolLabel)
+        schoolLabel.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, paddingTop: 40, paddingLeft: 40)
+        
+        view.addSubview(linkSchools)
+        linkSchools.anchor(top: schoolLabel.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: -5, paddingLeft: 40, paddingRight: 40, height: 50)
+        
+        searchSchoolBottomBorder.backgroundColor = UIColor(white: 0, alpha: 0.2)
+        self.view.addSubview(searchSchoolBottomBorder)
+        searchSchoolBottomBorder.anchor(top: linkSchools.bottomAnchor, left: linkSchools.leftAnchor, right: linkSchools.rightAnchor, height: 0.5)
+        
         let radioButtonsStack = UIStackView(arrangedSubviews: [publicGroupButton, privateGroupButton])
         radioButtonsStack.distribution = .fillEqually
         radioButtonsStack.axis = .horizontal
         radioButtonsStack.spacing = 10
         
-        let stackView = UIStackView(arrangedSubviews: [linkSchools, groupnameTextField, bioTextField, radioButtonsStack, createGroupButton])
+        let stackView = UIStackView(arrangedSubviews: [groupnameTextField, bioTextField, radioButtonsStack, createGroupButton])
         stackView.distribution = .fillEqually
         stackView.axis = .vertical
 //        stackView.spacing = 25
         stackView.spacing = 15
         
         view.addSubview(stackView)
-        stackView.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 40, paddingLeft: 40, paddingRight: 40, height: 300)
+        stackView.anchor(top: linkSchools.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 25, paddingLeft: 40, paddingRight: 40, height: 230)
     }
     
     private func resetInputFields() {

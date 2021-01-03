@@ -266,6 +266,28 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
             self.invitedLabel.attributedText = attributedText
         }
         self.loadGroupMembersIcon(group: group)
+        
+        addUserToSchool(group: group)
+    }
+    
+    func addUserToSchool(group: Group) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        Database.database().fetchSchoolOfGroup(group: group.groupId, completion: { (school) in
+            if school != "" {
+                let formatted_school = school.replacingOccurrences(of: " ", with: "_-a-_")
+                
+                if let school_json = try? JSONEncoder().encode(formatted_school) {
+                    UserDefaults.standard.set(school_json, forKey: "selectedSchool")
+                }
+                
+                Database.database().addUserToSchool(withUID: currentLoggedInUserId, selectedSchool: formatted_school) { (err) in
+                    if err != nil {
+                       return
+                    }
+                    Database.database().addSchoolToUser(withUID: currentLoggedInUserId, selectedSchool: formatted_school) { (err) in }
+                }
+            }
+        }) { (_) in}
     }
     
     func setupGroupNoInvite(){

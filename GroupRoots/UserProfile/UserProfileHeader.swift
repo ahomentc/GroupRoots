@@ -562,7 +562,7 @@ private class UserProfileFollowButton: UIButton {
     private func setupLoadingStyle() {
         setTitle("Loading", for: .normal)
         setTitleColor(.black, for: .normal)
-        backgroundColor = .white
+        backgroundColor = .clear
         layer.borderColor = UIColor(white: 0, alpha: 0).cgColor
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         isUserInteractionEnabled = false
@@ -577,7 +577,7 @@ private class UserProfileFollowButton: UIButton {
 //        isUserInteractionEnabled = true
         
         setTitle("", for: .normal)
-        backgroundColor = .white
+        backgroundColor = .clear
         layer.borderColor = UIColor(white: 0, alpha: 0).cgColor
         isUserInteractionEnabled = false
     }
@@ -585,7 +585,7 @@ private class UserProfileFollowButton: UIButton {
     private func setupFollowStyle() {
         setTitle("Follow", for: .normal)
         setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-        backgroundColor = UIColor.white
+        backgroundColor = UIColor.clear
         layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)   
         layer.cornerRadius = 5
@@ -598,7 +598,7 @@ private class UserProfileFollowButton: UIButton {
         setTitleColor(.black, for: .normal)
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
-        backgroundColor = .white
+        backgroundColor = .clear
         isUserInteractionEnabled = true
     }
     
@@ -647,7 +647,7 @@ private class GroupRecruitButton: UIButton {
     private func setupNewStyle() {
         setTitle("New Group", for: .normal)
         setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-        backgroundColor = UIColor.white
+        backgroundColor = UIColor.clear
         layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
         layer.cornerRadius = 5
         layer.borderWidth = 1.2
@@ -658,7 +658,7 @@ private class GroupRecruitButton: UIButton {
     private func setupInviteStyle() {
         setTitle("Invite to Group", for: .normal)
         setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-        backgroundColor = UIColor.white
+        backgroundColor = UIColor.clear
         layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
         layer.cornerRadius = 5
         layer.borderWidth = 1.2

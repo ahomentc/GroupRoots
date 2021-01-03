@@ -135,6 +135,8 @@ class GroupProfileController: HomePostCellViewController {
         self.navigationController?.navigationBar.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
         self.navigationController?.navigationBar.barTintColor = UIColor.init(white: 0.98, alpha: 1)
         self.view.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
+        
+        checkIfShouldShowInstaPromo()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -191,6 +193,35 @@ class GroupProfileController: HomePostCellViewController {
         }) { (err) in
             return
         }
+    }
+    
+    func checkIfShouldShowInstaPromo() {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        guard let group = group else { return }
+        
+        Database.database().fetchSchoolOfGroup(group: group.groupId, completion: { (school) in
+            if school != "" {
+                let formatted_school = school.replacingOccurrences(of: " ", with: "_-a-_")
+                Database.database().isPromoActive(school: formatted_school, completion: { (isActive) in
+                    Database.database().hasUserSeenPromoPage(school: formatted_school, uid: currentLoggedInUserId, completion: { (hasSeen) in
+                        Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
+//                            if !hasSeen && isActive && inGroup {
+                            if !hasSeen && inGroup {
+                                // add a timer to delay so it looks more like a popup
+                                Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { timer in
+                                    let instaPromoController = InstaPromoController()
+                                    instaPromoController.group = group
+                                    instaPromoController.school = formatted_school
+                                    let navController = UINavigationController(rootViewController: instaPromoController)
+                                    navController.modalPresentationStyle = .fullScreen
+                                    self.present(navController, animated: true, completion: nil)
+                                }
+                            }
+                        }) { (err) in }
+                    }) { (_) in}
+                }) { (_) in}
+            }
+        }) { (_) in}
     }
     
     @objc private func updateGroup(){

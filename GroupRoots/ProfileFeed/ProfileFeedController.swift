@@ -20,7 +20,7 @@ import FirebaseStorage
 import YPImagePicker
 import Photos
 
-class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate, InviteToGroupWhenCreateControllerDelegate, EmptyFeedPostCellDelegate, FullGroupCellDelegate, SchoolEmptyStateCellDelegate, SchoolUsersCellDelegate, CreateGroupCellDelegate, LargeImageViewControllerDelegate {
+class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate, InviteToGroupWhenCreateControllerDelegate, EmptyFeedPostCellDelegate, FullGroupCellDelegate, SchoolEmptyStateCellDelegate, SchoolUsersCellDelegate, CreateGroupCellDelegate, LargeImageViewControllerDelegate, PromoDelegate {
         
     override var prefersStatusBarHidden: Bool {
       return statusBarHidden
@@ -65,6 +65,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     var user: User?
     var schoolPromoIsActive = false
     var userHasDonePromo = false
+    var userHasBlockedPromo = false
     
     private let loadingScreenView: CustomImageView = {
         let iv = CustomImageView()
@@ -318,7 +319,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     private lazy var selectSchoolButton: UIButton = {
         let button = UIButton()
         button.addTarget(self, action: #selector(selectSchool), for: .touchUpInside)
-        button.layer.zPosition = 1;
+//        button.layer.zPosition = 0;
         button.isHidden = true
         button.backgroundColor = UIColor(white: 0.9, alpha: 1)
         button.setTitleColor(.black, for: .normal)
@@ -399,8 +400,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             }
             self.isFirstView = !hasOpenedApp
         }
+        
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
-                
+                        
         let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18), NSAttributedString.Key.foregroundColor : UIColor.black]
         navigationController?.navigationBar.titleTextAttributes = textAttributes
         
@@ -486,9 +488,12 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         self.view.addSubview(searchSchoolBottomBorder)
         searchSchoolBottomBorder.anchor(top: searchSchoolField.bottomAnchor, left: searchSchoolField.leftAnchor, right: searchSchoolField.rightAnchor, height: 0.5)
         
+        self.view.insertSubview(activityIndicatorView, at: 20)
+        activityIndicatorView.isHidden = true
+        
 //        selectSchoolButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3, width: 300, height: 50)
         selectSchoolButton.layer.cornerRadius = 14
-        self.view.insertSubview(selectSchoolButton, at: 4)
+        self.view.insertSubview(selectSchoolButton, at: 1)
         selectSchoolButton.anchor(top: searchSchoolBottomBorder.bottomAnchor, right: searchSchoolField.rightAnchor, paddingTop: 25, paddingRight: 15, width: 150, height: 50)
         
         collectionView?.frame = CGRect(x: 0, y: UIScreen.main.bounds.height/9, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - UIScreen.main.bounds.height/8)
@@ -530,6 +535,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         
         // what happens here if there's been paging... more specifically, what happens when refresh and had paging occur?
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateUserProfileFeed, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name(rawValue: "createdGroup"), object: nil)
+        
         configureNavigationBar()
         
         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false, block: { timer in
@@ -546,7 +553,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             
             activityIndicatorView.isHidden = false
             activityIndicatorView.color = .black
-            self.view.insertSubview(activityIndicatorView, at: 20)
+//            self.view.insertSubview(activityIndicatorView, at: 20)
             activityIndicatorView.startAnimating()
             
             self.loadData()
@@ -597,6 +604,16 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     func loadData() {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        
+        if let isSchoolViewRetrieved = UserDefaults.standard.object(forKey: "isSchoolView") as? Data {
+            guard let is_school_view = try? JSONDecoder().decode(Bool.self, from: isSchoolViewRetrieved) else {
+                print("Error: Couldn't decode data into Blog")
+                return
+            }
+            self.isSchoolView = is_school_view
+        }
+        
         if isSchoolView {
             self.collectionView.isHidden = true
             
@@ -624,6 +641,37 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     return
                 }
                 self.selectedSchool = selectedSchool
+            }
+            else {
+                Database.database().fetchSchoolOfUser(uid: currentLoggedInUserId, completion: { (school) in
+                    if school != "" {
+                        let formatted_school = school.replacingOccurrences(of: " ", with: "_-a-_")
+                        self.selectedSchool = formatted_school
+                        
+                        if let selected_school = try? JSONEncoder().encode(self.selectedSchool) {
+                            UserDefaults.standard.set(selected_school, forKey: "selectedSchool")
+                        }
+                        
+                        if self.selectedSchool != "" {
+                            // display groups for that school and the insta thing
+                            self.schoolCollectionView.isHidden = false
+                            self.fetchAllSchoolGroups()
+                            self.searchSchoolField.isHidden = true
+                            self.selectASchoolLabel.isHidden = true
+                            self.searchSchoolBottomBorder.isHidden = true
+                            self.selectSchoolButton.isHidden = true
+                        }
+                        else {
+                            // display the start screen for schools
+                            self.schoolCollectionView.isHidden = true
+                            self.searchSchoolField.isHidden = false
+                            self.selectASchoolLabel.isHidden = false
+                            self.searchSchoolBottomBorder.isHidden = false
+                            self.selectSchoolButton.isHidden = false
+                            self.setupSchoolSearch()
+                        }
+                    }
+                }) { (_) in}
             }
             
             activityIndicatorView.isHidden = false
@@ -972,6 +1020,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.fetchSchoolGroupInfo(groups: groups)
             self.fetchSchoolPromoIsActive(school: school)
             self.checkIfUserHasDonePromo(uid: currentLoggedInUserId, school: school)
+            self.checkIfUserHasBlockedPromo(uid: currentLoggedInUserId, school: school)
             
         }) { (_) in }
     }
@@ -981,6 +1030,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     var schoolGroupMembersFetched = false
     var schoolPromoIsActiveFetched = false
     var hasUserDonePromoFetched = false
+    var hasUserBlockedPromoFetched = false
     private func reloadSchoolCollectionView(){
         if schoolMembersFetched && schoolGroupInfoFetched && schoolGroupMembersFetched && schoolPromoIsActiveFetched && hasUserDonePromoFetched {
             let refreshControlSchool = UIRefreshControl()
@@ -989,10 +1039,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             
             // bring the groups you have access to, to the front
             self.school_groups.sort(by: { (g1, g2) -> Bool in
-                if self.canViewGroupPostsDict[g1.groupId]! && self.canViewGroupPostsDict[g2.groupId]! {
+                if self.canViewGroupPostsDict[g1.groupId] != nil && self.canViewGroupPostsDict[g1.groupId]! && self.canViewGroupPostsDict[g2.groupId] != nil && self.canViewGroupPostsDict[g2.groupId]! {
                     return g1.lastPostedDate > g2.lastPostedDate
                 }
-                if self.canViewGroupPostsDict[g1.groupId]! {
+                if self.canViewGroupPostsDict[g1.groupId] != nil && self.canViewGroupPostsDict[g1.groupId]! {
                     return true
                 }
                 return false
@@ -1022,6 +1072,14 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 self.reloadSchoolCollectionView()
             }
         })
+    }
+    
+    func checkIfUserHasBlockedPromo(uid: String, school: String) {
+        Database.database().isPromoBlockedForUser(school: school, uid: uid, completion: { (hasDone) in
+            self.hasUserBlockedPromoFetched = true
+            self.userHasBlockedPromo = hasDone
+            self.reloadSchoolCollectionView()
+        }) { (_) in}
     }
     
     private func fetchSchoolPromoIsActive(school: String) {
@@ -1172,6 +1230,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         return Array(orderedSchoolMembers)
     }
     
+    func refreshSchool() {
+        self.handleRefresh()
+    }
     
     func configureNavBar() {
         self.navigationController?.navigationBar.height(CGFloat(0))
@@ -1235,16 +1296,18 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 return cell
             }
             
-            if self.schoolPromoIsActive && !self.userHasDonePromo {
+            if self.schoolPromoIsActive && !self.userHasDonePromo && !self.userHasBlockedPromo {
                 if indexPath.item == 2 {
                     let currentLoggedInUserId = Auth.auth().currentUser?.uid
                     if currentLoggedInUserId != nil && self.school_members_group_count[currentLoggedInUserId!] != nil && self.school_members_group_count[currentLoggedInUserId!]! > 0 {
                         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: InstaPromoExistingGroupCell.cellId, for: indexPath) as! InstaPromoExistingGroupCell
+                        cell.delegate = self
                         cell.selectedSchool = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
                         return cell
                     }
                     else {
                         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: InstaPromoCell.cellId, for: indexPath) as! InstaPromoCell
+                        cell.delegate = self
                         cell.selectedSchool = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
                         return cell
                     }
@@ -1281,7 +1344,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FullGroupCell.cellId, for: indexPath) as! FullGroupCell
             
             var num_to_adjust = 4
-            if self.schoolPromoIsActive && !self.userHasDonePromo{
+            if self.schoolPromoIsActive && !self.userHasDonePromo && !self.userHasBlockedPromo {
                 num_to_adjust = 5
             }
             
@@ -1334,7 +1397,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 return CGSize(width: view.frame.width, height: 175)
             }
             
-            if self.schoolPromoIsActive && !self.userHasDonePromo {
+            if self.schoolPromoIsActive && !self.userHasDonePromo && !self.userHasBlockedPromo {
                 if indexPath.item == 2 {
                     return CGSize(width: view.frame.width, height: 120)
                 }
@@ -1368,18 +1431,14 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         if collectionView == self.schoolCollectionView {
-            if self.schoolPromoIsActive && !self.userHasDonePromo && indexPath.row == 2 {
+            if self.schoolPromoIsActive && !self.userHasDonePromo && !self.userHasBlockedPromo && indexPath.row == 2 {
                 if self.school_members_group_count[currentLoggedInUserId] != nil && self.school_members_group_count[currentLoggedInUserId]! > 0 {
-                    // get the groups of the user and select the first one
-                    Database.database().fetchAllGroups(withUID: currentLoggedInUserId, completion: { (groups) in
-                        let instaPromoController = InstaPromoController()
-                        instaPromoController.group = groups[0]
-                        let navController = UINavigationController(rootViewController: instaPromoController)
-                        navController.modalPresentationStyle = .fullScreen
-                        self.present(navController, animated: true, completion: nil)
-                    }) { (_) in
-                        self.collectionView?.refreshControl?.endRefreshing()
-                    }
+                    let instaPromoController = InstaPromoController()
+                    let formatted_school = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
+                    instaPromoController.school = formatted_school
+                    let navController = UINavigationController(rootViewController: instaPromoController)
+                    navController.modalPresentationStyle = .fullScreen
+                    self.present(navController, animated: true, completion: nil)
                 }
                 else {
 //                    let formatted_school = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
@@ -1479,16 +1538,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     func didTapGroup(group: Group) {
-//        let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
-//        groupProfileController.group = group
-//        groupProfileController.modalPresentationCapturesStatusBarAppearance = true
-//        navigationController?.pushViewController(groupProfileController, animated: true)
-        
-        let instaPromoController = InstaPromoController()
-        instaPromoController.group = group
-        let navController = UINavigationController(rootViewController: instaPromoController)
-        navController.modalPresentationStyle = .fullScreen
-        self.present(navController, animated: true, completion: nil)
+        let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+        groupProfileController.group = group
+        groupProfileController.modalPresentationCapturesStatusBarAppearance = true
+        navigationController?.pushViewController(groupProfileController, animated: true)
     }
     
     func didTapOptions(groupPost: GroupPost) {
@@ -1661,12 +1714,12 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     func didChangeViewType(isFullscreen: Bool) {
-        if isFullscreen {
-            self.createGroupIconButton.isHidden = true
-        }
-        else {
-            self.createGroupIconButton.isHidden = false
-        }
+//        if isFullscreen {
+//            self.createGroupIconButton.isHidden = true
+//        }
+//        else {
+//            self.createGroupIconButton.isHidden = false
+//        }
     }
     
     func didView(groupPost: GroupPost) {
@@ -1866,12 +1919,20 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     @objc private func changeToFollowing() {
+        if let is_school_view = try? JSONEncoder().encode(false) {
+            UserDefaults.standard.set(is_school_view, forKey: "isSchoolView")
+        }
+        
         self.isSchoolView = false
         self.loadData()
         self.searchSchoolField.resignFirstResponder()
     }
     
     @objc private func changeToMySchool() {
+        if let is_school_view = try? JSONEncoder().encode(true) {
+            UserDefaults.standard.set(is_school_view, forKey: "isSchoolView")
+        }
+        
         self.isSchoolView = true
         self.loadData()
     }
@@ -1922,6 +1983,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     @objc private func selectSchool() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         self.selectedSchool = searchSchoolField.text ?? ""
+        
+        if let selected_school = try? JSONEncoder().encode(self.selectedSchool) {
+            UserDefaults.standard.set(selected_school, forKey: "selectedSchool")
+        }
         
         let formatted_school = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
         

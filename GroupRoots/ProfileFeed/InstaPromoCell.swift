@@ -9,15 +9,23 @@
 import Foundation
 import UIKit
 import FirebaseDatabase
+import FirebaseAuth
+
+protocol PromoDelegate {
+    func refreshSchool()
+}
 
 class InstaPromoCell: UICollectionViewCell {
 
-    let close_button: UIButton = {
+    var delegate: PromoDelegate?
+    
+    lazy var close_button: UIButton = {
         let button = UIButton(type: .system)
         button.tintColor = UIColor.init(white: 0.8, alpha: 1)
         button.isUserInteractionEnabled = true
         button.setImage(#imageLiteral(resourceName: "x"), for: .normal)
-//        button.addTarget(self, action: #selector(handlePlusPhoto), for: .touchUpInside)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        button.addTarget(self, action: #selector(removePromo), for: .touchUpInside)
         return button
     }()
     
@@ -34,7 +42,6 @@ class InstaPromoCell: UICollectionViewCell {
     var selectedSchool: String? {
         didSet {
             guard let selectedSchool = selectedSchool else { return }
-            print(selectedSchool)
             Database.database().fetchSchoolPromoPayout(school: selectedSchool, completion: { (payout) in
                 if payout > 0 {
                     let attributedText = NSMutableAttributedString(string: "You're one of the first people!\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
@@ -76,13 +83,12 @@ class InstaPromoCell: UICollectionViewCell {
         separatorViewTop.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 30, paddingLeft: 20, paddingRight: 20, height: 0.5)
         
         addSubview(close_button)
-        close_button.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: 20, paddingLeft: 20)
+        close_button.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: 20, paddingLeft: 0)
         
         addSubview(right_arrow)
         right_arrow.anchor(top: topAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 20, paddingRight: 15)
         
         addSubview(promoLabel)
-//        promoLabel.anchor(top: topAnchor, left: close_button.rightAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 20, paddingLeft: 10, paddingRight: 15)
         promoLabel.anchor(top: topAnchor, left: close_button.rightAnchor, bottom: bottomAnchor, right: right_arrow.leftAnchor, paddingTop: 20, paddingLeft: 10, paddingRight: 15)
         
         let separatorViewBottom = UIView()
@@ -90,9 +96,23 @@ class InstaPromoCell: UICollectionViewCell {
         addSubview(separatorViewBottom)
         separatorViewBottom.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 20, paddingBottom: 10, paddingRight: 20, height: 0.5)
     }
+    
+    @objc func removePromo() {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        guard let selectedSchool = self.selectedSchool else { return }
+        let formatted_school = selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
+        Database.database().blockPromoForUser(school: formatted_school, uid: currentLoggedInUserId) { (err) in
+            if err != nil {
+               return
+            }
+            self.delegate?.refreshSchool()
+        }
+    }
 }
 
 class InstaPromoExistingGroupCell: UICollectionViewCell {
+    
+    var delegate: PromoDelegate?
     
     private lazy var right_arrow: CustomImageView = {
         let iv = CustomImageView()
@@ -104,12 +124,13 @@ class InstaPromoExistingGroupCell: UICollectionViewCell {
         return iv
     }()
 
-    let close_button: UIButton = {
+    lazy var close_button: UIButton = {
         let button = UIButton(type: .system)
         button.tintColor = UIColor.init(white: 0.8, alpha: 1)
         button.isUserInteractionEnabled = true
         button.setImage(#imageLiteral(resourceName: "x"), for: .normal)
-//        button.addTarget(self, action: #selector(handlePlusPhoto), for: .touchUpInside)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        button.addTarget(self, action: #selector(removePromo), for: .touchUpInside)
         return button
     }()
 
@@ -158,7 +179,7 @@ class InstaPromoExistingGroupCell: UICollectionViewCell {
         separatorViewTop.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 30, paddingLeft: 20, paddingRight: 20, height: 0.5)
         
         addSubview(close_button)
-        close_button.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: 20, paddingLeft: 20)
+        close_button.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, paddingTop: 20, paddingLeft: 0)
         
         addSubview(right_arrow)
         right_arrow.anchor(top: topAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 20, paddingRight: 15)
@@ -170,6 +191,18 @@ class InstaPromoExistingGroupCell: UICollectionViewCell {
         separatorViewBottom.backgroundColor = UIColor(white: 0, alpha: 0.2)
         addSubview(separatorViewBottom)
         separatorViewBottom.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 20, paddingBottom: 10, paddingRight: 20, height: 0.5)
+    }
+    
+    @objc func removePromo() {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        guard let selectedSchool = self.selectedSchool else { return }
+        let formatted_school = selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
+        Database.database().blockPromoForUser(school: formatted_school, uid: currentLoggedInUserId) { (err) in
+            if err != nil {
+               return
+            }
+            self.delegate?.refreshSchool()
+        }
     }
 }
 

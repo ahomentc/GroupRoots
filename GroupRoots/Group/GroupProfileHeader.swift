@@ -111,7 +111,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
     private let addMemberButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Add Member", for: .normal)
-        button.backgroundColor = UIColor.white
+        button.backgroundColor = UIColor.clear
         button.isHidden = true
         button.layer.cornerRadius = 5
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
@@ -933,7 +933,7 @@ private class GroupJoinButton: UIButton {
     private func setupLoadingStyle() {
         setTitle("Loading", for: .normal)
         setTitleColor(.black, for: .normal)
-        backgroundColor = .white
+        backgroundColor = .clear
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         isUserInteractionEnabled = false
     }
@@ -941,7 +941,7 @@ private class GroupJoinButton: UIButton {
     private func setupRequestedStyle() {
         setTitle("Requested", for: .normal)
         setTitleColor(.black, for: .normal)
-        backgroundColor = .white
+        backgroundColor = .clear
         layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         isUserInteractionEnabled = true
@@ -955,7 +955,7 @@ private class GroupJoinButton: UIButton {
         layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
         layer.borderWidth = 1
         layer.cornerRadius = 5
-        backgroundColor = .white
+        backgroundColor = .clear
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         isUserInteractionEnabled = true
     }
@@ -963,7 +963,7 @@ private class GroupJoinButton: UIButton {
     private func setupJoinStyle() {
         setTitle("Join", for: .normal)
         setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-        backgroundColor = UIColor.white
+        backgroundColor = UIColor.clear
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
         layer.cornerRadius = 5
@@ -975,7 +975,7 @@ private class GroupJoinButton: UIButton {
     private func setupSubscribeStyle() {
         setTitle("Follow", for: .normal)
         setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-        backgroundColor = UIColor.white
+        backgroundColor = UIColor.clear
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
         layer.cornerRadius = 5
@@ -990,7 +990,7 @@ private class GroupJoinButton: UIButton {
         layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
         layer.borderWidth = 1
         layer.cornerRadius = 5
-        backgroundColor = .white
+        backgroundColor = .clear
         contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         isUserInteractionEnabled = true
     }

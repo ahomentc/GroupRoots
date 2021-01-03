@@ -2616,6 +2616,17 @@ extension Database {
                                     if err != nil {
                                         completion(err);return
                                     }
+                                    Database.database().fetchSchoolOfGroup(group: groupId, completion: { (school) in
+                                        if school != "" {
+                                            let formatted_school = school.replacingOccurrences(of: " ", with: "_-a-_")
+                                            Database.database().addUserToSchool(withUID: uid, selectedSchool: formatted_school) { (err) in
+                                                if err != nil {
+                                                   return
+                                                }
+                                                Database.database().addSchoolToUser(withUID: uid, selectedSchool: formatted_school) { (err) in }
+                                            }
+                                        }
+                                    }) { (_) in}
                                     completion(nil)
                                 })
                             }
@@ -3008,6 +3019,36 @@ extension Database {
         }
     }
     
+    func fetchSchoolOfGroup(group: String, completion: @escaping (String) -> (), withCancel cancel: ((Error) -> ())?) {
+        let ref = Database.database().reference().child("groups").child(group).child("selectedSchool")
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            if let val = snapshot.value as? String {
+                completion(val)
+            }
+            else {
+                completion("")
+            }
+        }) { (err) in
+            print("Failed to fetch all users from database:", (err))
+            cancel?(err)
+        }
+    }
+
+    func fetchSchoolOfUser(uid: String, completion: @escaping (String) -> (), withCancel cancel: ((Error) -> ())?) {
+        let ref = Database.database().reference().child("users").child(uid).child("school")
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            if let val = snapshot.value as? String {
+                completion(val)
+            }
+            else {
+                completion("")
+            }
+        }) { (err) in
+            print("Failed to fetch all users from database:", (err))
+            cancel?(err)
+        }
+    }
+    
     func fetchSchoolPromoPayout(school: String, completion: @escaping (Int) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("promos").child(school).child("currentInstaPayout")
         ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
@@ -3059,6 +3100,63 @@ extension Database {
         }
     }
     
+    func blockPromoForUser(school: String, uid: String, completion: @escaping (Error?) -> ()) {
+        let values = [uid: 1]
+        Database.database().reference().child("blockedPromos").child(school).updateChildValues(values) { (err, ref) in
+            if let err = err {
+                completion(err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
+    func isPromoBlockedForUser(school: String, uid: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+        Database.database().reference().child("blockedPromos").child(school).child(uid).observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(true)
+                }
+            } else {
+                completion(false)
+            }
+        }) { (err) in
+            print("Failed to check if following:", err)
+            cancel?(err)
+        }
+    }
+    
+    func userHasSeenPromoPage(school: String, uid: String, completion: @escaping (Error?) -> ()) {
+        let values = [uid: 1]
+        Database.database().reference().child("seenPromoPage").child(school).updateChildValues(values) { (err, ref) in
+            if let err = err {
+                completion(err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
+    func hasUserSeenPromoPage(school: String, uid: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+        Database.database().reference().child("seenPromoPage").child(school).child(uid).observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(true)
+                }
+            } else {
+                completion(false)
+            }
+        }) { (err) in
+            print("Failed to check if following:", err)
+            cancel?(err)
+        }
+    }
     
     //MARK: GroupFollowers
     
