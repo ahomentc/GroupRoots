@@ -17,6 +17,7 @@ protocol EmptySearchCellDelegate {
     func didTapUser(user: User)
     func didTapImportContacts()
     func requestImportContactsIfAuth()
+    func didFollowFirstUser()
 }
 
 class EmptySearchCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, EmptyFeedUserCellDelegate, ImportContactsCellDelegate {
@@ -118,7 +119,7 @@ class EmptySearchCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if CNContactStore.authorizationStatus(for: .contacts) != .authorized && CNContactStore.authorizationStatus(for: .contacts) != .denied && indexPath.row == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImportContactsCell.cellId, for: indexPath) as! ImportContactsCell
-            cell.layer.cornerRadius = 10
+            cell.layer.cornerRadius = 7
             cell.layer.borderWidth = 1.0
             cell.layer.borderColor = UIColor.clear.cgColor
             cell.layer.masksToBounds = true
@@ -137,7 +138,7 @@ class EmptySearchCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
                     cell.user = recommendedUsers![indexPath.row]
                 }
             }
-            cell.layer.cornerRadius = 10
+            cell.layer.cornerRadius = 7
             cell.layer.borderWidth = 1.0
             cell.layer.borderColor = UIColor.clear.cgColor
             cell.layer.masksToBounds = true
@@ -175,6 +176,16 @@ class EmptySearchCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
             }
             self.collectionView.reloadData()
             
+            // check if this is the first time the user has followed someone and if so, show the popup
+            Database.database().hasFollowedSomeone(completion: { (hasFollowed) in
+                if !hasFollowed {
+                    // add them to followed someone
+                    // send notification to show popup
+                    Database.database().followedSomeone() { (err) in }
+                    self.delegate?.didFollowFirstUser()
+                }
+            })
+            
             Database.database().createNotification(to: user, notificationType: NotificationType.newFollow) { (err) in
                 if err != nil {
                     return
@@ -199,6 +210,7 @@ class EmptySearchCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
     func didTapImportContacts() {
         self.delegate?.didTapImportContacts()
     }
+    
 }
 
 extension EmptySearchCell: UICollectionViewDelegateFlowLayout {

@@ -157,6 +157,15 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
         return button
     }()
+    
+    let lastPostedLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 10)
+        label.textColor = .lightGray
+        label.textAlignment = .right
+        label.text = ""
+        return label
+    }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -179,6 +188,9 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         self.headerCollectionView.reloadData()
         
         if groupPosts.count > 0 {
+            let timeAgoDisplay = groupPosts[0].creationDate.timeAgoDisplay()
+            lastPostedLabel.text = "Updated " + timeAgoDisplay
+            
             let group = groupPosts[0].group
             if group.groupname == "" {
                 var usernames = ""
@@ -233,6 +245,9 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 self.groupnameButton.setAttributedTitle(balanceString, for: .normal)
             }
         }
+        else {
+            lastPostedLabel.text = ""
+        }
         groupnameButton.setTitleColor(.black, for: .normal)
     }
     
@@ -259,7 +274,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 9 * 8 )
         layout.minimumLineSpacing = CGFloat(0)
-        
+
         collectionView = UICollectionView(frame: CGRect(x: 0, y: 160, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 9 * 8 - 160), collectionViewLayout: layout)
 //        CGRect(x: 0, y: 220, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 220)
         
@@ -275,6 +290,9 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         collectionView.isPagingEnabled = true
         contentView.insertSubview(collectionView, at: 5)
         
+        contentView.addSubview(lastPostedLabel)
+        lastPostedLabel.anchor(top: topAnchor, right: rightAnchor, paddingTop: 85 + UIScreen.main.bounds.width - 30 + UIScreen.main.bounds.height/8, paddingRight: 20)
+        
         contentView.insertSubview(groupnameButton, at: 6)
         groupnameButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: 85 + UIScreen.main.bounds.height / 14 , paddingLeft: 20, height: 10)
         groupnameButton.backgroundColor = .clear
@@ -283,7 +301,8 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
 //        insertSubview(closeButton, at: 7)
 //        closeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: UIScreen.main.bounds.height/16, paddingRight: 20)
         
-        pageControlSwipe = UIPageControl(frame: CGRect(x: 0, y: 130 +  UIScreen.main.bounds.height / 1.7, width: UIScreen.main.bounds.width, height: 10))
+        pageControlSwipe = UIPageControl(frame: CGRect(x: 0, y: 135 +  UIScreen.main.bounds.height / 1.7, width: UIScreen.main.bounds.width, height: 10))
+//        pageControlSwipe = UIPageControl(frame: CGRect(x: 0, y: 95 + UIScreen.main.bounds.width - 30 + UIScreen.main.bounds.height/8, width: UIScreen.main.bounds.width, height: 10))
         pageControlSwipe.pageIndicatorTintColor = UIColor.lightGray
         pageControlSwipe.currentPageIndicatorTintColor = UIColor.darkGray
         self.addSubview(pageControlSwipe)

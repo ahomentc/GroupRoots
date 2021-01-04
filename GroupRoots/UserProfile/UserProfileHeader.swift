@@ -12,6 +12,7 @@ protocol UserProfileHeaderDelegate {
     func handleInviteGroup()
     func didSelectFollowPage(showFollowers: Bool)
     func didSelectSubscriptionsPage()
+    func didFollowFirstUser()
 }
 
 //MARK: - UserProfileHeader
@@ -402,6 +403,17 @@ class UserProfileHeader: UICollectionViewCell, UITextViewDelegate {
                     self.followButton.type = previousButtonType
                     return
                 }
+                
+                // check if this is the first time the user has followed someone and if so, show the popup
+                Database.database().hasFollowedSomeone(completion: { (hasFollowed) in
+                    if !hasFollowed {
+                        // add them to followed someone
+                        // send notification to show popup
+                        Database.database().followedSomeone() { (err) in }
+                        self.delegate?.didFollowFirstUser()
+                    }
+                })
+                
                 self.reloadFollowButton()
                 self.reloadUserStats()
                 NotificationCenter.default.post(name: NSNotification.Name.updateUserProfile, object: nil) // updates user who tapped's profile

@@ -561,6 +561,39 @@ extension Database {
         }
     }
     
+    func hasFollowedSomeone(completion: @escaping (Bool) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let ref = Database.database().reference().child("hasFollowedSomeone").child(currentLoggedInUserId)
+        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(true)
+                }
+            } else {
+                completion(false)
+            }
+        }) { (err) in
+            print("Failed to fetch user from database:", err)
+        }
+    }
+    
+    func followedSomeone(completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        let ref = Database.database().reference().child("hasFollowedSomeone")
+        let values = [currentLoggedInUserId: 1]
+        ref.updateChildValues(values) { (err, ref) in
+            if let err = err {
+                print("Failed to save to database", err)
+                completion(err)
+                return
+            }
+            completion(nil)
+        }
+    }
+    
 //    func fetchAllUsers(includeCurrentUser: Bool = true, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
 //        let ref = Database.database().reference().child("users")
 //        ref.observeSingleEvent(of: .value, with: { (snapshot) in

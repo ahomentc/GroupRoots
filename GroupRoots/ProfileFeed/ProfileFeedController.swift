@@ -106,8 +106,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.isHidden = true
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
-        attributedText.append(NSMutableAttributedString(string: "Photos and videos of groups you\nfollow will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSMutableAttributedString(string: "When you follow friends, you automatically\nalso follow their public groups.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "Photos and videos from groups you\nfollow will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "When you follow someone, you auto\nfollow their public groups too.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
@@ -319,7 +319,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     private lazy var selectSchoolButton: UIButton = {
         let button = UIButton()
         button.addTarget(self, action: #selector(selectSchool), for: .touchUpInside)
-//        button.layer.zPosition = 0;
         button.isHidden = true
         button.backgroundColor = UIColor(white: 0.9, alpha: 1)
         button.setTitleColor(.black, for: .normal)
@@ -327,6 +326,50 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         button.setTitle("Select School", for: .normal)
         return button
     }()
+    
+    //MARK: First follow popup
+    private let firstFollowLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+        label.isHidden = true
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "Auto Group Follow", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 18)])
+        attributedText.append(NSMutableAttributedString(string: "\n\nWhen you follow someone,\nyou auto follow the public\ngroups they're members of.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        label.attributedText = attributedText
+        return label
+    }()
+    
+    private lazy var firstFollowButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(closeFirstFollowPopup), for: .touchUpInside)
+        button.layer.zPosition = 4;
+        button.isHidden = true
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        button.setTitle("Got it", for: .normal)
+        return button
+    }()
+    
+    private let firstFollowBackground: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(white: 1, alpha: 1)
+//        view.layer.borderWidth = 1
+//        view.layer.borderColor = UIColor.darkGray.cgColor
+        view.layer.zPosition = 3
+        view.isUserInteractionEnabled = false
+        view.layer.cornerRadius = 10
+        view.isHidden = true
+        
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 1
+        view.layer.shadowOffset = .zero
+        view.layer.shadowRadius = 150
+        return view
+    }()
+    
     
     func showEmptyStateViewIfNeeded() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
@@ -367,24 +410,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     override func viewDidAppear(_ animated: Bool) {
         self.configureNavBar()
-        
-        // check if fullscreen and set tabBar color accordingly
-        for cell in collectionView.visibleCells {
-            if cell is FeedGroupCell {
-                let visible_cell = cell as! FeedGroupCell
-                if visible_cell.isFullScreen {
-                    self.createGroupIconButton.isHidden = true
-                    NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
-//                    self.statusBarHidden = true
-                }
-                else {
-                    self.createGroupIconButton.isHidden = false
-                    NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
-//                    self.statusBarHidden = false
-                }
-                break
-            }
-        }
     }
     
     override func viewDidLoad() {
@@ -443,18 +468,18 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         logoImageView.frame = CGRect(x: view.frame.width/2 - 100, y: 80, width: 200, height: 200)
         self.view.addSubview(logoImageView)
         
-        horizontalGifView.frame = CGRect(x: view.frame.width/2 - 101.25, y: UIScreen.main.bounds.height/3 - 70, width: 202.5, height: 360)
+        horizontalGifView.frame = CGRect(x: view.frame.width/2 - 101.25, y: UIScreen.main.bounds.height/3 - 45, width: 202.5, height: 360)
         horizontalGifView.loadGif(name: "horiz")
         self.view.addSubview(horizontalGifView)
         
-        verticalGifView.frame = CGRect(x: view.frame.width/2 - 101.25, y: UIScreen.main.bounds.height/3 - 30, width: 202.5, height: 300.15)
+        verticalGifView.frame = CGRect(x: view.frame.width/2 - 101.25, y: UIScreen.main.bounds.height/3 - 10, width: 202.5, height: 300.15)
         verticalGifView.loadGif(name: "vert")
         self.view.addSubview(verticalGifView)
         
-        animationsTitleLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/3-300, width: 300, height: 300)
+        animationsTitleLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/3-250, width: 300, height: 300)
         self.view.addSubview(animationsTitleLabel)
         
-        animationsLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-200, y: UIScreen.main.bounds.height/3-250, width: 400, height: 300)
+        animationsLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-200, y: UIScreen.main.bounds.height/3-210, width: 400, height: 300)
         self.view.addSubview(animationsLabel)
         
         animationsButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
@@ -496,6 +521,16 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         self.view.insertSubview(selectSchoolButton, at: 1)
         selectSchoolButton.anchor(top: searchSchoolBottomBorder.bottomAnchor, right: searchSchoolField.rightAnchor, paddingTop: 25, paddingRight: 15, width: 150, height: 50)
         
+        firstFollowLabel.frame = CGRect(x: 0, y: UIScreen.main.bounds.height/2-80, width: UIScreen.main.bounds.width, height: 120)
+        self.view.insertSubview(firstFollowLabel, at: 4)
+        
+        firstFollowBackground.frame = CGRect(x: UIScreen.main.bounds.width/2-140, y: UIScreen.main.bounds.height/2-120, width: 280, height: 270)
+        self.view.insertSubview(firstFollowBackground, at: 3)
+        
+        firstFollowButton.frame = CGRect(x: UIScreen.main.bounds.width/2-50, y: UIScreen.main.bounds.height/2+60, width: 100, height: 50)
+        firstFollowButton.layer.cornerRadius = 18
+        self.view.insertSubview(firstFollowButton, at: 4)
+        
         collectionView?.frame = CGRect(x: 0, y: UIScreen.main.bounds.height/9, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - UIScreen.main.bounds.height/8)
         collectionView?.register(FeedGroupCell.self, forCellWithReuseIdentifier: "cellId")
         collectionView?.register(EmptyFeedPostCell.self, forCellWithReuseIdentifier: EmptyFeedPostCell.cellId)
@@ -536,6 +571,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         // what happens here if there's been paging... more specifically, what happens when refresh and had paging occur?
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateUserProfileFeed, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name(rawValue: "createdGroup"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(showFirstFollowPopup), name: NSNotification.Name(rawValue: "showFirstFollowPopupHomescreen"), object: nil)
         
         configureNavigationBar()
         
@@ -697,7 +733,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             }
         }
         else {
-            self.collectionView.isHidden = false
+//            self.collectionView.isHidden = false
             self.createGroupIconButton.isHidden = false
             self.schoolCollectionView.isHidden = true
             self.searchSchoolField.isHidden = true
@@ -720,6 +756,82 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         self.navigationController?.navigationBar.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
         self.navigationController?.navigationBar.barTintColor = UIColor.init(white: 0.98, alpha: 1)
 //        self.view.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
+    }
+    
+    func didFollowFirstUser() {
+        self.showFirstFollowPopup()
+    }
+    
+    @objc func showFirstFollowPopup() {
+        self.firstFollowLabel.isHidden = false
+        self.firstFollowBackground.isHidden = false
+        self.firstFollowButton.isHidden = false
+        
+        self.firstFollowLabel.alpha = 0
+        self.firstFollowBackground.alpha = 0
+        self.firstFollowButton.alpha = 0
+        
+        if isSchoolView {
+            UIView.animate(withDuration: 0.5) {
+                self.schoolCollectionView.alpha = 0
+                self.firstFollowLabel.alpha = 1
+                self.firstFollowBackground.alpha = 1
+                self.firstFollowButton.alpha = 1
+            }
+            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
+                self.schoolCollectionView.isHidden = true
+            }
+        }
+        else {
+            UIView.animate(withDuration: 0.5) {
+                self.collectionView.alpha = 0
+                self.firstFollowLabel.alpha = 1
+                self.firstFollowBackground.alpha = 1
+                self.firstFollowButton.alpha = 1
+            }
+            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
+                self.collectionView.isHidden = true
+            }
+        }
+        
+    }
+    
+    @objc func closeFirstFollowPopup() {
+        
+        self.firstFollowLabel.alpha = 1
+        self.firstFollowBackground.alpha = 1
+        self.firstFollowButton.alpha = 1
+        
+        if isSchoolView {
+            self.schoolCollectionView.isHidden = false
+            self.schoolCollectionView.alpha = 0
+            UIView.animate(withDuration: 0.5) {
+                self.schoolCollectionView.alpha = 1
+                self.firstFollowLabel.alpha = 0
+                self.firstFollowBackground.alpha = 0
+                self.firstFollowButton.alpha = 0
+            }
+            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
+                self.firstFollowLabel.isHidden = true
+                self.firstFollowBackground.isHidden = true
+                self.firstFollowButton.isHidden = true
+            }
+        }
+        else {
+            self.collectionView.alpha = 0
+            self.collectionView.isHidden = false
+            UIView.animate(withDuration: 0.5) {
+                self.collectionView.alpha = 1
+                self.firstFollowLabel.alpha = 0
+                self.firstFollowBackground.alpha = 0
+                self.firstFollowButton.alpha = 0
+            }
+            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
+                self.firstFollowLabel.isHidden = true
+                self.firstFollowBackground.isHidden = true
+                self.firstFollowButton.isHidden = true
+            }
+        }
     }
     
     func requestZoomCapability(for cell: FeedPostCell) {
@@ -1786,16 +1898,38 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             UserDefaults.standard.set(hasOpenedApp, forKey: "hasOpenedApp")
         }
 
-        self.newGroupButton.isHidden = true
-        self.goButton.isHidden = true
-        self.inviteButton.isHidden = true
-        self.welcomeLabel.isHidden = true
-        self.logoImageView.isHidden = true
-        
         self.verticalGifView.isHidden = false
         self.animationsTitleLabel.isHidden = false
         self.animationsButton.isHidden = false
         self.animationsLabel.isHidden = false
+        self.verticalGifView.alpha = 0
+        self.animationsTitleLabel.alpha = 0
+        self.animationsButton.alpha = 0
+        self.animationsLabel.alpha = 0
+        self.newGroupButton.alpha = 1
+        self.goButton.alpha = 1
+        self.inviteButton.alpha = 1
+        self.welcomeLabel.alpha = 1
+        self.logoImageView.alpha = 1
+        
+        UIView.animate(withDuration: 0.5) {
+            self.verticalGifView.alpha = 1
+            self.animationsTitleLabel.alpha = 1
+            self.animationsButton.alpha = 1
+            self.animationsLabel.alpha = 1
+            self.newGroupButton.alpha = 0
+            self.goButton.alpha = 0
+            self.inviteButton.alpha = 0
+            self.welcomeLabel.alpha = 0
+            self.logoImageView.alpha = 0
+        }
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
+            self.newGroupButton.isHidden = true
+            self.goButton.isHidden = true
+            self.inviteButton.isHidden = true
+            self.welcomeLabel.isHidden = true
+            self.logoImageView.isHidden = true
+        }
     }
     
     func showBumpAnim(){
@@ -1834,25 +1968,57 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     @objc internal func showSecondAnim() {
-        self.animationsButton.isHidden = true
+        
         self.animationsButton2.isHidden = false
         self.horizontalGifView.isHidden = false
-        self.verticalGifView.isHidden = true
         
-        self.animationsLabel.attributedText = NSMutableAttributedString(string: "Swipe left to see all of a group’s posts.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)])
+        self.animationsButton2.alpha = 0
+        self.horizontalGifView.alpha = 0
+        self.animationsButton.alpha = 1
+        self.verticalGifView.alpha = 1
+        
+        self.animationsLabel.attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)])
+        
+        UIView.animate(withDuration: 0.5) {
+            self.animationsButton2.alpha = 1
+            self.horizontalGifView.alpha = 1
+            self.animationsButton.alpha = 0
+            self.verticalGifView.alpha = 0
+        }
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
+            self.animationsButton.isHidden = true
+            self.verticalGifView.isHidden = true
+            self.animationsLabel.attributedText = NSMutableAttributedString(string: "Swipe left to see all of a group’s posts.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)])
+        }
     }
     
     @objc internal func endIntro() {
-        self.animationsButton2.isHidden = true
-        self.horizontalGifView.isHidden = true
-        self.animationsTitleLabel.isHidden = true
-        self.animationsButton.isHidden = true
-        self.animationsLabel.isHidden = true
+        self.animationsButton2.alpha = 1
+        self.horizontalGifView.alpha = 1
+        self.animationsTitleLabel.alpha = 1
+        self.animationsButton.alpha = 1
+        self.animationsLabel.alpha = 1
         
         self.activityIndicatorView.isHidden = false
-        self.handleRefresh()
+        self.activityIndicatorView.alpha = 0
         
-        self.showBumpAnim()
+        UIView.animate(withDuration: 0.5) {
+            self.animationsButton2.alpha = 0
+            self.horizontalGifView.alpha = 0
+            self.animationsTitleLabel.alpha = 0
+            self.animationsButton.alpha = 0
+            self.animationsLabel.alpha = 0
+            self.activityIndicatorView.alpha = 1
+        }
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
+            self.animationsButton2.isHidden = true
+            self.horizontalGifView.isHidden = true
+            self.animationsTitleLabel.isHidden = true
+            self.animationsButton.isHidden = true
+            self.animationsLabel.isHidden = true
+            self.handleRefresh()
+            self.showBumpAnim()
+        }
     }
     
     func shouldOpenGroup(groupId: String) {

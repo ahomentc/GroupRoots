@@ -5,6 +5,7 @@ import FirebaseDatabase
 import Contacts
 
 class UserSearchController: UICollectionViewController, EmptySearchCellDelegate {
+
     func didTapUser(user: User) {
         let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
         userProfileController.user = user
@@ -76,6 +77,49 @@ class UserSearchController: UICollectionViewController, EmptySearchCellDelegate 
     private var filteredUsers = [User]()
     private var filteredGroups = [Group]()
     
+    //MARK: First follow popup
+    private let firstFollowLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.black
+        label.layer.zPosition = 4
+        label.numberOfLines = 0
+        label.isHidden = true
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "Auto Group Follow", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 18)])
+        attributedText.append(NSMutableAttributedString(string: "\n\nWhen you follow someone,\nyou auto follow the public\ngroups they're members of.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        label.attributedText = attributedText
+        return label
+    }()
+    
+    private lazy var firstFollowButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(closeFirstFollowPopup), for: .touchUpInside)
+        button.layer.zPosition = 4;
+        button.isHidden = true
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        button.setTitle("Got it", for: .normal)
+        return button
+    }()
+    
+    private let firstFollowBackground: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(white: 1, alpha: 1)
+//        view.layer.borderWidth = 1
+//        view.layer.borderColor = UIColor.darkGray.cgColor
+        view.layer.zPosition = 3
+        view.isUserInteractionEnabled = false
+        view.layer.cornerRadius = 10
+        view.isHidden = true
+        
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 1
+        view.layer.shadowOffset = .zero
+        view.layer.shadowRadius = 150
+        return view
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         if #available(iOS 13.0, *) {
@@ -98,6 +142,16 @@ class UserSearchController: UICollectionViewController, EmptySearchCellDelegate 
         collectionView?.register(EmptySearchCell.self, forCellWithReuseIdentifier: EmptySearchCell.cellId)
         
         searchBar.delegate = self
+        
+        firstFollowLabel.frame = CGRect(x: 0, y: UIScreen.main.bounds.height/2-80, width: UIScreen.main.bounds.width, height: 120)
+        self.view.insertSubview(firstFollowLabel, at: 4)
+        
+        firstFollowBackground.frame = CGRect(x: UIScreen.main.bounds.width/2-140, y: UIScreen.main.bounds.height/2-120, width: 280, height: 270)
+        self.view.insertSubview(firstFollowBackground, at: 3)
+        
+        firstFollowButton.frame = CGRect(x: UIScreen.main.bounds.width/2-50, y: UIScreen.main.bounds.height/2+60, width: 100, height: 50)
+        firstFollowButton.layer.cornerRadius = 18
+        self.view.insertSubview(firstFollowButton, at: 4)
         
 //        fetchAllUsers()
     }
@@ -251,6 +305,51 @@ class UserSearchController: UICollectionViewController, EmptySearchCellDelegate 
             header?.delegate = self
         }
         return header!
+    }
+    
+    func didFollowFirstUser() {
+        self.showFirstFollowPopup()
+    }
+    
+    @objc func showFirstFollowPopup() {
+        self.firstFollowLabel.isHidden = false
+        self.firstFollowBackground.isHidden = false
+        self.firstFollowButton.isHidden = false
+        
+        self.firstFollowLabel.alpha = 0
+        self.firstFollowBackground.alpha = 0
+        self.firstFollowButton.alpha = 0
+        
+        UIView.animate(withDuration: 0.5) {
+            self.collectionView.alpha = 0
+            self.firstFollowLabel.alpha = 1
+            self.firstFollowBackground.alpha = 1
+            self.firstFollowButton.alpha = 1
+        }
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
+            self.collectionView.isHidden = true
+        }
+        
+    }
+    
+    @objc func closeFirstFollowPopup() {
+        self.firstFollowLabel.alpha = 1
+        self.firstFollowBackground.alpha = 1
+        self.firstFollowButton.alpha = 1
+        
+        self.collectionView.isHidden = false
+        self.collectionView.alpha = 0
+        UIView.animate(withDuration: 0.5) {
+            self.collectionView.alpha = 1
+            self.firstFollowLabel.alpha = 0
+            self.firstFollowBackground.alpha = 0
+            self.firstFollowButton.alpha = 0
+        }
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
+            self.firstFollowLabel.isHidden = true
+            self.firstFollowBackground.isHidden = true
+            self.firstFollowButton.isHidden = true
+        }
     }
 }
 

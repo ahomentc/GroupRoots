@@ -290,8 +290,8 @@ class YourGroupsCell: UICollectionViewCell {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14)
         label.textAlignment = .left
-        label.textColor = .black
-        label.text = "Friend groups in your school"
+        label.textColor = .darkGray
+        label.text = "Friend group feed"
         return label
     }()
     

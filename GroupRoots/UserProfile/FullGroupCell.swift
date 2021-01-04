@@ -130,6 +130,23 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         return button
     }()
     
+    private lazy var requestedButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.addTarget(self, action: #selector(handleRequestedTap), for: .touchUpInside)
+        button.setTitle("Requested", for: .normal)
+        button.backgroundColor = UIColor.clear
+        button.setTitleColor(.black, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+        button.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        button.layer.cornerRadius = 5
+        button.layer.borderWidth = 1
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.isUserInteractionEnabled = true
+        button.isHidden = true
+        return button
+    }()
+    
     private lazy var emptyPostButton: UIButton = {
         let button = UIButton(type: .system)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
@@ -145,6 +162,15 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         button.isUserInteractionEnabled = true
         button.isHidden = true
         return button
+    }()
+    
+    let lastPostedLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 10)
+        label.textColor = .lightGray
+        label.textAlignment = .right
+        label.text = ""
+        return label
     }()
     
     var headerCollectionView: UICollectionView!
@@ -170,6 +196,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         self.groupnameLabel.text = ""
         let emptyString = NSMutableAttributedString(string:"")
         self.groupnameLabel.attributedText = emptyString
+        self.lastPostedLabel.text = ""
         
         self.groupPosts = nil
         self.groupMembers = nil
@@ -182,6 +209,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         noPostsLabel.isHidden = true
         privateLabel.isHidden = true
         subscribeButton.isHidden = true
+        requestedButton.isHidden = true
         emptyPostButton.isHidden = true
         hiddenIcon.isHidden = true
         collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
@@ -205,13 +233,16 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         contentView.addSubview(subscribeButton)
         subscribeButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 220, paddingLeft: UIScreen.main.bounds.width/3, paddingRight: UIScreen.main.bounds.width/3, height: 40)
         
+        contentView.addSubview(requestedButton)
+        requestedButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 220, paddingLeft: UIScreen.main.bounds.width/3, paddingRight: UIScreen.main.bounds.width/3, height: 40)
+        
         contentView.addSubview(emptyPostButton)
         emptyPostButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 220, paddingLeft: UIScreen.main.bounds.width/3, paddingRight: UIScreen.main.bounds.width/3, height: 40)
         
         let separatorView = UIView()
         separatorView.backgroundColor = UIColor(white: 0, alpha: 0.25)
         contentView.addSubview(separatorView)
-        separatorView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 50, paddingRight: 50, height: 0.5)
+        separatorView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 20, paddingRight: 20, height: 0.5)
         
         // need this because group will already be loaded but order might change so need to reload cell
 //        configureCell()
@@ -253,6 +284,9 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
         contentView.insertSubview(collectionView, at: 5)
+        
+        contentView.addSubview(lastPostedLabel)
+        lastPostedLabel.anchor(top: collectionView.bottomAnchor, right: rightAnchor, paddingTop: 5, paddingRight: 20)
     }
     
     // doing this here to load faster
@@ -337,6 +371,11 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         
         if groupPosts.count == 0 {
             self.setupEmpty()
+            lastPostedLabel.text = ""
+        }
+        else {
+            let timeAgoDisplay = groupPosts[0].creationDate.timeAgoDisplay()
+            lastPostedLabel.text = "Updated " + timeAgoDisplay
         }
         
         self.collectionView?.reloadData()
@@ -359,12 +398,14 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 privateLabel.isHidden = true
                 noPostsLabel.text = "This group is private.\n Your follow is pending."
                 subscribeButton.isHidden = true
+                requestedButton.isHidden = false
             }
             else {
                 noPostsLabel.isHidden = true
                 privateLabel.isHidden = false
                 privateLabel.text = "This group is private.\n Follow to see their posts."
                 subscribeButton.isHidden = false
+                requestedButton.isHidden = true
             }
         }
     }
@@ -581,8 +622,9 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         
         noPostsLabel.isHidden = false
         privateLabel.isHidden = true
-        noPostsLabel.text = "This group is private.\n Your subscription is pending."
+        noPostsLabel.text = "This group is private.\n Your follow is pending."
         subscribeButton.isHidden = true
+        requestedButton.isHidden = false
         
         Database.database().subscribeToGroup(groupId: groupId) { (err) in
             
@@ -622,6 +664,24 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     })
                 }
             })
+        }
+    }
+    
+    @objc private func handleRequestedTap() {
+        guard let groupId = group?.groupId else { return }
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        
+        noPostsLabel.isHidden = true
+        privateLabel.isHidden = false
+        privateLabel.text = "This group is private.\n Follow to see their posts."
+        subscribeButton.isHidden = false
+        requestedButton.isHidden = true
+        
+        Database.database().removeUserFromGroupPending(withUID: currentLoggedInUserId, groupId: groupId) { (err) in
+            if err != nil {
+                return
+            }
+            
         }
     }
 }

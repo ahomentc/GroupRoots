@@ -169,6 +169,17 @@ class SchoolUserCell: UICollectionViewCell {
                 }
                 self.loadFollowButtonData()
                 NotificationCenter.default.post(name: NSNotification.Name.updateUserProfile, object: nil) // updates user who tapped's profile
+                
+                // check if this is the first time the user has followed someone and if so, show the popup
+                Database.database().hasFollowedSomeone(completion: { (hasFollowed) in
+                    if !hasFollowed {
+                        // add them to followed someone
+                        // send notification to show popup
+                        Database.database().followedSomeone() { (err) in }
+                        NotificationCenter.default.post(name: NSNotification.Name("showFirstFollowPopupHomescreen"), object: nil)
+                    }
+                })
+                
                 Database.database().createNotification(to: self.user!, notificationType: NotificationType.newFollow) { (err) in
                     if err != nil {
                         return

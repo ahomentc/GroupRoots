@@ -13,6 +13,7 @@ import FirebaseDatabase
 
 protocol UserDecisionCellDelegate {
     func acceptUserRequest()
+    
 }
 
 

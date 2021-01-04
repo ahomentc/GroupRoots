@@ -11,14 +11,13 @@ import Firebase
 import FirebaseAuth
 import FirebaseDatabase
 
-//protocol UserFollowCellDelegate {
-//    func acceptUserRequest()
-//}
-
+protocol UserFollowCellDelegate {
+    func didFollowFirstUser()
+}
 
 class FollowPageCell: UICollectionViewCell {
     
-    var delegate: UserDecisionCellDelegate?
+    var delegate: UserFollowCellDelegate?
     
     var user: User? {
         didSet {
@@ -129,6 +128,17 @@ class FollowPageCell: UICollectionViewCell {
                     self.followButton.type = previousButtonType
                     return
                 }
+                
+                // check if this is the first time the user has followed someone and if so, show the popup
+                Database.database().hasFollowedSomeone(completion: { (hasFollowed) in
+                    if !hasFollowed {
+                        // add them to followed someone
+                        // send notification to show popup
+                        Database.database().followedSomeone() { (err) in }
+                        self.delegate?.didFollowFirstUser()
+                    }
+                })
+                
                 self.reloadFollowButton() // put this in callback
                 NotificationCenter.default.post(name: NSNotification.Name("updateFollowers"), object: nil)
             }
