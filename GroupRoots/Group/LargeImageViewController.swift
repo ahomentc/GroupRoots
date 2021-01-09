@@ -212,15 +212,16 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                 sync.enter()
                 Database.database().numberOfCommentsForPost(postId: groupPost.id) { (commentsCount) in
                     self.numCommentsForPosts[groupPost.id] = commentsCount
-                    Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
-                        sync.leave()
-                        if inGroup {
-                            sync.enter()
-                            Database.database().fetchPostVisibleViewers(postId: groupPost.id, completion: { (viewer_ids) in
-                                Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
+                    
+                    Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
+                        self.numViewsForPost[groupPost.id] = views_count
+                        Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
+                            sync.leave()
+                            if inGroup {
+                                sync.enter()
+                                Database.database().fetchPostVisibleViewers(postId: groupPost.id, completion: { (viewer_ids) in
                                     sync.leave()
                                     self.numViewsForPost[groupPost.id] = views_count
-//                                    self.reloadGroupData()
                                     if viewer_ids.count > 0 {
                                         var viewers = [User]()
                                         let viewersSync = DispatchGroup()
@@ -244,13 +245,13 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                                             sync.leave()
                                         }
                                     }
-                                }) { (err) in }
-                            }) { (err) in
+                                }) { (err) in
+                                }
                             }
+                        }) { (err) in
+                            return
                         }
-                    }) { (err) in
-                        return
-                    }
+                    }) { (err) in }
                 }
             })
             sync.notify(queue: .main) {

@@ -197,7 +197,7 @@ class NotificationCell: UICollectionViewCell {
         else if notification.type == NotificationType.groupJoinInvitation {
             var groupname = "a group"
             if notification.group?.groupname ?? "" != "" {
-                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
+                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
             notificationsLabel.text = "invited you to join " + groupname
             notificationsLabel.isUserInteractionEnabled = true
@@ -207,7 +207,7 @@ class NotificationCell: UICollectionViewCell {
         else if notification.type == NotificationType.newGroupJoin {
             var groupname = "your group"
             if notification.group?.groupname ?? "" != "" {
-                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
+                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
             notificationsLabel.text = "joined " + groupname
             notificationsLabel.isUserInteractionEnabled = true
@@ -217,7 +217,7 @@ class NotificationCell: UICollectionViewCell {
         else if notification.type == NotificationType.groupJoinRequest {
             var groupname = "your group"
             if notification.group?.groupname ?? "" != "" {
-                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
+                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
             notificationsLabel.text = "requested to join " + groupname
             notificationsLabel.isUserInteractionEnabled = true
@@ -227,7 +227,7 @@ class NotificationCell: UICollectionViewCell {
         else if notification.type == NotificationType.newGroupSubscribe {
             var groupname = "your group"
             if notification.group?.groupname ?? "" != "" {
-                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
+                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
             notificationsLabel.text = "subscribed to " + groupname
             notificationsLabel.isUserInteractionEnabled = true
@@ -237,7 +237,7 @@ class NotificationCell: UICollectionViewCell {
         else if notification.type == NotificationType.groupSubscribeRequest {
             var groupname = "your group"
             if notification.group?.groupname ?? "" != "" {
-                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
+                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
             notificationsLabel.text = "requested subscription for " + groupname
             notificationsLabel.isUserInteractionEnabled = true
@@ -247,7 +247,7 @@ class NotificationCell: UICollectionViewCell {
         else if notification.type == NotificationType.groupProfileNameEdit {
             notificationsLabel.text = "removed your group's name"
             if notification.group?.groupname ?? "" != "" {
-                let groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
+                let groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
                 notificationsLabel.text = "changed group name to " + groupname
             }
             notificationsLabel.isUserInteractionEnabled = true
@@ -257,7 +257,7 @@ class NotificationCell: UICollectionViewCell {
         else if notification.type == NotificationType.groupProfilePicEdit {
             var groupname = "your group"
             if notification.group?.groupname ?? "" != "" {
-                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
+                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
             notificationsLabel.text = "edited " + groupname + "'s profile picture"
             notificationsLabel.isUserInteractionEnabled = true
@@ -269,7 +269,7 @@ class NotificationCell: UICollectionViewCell {
             guard let isPrivate = group.isPrivate else { return }
             var groupname = "your group"
             if group.groupname != "" {
-                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
+                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
             if isPrivate {
                 notificationsLabel.text = "made " + groupname + " private"
@@ -284,7 +284,7 @@ class NotificationCell: UICollectionViewCell {
         else if notification.type == NotificationType.groupPostComment {
             var groupname = "your group"
             if notification.group?.groupname ?? "" != "" {
-                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
+                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
             notificationsLabel.text = "commented on " + groupname + "'s post "
             notificationsLabel.isUserInteractionEnabled = true
@@ -300,7 +300,7 @@ class NotificationCell: UICollectionViewCell {
         else if notification.type == NotificationType.newGroupPost {
             var groupname = "your group"
             if notification.group?.groupname ?? "" != "" {
-                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
+                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
             notificationsLabel.text = "posted in " + groupname
             notificationsLabel.isUserInteractionEnabled = true
@@ -311,7 +311,7 @@ class NotificationCell: UICollectionViewCell {
             guard let group = notification.group else { return }
             var groupname = "your group"
             if group.groupname != "" {
-                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ") ?? ""
+                groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
             notificationsLabel.text = "left " + groupname + ". Unsubscribe?"
             notificationsLabel.isUserInteractionEnabled = true

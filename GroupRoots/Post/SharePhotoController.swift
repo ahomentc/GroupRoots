@@ -524,7 +524,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                                 self.selectedGroupnameLabel.attributedText = NSMutableAttributedString(string: usernames, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 20)])
                             }
                             else {
-                                self.selectedGroupnameLabel.attributedText = NSMutableAttributedString(string: self.preSelectedGroup!.groupname.replacingOccurrences(of: "_-a-_", with: " "), attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 20)])
+                                self.selectedGroupnameLabel.attributedText = NSMutableAttributedString(string: self.preSelectedGroup!.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘"), attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 20)])
                             }
                         }) { (_) in }
                     }

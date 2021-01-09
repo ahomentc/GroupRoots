@@ -20,7 +20,7 @@ import FirebaseStorage
 import YPImagePicker
 import Photos
 
-class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate, InviteToGroupWhenCreateControllerDelegate, EmptyFeedPostCellDelegate, FullGroupCellDelegate, SchoolEmptyStateCellDelegate, SchoolUsersCellDelegate, CreateGroupCellDelegate, LargeImageViewControllerDelegate, PromoDelegate {
+class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate, InviteToGroupWhenCreateControllerDelegate, EmptyFeedPostCellDelegate, SchoolGroupCellDelegate, SchoolEmptyStateCellDelegate, SchoolUsersCellDelegate, CreateGroupCellDelegate, LargeImageViewControllerDelegate, PromoDelegate {
         
     override var prefersStatusBarHidden: Bool {
       return statusBarHidden
@@ -53,6 +53,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     var isSchoolView = true
     private var fetchedSchoolGroups = false
     private var isInGroupFollowPendingDict = [String: Bool]()
+    private var isInGroupFollowersDict = [String: Bool]()
     private var canViewGroupPostsDict = [String: Bool]()
     private var groupMembersDict = [String: [User]]()
     private var groupPosts2DDict = [String: [GroupPost]]()
@@ -122,7 +123,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
         attributedText.append(NSMutableAttributedString(string: "Photos and videos of groups you\nfollow will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSMutableAttributedString(string: "When you follow friends, you automatically\nalso follow their public groups.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "When you follow someone, you auto\nfollow their public groups too.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
@@ -555,7 +556,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         schoolCollectionView?.register(InstaPromoCell.self, forCellWithReuseIdentifier: InstaPromoCell.cellId)
         schoolCollectionView?.register(InstaPromoExistingGroupCell.self, forCellWithReuseIdentifier: InstaPromoExistingGroupCell.cellId)
         schoolCollectionView?.register(GroupCell.self, forCellWithReuseIdentifier: GroupCell.cellId)
-        schoolCollectionView?.register(FullGroupCell.self, forCellWithReuseIdentifier: FullGroupCell.cellId)
+        schoolCollectionView?.register(SchoolGroupCell.self, forCellWithReuseIdentifier: SchoolGroupCell.cellId)
         schoolCollectionView?.register(SchoolUsersCell.self, forCellWithReuseIdentifier: SchoolUsersCell.cellId)
         schoolCollectionView?.register(CreateGroupCell.self, forCellWithReuseIdentifier: CreateGroupCell.cellId)
         schoolCollectionView?.register(YourGroupsCell.self, forCellWithReuseIdentifier: YourGroupsCell.cellId)
@@ -733,7 +734,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             }
         }
         else {
-//            self.collectionView.isHidden = false
+            self.collectionView.isHidden = false
             self.createGroupIconButton.isHidden = false
             self.schoolCollectionView.isHidden = true
             self.searchSchoolField.isHidden = true
@@ -960,6 +961,20 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                                     }
                                     lower_sync.leave()
                                 }) { (err) in return }
+                                
+                                // get the post total viewers
+                                lower_sync.enter()
+                                Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
+                                    let existingPostsForTotalViewersInGroup = self.groupPostsTotalViewersDict[groupId]
+                                    if existingPostsForTotalViewersInGroup == nil {
+                                        self.groupPostsTotalViewersDict[groupId] = [groupPost.id: views_count]
+                                    }
+                                    else {
+                                        self.groupPostsTotalViewersDict[groupId]![groupPost.id] = views_count
+                                    }
+                                    lower_sync.leave()
+
+                                }) { (err) in return }
 
                                 // the following is only if the user is in a gorup
                                 lower_sync.enter()
@@ -1001,20 +1016,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                                                 lower_sync.leave()
                                             }
                                         }) { (err) in return}
-
-                                        // get the post total viewers
-                                        lower_sync.enter()
-                                        Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
-                                            let existingPostsForTotalViewersInGroup = self.groupPostsTotalViewersDict[groupId]
-                                            if existingPostsForTotalViewersInGroup == nil {
-                                                self.groupPostsTotalViewersDict[groupId] = [groupPost.id: views_count]
-                                            }
-                                            else {
-                                                self.groupPostsTotalViewersDict[groupId]![groupPost.id] = views_count
-                                            }
-                                            lower_sync.leave()
-
-                                        }) { (err) in return }
                                     }
                                 }) { (err) in return }
                             })
@@ -1263,42 +1264,12 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             Database.database().isInGroupFollowPending(groupId: group.groupId, withUID: currentLoggedInUserId, completion: { (followPending) in
                 self.isInGroupFollowPendingDict[groupId] = followPending
                 
-                Database.database().isInGroup(groupId: group.groupId, completion: { (inGroup) in
-                    self.isInGroupDict[groupId] = inGroup
+                Database.database().isFollowingGroup(groupId: group.groupId, completion: { (isFollowingGroup) in
+                    self.isInGroupFollowersDict[groupId] = isFollowingGroup
                     
-                    Database.database().canViewGroupPosts(groupId: group.groupId, completion: { (canView) in
-                        self.canViewGroupPostsDict[groupId] = canView
-                            
-                        if canView {
-                            Database.database().fetchAllGroupPosts(groupId: group.groupId, completion: { (countAndPosts) in
-                                if countAndPosts.count > 0 {
-                                    self.groupPosts2DDict[groupId] = countAndPosts[1] as? [GroupPost]
-                                    if self.groupPosts2DDict[groupId] != nil {
-                                        self.groupPosts2DDict[groupId]!.sort(by: { (p1, p2) -> Bool in
-                                            return p1.creationDate.compare(p2.creationDate) == .orderedDescending
-                                        })
-                                    }
-                                    else {
-                                        self.groupPosts2DDict[groupId] = []
-                                    }
-                                }
-                                else {
-                                    self.groupPosts2DDict[groupId] = []
-                                }
-                                sync.leave()
-                            }) { (err) in
-                                return
-                            }
-                        }
-                        else {
-                            self.groupPosts2DDict[groupId] = []
-                            sync.leave()
-                        }
-                    }) { (err) in
-                        return
-                    }
+                    sync.leave()
                 }) { (err) in
-                   return
+                    return
                 }
             }) { (err) in
                 return
@@ -1453,7 +1424,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 return cell
             }
             
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FullGroupCell.cellId, for: indexPath) as! FullGroupCell
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SchoolGroupCell.cellId, for: indexPath) as! SchoolGroupCell
             
             var num_to_adjust = 4
             if self.schoolPromoIsActive && !self.userHasDonePromo && !self.userHasBlockedPromo {
@@ -1463,12 +1434,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             cell.group = school_groups[indexPath.item - num_to_adjust]
             cell.user = user
             let groupId = school_groups[indexPath.item - num_to_adjust].groupId
-            cell.isGroupHidden = false
             cell.isInFollowPending = isInGroupFollowPendingDict[groupId]
-            cell.canView = canViewGroupPostsDict[groupId]
-            cell.isInGroup = isInGroupDict[groupId]
+            cell.isFollowingGroup = isInGroupFollowersDict[groupId]
             cell.groupMembers = groupMembersDict[groupId]
-            cell.groupPosts = groupPosts2DDict[groupId]
             cell.delegate = self
             return cell
         }
@@ -1533,7 +1501,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 return CGSize(width: view.frame.width, height: 50)
             }
             
-            return CGSize(width: view.frame.width, height: 310)
+            return CGSize(width: view.frame.width, height: 190)
         }
         else {
             return CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - UIScreen.main.bounds.height/8)

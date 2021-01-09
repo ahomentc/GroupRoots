@@ -178,7 +178,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         button.setImage(#imageLiteral(resourceName: "eye").withRenderingMode(.alwaysOriginal), for: .normal)
         button.addTarget(self, action: #selector(showViewers), for: .touchUpInside)
         button.layer.zPosition = 4;
-        button.isHidden = true
+        button.isHidden = false
         button.contentEdgeInsets = UIEdgeInsets(top: 15, left: 15, bottom: 15, right: 15)
         return button
     }()
@@ -187,6 +187,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         let label = UILabel()
         label.layer.zPosition = 4;
         label.numberOfLines = 0
+        label.isHidden = false
         label.isUserInteractionEnabled = true
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(showViewers))
         label.addGestureRecognizer(gestureRecognizer)
@@ -397,7 +398,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         setupTimeLabel(groupPost: groupPost)
         setupPostLocation(groupPost: groupPost)
         
-        self.viewButton.isHidden = true
+//        self.viewButton.isHidden = true
         let attributedText = NSAttributedString(string: "", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 17), NSAttributedString.Key.foregroundColor: UIColor.white])
         viewCountLabel.attributedText = attributedText
         

@@ -216,7 +216,7 @@ class GroupProfileHeaderCell: UICollectionViewCell {
             groupLabel.text = "Group"
         }
         else {
-            groupname = groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: " ")
+            groupname = groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "'")
             if groupname.count > 10 { // change to 10
                 groupname = String(groupname.prefix(10)) // keep only the first 10 characters
                 groupname = groupname + "..."

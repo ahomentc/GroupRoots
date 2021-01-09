@@ -2651,7 +2651,7 @@ extension Database {
                                     }
                                     Database.database().fetchSchoolOfGroup(group: groupId, completion: { (school) in
                                         if school != "" {
-                                            let formatted_school = school.replacingOccurrences(of: " ", with: "_-a-_")
+                                            let formatted_school = school.replacingOccurrences(of: " ", with: "_-a-_").replacingOccurrences(of: "_-b-_", with: "‘")
                                             Database.database().addUserToSchool(withUID: uid, selectedSchool: formatted_school) { (err) in
                                                 if err != nil {
                                                    return
@@ -2979,7 +2979,7 @@ extension Database {
     
     func fetchSchoolGroups(school: String, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
         
-        let selectedSchool = school.replacingOccurrences(of: " ", with: "_-a-_")
+        let selectedSchool = school.replacingOccurrences(of: " ", with: "_-a-_").replacingOccurrences(of: "_-b-_", with: "‘")
         let ref = Database.database().reference().child("schools").child(selectedSchool).child("groups")
         
         ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
@@ -4528,7 +4528,7 @@ extension Database {
                 }
             case .groupJoinRequest:
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    let pushMessage = user.username + " requested to join your group " + group!.groupname.replacingOccurrences(of: "_-a-_", with: " ")
+                    let pushMessage = user.username + " requested to join your group " + group!.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
                     PushNotificationSender().sendPushNotification(to: token, title: "Group Join Request", body: pushMessage)
                     
                     // Save the notification
@@ -4611,7 +4611,7 @@ extension Database {
                         pushMessage = user.username + " removed your group's name"
                     }
                     else {
-                        pushMessage = user.username + " changed group name to " + groupname.replacingOccurrences(of: "_-a-_", with: " ")
+                        pushMessage = user.username + " changed group name to " + groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
                     }
                     
                     PushNotificationSender().sendPushNotification(to: token, title: "Group Name Edit", body: pushMessage)

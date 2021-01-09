@@ -291,7 +291,9 @@ class YourGroupsCell: UICollectionViewCell {
         label.font = UIFont.systemFont(ofSize: 14)
         label.textAlignment = .left
         label.textColor = .darkGray
-        label.text = "Friend group feed"
+//        label.text = "Friend group feed"
+        // Friend groups in your school
+        label.text = "Friend Groups"
         return label
     }()
     

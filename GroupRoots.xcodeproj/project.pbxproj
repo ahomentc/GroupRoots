@@ -77,6 +77,7 @@
 		75D86CC22536B8A300939301 /* PostLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CC12536B8A200939301 /* PostLocation.swift */; };
 		75DD552924A2F89800FE9E7D /* LoadMoreNotificationsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */; };
 		75E1A08B244180E500F6BE74 /* SignUpTwoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */; };
+		75E21FBE25A52474004F695F /* SchoolGroupCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E21FBD25A52470004F695F /* SchoolGroupCell.swift */; };
 		75E5CBB324FACC4B0080F815 /* ContactsInviteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */; };
 		75E5CBB524FACF550080F815 /* Contact.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBB424FACF550080F815 /* Contact.swift */; };
 		75E5CBB724FAD5240080F815 /* ContactCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E5CBB624FAD5240080F815 /* ContactCell.swift */; };
@@ -205,6 +206,7 @@
 		75D86CC12536B8A200939301 /* PostLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostLocation.swift; sourceTree = "<group>"; };
 		75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadMoreNotificationsCell.swift; sourceTree = "<group>"; };
 		75E1A08A244180E500F6BE74 /* SignUpTwoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpTwoController.swift; sourceTree = "<group>"; };
+		75E21FBD25A52470004F695F /* SchoolGroupCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolGroupCell.swift; sourceTree = "<group>"; };
 		75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsInviteController.swift; sourceTree = "<group>"; };
 		75E5CBB424FACF550080F815 /* Contact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Contact.swift; sourceTree = "<group>"; };
 		75E5CBB624FAD5240080F815 /* ContactCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactCell.swift; sourceTree = "<group>"; };
@@ -350,6 +352,7 @@
 				75E62580259334A2004262D9 /* InstaPromoCell.swift */,
 				75E6258325955B30004262D9 /* SchoolUsersCell.swift */,
 				75E6258625956AAC004262D9 /* SchoolUserCell.swift */,
+				75E21FBD25A52470004F695F /* SchoolGroupCell.swift */,
 			);
 			path = ProfileFeed;
 			sourceTree = "<group>";
@@ -825,6 +828,7 @@
 				AD4D8CF12060827500A49BA4 /* UserProfileHeader.swift in Sources */,
 				75BE32DC24E22E1800310BA4 /* ResetController.swift in Sources */,
 				7578BB2023D27CFB00AF9BFB /* GroupProfileEmptyStateCell.swift in Sources */,
+				75E21FBE25A52474004F695F /* SchoolGroupCell.swift in Sources */,
 				AD4D8CEE2060648B00A49BA4 /* UserProfileController.swift in Sources */,
 				75BB489123DACD5100CF008F /* FeedPostCell.swift in Sources */,
 				AD2A2CB1205C88DE0023D5C8 /* AppDelegate.swift in Sources */,

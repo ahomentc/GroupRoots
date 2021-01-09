@@ -98,7 +98,7 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
 //        label.isHidden = true
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Tip\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
-        attributedText.append(NSMutableAttributedString(string: "If a group is public, followers of the group\nmembers are auto subscribed to the group,\nand the group will appear in their feed.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)]))
+        attributedText.append(NSMutableAttributedString(string: "If a group is public, followers of the group\nmembers will have the group appear\nin their feeds.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)]))
         label.attributedText = attributedText
         return label
     }()

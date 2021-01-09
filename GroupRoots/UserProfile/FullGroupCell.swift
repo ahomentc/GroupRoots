@@ -222,7 +222,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         hiddenIcon.anchor(top: topAnchor, right: rightAnchor, paddingTop: 6, paddingRight: 12)
         
         contentView.addSubview(groupnameLabel)
-        groupnameLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 125, paddingLeft: 22)
+        groupnameLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 125, paddingLeft: 22, height: 30)
         
         contentView.addSubview(noPostsLabel)
         noPostsLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 170)

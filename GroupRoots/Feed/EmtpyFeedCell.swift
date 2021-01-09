@@ -59,7 +59,7 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         label.isHidden = true
         label.textColor = UIColor.black
         let attributedText = NSMutableAttributedString(string: "Follow suggested users\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
-        attributedText.append(NSMutableAttributedString(string: "and get auto subscribed to their public groups", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)]))
+        attributedText.append(NSMutableAttributedString(string: "to have their public groups in your feed", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)]))
         label.attributedText = attributedText
         label.numberOfLines = 0
         label.size(22)
