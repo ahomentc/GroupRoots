@@ -212,6 +212,7 @@ class GroupProfileController: HomePostCellViewController {
                                     let instaPromoController = InstaPromoController()
                                     instaPromoController.group = group
                                     instaPromoController.school = formatted_school
+                                    instaPromoController.isJoin = false
                                     let navController = UINavigationController(rootViewController: instaPromoController)
                                     navController.modalPresentationStyle = .fullScreen
                                     self.present(navController, animated: true, completion: nil)

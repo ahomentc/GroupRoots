@@ -108,7 +108,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
         attributedText.append(NSMutableAttributedString(string: "Photos and videos from groups you\nfollow will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSMutableAttributedString(string: "When you follow someone, you auto\nfollow their public groups too.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "When you follow someone, you'll see\nposts from their public groups.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
@@ -123,7 +123,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
         attributedText.append(NSMutableAttributedString(string: "Photos and videos of groups you\nfollow will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSMutableAttributedString(string: "When you follow someone, you auto\nfollow their public groups too.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "When you follow someone, you'll see\nposts from their public groups.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
@@ -337,7 +337,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.isHidden = true
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Auto Group Follow", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 18)])
-        attributedText.append(NSMutableAttributedString(string: "\n\nWhen you follow someone,\nyou auto follow the public\ngroups they're members of.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "\n\nWhen you follow someone\nposts from their public groups\nwill appear in the following feed.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
     }()
@@ -371,7 +371,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         return view
     }()
     
-    
     func showEmptyStateViewIfNeeded() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         Database.database().numberOfSubscriptionsForUser(withUID: currentLoggedInUserId) { (followingCount) in
@@ -380,11 +379,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.newGroupButton.isHidden = false
                     self.goButton.isHidden = true
                     self.inviteButton.isHidden = false
-//                    self.welcomeLabel.isHidden = false
                     self.noSubscriptionsLabel.isHidden = false
                     self.logoImageView.isHidden = false
-                    
-//                    TableViewHelper.EmptyMessage(message: "Welcome to GroupRoots!\n\nFollow friends to see their\ngroups in your feed", viewController: self)
+
                     UIView.animate(withDuration: 0.5, delay: 0.5, options: .curveEaseOut, animations: {
                         self.collectionView?.backgroundView?.alpha = 1
                     }, completion: nil)
@@ -841,9 +838,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     private func loadGroupPosts(){
         addGroupPosts()
-        if !isFirstView {
-            showEmptyStateViewIfNeeded()
-        }
+//        if !isFirstView {
+//            showEmptyStateViewIfNeeded()
+//        }
     }
     
     private func addGroupPosts() {
@@ -894,6 +891,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         // run below when all the group ids have been collected
         sync.notify(queue: .main) {
             let lower_sync = DispatchGroup()
+            lower_sync.enter()
             group_ids.forEach({ (groupId) in
                 lower_sync.enter()
                 // could change this function to have only posts but maybe this could be useful in the future
@@ -1043,6 +1041,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.collectionView?.refreshControl?.endRefreshing()
                 })
             })
+            lower_sync.leave()
             lower_sync.notify(queue: .main) {
                 tempGroupPosts2D.sort(by: { (p1, p2) -> Bool in
                     return p1[0].creationDate.compare(p2[0].creationDate) == .orderedDescending
@@ -1096,14 +1095,32 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.createGroupIconButton.isHidden = false
                 }
                 else if self.groupPosts2D.count == 0 {
-                    self.newGroupButton.isHidden = false
+//                    self.newGroupButton.isHidden = false
                     self.goButton.isHidden = true
-                    self.inviteButton.isHidden = false
-                    self.noSubscriptionsLabel.isHidden = false
+//                    self.inviteButton.isHidden = false
+//                    self.noSubscriptionsLabel.isHidden = false
                     self.welcomeLabel.isHidden = true
-                    self.logoImageView.isHidden = false
+//                    self.logoImageView.isHidden = false
                     self.collectionView.isHidden = true
                     self.createGroupIconButton.isHidden = true
+                    
+                    self.newGroupButton.alpha = 0
+                    self.noSubscriptionsLabel.alpha = 0
+                    self.logoImageView.alpha = 0
+                    self.inviteButton.alpha = 0
+                    
+                    UIView.animate(withDuration: 0.5) {
+                        self.newGroupButton.alpha = 1
+                        self.noSubscriptionsLabel.alpha = 1
+                        self.logoImageView.alpha = 1
+                        self.inviteButton.alpha = 1
+                    }
+                    Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
+                        self.newGroupButton.isHidden = false
+                        self.noSubscriptionsLabel.isHidden = false
+                        self.logoImageView.isHidden = false
+                        self.inviteButton.isHidden = false
+                    }
                 }
             }
         }
@@ -1346,8 +1363,17 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
 //            }
             var groupCells = school_groups.count
             if groupCells == 0 { groupCells = 1 }
-            if self.schoolPromoIsActive {
+            if self.schoolPromoIsActive && !self.userHasDonePromo && !self.userHasBlockedPromo {
                 return groupCells + 5
+            }
+            else if !self.userHasDonePromo && !self.userHasBlockedPromo {
+                let currentLoggedInUserId = Auth.auth().currentUser?.uid
+                if currentLoggedInUserId != nil && self.school_members_group_count[currentLoggedInUserId!] != nil && self.school_members_group_count[currentLoggedInUserId!]! > 0 {
+                    return groupCells + 5
+                }
+                else {
+                    return groupCells + 4
+                }
             }
             else {
                 return groupCells + 4
@@ -1386,6 +1412,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: InstaPromoExistingGroupCell.cellId, for: indexPath) as! InstaPromoExistingGroupCell
                         cell.delegate = self
                         cell.selectedSchool = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
+                        cell.promoNotActive = false
                         return cell
                     }
                     else {
@@ -1404,6 +1431,44 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 if indexPath.item == 4 {
                     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: YourGroupsCell.cellId, for: indexPath) as! YourGroupsCell
                     return cell
+                }
+            }
+            else if !self.userHasDonePromo && !self.userHasBlockedPromo {
+                let currentLoggedInUserId = Auth.auth().currentUser?.uid
+                if currentLoggedInUserId != nil && self.school_members_group_count[currentLoggedInUserId!] != nil && self.school_members_group_count[currentLoggedInUserId!]! > 0 {
+                    
+                    // only show the instaPromo with no active if there is a group
+                    if indexPath.item == 2 {
+                        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: InstaPromoExistingGroupCell.cellId, for: indexPath) as! InstaPromoExistingGroupCell
+                        cell.delegate = self
+                        cell.selectedSchool = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
+                        cell.promoNotActive = true
+                        return cell
+                    }
+                    
+                    if indexPath.item == 3 {
+                        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CreateGroupCell.cellId, for: indexPath) as! CreateGroupCell
+                        cell.selectedSchool = self.selectedSchool
+                        cell.delegate = self
+                        return cell
+                    }
+                    if indexPath.item == 4 {
+                        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: YourGroupsCell.cellId, for: indexPath) as! YourGroupsCell
+                        return cell
+                    }
+                }
+                else {
+                    // do regular here since in no groups
+                    if indexPath.item == 2 {
+                        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CreateGroupCell.cellId, for: indexPath) as! CreateGroupCell
+                        cell.selectedSchool = self.selectedSchool
+                        cell.delegate = self
+                        return cell
+                    }
+                    if indexPath.item == 3 {
+                        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: YourGroupsCell.cellId, for: indexPath) as! YourGroupsCell
+                        return cell
+                    }
                 }
             }
             else {
@@ -1488,6 +1553,28 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     return CGSize(width: view.frame.width, height: 40)
                 }
             }
+            else if !self.userHasDonePromo && !self.userHasBlockedPromo {
+                let currentLoggedInUserId = Auth.auth().currentUser?.uid
+                if currentLoggedInUserId != nil && self.school_members_group_count[currentLoggedInUserId!] != nil && self.school_members_group_count[currentLoggedInUserId!]! > 0 {
+                    if indexPath.item == 2 {
+                        return CGSize(width: view.frame.width, height: 120)
+                    }
+                    if indexPath.item == 3 {
+                        return CGSize(width: view.frame.width, height: 70)
+                    }
+                    if indexPath.item == 4 {
+                        return CGSize(width: view.frame.width, height: 40)
+                    }
+                }
+                else {
+                    if indexPath.item == 2 {
+                        return CGSize(width: view.frame.width, height: 70)
+                    }
+                    if indexPath.item == 3 {
+                        return CGSize(width: view.frame.width, height: 40)
+                    }
+                }
+            }
             else {
                 if indexPath.item == 2 {
                     return CGSize(width: view.frame.width, height: 70)
@@ -1513,16 +1600,28 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         if collectionView == self.schoolCollectionView {
             if self.schoolPromoIsActive && !self.userHasDonePromo && !self.userHasBlockedPromo && indexPath.row == 2 {
                 if self.school_members_group_count[currentLoggedInUserId] != nil && self.school_members_group_count[currentLoggedInUserId]! > 0 {
+                    // group already exists
                     let instaPromoController = InstaPromoController()
                     let formatted_school = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
                     instaPromoController.school = formatted_school
+                    instaPromoController.isJoin = true
                     let navController = UINavigationController(rootViewController: instaPromoController)
                     navController.modalPresentationStyle = .fullScreen
                     self.present(navController, animated: true, completion: nil)
                 }
                 else {
-//                    let formatted_school = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
                     self.handleShowNewGroupForSchool(school: self.selectedSchool)
+                }
+            }
+            else if !self.userHasDonePromo && !self.userHasBlockedPromo && indexPath.row == 2 {
+                if self.school_members_group_count[currentLoggedInUserId] != nil && self.school_members_group_count[currentLoggedInUserId]! > 0 {
+                    let instaPromoController = InstaPromoController()
+                    let formatted_school = self.selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
+                    instaPromoController.school = formatted_school
+                    instaPromoController.isJoin = true
+                    let navController = UINavigationController(rootViewController: instaPromoController)
+                    navController.modalPresentationStyle = .fullScreen
+                    self.present(navController, animated: true, completion: nil)
                 }
             }
         }

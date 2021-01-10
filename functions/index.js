@@ -1232,10 +1232,10 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 							    	message += ' just added you to a group'
 							    }
 							    else {
-							    	message += ' just added you to group "' + groupname.split("_-a-_").join(" ").split("_-b-_").join("'")
+							    	message += ' just added you to group "' + groupname.split("_-a-_").join(" ").split("_-b-_").join("'") + '"'
 							    }
 
-							    message += " on GroupRoots! Download the app from https://apps.apple.com/us/app/id1525863510"
+							    message += " on GroupRoots! Download the app from: https://apps.apple.com/us/app/id1525863510"
 
 							    const textMessageFirst = {
 							        body: message,

@@ -35,8 +35,8 @@ class ImportContactsCell: UICollectionViewCell {
         label.layer.zPosition = 4
         label.numberOfLines = 0
         label.textAlignment = .center
-        let attributedText = NSMutableAttributedString(string: "Connect contacts\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 15)])
-        attributedText.append(NSMutableAttributedString(string: "Find people you know", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
+        let attributedText = NSMutableAttributedString(string: "Connect contacts\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
+        attributedText.append(NSMutableAttributedString(string: "Find people you know", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 11)]))
         label.attributedText = attributedText
         return label
     }()
@@ -85,14 +85,14 @@ class ImportContactsCell: UICollectionViewCell {
 
     private func sharedInit() {
         addSubview(profileImageView)
-        profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 20, paddingLeft: 50, width: 60, height: 60)
+        profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 18, paddingLeft: 40, width: 60, height: 60)
         profileImageView.layer.cornerRadius = 30
         
         addSubview(importLabel)
         importLabel.anchor(top: profileImageView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 0, height: 60)
 
         addSubview(connectButton)
-        connectButton.anchor(top: profileImageView.bottomAnchor, left: leftAnchor, paddingTop: 64, paddingLeft: 40)
+        connectButton.anchor(top: profileImageView.bottomAnchor, left: leftAnchor, paddingTop: 58, paddingLeft: 30)
         
         self.backgroundColor = .white
         

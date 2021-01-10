@@ -38,6 +38,12 @@ class InstaPromoController: UIViewController {
         }
     }
     
+    var isJoin: Bool? {
+        didSet {
+            self.setupPromo()
+        }
+    }
+    
     var wasNavPushed: Bool? {
         didSet{
             guard let wasNavPushed = wasNavPushed else { return }
@@ -139,19 +145,29 @@ class InstaPromoController: UIViewController {
     func setupPromo() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         guard let school = school else { return }
+        guard let isJoin = isJoin else { return } // is join promo
         
         Database.database().isPromoActive(school: school, completion: { (isActive) in
             
             Database.database().userHasSeenPromoPage(school: school, uid: currentLoggedInUserId) { (err) in }
             
             if isActive {
-                Database.database().fetchSchoolPromoPayout(school: school, completion: { (payout) in
+                if isJoin {
                     let navLabel = UILabel()
-                    navLabel.text = "$" + String(payout) + " Amazon Code Promo"
+                    navLabel.text = "$10 Amazon Code Promo"
                     navLabel.font = UIFont.boldSystemFont(ofSize: 18)
                     navLabel.textColor = .white
                     self.navigationItem.titleView = navLabel
-                }) { (_) in}
+                }
+                else {
+                    Database.database().fetchSchoolPromoPayout(school: school, completion: { (payout) in
+                        let navLabel = UILabel()
+                        navLabel.text = "$" + String(payout) + " Amazon Code Promo"
+                        navLabel.font = UIFont.boldSystemFont(ofSize: 18)
+                        navLabel.textColor = .white
+                        self.navigationItem.titleView = navLabel
+                    }) { (_) in}
+                }
             }
             
             if !isActive {
@@ -209,7 +225,14 @@ class InstaPromoController: UIViewController {
                         let imageWithMembers = self.textToImage(drawText: "Reserved for:\n" + reserved_for_text as NSString, inImage: imageWithSchool, atPoint: CGPoint(x: 0, y: yForReservedFor), fontSize: 30, fontColor: .lightGray, shouldCenter: true)
                         
                         Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                            let imageWithUserCode = self.textToImage(drawText: (school + " " + user.username) as NSString, inImage: imageWithMembers, atPoint: CGPoint(x: 0, y: 1540), fontSize: 12, fontColor: .darkGray, shouldCenter: true)
+                            var identifier_text = ""
+                            if isJoin {
+                                identifier_text = user.username + " join " + school
+                            }
+                            else {
+                                identifier_text = user.username + " " + school
+                            }
+                            let imageWithUserCode = self.textToImage(drawText: identifier_text as NSString, inImage: imageWithMembers, atPoint: CGPoint(x: 0, y: 1540), fontSize: 12, fontColor: .darkGray, shouldCenter: true)
                             if isActive {
                                 self.promoImageView.image = imageWithUserCode
                             }

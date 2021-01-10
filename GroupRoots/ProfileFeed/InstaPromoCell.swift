@@ -114,6 +114,12 @@ class InstaPromoExistingGroupCell: UICollectionViewCell {
     
     var delegate: PromoDelegate?
     
+    var promoNotActive: Bool? {
+        didSet {
+            setPromoLabel()
+        }
+    }
+    
     private lazy var right_arrow: CustomImageView = {
         let iv = CustomImageView()
         iv.contentMode = .scaleAspectFit
@@ -136,15 +142,7 @@ class InstaPromoExistingGroupCell: UICollectionViewCell {
 
     var selectedSchool: String? {
         didSet {
-            guard let selectedSchool = selectedSchool else { return }
-            print(selectedSchool)
-            Database.database().fetchSchoolPromoPayout(school: selectedSchool, completion: { (payout) in
-                if payout > 0 {
-                    let attributedText = NSMutableAttributedString(string: "You're one of the first people!\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
-                    attributedText.append(NSMutableAttributedString(string: "Post the group you're in on your Instagram\nStory for a $" + String(payout) + " Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
-                    self.promoLabel.attributedText = attributedText
-                }
-            }) { (_) in}
+            setPromoLabel()
         }
     }
     
@@ -168,6 +166,21 @@ class InstaPromoExistingGroupCell: UICollectionViewCell {
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         sharedInit()
+    }
+    
+    func setPromoLabel() {
+        guard let promoNotActive = promoNotActive else { return }
+        
+        if promoNotActive {
+            let attributedText = NSMutableAttributedString(string: "Share your group reservation!\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
+            attributedText.append(NSMutableAttributedString(string: "View the reservation picture\nfor the group you're in", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
+            self.promoLabel.attributedText = attributedText
+        }
+        else {
+            let attributedText = NSMutableAttributedString(string: "You're one of the first people!\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
+            attributedText.append(NSMutableAttributedString(string: "Post the group you're in on your Instagram\nStory for a $10 Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
+            self.promoLabel.attributedText = attributedText
+        }
     }
     
     private func sharedInit() {

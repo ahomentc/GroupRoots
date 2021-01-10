@@ -137,7 +137,7 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
-        layout.itemSize = CGSize(width: 160, height: 200)
+        layout.itemSize = CGSize(width: 140, height: 190)
         layout.minimumLineSpacing = CGFloat(15)
         collectionView = UICollectionView(frame: CGRect(x: 0, y: UIScreen.main.bounds.height/3 + 20 - 60, width: UIScreen.main.bounds.width, height: 210), collectionViewLayout: layout)
         collectionView.delegate = self
@@ -160,7 +160,7 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         collectionView.layer.shadowColor = UIColor.black.cgColor
         collectionView.layer.shadowOffset = CGSize(width: 0, height: 1.0)
         collectionView.layer.shadowOpacity = 0.2
-        collectionView.layer.shadowRadius = 4.0
+        collectionView.layer.shadowRadius = 3.0
     }
     
     func fetchRecommendedUsers(){
@@ -307,7 +307,7 @@ class EmptyFeedPostCell: UICollectionViewCell, UICollectionViewDataSource, UICol
 extension EmptyFeedPostCell: UICollectionViewDelegateFlowLayout {
     
     private func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewFlowLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 160, height: 200)
+        return CGSize(width: 140, height: 190)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
