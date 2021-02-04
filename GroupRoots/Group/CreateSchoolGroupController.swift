@@ -1,9 +1,9 @@
 //
-//  CreateGroup.swift
-//  InstagramClone
+//  CreateSchoolGroupController.swift
+//  GroupRoots
 //
-//  Created by Andrei Homentcovschi on 1/17/20.
-//  Copyright © 2020 Andrei Homentcovschi. All rights reserved.
+//  Created by Andrei Homentcovschi on 1/12/21.
+//  Copyright © 2021 Andrei Homentcovschi. All rights reserved.
 //
 
 import UIKit
@@ -13,13 +13,13 @@ import FirebaseDatabase
 import SearchTextField
 import FirebaseStorage
 
-protocol CreateGroupControllerDelegate {
+protocol CreateSchoolGroupControllerDelegate {
     func shouldOpenGroup(groupId: String)
 }
 
-class CreateGroupController: UIViewController, UINavigationControllerDelegate {
+class CreateSchoolGroupController: UIViewController, UINavigationControllerDelegate {
     
-    var delegate: CreateGroupControllerDelegate?
+    var delegate: CreateSchoolGroupControllerDelegate?
     var delegateForInvite: InviteToGroupWhenCreateControllerDelegate?
     
     private var isPrivate: Bool = false
@@ -86,7 +86,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     
     private let createGroupButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Create", for: .normal)
+        button.setTitle("Next", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         button.layer.cornerRadius = 5
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
@@ -223,14 +223,14 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         radioButtonsStack.axis = .horizontal
         radioButtonsStack.spacing = 10
         
-        let stackView = UIStackView(arrangedSubviews: [groupnameTextField, bioTextField, radioButtonsStack, createGroupButton])
-        stackView.distribution = .fillEqually
-        stackView.axis = .vertical
-        stackView.spacing = 15
+        let stackViewSchool = UIStackView(arrangedSubviews: [groupnameTextField, bioTextField, radioButtonsStack, createGroupButton])
+        stackViewSchool.distribution = .fillEqually
+        stackViewSchool.axis = .vertical
+        stackViewSchool.spacing = 15
+        stackViewSchool.isHidden = false
         
-        view.addSubview(stackView)
-        stackView.anchor(top: linkSchools.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 25, paddingLeft: 40, paddingRight: 40, height: 230)
-        
+        view.addSubview(stackViewSchool)
+        stackViewSchool.anchor(top: linkSchools.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 25, paddingLeft: 40, paddingRight: 40, height: 230)
     }
     
     private func resetInputFields() {
@@ -290,7 +290,6 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         
         if groupname != nil && groupname != "" {
             formatedGroupname = groupname!.replacingOccurrences(of: " ", with: "_-a-_").replacingOccurrences(of: "‘", with: "_-b-_").replacingOccurrences(of: "'", with: "_-b-_").replacingOccurrences(of: "’", with: "_-b-_")
-            print(formatedGroupname)
             if formatedGroupname.range(of: #"^[a-zA-Z0-9‘_ -]*$"#, options: .regularExpression) == nil {
                 let alert = UIAlertController(title: "Group name invalid", message: "Please enter a Group name with no symbols", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
@@ -317,7 +316,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
 //                self.delegate?.shouldOpenGroup(groupId: groupId)
 //            })
 //            NotificationCenter.default.post(name: NSNotification.Name("createdGroup"), object: nil)
-            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+//            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
             NotificationCenter.default.post(name: NSNotification.Name.updateGroupsToPostTo, object: nil)
             Database.database().groupExists(groupId: groupId, completion: { (exists) in
                 if exists {
@@ -358,7 +357,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
 
 //MARK: UIImagePickerControllerDelegate
 
-extension CreateGroupController: UIImagePickerControllerDelegate {
+extension CreateSchoolGroupController: UIImagePickerControllerDelegate {
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         // Local variable inserted by Swift 4.2 migrator.
         let info = convertFromUIImagePickerControllerInfoKeyDictionary(info)
@@ -378,7 +377,7 @@ extension CreateGroupController: UIImagePickerControllerDelegate {
 
 //MARK: - UITextFieldDelegate
 
-extension CreateGroupController: UITextFieldDelegate {
+extension CreateSchoolGroupController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
@@ -389,4 +388,5 @@ extension CreateGroupController: UITextFieldDelegate {
 fileprivate func convertFromUIImagePickerControllerInfoKeyDictionary(_ input: [UIImagePickerController.InfoKey: Any]) -> [String: Any] {
     return Dictionary(uniqueKeysWithValues: input.map {key, value in (key.rawValue, value)})
 }
+
 

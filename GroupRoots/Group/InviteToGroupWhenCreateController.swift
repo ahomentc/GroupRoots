@@ -13,6 +13,7 @@ import FirebaseDatabase
 import ContactsUI
 import PhoneNumberKit
 import DGCollectionViewLeftAlignFlowLayout
+import NVActivityIndicatorView
 
 protocol InviteToGroupWhenCreateControllerDelegate {
     func shouldOpenGroup(groupId: String)
@@ -22,9 +23,12 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
     
     var group: Group? {
         didSet {
-//            self.addedCollectionView.reloadData()
+            setSchool()
         }
     }
+    
+    var isPromoActive = false
+    var school = ""
     
     var delegate: InviteToGroupWhenCreateControllerDelegate?
     
@@ -67,7 +71,9 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
             sb.backgroundImage = UIImage()
             UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).backgroundColor = UIColor.rgb(red: 240, green: 240, blue: 240)
             return sb
-        }()
+    }()
+    
+    let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
     
     private var filteredUsers = [User]()
     private var filteredContacts = [Contact]()
@@ -165,6 +171,10 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
         }
         
         self.importAllContacts()
+        
+        self.view.insertSubview(activityIndicatorView, at: 20)
+        activityIndicatorView.color = .black
+        activityIndicatorView.isHidden = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -178,11 +188,49 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
         navigationController?.view.layoutIfNeeded()
     }
     
+    func setSchool() {
+        guard let group = group else { return }
+        Database.database().fetchSchoolOfGroup(group: group.groupId, completion: { (school) in
+            if school != "" {
+                let formatted_school = school.replacingOccurrences(of: " ", with: "_-a-_")
+                self.school = formatted_school
+                Database.database().isPromoActive(school: formatted_school, completion: { (isActive) in
+                    self.isPromoActive = isActive
+                }) { (_) in}
+            }
+        }) { (_) in}
+    }
+    
     @objc private func cancelSelected(){
         guard let group = group else { self.dismiss(animated: true, completion: nil); return }
-        self.dismiss(animated: true, completion: {
-            self.delegate?.shouldOpenGroup(groupId: group.groupId)
-        })
+        
+        // make it so that cannot create group if no invites even if promo isn't active
+//        self.dismiss(animated: true, completion: {
+//            Database.database().deleteGroup(groupId: group.groupId, school: self.school) { (_) in
+//                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+//            }
+//        })
+        
+        self.activityIndicatorView.isHidden = false
+        activityIndicatorView.startAnimating()
+        Database.database().deleteGroup(groupId: group.groupId, school: self.school) { (_) in
+//            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+            self.dismiss(animated: true, completion: nil)
+        }
+        
+//        if self.isPromoActive {
+//            self.dismiss(animated: true, completion: {
+//                // delete the group async and do a post notification to reload Feed
+//                Database.database().deleteGroup(groupId: group.groupId, school: self.school) { (_) in
+//                    NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+//                }
+//            })
+//        }
+//        else {
+//            self.dismiss(animated: true, completion: {
+//                self.delegate?.shouldOpenGroup(groupId: group.groupId)
+//            })
+//        }
     }
     
     @objc private func inviteButtonClicked(){
@@ -265,7 +313,7 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
                             alertsToPresent.removeFirst()
                             sync.leave()
                        }
-                   }
+                    }
                     
                     for (i, number) in contact.phone_numbers.enumerated() {
                         let action = UIAlertAction(title: number?.value.stringValue, style: .default, handler: closure(i))
@@ -288,6 +336,7 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
                 self.dismiss(animated: true, completion: {
                     self.delegate?.shouldOpenGroup(groupId: group.groupId)
                 })
+                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
                 NotificationCenter.default.post(name: NSNotification.Name("createdGroup"), object: nil)
                 // also add a little message for when this closes saying something about invited
             }

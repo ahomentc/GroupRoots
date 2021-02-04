@@ -73,7 +73,7 @@ class SchoolGroupCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
         button.backgroundColor = UIColor.white
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         button.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
-        button.layer.cornerRadius = 5
+        button.layer.cornerRadius = 7
         button.layer.borderWidth = 1
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.isUserInteractionEnabled = true
@@ -90,7 +90,7 @@ class SchoolGroupCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
         button.setTitleColor(.black, for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         button.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
-        button.layer.cornerRadius = 5
+        button.layer.cornerRadius = 7
         button.layer.borderWidth = 1
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.isUserInteractionEnabled = true
@@ -107,11 +107,29 @@ class SchoolGroupCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
         button.setTitleColor(.black, for: .normal)
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         button.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
-        button.layer.cornerRadius = 5
+        button.layer.cornerRadius = 7
         button.layer.borderWidth = 1
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.isUserInteractionEnabled = true
         button.isHidden = true
+        return button
+    }()
+    
+    private lazy var viewGroupButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.addTarget(self, action: #selector(handleGroupTap), for: .touchUpInside)
+        button.setTitle("Open Group Profile", for: .normal)
+//        button.backgroundColor = UIColor.clear
+        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+        button.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        button.layer.cornerRadius = 10
+//        button.layer.borderWidth = 1
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.isUserInteractionEnabled = true
+        button.isHidden = false
         return button
     }()
     
@@ -158,17 +176,23 @@ class SchoolGroupCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
     private func sharedInit() {
         self.backgroundColor = UIColor(white: 0, alpha: 0)
         
-        contentView.addSubview(groupnameLabel)
-        groupnameLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 130, paddingLeft: 30, height: 30)
+//        contentView.addSubview(groupnameLabel)
+//        groupnameLabel.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 130, paddingLeft: 30, height: 30)
         
         contentView.addSubview(subscribeButton)
-        subscribeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 125, paddingRight: 35, height: 40)
+        subscribeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 120, paddingRight: 35, height: 40)
         
         contentView.addSubview(unsubscribeButton)
-        unsubscribeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 125, paddingRight: 35, height: 40)
+        unsubscribeButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 120, paddingRight: 35, height: 40)
         
         contentView.addSubview(requestedButton)
-        requestedButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 125, paddingRight: 35, height: 40)
+        requestedButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 120, paddingRight: 35, height: 40)
+        
+//        contentView.addSubview(viewGroupButton)
+//        viewGroupButton.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 180, paddingLeft: 80, paddingRight: 80, height: 40)
+        
+        contentView.addSubview(viewGroupButton)
+        viewGroupButton.anchor(top: topAnchor, left: leftAnchor, paddingTop: 120, paddingLeft: 30, width: 200, height: 40)
         
         let separatorView = UIView()
         separatorView.backgroundColor = UIColor(white: 0, alpha: 0.25)

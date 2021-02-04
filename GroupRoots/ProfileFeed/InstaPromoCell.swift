@@ -149,7 +149,7 @@ class InstaPromoExistingGroupCell: UICollectionViewCell {
     private let promoLabel: UILabel = {
         let label = UILabel()
         let attributedText = NSMutableAttributedString(string: "You're one of the first people!\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
-        attributedText.append(NSMutableAttributedString(string: "Post the group you're in on your Instagram\nStory for a Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
+        attributedText.append(NSMutableAttributedString(string: "Post the group you joined on your Instagram\nStory for a Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
         label.attributedText = attributedText
         label.numberOfLines = 0
         label.textAlignment = .center
@@ -178,7 +178,7 @@ class InstaPromoExistingGroupCell: UICollectionViewCell {
         }
         else {
             let attributedText = NSMutableAttributedString(string: "You're one of the first people!\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 14)])
-            attributedText.append(NSMutableAttributedString(string: "Post the group you're in on your Instagram\nStory for a $10 Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
+            attributedText.append(NSMutableAttributedString(string: "Post the group you joined on your Instagram\nStory for a $10 Amazon gift card code.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)]))
             self.promoLabel.attributedText = attributedText
         }
     }
@@ -247,6 +247,57 @@ class NoGroupsInSchoolCell: UICollectionViewCell {
 
         addSubview(noGroupsLabel)
         noGroupsLabel.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 15, paddingRight: 15)
+    }
+}
+
+class UnlockCell: UICollectionViewCell {
+    
+    private let unlockLabel: UILabel = {
+        let label = UILabel()
+        let attributedText = NSMutableAttributedString(string: "Create or join a group to see the\nrest of the groups in your school", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16), NSAttributedString.Key.foregroundColor: UIColor.black])
+        label.attributedText = attributedText
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        return label
+    }()
+    
+    static var cellId = "UnlockCellId"
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        sharedInit()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        sharedInit()
+    }
+    
+    private func sharedInit() {
+        self.backgroundColor = UIColor.init(white: 0.97, alpha: 1)
+        
+        let separatorView = UIView()
+        separatorView.backgroundColor = UIColor(white: 0.75, alpha: 1)
+        contentView.addSubview(separatorView)
+        separatorView.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: -1, height: 1)
+        
+        let separatorView2 = UIView()
+        separatorView2.backgroundColor = UIColor(white: 0.87, alpha: 1)
+        contentView.addSubview(separatorView2)
+        separatorView2.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 0, height: 1)
+        
+        let separatorView3 = UIView()
+        separatorView3.backgroundColor = UIColor(white: 0.95, alpha: 1)
+        contentView.addSubview(separatorView3)
+        separatorView3.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 1, height: 1)
+        
+        let separatorView4 = UIView()
+        separatorView4.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        contentView.addSubview(separatorView4)
+        separatorView4.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingBottom: 0, height: 1)
+
+        addSubview(unlockLabel)
+        unlockLabel.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 15, paddingBottom: 5, paddingRight: 15)
     }
 }
 

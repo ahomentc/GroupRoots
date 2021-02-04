@@ -13,6 +13,7 @@ import FirebaseDatabase
 
 protocol SchoolUsersCellDelegate {
     func didTapUser(user: User)
+    func didTapFirstFollow()
 }
 
 class SchoolUsersCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate {
@@ -34,6 +35,18 @@ class SchoolUsersCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
     
     // group_id to is_following
     var is_following_groups_in_school: [String: Bool]? {
+        didSet {
+            configureGroupHeader()
+        }
+    }
+    
+    var hideIfNoGroups: Bool? {
+        didSet {
+            configureGroupHeader()
+        }
+    }
+    
+    var schoolTemplateIsActive: Bool? {
         didSet {
             configureGroupHeader()
         }
@@ -87,6 +100,7 @@ class SchoolUsersCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
         headerCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         headerCollectionView.register(GroupProfileHeaderCell.self, forCellWithReuseIdentifier: GroupProfileHeaderCell.cellId)
         headerCollectionView.register(SchoolUserCell.self, forCellWithReuseIdentifier: SchoolUserCell.cellId)
+        headerCollectionView?.register(UnlockSchoolUserCell.self, forCellWithReuseIdentifier: UnlockSchoolUserCell.cellId)
         headerCollectionView.showsHorizontalScrollIndicator = false
         headerCollectionView.isUserInteractionEnabled = true
         headerCollectionView.allowsSelection = true
@@ -101,41 +115,13 @@ class SchoolUsersCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
     }
     
     public func configureGroupHeader(){
-        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-        guard var schoolMembers = self.schoolMembers else { return }
-        guard let school_members_group_count = school_members_group_count else { return }
-        guard let is_following_groups_in_school = is_following_groups_in_school else { return }
+        guard self.schoolMembers != nil else { return }
+        guard school_members_group_count != nil else { return }
+        guard is_following_groups_in_school != nil else { return }
+        guard hideIfNoGroups != nil else { return }
+        guard schoolTemplateIsActive != nil else { return }
         
         self.orderedSchoolMembers = self.schoolMembers!
-        
-        // order the members by number of groups
-        // randomize the first 10
-        // make the user be in position 1 of array if array length is > 1
-        // else make user be in position 0
-//
-//        schoolMembers.sort(by: { (u1, u2) -> Bool in
-//            return school_members_group_count[u1.uid]! > school_members_group_count[u2.uid]!
-//        })
-//
-//        // get array with just the first 10
-//        var firstAfterSort = schoolMembers.prefix(6)
-//
-//        firstAfterSort.shuffle()
-//
-//        self.orderedSchoolMembers = firstAfterSort + Array(schoolMembers.dropFirst(6))
-//
-//        // put current user to top of the list
-//        var indexToSwap = -1
-//        for (i,user) in self.orderedSchoolMembers.enumerated() {
-//            if user.uid == currentLoggedInUserId {
-//                indexToSwap = i
-//                break
-//            }
-//        }
-//        if indexToSwap > -1 && self.orderedSchoolMembers.count > 1 {
-//            self.orderedSchoolMembers.swapAt(1, indexToSwap)
-//        }
-//
         
         self.finishedLoading = true
         self.headerCollectionView.reloadData()
@@ -145,10 +131,35 @@ class SchoolUsersCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
         if !finishedLoading {
             return 0
         }
+        
+        let currentLoggedInUserId = Auth.auth().currentUser?.uid
+        if currentLoggedInUserId != nil && self.school_members_group_count != nil && self.hideIfNoGroups != nil && self.schoolTemplateIsActive != nil
+        {
+            let num_groups_for_user = self.school_members_group_count![currentLoggedInUserId!]
+            if (num_groups_for_user == 0 || num_groups_for_user == nil) && self.hideIfNoGroups! && self.schoolTemplateIsActive!{
+                return 11
+            }
+            else if (num_groups_for_user == 0 || num_groups_for_user == nil) && self.hideIfNoGroups! && orderedSchoolMembers.count > 11 {
+                return 11
+            }
+        }
         return orderedSchoolMembers.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let currentLoggedInUserId = Auth.auth().currentUser?.uid
+        if currentLoggedInUserId != nil && self.school_members_group_count != nil && self.hideIfNoGroups != nil {
+            let num_groups_for_user = self.school_members_group_count![currentLoggedInUserId!]
+            if (num_groups_for_user == 0 || num_groups_for_user == nil) && self.hideIfNoGroups! && indexPath.item == 10 {
+                let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: UnlockSchoolUserCell.cellId, for: indexPath) as! UnlockSchoolUserCell
+                cell.layer.backgroundColor = UIColor.clear.cgColor
+//                cell.layer.borderWidth = 1
+//                cell.layer.cornerRadius = 5
+//                cell.layer.borderColor = UIColor.init(white: 0.9, alpha: 1).cgColor
+                return cell
+            }
+        }
+        
         let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: SchoolUserCell.cellId, for: indexPath) as! SchoolUserCell
         if indexPath.item < orderedSchoolMembers.count {
             cell.user = orderedSchoolMembers[indexPath.item]
@@ -158,11 +169,6 @@ class SchoolUsersCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
         cell.group_has_profile_image = true
         cell.layer.backgroundColor = UIColor.clear.cgColor
         
-//        cell.layer.shadowColor = UIColor.black.cgColor
-//        cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
-//        cell.layer.shadowOpacity = 0.2
-//        cell.layer.shadowRadius = 2.0
-        
         cell.layer.borderWidth = 1
         cell.layer.cornerRadius = 5
         cell.layer.borderColor = UIColor.init(white: 0.9, alpha: 1).cgColor
@@ -170,6 +176,14 @@ class SchoolUsersCell: UICollectionViewCell, UICollectionViewDataSource, UIColle
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let currentLoggedInUserId = Auth.auth().currentUser?.uid
+        if currentLoggedInUserId != nil && self.school_members_group_count != nil && self.hideIfNoGroups != nil {
+            let num_groups_for_user = self.school_members_group_count![currentLoggedInUserId!]
+            if (num_groups_for_user == 0 || num_groups_for_user == nil) && self.hideIfNoGroups! && indexPath.item == 10 {
+                delegate?.didTapFirstFollow()
+                return
+            }
+        }
         delegate?.didTapUser(user: orderedSchoolMembers[indexPath.row])
     }
 }

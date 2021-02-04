@@ -826,6 +826,12 @@ exports.updateRecommendedFollowOnGroupJoin = functions.database.ref('/groups/{gr
 	}).catch(() => {return null});
 })
 
+exports.removeFromRequestedGroupsOnGroupJoin = functions.database.ref('/groups/{groupId}/members/{uid}').onCreate((snapshot, context) => {
+	const group_id = context.params.groupId;
+	const new_member_id = context.params.uid;
+	return snapshot.ref.root.child('/users/' + new_member_id + '/requestedGroups/' + group_id).remove();
+})
+
 exports.updateRecommendedFollowOnGroupSubscribe = functions.database.ref('/groupsFollowing/{user_id}/{group_id}').onCreate((snapshot, context) => {
 	const new_subscriber_id = context.params.user_id;
 	const group_id = context.params.group_id;
@@ -2016,13 +2022,13 @@ exports.updateUserAmountOnPromo = functions.database.ref("/promos/{schoolName}/p
 				count += 1;
 			})
 
-			if ( count < 5 ) {
+			if ( count < 4 ) {
 				promises.push(admin.database().ref('/promos/' + school_name + '/currentInstaPayout/').set(50));
 			}
-			else if (count < 10) {
+			else if (count < 14) {
 				promises.push(admin.database().ref('/promos/' + school_name + '/currentInstaPayout/').set(20));
 			}
-			else if (count < 20 ) {
+			else if (count < 41) {
 				promises.push(admin.database().ref('/promos/' + school_name + '/currentInstaPayout/').set(10));
 			}
 			else {

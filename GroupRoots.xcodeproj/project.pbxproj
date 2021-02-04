@@ -49,6 +49,7 @@
 		75ACAFC723F677BD00DAE747 /* FollowPageHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ACAFC623F677BD00DAE747 /* FollowPageHeader.swift */; };
 		75ACAFC923F7DE8700DAE747 /* FollowPageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ACAFC823F7DE8700DAE747 /* FollowPageCell.swift */; };
 		75ACAFCB23FBADD000DAE747 /* FeedMemberCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ACAFCA23FBADD000DAE747 /* FeedMemberCell.swift */; };
+		75B0201025AED70F00292C56 /* CreateSchoolGroupController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B0200F25AED70F00292C56 /* CreateSchoolGroupController.swift */; };
 		75B65DE32408F8E8006CBA0B /* ViewersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B65DE22408F8E7006CBA0B /* ViewersController.swift */; };
 		75B65DE52408FB32006CBA0B /* ViewerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B65DE42408FB32006CBA0B /* ViewerCell.swift */; };
 		75B65DE7240A506C006CBA0B /* GroupFollowersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B65DE6240A506C006CBA0B /* GroupFollowersController.swift */; };
@@ -178,6 +179,7 @@
 		75ACAFC623F677BD00DAE747 /* FollowPageHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowPageHeader.swift; sourceTree = "<group>"; };
 		75ACAFC823F7DE8700DAE747 /* FollowPageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowPageCell.swift; sourceTree = "<group>"; };
 		75ACAFCA23FBADD000DAE747 /* FeedMemberCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedMemberCell.swift; sourceTree = "<group>"; };
+		75B0200F25AED70F00292C56 /* CreateSchoolGroupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateSchoolGroupController.swift; sourceTree = "<group>"; };
 		75B65DE22408F8E7006CBA0B /* ViewersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewersController.swift; sourceTree = "<group>"; };
 		75B65DE42408FB32006CBA0B /* ViewerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerCell.swift; sourceTree = "<group>"; };
 		75B65DE6240A506C006CBA0B /* GroupFollowersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupFollowersController.swift; sourceTree = "<group>"; };
@@ -329,6 +331,7 @@
 				756D72CA242B3247008B6F42 /* InviteToGroupCell.swift */,
 				755D9EE7243AB0C500915999 /* EditGroupController.swift */,
 				7578BB0D23D248F500AF9BFB /* CreateGroupController.swift */,
+				75B0200F25AED70F00292C56 /* CreateSchoolGroupController.swift */,
 				75E5CBB224FACC4B0080F815 /* ContactsInviteController.swift */,
 				75E5CBB624FAD5240080F815 /* ContactCell.swift */,
 				75E5CBB824FB6F280080F815 /* SearchUserForInvitationController.swift */,
@@ -761,6 +764,7 @@
 				75B65DF1241442FF006CBA0B /* SubscriptionCell.swift in Sources */,
 				75BB488F23DAB1CD00CF008F /* FeedCell.swift in Sources */,
 				AD32EF792114E4B200BB7B56 /* CustomAnimationDismissor.swift in Sources */,
+				75B0201025AED70F00292C56 /* CreateSchoolGroupController.swift in Sources */,
 				75E5CBB324FACC4B0080F815 /* ContactsInviteController.swift in Sources */,
 				75F2C2A923DD220C0037C76D /* PushNotificationManager.swift in Sources */,
 				75ACAFCB23FBADD000DAE747 /* FeedMemberCell.swift in Sources */,
@@ -934,7 +938,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -987,7 +991,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -1002,11 +1006,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GroupRoots.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 32;
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				INFOPLIST_FILE = GroupRoots/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots;
 				PRODUCT_NAME = GroupRoots;
 				SWIFT_VERSION = 4.2;
@@ -1021,11 +1025,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GroupRoots.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 32;
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				INFOPLIST_FILE = GroupRoots/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots;
 				PRODUCT_NAME = GroupRoots;
 				SWIFT_VERSION = 4.2;

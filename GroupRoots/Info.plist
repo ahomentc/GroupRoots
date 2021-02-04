@@ -36,11 +36,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>This lets you take photos and record video.</string>
+	<string>Camera access lets you take photos and record video.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Contact access to invite and find friends on GroupRoots</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save photos to camera roll.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>Contact access needed to find friends who are on GroupRoots</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This lets you share photos from your library and save photos to your Camera Roll.</string>
 	<key>UILaunchStoryboardName</key>

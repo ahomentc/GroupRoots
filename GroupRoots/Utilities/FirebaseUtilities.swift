@@ -1733,6 +1733,48 @@ extension Database {
         }
     }
     
+    func fetchFirstGroup(withUID uid: String, completion: @escaping (Group) -> (), withCancel cancel: ((Error) -> ())?) {
+        var groupUser = uid
+        if groupUser == ""{
+            groupUser = (Auth.auth().currentUser?.uid)!
+        }
+        
+        let ref = Database.database().reference().child("users").child(groupUser).child("groups")
+        ref.queryLimited(toFirst: 1).observeSingleEvent(of: .value, with: { (snapshot) in
+            var groups = [Group]()
+
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let groupId = child.key
+                sync.enter()
+                self.groupExists(groupId: groupId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                            groups.append(group)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+//            })
+            }
+            sync.notify(queue: .main) {
+                if groups.count > 0 {
+                    completion(groups[0])
+                }
+                else {
+                    let error = NSError(domain:"", code:401, userInfo:[ NSLocalizedDescriptionKey: "No groups found"])
+                    cancel?(error)
+                }
+            }
+        }) { (err) in
+            print("Failed to fetch posts:", err)
+            cancel?(err)
+        }
+    }
+    
     func fetchGroupsFollowing(withUID uid: String, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
         var groupUser = uid
         if groupUser == ""{
@@ -1875,7 +1917,7 @@ extension Database {
      
      func fetchAllGroupIds(withUID uid: String, completion: @escaping ([String]) -> (), withCancel cancel: ((Error) -> ())?) {
          var groupUser = uid
-         if groupUser == ""{
+         if groupUser == "" {
              groupUser = (Auth.auth().currentUser?.uid)!
          }
          let ref = Database.database().reference().child("users").child(groupUser).child("groups")
@@ -2293,7 +2335,14 @@ extension Database {
                 completion(err)
                 return
             }
-            completion(nil)
+            let group_values = [uid: 1]
+            Database.database().reference().child("groupInvitations").child(groupId).updateChildValues(group_values) { (err, ref) in
+                if let err = err {
+                    completion(err)
+                    return
+                }
+                completion(nil)
+            }
         }
     }
     
@@ -2309,7 +2358,16 @@ extension Database {
             let phoneNumber = try phoneNumberKit.parse(number.value.stringValue)
             let numberString = phoneNumberKit.format(phoneNumber, toType: .e164)
             
-            let invitedContactsForGroupValue = [numberString: 1] as [String : Any]
+            var full_name = ""
+            if contact.given_name != "" {
+                full_name += contact.given_name
+            }
+            if contact.family_name != "" {
+                full_name += " "
+                full_name += contact.family_name
+            }
+            
+            let invitedContactsForGroupValue = [numberString: full_name] as [String : Any]
             let invitedContactsValue = ["invitedBy": currentLoggedInUserId, "twilioNumber": "0"] as [String : Any]
             Database.database().doesNumberExist(number: numberString, completion: { (exists) in
                 if exists {
@@ -2547,6 +2605,38 @@ extension Database {
 //            completion(nil)
 //        }
 //    }
+    
+    func fetchUsersInvitedToGroup(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
+        let ref = Database.database().reference().child("groupInvitations").child(groupId)
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            var users = [User]()
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let userId = child.key
+                sync.enter()
+                self.userExists(withUID: userId, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchUser(withUID: userId, completion: { (user) in
+                            users.append(user)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                users.sort(by: { (u1, u2) -> Bool in
+                    return u1.uid.compare(u2.uid) == .orderedAscending
+                })
+                completion(users)
+            }
+        }) { (err) in
+            print("Failed to fetch all users from database:", (err))
+            cancel?(err)
+        }
+    }
         
     func isUserInvitedToGroup(withUID uid: String, groupId: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
@@ -2576,6 +2666,23 @@ extension Database {
                 return
             }
             completion(nil)
+        }
+    }
+
+    func fetchInvitedContactsForGroup(groupId: String, completion: @escaping ([Contact]) -> (), withCancel cancel: ((Error) -> ())?) {
+        let ref = Database.database().reference().child("invitedContactsForGroup").child(groupId)
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            var contacts = [Contact]()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let number = child.key
+                let name = child.value as! String
+                let contact = Contact(contact:CNContact(), phone_string: number, full_name: name)
+                contacts.append(contact)
+            }
+            completion(contacts)
+        }) { (err) in
+            print("Failed to fetch all contacts from database:", (err))
+            cancel?(err)
         }
     }
     
@@ -2977,6 +3084,17 @@ extension Database {
         }
     }
     
+    func fetchSchoolCode(school: String, completion: @escaping (String) -> (), withCancel cancel: ((Error) -> ())?) {
+        Database.database().reference().child("schools").child(school).child("schoolCode").observeSingleEvent(of: .value) { (snapshot) in
+            if let val = snapshot.value as? String {
+                completion(val)
+            }
+            else {
+                completion("")
+            }
+        }
+    }
+    
     func fetchSchoolGroups(school: String, completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
         
         let selectedSchool = school.replacingOccurrences(of: " ", with: "_-a-_").replacingOccurrences(of: "_-b-_", with: "‘")
@@ -3012,7 +3130,6 @@ extension Database {
     }
     
     func fetchSchoolMembers(school: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
-//        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         let ref = Database.database().reference().child("schools").child(school).child("users")
         ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
             var users = [User]()
@@ -3036,18 +3153,75 @@ extension Database {
                 users.sort(by: { (u1, u2) -> Bool in
                     return u1.uid.compare(u2.uid) == .orderedAscending
                 })
-                
-//                // put current user to top of the list
-//                for (i,user) in users.enumerated() {
-//                    if user.uid == currentLoggedInUserId {
-//                        users.swapAt(0, i)
-//                    }
-//                }
-                
                 completion(users)
             }
         }) { (err) in
             print("Failed to fetch all users from database:", (err))
+            cancel?(err)
+        }
+    }
+    
+    func fetchTemplateMembers(completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
+        let ref = Database.database().reference().child("template").child("users")
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            var users = [User]()
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let userId = child.key
+                sync.enter()
+                self.userExists(withUID: userId, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchUser(withUID: userId, completion: { (user) in
+                            users.append(user)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                users.sort(by: { (u1, u2) -> Bool in
+                    return u1.uid.compare(u2.uid) == .orderedAscending
+                })
+                completion(users)
+            }
+        }) { (err) in
+            print("Failed to fetch all users from database:", (err))
+            cancel?(err)
+        }
+    }
+    
+    func fetchTemplateGroups(completion: @escaping ([Group]) -> (), withCancel cancel: ((Error) -> ())?) {
+        
+        let ref = Database.database().reference().child("template").child("groups")
+        
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            var groups = [Group]()
+
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                let groupId = child.key
+                sync.enter()
+                print(groupId)
+                self.groupExists(groupId: groupId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                            groups.append(group)
+                            sync.leave()
+                        })
+                    }
+                    else {
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                completion(groups)
+            }
+        }) { (err) in
+            print("Failed to fetch posts:", err)
             cancel?(err)
         }
     }
@@ -3129,6 +3303,42 @@ extension Database {
             }
         }) { (err) in
             print("Failed to check if following:", err)
+            cancel?(err)
+        }
+    }
+    
+    func isTemplateActive(school: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+        Database.database().reference().child("schools").child(school).child("useTemplate").observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(snapshot.value as! Bool)
+                }
+            } else {
+                completion(false)
+            }
+        }) { (err) in
+            print("Failed to check if template is active:", err)
+            cancel?(err)
+        }
+    }
+    
+    func hideIfNoGroups(school: String, completion: @escaping (Bool) -> (), withCancel cancel: ((Error) -> ())?) {
+        Database.database().reference().child("schools").child(school).child("hideIfNoGroups").observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.value != nil {
+                if snapshot.value! is NSNull {
+                    completion(false)
+                }
+                else {
+                    completion(snapshot.value as! Bool)
+                }
+            } else {
+                completion(false)
+            }
+        }) { (err) in
+            print("Failed to check if template is active:", err)
             cancel?(err)
         }
     }
@@ -4156,6 +4366,39 @@ extension Database {
         }) { (err) in
             print("Failed to fetch posts:", err)
             cancel?(err)
+        }
+    }
+    
+    func deleteGroup(groupId: String, school: String? = nil, completion: ((Error?) -> ())? = nil) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        Database.database().reference().child("groups").child(groupId).removeValue { (err, _) in
+            if let err = err {
+                print("Failed to delete post:", err)
+                completion?(err)
+                return
+            }
+            
+            Database.database().reference().child("users").child(currentLoggedInUserId).child("groups").child(groupId).removeValue(completionBlock: { (err, _) in
+                if let err = err {
+                    print("Failed to delete comments on post:", err)
+                    completion?(err)
+                    return
+                }
+                
+                if school != nil {
+                    Database.database().reference().child("schools").child(school!).child("groups").child(groupId).removeValue(completionBlock: { (err, _) in
+                        if let err = err {
+                            print("Failed to delete likes on post:", err)
+                            completion?(err)
+                            return
+                        }
+                        completion?(nil)
+                    })
+                }
+                else {
+                    completion?(nil)
+                }
+            })
         }
     }
     

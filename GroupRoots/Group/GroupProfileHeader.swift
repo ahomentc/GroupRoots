@@ -470,6 +470,7 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
         
         // check if user is in the group
         Database.database().isInGroup(groupId: groupId, completion: { (inGroup) in
+
             if inGroup {
                 self.joinButton.type = .leave
                 return

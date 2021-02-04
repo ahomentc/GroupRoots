@@ -210,38 +210,60 @@ class InstaPromoController: UIViewController {
                     
                     var names = [String]()
                     Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
-                        members.forEach({ (member) in
-                            if member.name != "" {
-                                names.append(member.name.capitalized)
-                            }
-                            else {
-                                names.append(member.username)
-                            }
-                        })
-                        let namesInString = self.convertNamesToString(names: names)
-                        let reserved_for_lines = self.getLines(text: namesInString, maxCharsInLine: 40)
-                        let reserved_for_text = self.convertLinesToString(lines: reserved_for_lines)
-                        
-                        let imageWithMembers = self.textToImage(drawText: "Reserved for:\n" + reserved_for_text as NSString, inImage: imageWithSchool, atPoint: CGPoint(x: 0, y: yForReservedFor), fontSize: 30, fontColor: .lightGray, shouldCenter: true)
-                        
-                        Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                            var identifier_text = ""
-                            if isJoin {
-                                identifier_text = user.username + " join " + school
-                            }
-                            else {
-                                identifier_text = user.username + " " + school
-                            }
-                            let imageWithUserCode = self.textToImage(drawText: identifier_text as NSString, inImage: imageWithMembers, atPoint: CGPoint(x: 0, y: 1540), fontSize: 12, fontColor: .darkGray, shouldCenter: true)
-                            if isActive {
-                                self.promoImageView.image = imageWithUserCode
-                            }
-                            else {
-                                self.promoImageView.image = imageWithMembers
-                            }
-                            self.promoImageView.isHidden = false
-                            self.activityIndicatorView.isHidden = true
-                        }
+                        Database.database().fetchUsersInvitedToGroup(groupId: group.groupId, completion: { (users_invited) in // fetch invited
+                            Database.database().fetchInvitedContactsForGroup(groupId: group.groupId, completion: { (contacts_invited) in
+                                members.forEach({ (member) in
+                                    if member.name != "" {
+                                        names.append(member.name.capitalized)
+                                    }
+                                    else {
+                                        names.append(member.username)
+                                    }
+                                })
+                                
+                                users_invited.forEach({ (user) in
+                                    if user.name != "" {
+                                        names.append(user.name.capitalized)
+                                    }
+                                    else {
+                                        names.append(user.username)
+                                    }
+                                })
+                                
+                                contacts_invited.forEach({ (contact) in
+                                    if contact.full_name != nil && contact.full_name != "" {
+                                        names.append(contact.full_name!.capitalized)
+                                    }
+                                })
+                                
+                                let namesInString = self.convertNamesToString(names: names)
+                                let reserved_for_lines = self.getLines(text: namesInString, maxCharsInLine: 40)
+                                let reserved_for_text = self.convertLinesToString(lines: reserved_for_lines)
+                                
+                                let imageWithMembers = self.textToImage(drawText: "Reserved for:\n" + reserved_for_text as NSString, inImage: imageWithSchool, atPoint: CGPoint(x: 0, y: yForReservedFor), fontSize: 30, fontColor: .lightGray, shouldCenter: true)
+                                
+                                Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
+                                    var identifier_text = ""
+                                    if isJoin {
+        //                                identifier_text = user.username + " join " + school
+                                        identifier_text = user.username + " join"
+                                    }
+                                    else {
+        //                                identifier_text = user.username + " " + school
+                                        identifier_text = user.username
+                                    }
+                                    let imageWithUserCode = self.textToImage(drawText: identifier_text as NSString, inImage: imageWithMembers, atPoint: CGPoint(x: 0, y: 1540), fontSize: 12, fontColor: .darkGray, shouldCenter: true)
+                                    if isActive {
+                                        self.promoImageView.image = imageWithUserCode
+                                    }
+                                    else {
+                                        self.promoImageView.image = imageWithMembers
+                                    }
+                                    self.promoImageView.isHidden = false
+                                    self.activityIndicatorView.isHidden = true
+                                }
+                            }) { (_) in}
+                        }) { (_) in}
                     }) { (_) in}
                 }
             }) { (_) in }

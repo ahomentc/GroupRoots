@@ -245,6 +245,8 @@ class SignUpAfterPhoneController: UIViewController, UINavigationControllerDelega
         guard let number = number else { return }
         guard let currentLoggedInUser = Auth.auth().currentUser else { return }
         
+        nextButton.isEnabled = false
+        
 //     username regex:   ^[a-zA-Z0-9_-]*$   must match
         if username.range(of: #"^[a-zA-Z0-9_-]*$"#, options: .regularExpression) == nil {
             let alert = UIAlertController(title: "Username invalid", message: "Please enter a username with no symbols (underscore is okay)", preferredStyle: .alert)

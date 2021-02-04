@@ -97,8 +97,10 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
         label.numberOfLines = 0
 //        label.isHidden = true
         label.textAlignment = .center
-        let attributedText = NSMutableAttributedString(string: "Tip\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
-        attributedText.append(NSMutableAttributedString(string: "If a group is public, followers of the group\nmembers will have the group appear\nin their feeds.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)]))
+//        let attributedText = NSMutableAttributedString(string: "Tip\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
+//        attributedText.append(NSMutableAttributedString(string: "If a group is public, followers of the group\nmembers will have the group appear\nin their feeds.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)]))
+        let attributedText = NSMutableAttributedString(string: "Tip\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 16)])
+        attributedText.append(NSMutableAttributedString(string: "Group profiles can be public or private.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)]))
         label.attributedText = attributedText
         return label
     }()
@@ -198,7 +200,7 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
 //        skipLabel.anchor(top: view.topAnchor, left: view.leftAnchor, paddingTop: 35, paddingLeft: 25)
         
         view.addSubview(doneLabel)
-        doneLabel.anchor(top: view.topAnchor, right: view.rightAnchor, paddingTop: 35, paddingRight: 25)
+        doneLabel.anchor(top: view.topAnchor, right: view.rightAnchor, paddingTop: 45, paddingRight: 25)
         
         view.addSubview(notInvitedLabel)
         notInvitedLabel.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/2 - 110, height: 70)

@@ -18,14 +18,18 @@ struct Contact: Equatable {
     let phone_numbers: [CNLabeledValue<CNPhoneNumber>?]
     let identifier: String
     let selected_phone_number: CNLabeledValue<CNPhoneNumber>?
+    let phone_string: String?
+    let full_name: String?
     
-    init(contact: CNContact, selected_number: CNLabeledValue<CNPhoneNumber>? = nil) {
+    init(contact: CNContact, selected_number: CNLabeledValue<CNPhoneNumber>? = nil, phone_string: String? = nil, full_name: String? = nil) {
         self.contact = contact
         self.given_name = contact.givenName
         self.family_name = contact.familyName
         self.phone_numbers = contact.phoneNumbers
         self.identifier = contact.identifier
         self.selected_phone_number = selected_number
+        self.phone_string = phone_string
+        self.full_name = full_name
     }
     
     static func ==(lhs: Contact, rhs: Contact) -> Bool {

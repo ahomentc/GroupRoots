@@ -108,6 +108,14 @@ class UserCell: UICollectionViewCell {
         
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        self.backgroundColor = UIColor.clear
+        self.user = nil
+        self.profileImageView.image = CustomImageView.imageWithColor(color: .white)
+        self.usernameLabel.text = ""
+    }
+    
     private func configureCell() {
         usernameLabel.text = user?.username
         if let profileImageUrl = user?.profileImageUrl {

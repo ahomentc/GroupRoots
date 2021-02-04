@@ -332,6 +332,7 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
         tabBar.tintColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
 //        tabBar.unselectedItemTintColor = UIColor.gray
         tabBar.unselectedItemTintColor = UIColor.darkGray
+        
     }
     
     @objc private func makeNotificationIconRead(){

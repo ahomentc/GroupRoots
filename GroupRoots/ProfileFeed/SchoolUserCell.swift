@@ -85,6 +85,14 @@ class SchoolUserCell: UICollectionViewCell {
         
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        self.backgroundColor = UIColor.clear
+        self.user = nil
+        self.profileImageView.image = CustomImageView.imageWithColor(color: .white)
+        self.usernameLabel.text = ""
+    }
+    
     private func configureCell() {
         guard group_has_profile_image != nil else { return }
         guard let user = user else { return }
@@ -322,5 +330,46 @@ private class UserProfileFollowButton: UIButton {
         isUserInteractionEnabled = false
     }
     
+}
+
+
+
+
+// MARK: UnlockUserCell
+class UnlockSchoolUserCell: UICollectionViewCell {
+
+    private let unlockLabel: UILabel = {
+        let label = UILabel()
+        let attributedText = NSMutableAttributedString(string: "+", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 25), NSAttributedString.Key.foregroundColor: UIColor.darkGray])
+        attributedText.append(NSMutableAttributedString(string: "\nSee More", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16), NSAttributedString.Key.foregroundColor: UIColor.darkGray]))
+        label.attributedText = attributedText
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        return label
+    }()
+
+    static var cellId = "unlockSchoolUserCellId"
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        sharedInit()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        sharedInit()
+    }
+    
+    private func sharedInit() {
+        configureCell()
+    }
+    
+    private func configureCell() {        
+//        addSubview(unlockLabel)
+//        unlockLabel.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 80)
+        
+        addSubview(unlockLabel)
+        unlockLabel.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: 15, paddingBottom: 5, paddingRight: 15)
+    }
 }
 

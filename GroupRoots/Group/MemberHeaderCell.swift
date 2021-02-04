@@ -177,6 +177,10 @@ class GroupProfileHeaderCell: UICollectionViewCell {
         profileImageView.image = CustomImageView.imageWithColor(color: .white)
         self.userOneImageView.image = CustomImageView.imageWithColor(color: .white)
         self.userTwoImageView.image = CustomImageView.imageWithColor(color: .white)
+        self.profileImageUrl = nil
+        self.userOneImageUrl = nil
+        self.userTwoImageUrl = nil
+        self.groupname = nil
     }
     
     private func sharedInit() {
