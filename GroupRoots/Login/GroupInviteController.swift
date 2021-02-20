@@ -154,12 +154,26 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
     
     private let codeButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Done", for: .normal)
+        button.setTitle("Join", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
         button.layer.cornerRadius = 5
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(handleSubmitCode), for: .touchUpInside)
+        button.isEnabled = true
+        return button
+    }()
+    
+    private let noCodeButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Nope", for: .normal)
+        button.backgroundColor = UIColor.white
+        button.layer.cornerRadius = 5
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.setTitleColor(UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
+        button.addTarget(self, action: #selector(doneSelected), for: .touchUpInside)
         button.isEnabled = true
         return button
     }()
@@ -185,25 +199,19 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
             overrideUserInterfaceStyle = .light
         }
         
-        navigationItem.title = "Group Invite Code"
-        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18)]
-        navigationController?.navigationBar.titleTextAttributes = textAttributes
-        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Skip", style: .plain, target: self, action: #selector(doneSelected))
-        navigationItem.leftBarButtonItem?.tintColor = .black
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneSelected))
-        navigationItem.rightBarButtonItem?.tintColor = .black
+//        navigationItem.title = "Group Invite Code"
+//        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18)]
+//        navigationController?.navigationBar.titleTextAttributes = textAttributes
+//        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Skip", style: .plain, target: self, action: #selector(doneSelected))
+//        navigationItem.leftBarButtonItem?.tintColor = .black
+//        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneSelected))
+//        navigationItem.rightBarButtonItem?.tintColor = .black
         
         view.backgroundColor = .white
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTapOnView)))
         
-//        view.addSubview(skipLabel)
-//        skipLabel.anchor(top: view.topAnchor, left: view.leftAnchor, paddingTop: 35, paddingLeft: 25)
-        
-        view.addSubview(doneLabel)
-        doneLabel.anchor(top: view.topAnchor, right: view.rightAnchor, paddingTop: 45, paddingRight: 25)
-        
         view.addSubview(notInvitedLabel)
-        notInvitedLabel.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/2 - 110, height: 70)
+        notInvitedLabel.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/2 - 160, height: 70)
         
         view.addSubview(invitedLabel)
         invitedLabel.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/4, height: 110)
@@ -246,10 +254,24 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
     }
     
     @objc private func doneSelected(){
-        if let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController {
-            mainTabBarController.setupViewControllers()
-            mainTabBarController.selectedIndex = 0
-            self.dismiss(animated: true, completion: nil)
+        UIView.animate(withDuration: 1) {
+            self.doneButton.alpha = 0
+            self.userTwoImageView.alpha = 0
+            self.userOneImageView.alpha = 0
+            self.profileImageView.alpha = 0
+            self.tipLabel.alpha = 0
+            self.skipLabel.alpha = 0
+            self.invitedLabel.alpha = 0
+            self.notInvitedLabel.alpha = 0
+            self.doneLabel.alpha = 0
+            self.codeButton.alpha = 0
+            self.noCodeButton.alpha = 0
+            self.inviteCodeTextField.alpha = 0
+        }
+        Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { timer in
+            let introDescriptionController = IntroDescriptionController()
+            introDescriptionController.isInvited = self.isInvited
+            self.navigationController?.pushViewController(introDescriptionController, animated: false)
         }
     }
     
@@ -293,13 +315,13 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
     }
     
     func setupGroupNoInvite(){
-        let stackView = UIStackView(arrangedSubviews: [self.inviteCodeTextField, self.codeButton])
+        let stackView = UIStackView(arrangedSubviews: [self.inviteCodeTextField, self.codeButton, self.noCodeButton])
         stackView.distribution = .fillEqually
         stackView.axis = .vertical
-        stackView.spacing = 25
+        stackView.spacing = 10
         
         self.view.addSubview(stackView)
-        stackView.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/2 - 20, paddingLeft: 40, paddingRight: 40, height: 110)
+        stackView.anchor(top: self.view.topAnchor, left: self.view.leftAnchor, right: self.view.rightAnchor, paddingTop: UIScreen.main.bounds.height/2 - 70, paddingLeft: 40, paddingRight: 40, height: 165)
         
         // displays elements to add a group invite code
         self.notInvitedLabel.isHidden = false
@@ -353,6 +375,7 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
         inviteCodeTextField.text = ""
         inviteCodeTextField.isUserInteractionEnabled = true
         codeButton.isEnabled = true
+        noCodeButton.isEnabled = true
     }
     
     @objc private func handleTapOnView(_ sender: UITextField) {
@@ -363,6 +386,7 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
         let code = inviteCodeTextField.text
         inviteCodeTextField.isUserInteractionEnabled = false
         codeButton.isEnabled = false
+        noCodeButton.isEnabled = false
         
         if code == "" {
             if let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController {

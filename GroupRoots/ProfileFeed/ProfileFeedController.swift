@@ -50,7 +50,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     // ---- school view data structures ----
     var selectedSchool = ""
-    var isSchoolView = true
+    var isSchoolView = false
     private var fetchedSchoolGroups = false
     private var isInGroupFollowPendingDict = [String: Bool]()
     private var isInGroupFollowersDict = [String: Bool]()
@@ -171,15 +171,15 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         return button
     }()
     
-    private lazy var inviteButton: UIButton = {
+    private lazy var createFirstPostbutton: UIButton = {
         let button = UIButton()
-        button.addTarget(self, action: #selector(handleShowInviteCode), for: .touchUpInside)
+        button.addTarget(self, action: #selector(handleShowCreateFirstPost), for: .touchUpInside)
         button.layer.zPosition = 4;
         button.isHidden = true
         button.backgroundColor = UIColor(white: 0.9, alpha: 1)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        button.setTitle("Enter a Group Invite Code", for: .normal)
+        button.setTitle("Create your first post", for: .normal)
         return button
     }()
     
@@ -546,7 +546,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 if followingCount == 0 && groupsCount == 0 {
                     self.newGroupButton.isHidden = false
                     self.goButton.isHidden = true
-                    self.inviteButton.isHidden = false
+                    self.createFirstPostbutton.isHidden = false
                     self.noSubscriptionsLabel.isHidden = false
                     self.logoImageView.isHidden = false
 
@@ -583,6 +583,11 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         if #available(iOS 13.0, *) {
             overrideUserInterfaceStyle = .light
         }
+        
+//        let introDescController = IntroDescriptionController()
+//        let descNavController = UINavigationController(rootViewController: introDescController)
+//        descNavController.modalPresentationStyle = .fullScreen
+//        self.present(descNavController, animated: true, completion: nil)
         
         if let hasOpenedAppRetrieved = UserDefaults.standard.object(forKey: "hasOpenedApp") as? Data {
             guard let hasOpenedApp = try? JSONDecoder().decode(Bool.self, from: hasOpenedAppRetrieved) else {
@@ -622,13 +627,21 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         noSubscriptionsLabel.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-150, width: 300, height: 300)
         self.view.insertSubview(noSubscriptionsLabel, at: 4)
         
-        inviteButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 - 30, width: 300, height: 50)
-        inviteButton.layer.cornerRadius = 14
-        self.view.insertSubview(inviteButton, at: 4)
+        createFirstPostbutton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 - 30, width: 300, height: 50)
+        createFirstPostbutton.layer.cornerRadius = 14
+        self.view.insertSubview(createFirstPostbutton, at: 4)
         
         newGroupButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
         newGroupButton.layer.cornerRadius = 14
         self.view.insertSubview(newGroupButton, at: 4)
+        
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        Database.database().numberOfGroupsForUserGettingsAllGroups(withUID: currentLoggedInUserId, completion: { (groupsCount) in
+            self.userInAGroup = groupsCount > 0
+            if groupsCount > 0 {
+                self.newGroupButton.setTitle("View your Group", for: .normal)
+            }
+        })
         
         goButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
         goButton.layer.cornerRadius = 14
@@ -659,9 +672,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         animationsButton2.layer.cornerRadius = 14
         self.view.insertSubview(animationsButton2, at: 4)
         
-        createGroupIconButton.frame = CGRect(x: UIScreen.main.bounds.width-50, y: UIScreen.main.bounds.height/23 + 0, width: 40, height: 40)
-        createGroupIconButton.layer.cornerRadius = 14
-        self.view.insertSubview(createGroupIconButton, at: 10)
+//        createGroupIconButton.frame = CGRect(x: UIScreen.main.bounds.width-50, y: UIScreen.main.bounds.height/23 + 0, width: 40, height: 40)
+//        createGroupIconButton.layer.cornerRadius = 14
+//        self.view.insertSubview(createGroupIconButton, at: 10)
         
         followingPageButton.frame = CGRect(x: UIScreen.main.bounds.width/2 - 105, y: UIScreen.main.bounds.height/23 + 0, width: 100, height: 40)
         self.view.insertSubview(followingPageButton, at: 10)
@@ -870,7 +883,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.createGroupIconButton.isHidden = true
             self.newGroupButton.isHidden = true
             self.goButton.isHidden = true
-            self.inviteButton.isHidden = true
+            self.createFirstPostbutton.isHidden = true
             self.welcomeLabel.isHidden = true
             self.noSubscriptionsLabel.isHidden = true
             self.logoImageView.isHidden = true
@@ -1245,7 +1258,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.reloadButton.isHidden = true
             self.newGroupButton.isHidden = true
             self.goButton.isHidden = true
-            self.inviteButton.isHidden = true
+            self.createFirstPostbutton.isHidden = true
             self.welcomeLabel.isHidden = true
             self.noSubscriptionsLabel.isHidden = true
             self.logoImageView.isHidden = true
@@ -1409,7 +1422,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
 //                                TableViewHelper.EmptyMessage(message: "No posts to show\nClick the plus to post to a group", viewController: self)
 //                                self.newGroupButton.isHidden = false
 //                                self.goButton.isHidden = true
-//                                self.inviteButton.isHidden = false
+//                                self.createFirstPostbutton.isHidden = false
 //                                self.welcomeLabel.isHidden = false
 //                                self.logoImageView.isHidden = false
                                 UIView.animate(withDuration: 0.5, delay: 0.5, options: .curveEaseOut, animations: {
@@ -1458,7 +1471,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
 //                if self.isFirstView && tempGroupPosts2D.count > 0 {
                 if self.isFirstView {
                     self.newGroupButton.isHidden = true
-                    self.inviteButton.isHidden = true
+                    self.createFirstPostbutton.isHidden = true
                     self.goButton.isHidden = false
                     self.welcomeLabel.isHidden = false
                     self.logoImageView.isHidden = false
@@ -1470,7 +1483,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.activityIndicatorView.isHidden = true
                     self.newGroupButton.isHidden = true
                     self.goButton.isHidden = true
-                    self.inviteButton.isHidden = true
+                    self.createFirstPostbutton.isHidden = true
                     self.welcomeLabel.isHidden = true
                     self.noSubscriptionsLabel.isHidden = true
                     self.logoImageView.isHidden = true
@@ -1480,7 +1493,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 else if self.groupPosts2D.count == 0 {
 //                    self.newGroupButton.isHidden = false
                     self.goButton.isHidden = true
-//                    self.inviteButton.isHidden = false
+//                    self.createFirstPostbutton.isHidden = false
 //                    self.noSubscriptionsLabel.isHidden = false
                     self.welcomeLabel.isHidden = true
 //                    self.logoImageView.isHidden = false
@@ -1490,19 +1503,19 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                     self.newGroupButton.alpha = 0
                     self.noSubscriptionsLabel.alpha = 0
                     self.logoImageView.alpha = 0
-                    self.inviteButton.alpha = 0
+                    self.createFirstPostbutton.alpha = 0
                     
                     UIView.animate(withDuration: 0.5) {
                         self.newGroupButton.alpha = 1
                         self.noSubscriptionsLabel.alpha = 1
                         self.logoImageView.alpha = 1
-                        self.inviteButton.alpha = 1
+                        self.createFirstPostbutton.alpha = 1
                     }
                     Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
                         self.newGroupButton.isHidden = false
                         self.noSubscriptionsLabel.isHidden = false
                         self.logoImageView.isHidden = false
-                        self.inviteButton.isHidden = false
+                        self.createFirstPostbutton.isHidden = false
                     }
                 }
             }
@@ -1570,17 +1583,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             let refreshControlSchool = UIRefreshControl()
             refreshControlSchool.addTarget(self, action: #selector(self.handleRefresh), for: .valueChanged)
             self.schoolCollectionView.refreshControl = refreshControlSchool
-            
-            // bring the groups you have access to, to the front
-//            self.school_groups.sort(by: { (g1, g2) -> Bool in
-//                if self.canViewGroupPostsDict[g1.groupId] != nil && self.canViewGroupPostsDict[g1.groupId]! && self.canViewGroupPostsDict[g2.groupId] != nil && self.canViewGroupPostsDict[g2.groupId]! {
-//                    return g1.lastPostedDate > g2.lastPostedDate
-//                }
-//                if self.canViewGroupPostsDict[g1.groupId] != nil && self.canViewGroupPostsDict[g1.groupId]! {
-//                    return true
-//                }
-//                return false
-//            })
             
             self.schoolCollectionView?.reloadData()
             activityIndicatorView.isHidden = true
@@ -2413,13 +2415,25 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         self.showUnlockFollowPopup()
     }
     
+    // if already in a group then take to group they're in
     @objc internal func handleShowNewGroup() {
-        let createGroupController = CreateGroupController()
-        createGroupController.delegate = self
-        createGroupController.delegateForInvite = self
-        let navController = UINavigationController(rootViewController: createGroupController)
-        navController.modalPresentationStyle = .fullScreen
-        present(navController, animated: true, completion: nil)
+        if self.userInAGroup {
+            guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+            Database.database().fetchFirstGroup(withUID: currentLoggedInUserId, completion: { (group) in
+                let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
+                groupProfileController.group = group
+                groupProfileController.modalPresentationCapturesStatusBarAppearance = true
+                self.navigationController?.pushViewController(groupProfileController, animated: true)
+            }) { (_) in }
+        }
+        else {
+            let createGroupController = CreateGroupController()
+            createGroupController.delegate = self
+            createGroupController.delegateForInvite = self
+            let navController = UINavigationController(rootViewController: createGroupController)
+            navController.modalPresentationStyle = .fullScreen
+            present(navController, animated: true, completion: nil)
+        }
     }
     
     func handleShowNewGroupForSchool(school: String) {
@@ -2457,11 +2471,45 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         }) { (_) in }
     }
     
-    @objc internal func handleShowInviteCode() {
-        let introCodeController = IntroCodeController()
-        let navController = UINavigationController(rootViewController: introCodeController)
-        navController.modalPresentationStyle = .fullScreen
-        present(navController, animated: true, completion: nil)
+    @objc internal func handleShowCreateFirstPost() {
+        var config = YPImagePickerConfiguration()
+        config.library.isSquareByDefault = false
+        config.shouldSaveNewPicturesToAlbum = false
+        config.library.mediaType = .photoAndVideo
+        config.hidesStatusBar = false
+        config.startOnScreen = YPPickerScreen.library
+        config.targetImageSize = .cappedTo(size: 600)
+        config.video.compression = AVAssetExportPresetMediumQuality
+        let picker = YPImagePicker(configuration: config)
+        
+        picker.didFinishPicking { [unowned picker] items, cancelled in
+            if cancelled {
+                print("Picker was canceled")
+                picker.dismiss(animated: true, completion: nil)
+                return
+            }
+            _ = items.map { print("🧀 \($0)") }
+            if let firstItem = items.first {
+                switch firstItem {
+                case .photo(let photo):
+                    let location = photo.asset?.location
+                    // need to do self.scrollToPreSelected() too
+                    let sharePhotoController = SharePhotoController()
+                    sharePhotoController.selectedImage = photo.image
+                    sharePhotoController.suggestedLocation = location
+                    picker.pushViewController(sharePhotoController, animated: true)
+                    
+                case .video(let video):
+                    let location = video.asset?.location
+                    let sharePhotoController = SharePhotoController()
+                    sharePhotoController.selectedVideoURL = video.url
+                    sharePhotoController.selectedImage = video.thumbnail
+                    sharePhotoController.suggestedLocation = location
+                    picker.pushViewController(sharePhotoController, animated: true)
+                }
+            }
+        }
+        present(picker, animated: true, completion: nil)
     }
     
     @objc internal func handleFirstGo() {
@@ -2481,7 +2529,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         self.animationsLabel.alpha = 0
         self.newGroupButton.alpha = 1
         self.goButton.alpha = 1
-        self.inviteButton.alpha = 1
+        self.createFirstPostbutton.alpha = 1
         self.welcomeLabel.alpha = 1
         self.logoImageView.alpha = 1
         
@@ -2492,14 +2540,14 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.animationsLabel.alpha = 1
             self.newGroupButton.alpha = 0
             self.goButton.alpha = 0
-            self.inviteButton.alpha = 0
+            self.createFirstPostbutton.alpha = 0
             self.welcomeLabel.alpha = 0
             self.logoImageView.alpha = 0
         }
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
             self.newGroupButton.isHidden = true
             self.goButton.isHidden = true
-            self.inviteButton.isHidden = true
+            self.createFirstPostbutton.isHidden = true
             self.welcomeLabel.isHidden = true
             self.logoImageView.isHidden = true
         }
@@ -2721,6 +2769,11 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     
     @objc private func selectSchool() {
         let selectedSchool = searchSchoolField.text ?? ""
+        
+        if selectedSchool == "" {
+            return
+        }
+        
         let formatted_school = selectedSchool.replacingOccurrences(of: " ", with: "_-a-_")
         
         Database.database().fetchSchoolCode(school: formatted_school, completion: { (code) in

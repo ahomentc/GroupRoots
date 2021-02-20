@@ -1985,7 +1985,7 @@ extension Database {
     }
     
     func groupnameExists(groupname: String, completion: @escaping (Bool) -> ()) {
-        Database.database().reference().child("groupnames").child(groupname).observeSingleEvent(of: .value, with: { (snapshot) in
+        Database.database().reference().child("groupnames").child(groupname.replacingOccurrences(of: " ", with: "_-a-_").replacingOccurrences(of: "‘", with: "_-b-_")).observeSingleEvent(of: .value, with: { (snapshot) in
             guard (snapshot.value as? String) != nil else {
                 completion(false)
                 return
@@ -5670,6 +5670,14 @@ extension Database {
                 completion(0)
             }
         }
+    }
+    
+    func numberOfGroupsForUserGettingsAllGroups(withUID uid: String, completion: @escaping (Int) -> ()) {
+        Database.database().fetchAllGroups(withUID: uid, completion: { (groups) in
+            completion(groups.count)
+        }, withCancel: { (err) in
+            completion(0)
+        })
     }
     
     func numberOfFollowersForUser(withUID uid: String, completion: @escaping (Int) -> ()) {
