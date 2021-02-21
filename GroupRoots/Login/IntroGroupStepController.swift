@@ -14,7 +14,6 @@ import FirebaseAuth
 import FirebaseDatabase
 import SearchTextField
 import FirebaseStorage
-import NVActivityIndicatorView
 
 
 class IntroGroupStepController: UIViewController, UINavigationControllerDelegate {
@@ -132,6 +131,18 @@ class IntroGroupStepController: UIViewController, UINavigationControllerDelegate
         return label
     }()
     
+    private lazy var skipLabel: UIButton = {
+        let label = UIButton(type: .system)
+        label.setTitleColor(UIColor.init(white: 0.6, alpha: 1), for: .normal)
+        label.titleLabel?.font = UIFont.systemFont(ofSize: 18)
+        label.contentHorizontalAlignment = .center
+        label.isUserInteractionEnabled = true
+        label.setTitle("skip", for: .normal)
+        label.isHidden = true
+        label.addTarget(self, action: #selector(doneSelected), for: .touchUpInside)
+        return label
+    }()
+    
     var linkSchools = SearchTextField()
     
     private var profileImage: UIImage?
@@ -142,17 +153,14 @@ class IntroGroupStepController: UIViewController, UINavigationControllerDelegate
             overrideUserInterfaceStyle = .light
         }
         
-        navigationItem.title = "Create Group"
-        let textAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 18)]
-        navigationController?.navigationBar.titleTextAttributes = textAttributes
-        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(doneSelected))
-        navigationItem.leftBarButtonItem?.tintColor = .black
-        
         view.backgroundColor = .white
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTapOnView)))
         
         self.view.insertSubview(groupProfileTitle, at: 5)
         groupProfileTitle.anchor(top: view.topAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 45, paddingLeft: 20, paddingRight: 20)
+        
+        self.view.insertSubview(skipLabel, at: 5)
+        skipLabel.anchor(top: view.topAnchor, left: view.leftAnchor, paddingTop: 25, paddingLeft: 15)
         
         view.addSubview(plusPhotoButton)
         plusPhotoButton.anchor(top: view.safeAreaLayoutGuide.topAnchor, paddingTop: 80, width: 140, height: 140)
@@ -160,10 +168,21 @@ class IntroGroupStepController: UIViewController, UINavigationControllerDelegate
         plusPhotoButton.layer.cornerRadius = 140 / 2
         
         setupInputFields()
+        
+        // check to see if we should should the skip button
+        Database.database().isForceCreateGroupEnabled(completion: { (isEnabled) in
+            if !isEnabled {
+                self.skipLabel.isHidden = false
+            }
+        })
     }
     
     @objc private func doneSelected(){
-        self.dismiss(animated: true, completion: nil)
+        if let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController {
+            mainTabBarController.setupViewControllers()
+            mainTabBarController.selectedIndex = 0
+            self.dismiss(animated: true, completion: nil)
+        }
     }
     
     struct Response: Codable { // or Decodable

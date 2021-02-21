@@ -203,34 +203,12 @@ class InviteToGroupWhenCreateController: UIViewController, UICollectionViewDataS
     
     @objc private func cancelSelected(){
         guard let group = group else { self.dismiss(animated: true, completion: nil); return }
-        
-        // make it so that cannot create group if no invites even if promo isn't active
-//        self.dismiss(animated: true, completion: {
-//            Database.database().deleteGroup(groupId: group.groupId, school: self.school) { (_) in
-//                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-//            }
-//        })
-        
+
         self.activityIndicatorView.isHidden = false
         activityIndicatorView.startAnimating()
-        Database.database().deleteGroup(groupId: group.groupId, school: self.school) { (_) in
-//            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+        Database.database().deleteGroup(groupId: group.groupId, groupname: group.groupname, school: self.school) { (_) in
             self.dismiss(animated: true, completion: nil)
         }
-        
-//        if self.isPromoActive {
-//            self.dismiss(animated: true, completion: {
-//                // delete the group async and do a post notification to reload Feed
-//                Database.database().deleteGroup(groupId: group.groupId, school: self.school) { (_) in
-//                    NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-//                }
-//            })
-//        }
-//        else {
-//            self.dismiss(animated: true, completion: {
-//                self.delegate?.shouldOpenGroup(groupId: group.groupId)
-//            })
-//        }
     }
     
     @objc private func inviteButtonClicked(){

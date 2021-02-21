@@ -2044,15 +2044,62 @@ exports.updateUserAmountOnPromo = functions.database.ref("/promos/{schoolName}/p
 });
 
 
+// ------------------- Timer Posts -------------------
 
 
+exports.addTempPostToBucket = functions.database.ref('/posts/{group_id}/{post_id}/isTempPost').onCreate((snapshot, context) => {	
+	const post_id = context.params.post_id;
+	const group_id = context.params.group_id;
+
+	// check if temp post exists and has value of true
+	if (snapshot !== null && snapshot.val() !== null && snapshot.val() === "true") {
+		var post_date = Date.now()
+		var hour = post_date.getHours()
+
+		// set the group_id and post_id to the bucket
+		return snapshot.ref.root.child('/timerPostExpirations/' + hour + '/' + group_id + '/' + post_id).set(post_date/1000)
+	}
+});
+
+exports.deleteTempPosts = functions.pubsub.schedule('every hour').timeZone('America/Los_Angeles').onRun((context) => {
+	var post_date = Date.now()
+	var hour = post_date.getHours()
+
+	const promises = []
+
+	// get all the groups,
+	//		get all the post_ids in the group
+	//			remove the group_id/post_id in posts
+	return snapshot.ref.root.child('/timerPostExpirations/' + hour).once('value', groups_snapshot => {
+		var sync = new DispatchGroup();
+		var token_0 = sync.enter();
+		var num_groups = 0
+		groups_snapshot.forEach(function(group) {
+			num_groups += 1;
+			var token = sync.enter();
+			var group_id = group.key;
+			return snapshot.ref.root.child('/timerPostExpirations/' + hour + '/' + group_id).once('value', posts_snapshot => {
+				posts_snapshot.forEach(function(post) {
+					var post_id = post.key;
+					promises.push(snapshot.ref.root.child('/posts/' + group_id + '/' + post_id).remove())
+					sync.leave(token)
+				})
+			}).catch(() => {return null});
+		})
+		
+		sync.leave(token_0)
+		sync.notify(function() {
+			if ( num_groups > 0 ){
+				promises.push(snapshot.ref.root.child('/timerPostExpirations/' + hour).remove())
+				return Promise.all(promises);
+			}
+			return null;
+		})
+	}).catch(() => {return null});
+});
 
 
-
-
-
-
-
+// TODO: function to delete media from storage when post is deleted
 
 
 

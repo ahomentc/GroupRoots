@@ -229,7 +229,7 @@ class NotificationCell: UICollectionViewCell {
             if notification.group?.groupname ?? "" != "" {
                 groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
-            notificationsLabel.text = "subscribed to " + groupname
+            notificationsLabel.text = "followed " + groupname
             notificationsLabel.isUserInteractionEnabled = true
             let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
             notificationsLabel.addGestureRecognizer(gestureRecognizer)
@@ -239,7 +239,7 @@ class NotificationCell: UICollectionViewCell {
             if notification.group?.groupname ?? "" != "" {
                 groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
-            notificationsLabel.text = "requested subscription for " + groupname
+            notificationsLabel.text = "requested to follow " + groupname
             notificationsLabel.isUserInteractionEnabled = true
             let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
             notificationsLabel.addGestureRecognizer(gestureRecognizer)
@@ -313,7 +313,7 @@ class NotificationCell: UICollectionViewCell {
             if group.groupname != "" {
                 groupname = notification.group?.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘") ?? ""
             }
-            notificationsLabel.text = "left " + groupname + ". Unsubscribe?"
+            notificationsLabel.text = "left " + groupname + ". Unfollow?"
             notificationsLabel.isUserInteractionEnabled = true
             let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleShowGroup))
             notificationsLabel.addGestureRecognizer(gestureRecognizer)

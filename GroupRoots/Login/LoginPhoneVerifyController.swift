@@ -41,8 +41,9 @@ class LoginPhoneVerifyController: UIViewController, UINavigationControllerDelega
     
     private lazy var backLabel: UILabel = {
         let label = UILabel()
-        label.textColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
-        label.text = "back"
+//        label.textColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
+        label.textColor = UIColor.init(white: 0.6, alpha: 1)
+        label.text = "Back"
         label.isUserInteractionEnabled = true
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(goBack))
         label.addGestureRecognizer(gestureRecognizer)

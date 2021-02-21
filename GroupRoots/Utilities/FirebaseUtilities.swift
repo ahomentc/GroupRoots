@@ -4369,7 +4369,7 @@ extension Database {
         }
     }
     
-    func deleteGroup(groupId: String, school: String? = nil, completion: ((Error?) -> ())? = nil) {
+    func deleteGroup(groupId: String, groupname: String, school: String? = nil, completion: ((Error?) -> ())? = nil) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         Database.database().reference().child("groups").child(groupId).removeValue { (err, _) in
             if let err = err {
@@ -4385,18 +4385,42 @@ extension Database {
                     return
                 }
                 
-                if school != nil {
-                    Database.database().reference().child("schools").child(school!).child("groups").child(groupId).removeValue(completionBlock: { (err, _) in
+                if groupname != "" {
+                    Database.database().reference().child("groupnames").child(groupname).removeValue(completionBlock: { (err, _) in
                         if let err = err {
                             print("Failed to delete likes on post:", err)
                             completion?(err)
                             return
                         }
-                        completion?(nil)
+                        if school != nil && school != "" {
+                            Database.database().reference().child("schools").child(school!).child("groups").child(groupId).removeValue(completionBlock: { (err, _) in
+                                if let err = err {
+                                    print("Failed to delete likes on post:", err)
+                                    completion?(err)
+                                    return
+                                }
+                                completion?(nil)
+                            })
+                        }
+                        else {
+                            completion?(nil)
+                        }
                     })
                 }
                 else {
-                    completion?(nil)
+                    if school != nil && school != "" {
+                        Database.database().reference().child("schools").child(school!).child("groups").child(groupId).removeValue(completionBlock: { (err, _) in
+                            if let err = err {
+                                print("Failed to delete likes on post:", err)
+                                completion?(err)
+                                return
+                            }
+                            completion?(nil)
+                        })
+                    }
+                    else {
+                        completion?(nil)
+                    }
                 }
             })
         }
@@ -4814,7 +4838,7 @@ extension Database {
             case .newGroupSubscribe:
                 guard let group = group else { return }
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    let pushMessage = user.username + " subscribed to your group " + group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
+                    let pushMessage = user.username + " followed your group " + group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
                     PushNotificationSender().sendPushNotification(to: token, title: "New Subscription", body: pushMessage)
                     
                     // Save the notification
@@ -4831,7 +4855,7 @@ extension Database {
             case .groupSubscribeRequest:
                 guard let group = group else { return }
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
-                    let pushMessage = user.username + " requested subscription to your group " + group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
+                    let pushMessage = user.username + " requested to follow your group " + group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
                     PushNotificationSender().sendPushNotification(to: token, title: "New Subscription Request", body: pushMessage)
                     
                     // Save the notification
@@ -5535,6 +5559,21 @@ extension Database {
                     completion(false)
                 }
             })
+        }) { (err) in
+            print("Failed to fetch notification from database:", err)
+        }
+    }
+    
+    func isForceCreateGroupEnabled(completion: @escaping (Bool) -> ()) {
+        Database.database().reference().child("forceCreateGroupEnabled").observeSingleEvent(of: .value, with: { (snapshot) in
+            if let isEnabled = snapshot.value as? Bool {
+                print("isEnabled: ", isEnabled)
+                completion(isEnabled)
+            }
+            else {
+                // on by default
+                completion(true)
+            }
         }) { (err) in
             print("Failed to fetch notification from database:", err)
         }

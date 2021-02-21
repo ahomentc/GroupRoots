@@ -23,6 +23,8 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         }
     }
     
+    var isTempPost: Bool? = false
+    
     var selectedLocation: PostLocation?
     
     var preSelectedGroup: Group?
@@ -141,23 +143,8 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         return button
     }()
     
-//    private lazy var locationButton: UIButton = {
-//        let button = UIButton()
-//        button.addTarget(self, action: #selector(pickLocation), for: .touchUpInside)
-//        button.layer.zPosition = 4;
-////        button.isHidden = true
-//        button.backgroundColor = UIColor(white: 0.9, alpha: 1)
-//        button.setTitleColor(.black, for: .normal)
-//        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-//        button.setTitle("Add location", for: .normal)
-//        button.layer.cornerRadius = 14
-//        button.isUserInteractionEnabled = true
-//        return button
-//    }()
-    
     let separatorView: UIView = {
         let view = UIView()
-//        view.isHidden = true
         return view
     }()
     
@@ -181,7 +168,6 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         label.text = "Add location"
         label.textAlignment = .left
         label.backgroundColor = UIColor.white
-//        label.font = UIFont(name: "Avenir", size: 16)!
         label.font = UIFont.systemFont(ofSize: 16)
         label.isHidden = false
         let tap = UITapGestureRecognizer(target: self, action: #selector(pickLocation))
@@ -203,8 +189,6 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         button.isUserInteractionEnabled = true
         return button
     }()
-    
-//    override var prefersStatusBarHidden: Bool { return true }
     
     override func viewDidLoad() {
         super.viewDidLoad()

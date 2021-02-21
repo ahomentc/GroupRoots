@@ -338,6 +338,84 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
     @objc private func makeNotificationIconRead(){
 //        self.setupViewControllers()
     }
+    
+    // --------- Timer Posts ----------
+    
+    let timerBackground: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(white: 1, alpha: 1)
+        view.layer.zPosition = 10
+        view.layer.cornerRadius = 10
+//            view.isHidden = true
+
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 1
+        view.layer.shadowOffset = .zero
+        view.layer.shadowRadius = 150
+        view.isUserInteractionEnabled = true
+        return view
+    }()
+    
+    let timerTitleLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor.init(white: 0.5, alpha: 1)
+        label.layer.zPosition = 12
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        let attributedText = NSMutableAttributedString(string: "Keep Post", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 18)])
+        label.attributedText = attributedText
+        return label
+    }()
+    
+    let foreverButton: UIButton = {
+        let label = UIButton(type: .system)
+        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
+        label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
+        label.contentHorizontalAlignment = .center
+        label.isUserInteractionEnabled = true
+        label.layer.zPosition = 12
+        label.setTitle("Forever", for: .normal)
+        label.addTarget(self, action: #selector(goToPostPage), for: .touchUpInside)
+        return label
+    }()
+    
+    let oneDayButton: UIButton = {
+        let label = UIButton(type: .system)
+        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
+        label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
+        label.contentHorizontalAlignment = .center
+        label.isUserInteractionEnabled = true
+        label.layer.zPosition = 12
+        label.setTitle("One Day", for: .normal)
+        label.addTarget(self, action: #selector(goToPostPageTemp), for: .touchUpInside)
+        return label
+    }()
+    
+    func createNewPost() {
+        timerBackground.alpha = 0
+        timerTitleLabel.alpha = 0
+        foreverButton.alpha = 0
+        oneDayButton.alpha = 0
+        
+        UIView.animate(withDuration: 0.5) {
+            self.timerBackground.alpha = 1
+            self.timerTitleLabel.alpha = 1
+            self.foreverButton.alpha = 1
+            self.oneDayButton.alpha = 1
+        }
+        
+        timerBackground.frame = CGRect(x: 40, y: UIScreen.main.bounds.height/2-100, width: UIScreen.main.bounds.width-80, height: 150)
+        self.view.insertSubview(timerBackground, at: 10)
+        
+        timerTitleLabel.frame = CGRect(x: UIScreen.main.bounds.width/2 - 100, y: UIScreen.main.bounds.height/2-80, width: 200, height: 50)
+        self.view.insertSubview(timerTitleLabel, at: 12)
+        
+        foreverButton.frame = CGRect(x: UIScreen.main.bounds.width/2 - 100, y: UIScreen.main.bounds.height/2-20, width: 80, height: 50)
+        self.view.insertSubview(foreverButton, at: 12)
+        
+        oneDayButton.frame = CGRect(x: UIScreen.main.bounds.width/2 + 100-80, y: UIScreen.main.bounds.height/2-20, width: 80, height: 50)
+        self.view.insertSubview(oneDayButton, at: 12)
+    }
 }
 
 //MARK: - UITabBarControllerDelegate
@@ -365,7 +443,13 @@ extension MainTabBarController: UITabBarControllerDelegate {
         return true
     }
     
-    func createNewPost(){
+    @objc func goToPostPage(){
+        timerBackground.removeFromSuperview()
+        timerTitleLabel.removeFromSuperview()
+        foreverButton.removeFromSuperview()
+        oneDayButton.removeFromSuperview()
+        
+        
         var config = YPImagePickerConfiguration()
         config.library.isSquareByDefault = false
         config.shouldSaveNewPicturesToAlbum = false
@@ -400,6 +484,7 @@ extension MainTabBarController: UITabBarControllerDelegate {
                     sharePhotoController.preSelectedGroup = preSelectedGroup
                     sharePhotoController.selectedImage = photo.image
                     sharePhotoController.suggestedLocation = location
+                    sharePhotoController.isTempPost = false
                     picker.pushViewController(sharePhotoController, animated: true)
                     
                 case .video(let video):
@@ -409,6 +494,66 @@ extension MainTabBarController: UITabBarControllerDelegate {
                     sharePhotoController.selectedVideoURL = video.url
                     sharePhotoController.selectedImage = video.thumbnail
                     sharePhotoController.suggestedLocation = location
+                    sharePhotoController.isTempPost = false
+                    picker.pushViewController(sharePhotoController, animated: true)
+                }
+            }
+        }
+        present(picker, animated: true, completion: nil)
+    }
+    
+    @objc func goToPostPageTemp(){
+        timerBackground.removeFromSuperview()
+        timerTitleLabel.removeFromSuperview()
+        foreverButton.removeFromSuperview()
+        oneDayButton.removeFromSuperview()
+        
+        
+        var config = YPImagePickerConfiguration()
+        config.library.isSquareByDefault = false
+        config.shouldSaveNewPicturesToAlbum = false
+        config.library.mediaType = .photoAndVideo
+        config.hidesStatusBar = false
+        config.startOnScreen = YPPickerScreen.library
+        config.targetImageSize = .cappedTo(size: 600)
+        config.video.compression = AVAssetExportPresetMediumQuality
+        let picker = YPImagePicker(configuration: config)
+        
+        var preSelectedGroup: Group?
+        if let topController = UIApplication.topViewController() {
+            if type(of: topController) == GroupProfileController.self {
+                let groupProfile = topController as? GroupProfileController
+                preSelectedGroup = groupProfile?.group
+            }
+        }
+        
+        picker.didFinishPicking { [unowned picker] items, cancelled in
+            if cancelled {
+                print("Picker was canceled")
+                picker.dismiss(animated: true, completion: nil)
+                return
+            }
+            _ = items.map { print("🧀 \($0)") }
+            if let firstItem = items.first {
+                switch firstItem {
+                case .photo(let photo):
+                    let location = photo.asset?.location
+                    // need to do self.scrollToPreSelected() too
+                    let sharePhotoController = SharePhotoController()
+                    sharePhotoController.preSelectedGroup = preSelectedGroup
+                    sharePhotoController.selectedImage = photo.image
+                    sharePhotoController.suggestedLocation = location
+                    sharePhotoController.isTempPost = true
+                    picker.pushViewController(sharePhotoController, animated: true)
+                    
+                case .video(let video):
+                    let location = video.asset?.location
+                    let sharePhotoController = SharePhotoController()
+                    sharePhotoController.preSelectedGroup = preSelectedGroup
+                    sharePhotoController.selectedVideoURL = video.url
+                    sharePhotoController.selectedImage = video.thumbnail
+                    sharePhotoController.suggestedLocation = location
+                    sharePhotoController.isTempPost = true
                     picker.pushViewController(sharePhotoController, animated: true)
                 }
             }

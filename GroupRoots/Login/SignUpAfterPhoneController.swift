@@ -11,6 +11,7 @@ import Firebase
 import GoogleSignIn
 import FirebaseAuth
 import FirebaseDatabase
+import NVActivityIndicatorView
 
 class SignUpAfterPhoneController: UIViewController, UINavigationControllerDelegate {
 
@@ -150,6 +151,8 @@ class SignUpAfterPhoneController: UIViewController, UINavigationControllerDelega
         return label
     }()
     
+    let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
+    
     private var profileImage: UIImage?
     
     override func viewDidLoad() {
@@ -179,6 +182,10 @@ class SignUpAfterPhoneController: UIViewController, UINavigationControllerDelega
         plusPhotoButton.layer.cornerRadius = 140 / 2
         
         setupInputFields()
+        
+        self.view.insertSubview(activityIndicatorView, at: 20)
+        activityIndicatorView.color = .black
+        activityIndicatorView.isHidden = true
     }
     
     private func setupInputFields() {
@@ -257,6 +264,8 @@ class SignUpAfterPhoneController: UIViewController, UINavigationControllerDelega
             return
         }
         
+        self.activityIndicatorView.isHidden = false
+        activityIndicatorView.startAnimating()
         Database.database().usernameExists(username: username, completion: { (exists) in
             if exists{
                 let alert = UIAlertController(title: "Username Taken", message: "Please select a different username.", preferredStyle: .alert)
@@ -264,6 +273,7 @@ class SignUpAfterPhoneController: UIViewController, UINavigationControllerDelega
                 self.present(alert, animated: true)
                 self.usernameTextField.text = ""
                 self.resetInputFields()
+                self.activityIndicatorView.isHidden = true
                 return
             }
             else {
@@ -292,10 +302,14 @@ class SignUpAfterPhoneController: UIViewController, UINavigationControllerDelega
                                        }
                                    }
                                }
-                           }) { (err) in return}
+                           }) { (err) in
+                                self.activityIndicatorView.isHidden = true
+                                return
+                            }
                         }
                     }
                     else {
+                        self.activityIndicatorView.isHidden = true
                         // email already exists, send to login
                         let alert = UIAlertController(title: "", message: "Email already exists. Please log in", preferredStyle: .alert)
                         self.present(alert, animated: true, completion: nil)

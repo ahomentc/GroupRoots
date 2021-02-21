@@ -641,6 +641,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             if groupsCount > 0 {
                 self.newGroupButton.setTitle("View your Group", for: .normal)
             }
+            else {
+                // open create group here if you want to do this
+                
+            }
         })
         
         goButton.frame = CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/4 * 3 + 30, width: 300, height: 50)
@@ -926,23 +930,24 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                             self.schoolCodeButton.isHidden = true
                             self.schoolCodeTextField.isHidden = true
                             self.schoolCodeBackground.isHidden = true
-                            
-                            if let groupExplainPopupShownRetrieved = UserDefaults.standard.object(forKey: "groupExplainPopupShown") as? Data {
-                                guard let groupExplainPopupShown = try? JSONDecoder().decode(Bool.self, from: groupExplainPopupShownRetrieved) else {
-                                    print("Error: Couldn't decode data into Blog")
-                                    return
-                                }
-                                if !groupExplainPopupShown {
-                                    Timer.scheduledTimer(withTimeInterval: 5, repeats: false) { timer in
-                                        self.showCreateGroupPopup()
-                                    }
-                                }
-                            }
-                            else {
-                                Timer.scheduledTimer(withTimeInterval: 5, repeats: false) { timer in
-                                    self.showCreateGroupPopup()
-                                }
-                            }
+                       
+                            // not doing the group explain popup anymore since it's in intro
+//                            if let groupExplainPopupShownRetrieved = UserDefaults.standard.object(forKey: "groupExplainPopupShown") as? Data {
+//                                guard let groupExplainPopupShown = try? JSONDecoder().decode(Bool.self, from: groupExplainPopupShownRetrieved) else {
+//                                    print("Error: Couldn't decode data into Blog")
+//                                    return
+//                                }
+//                                if !groupExplainPopupShown {
+//                                    Timer.scheduledTimer(withTimeInterval: 5, repeats: false) { timer in
+//                                        self.showCreateGroupPopup()
+//                                    }
+//                                }
+//                            }
+//                            else {
+//                                Timer.scheduledTimer(withTimeInterval: 5, repeats: false) { timer in
+//                                    self.showCreateGroupPopup()
+//                                }
+//                            }
                         }
                         else {
                             // display the start screen for schools
@@ -2248,10 +2253,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     private func unsubscribeAction(forPost groupPost: GroupPost, uid: String) -> UIAlertAction? {
-        let action = UIAlertAction(title: "Unsubscribe", style: .destructive, handler: { (_) in
-            let alert = UIAlertController(title: "Unsubscribe?", message: nil, preferredStyle: .alert)
+        let action = UIAlertAction(title: "Unfollow", style: .destructive, handler: { (_) in
+            let alert = UIAlertController(title: "Unfollow?", message: nil, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-            alert.addAction(UIAlertAction(title: "Unsubscribe", style: .default, handler: { (_) in
+            alert.addAction(UIAlertAction(title: "Unfollow", style: .default, handler: { (_) in
                 Database.database().removeGroupFromUserFollowing(withUID: uid, groupId: groupPost.group.groupId) { (err) in
                     NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
                     NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)

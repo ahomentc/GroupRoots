@@ -76,35 +76,57 @@ class InviteToGroupFromIntroController: UIViewController, UICollectionViewDataSo
         return label
     }()
     
-    private lazy var addLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = UIColor.black
-        label.layer.zPosition = 5
-        let attributedText = NSMutableAttributedString(string: "Done", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 18)])
-        label.attributedText = attributedText
-        label.numberOfLines = 0
-        label.textAlignment = .center
-        
+//    private lazy var addLabel: UILabel = {
+//        let label = UILabel()
+//        label.textColor = UIColor.black
+//        label.layer.zPosition = 5
+//        let attributedText = NSMutableAttributedString(string: "Done", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 18)])
+//        label.attributedText = attributedText
+//        label.numberOfLines = 0
+//        label.textAlignment = .center
+//
+//        label.isUserInteractionEnabled = true
+//        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(inviteButtonClicked))
+//        label.addGestureRecognizer(gestureRecognizer)
+//
+//        return label
+//    }()
+    
+    private lazy var addLabel: UIButton = {
+        let label = UIButton(type: .system)
+        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
+        label.titleLabel?.font = UIFont.systemFont(ofSize: 18)
+        label.contentHorizontalAlignment = .center
         label.isUserInteractionEnabled = true
-        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(inviteButtonClicked))
-        label.addGestureRecognizer(gestureRecognizer)
-        
+        label.setTitle("Done", for: .normal)
+        label.addTarget(self, action: #selector(inviteButtonClicked), for: .touchUpInside)
         return label
     }()
     
-    private lazy var backLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = UIColor.black
-        label.layer.zPosition = 5
-        let attributedText = NSMutableAttributedString(string: "Back", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 18)])
-        label.attributedText = attributedText
-        label.numberOfLines = 0
-        label.textAlignment = .center
-        
+//    private lazy var backLabel: UILabel = {
+//        let label = UILabel()
+//        label.textColor = UIColor.black
+//        label.layer.zPosition = 5
+//        let attributedText = NSMutableAttributedString(string: "Back", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 18)])
+//        label.attributedText = attributedText
+//        label.numberOfLines = 0
+//        label.textAlignment = .center
+//
+//        label.isUserInteractionEnabled = true
+//        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(goBack))
+//        label.addGestureRecognizer(gestureRecognizer)
+//
+//        return label
+//    }()
+    
+    private lazy var backLabel: UIButton = {
+        let label = UIButton(type: .system)
+        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
+        label.titleLabel?.font = UIFont.systemFont(ofSize: 18)
+        label.contentHorizontalAlignment = .center
         label.isUserInteractionEnabled = true
-        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(goBack))
-        label.addGestureRecognizer(gestureRecognizer)
-        
+        label.setTitle("Back", for: .normal)
+        label.addTarget(self, action: #selector(goBack), for: .touchUpInside)
         return label
     }()
     
@@ -152,22 +174,14 @@ class InviteToGroupFromIntroController: UIViewController, UICollectionViewDataSo
             self.hasClickedSelectContacts = hasSelectedContacts
         }
         
-        // these don't apply here
-//        navigationItem.title = "Add Group Members"
-//        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancelSelected))
-//        navigationItem.leftBarButtonItem?.tintColor = .black
-//        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Invite", style: .plain, target: self, action: #selector(inviteButtonClicked))
-//        navigationItem.rightBarButtonItem?.tintColor = .black
-//        self.navigationController?.navigationBar.shadowImage = UIColor.white.as1ptImage()
-        
         self.view.insertSubview(titleLabel, at: 5)
-        titleLabel.anchor(top: view.topAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 40, paddingLeft: 70, paddingRight: 70)
+        titleLabel.anchor(top: view.topAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 44, paddingLeft: 70, paddingRight: 70)
         
         self.view.insertSubview(addLabel, at: 5)
-        addLabel.anchor(top: view.topAnchor, right: view.rightAnchor, paddingTop: 40, paddingRight: 25)
+        addLabel.anchor(top: view.topAnchor, right: view.rightAnchor, paddingTop: 37, paddingRight: 25)
         
         self.view.insertSubview(backLabel, at: 5)
-        backLabel.anchor(top: view.topAnchor, left: view.leftAnchor, paddingTop: 40, paddingLeft: 25)
+        backLabel.anchor(top: view.topAnchor, left: view.leftAnchor, paddingTop: 37, paddingLeft: 25)
 
         let added_layout = DGCollectionViewLeftAlignFlowLayout()
         added_layout.scrollDirection = UICollectionView.ScrollDirection.vertical
@@ -249,7 +263,7 @@ class InviteToGroupFromIntroController: UIViewController, UICollectionViewDataSo
         
         self.activityIndicatorView.isHidden = false
         activityIndicatorView.startAnimating()
-        Database.database().deleteGroup(groupId: group.groupId, school: self.school) { (_) in
+        Database.database().deleteGroup(groupId: group.groupId, groupname: group.groupname, school: self.school) { (_) in
             self.dismiss(animated: true, completion: nil)
         }
     }
@@ -297,11 +311,10 @@ class InviteToGroupFromIntroController: UIViewController, UICollectionViewDataSo
                     }
                 })
             }
-            
-            self.activityIndicatorView.isHidden = true
-            
+        
             // after the group is created, do the invitations
             create_group_sync.notify(queue: .main) {
+                self.activityIndicatorView.isHidden = true
                 guard let group = self.group else { return }
                 let sync = DispatchGroup()
                 var alertsToPresent: [UIAlertController] = []
