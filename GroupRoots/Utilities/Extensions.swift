@@ -115,6 +115,11 @@ extension Date {
         
         return "\(secondsAgo / week)wk"
     }
+    
+    func timeAgo() -> Int {
+        let secondsAgo = Double(Date().timeIntervalSince(self))
+        return Int(floor(secondsAgo / 3600))
+    }
 }
 
 extension NSNotification.Name {

@@ -201,6 +201,14 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(handleCancel))
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Share", style: .plain, target: self, action: #selector(handleShare))
         
+        self.navigationController?.navigationBar.height(CGFloat(50))
+        self.navigationController?.isNavigationBarHidden = false
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+//        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = false
+        self.navigationController?.navigationBar.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
+        self.navigationController?.navigationBar.barTintColor = UIColor.init(white: 0.98, alpha: 1)
+        
         layoutViews()
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateGroupsToPostTo, object: nil)
@@ -621,6 +629,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
     }
     
     @objc private func handleShare() {
+        guard let isTempPost = isTempPost else { return }
         guard let postImage = selectedImage else { return }
         let caption = textView.text
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
@@ -641,7 +650,7 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
         }
         catch {}
         
-        Database.database().createGroupPost(withImage: postImage, withVideo: self.selectedVideoURL, caption: caption ?? "", groupId: self.selectedGroupId, location: postLocation, completion: { (postId) in
+        Database.database().createGroupPost(withImage: postImage, withVideo: self.selectedVideoURL, caption: caption ?? "", groupId: self.selectedGroupId, location: postLocation, isTempPost: isTempPost, completion: { (postId) in
             if postId == "" {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
                 self.textView.isUserInteractionEnabled = true

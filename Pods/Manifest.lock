@@ -114,6 +114,8 @@ PODS:
     - GoogleUtilities/Logger
   - GoogleUtilities/UserDefaults (6.7.1):
     - GoogleUtilities/Logger
+  - GradientProgressBar (2.0.3):
+    - LightweightObservable (~> 2.0)
   - GTMAppAuth (1.0.0):
     - AppAuth/Core (~> 1.0)
     - GTMSessionFetcher (~> 1.1)
@@ -124,6 +126,7 @@ PODS:
     - GTMSessionFetcher/Core (= 1.3.0)
   - InjectableLoggers (2.1.1)
   - leveldb-library (1.22)
+  - LightweightObservable (2.1.2)
   - LocationPicker (1.4.2)
   - MGEvents (1.2.1)
   - nanopb (1.30905.0):
@@ -154,8 +157,10 @@ PODS:
     - MGEvents (~> 1.2)
     - PromiseKit/Promise (~> 1.5)
     - SGHTTPRequest/Core (~> 1.9)
+  - SnapSliderFilters (2.0)
   - SteviaLayout (4.7.3)
   - SwiftGifOrigin (1.7.0)
+  - SwiftyCam (4.0.0)
   - UPCarouselFlowLayout (1.1.2)
   - YPImagePicker (4.1.3):
     - PryntTrimmerView (~> 4.0.0)
@@ -173,13 +178,16 @@ DEPENDENCIES:
   - Firebase/Messaging
   - Firebase/Storage
   - GoogleSignIn
+  - GradientProgressBar (~> 2.0)
   - LocationPicker
   - NVActivityIndicatorView
   - PhoneNumberKit (~> 3.1)
   - Player (~> 0.13.2)
   - SearchTextField
   - SGImageCache
+  - SnapSliderFilters
   - SwiftGifOrigin (~> 1.7.0)
+  - SwiftyCam
   - UPCarouselFlowLayout
   - YPImagePicker
   - Zoomy
@@ -206,10 +214,12 @@ SPEC REPOS:
     - GoogleDataTransport
     - GoogleSignIn
     - GoogleUtilities
+    - GradientProgressBar
     - GTMAppAuth
     - GTMSessionFetcher
     - InjectableLoggers
     - leveldb-library
+    - LightweightObservable
     - LocationPicker
     - MGEvents
     - nanopb
@@ -223,8 +233,10 @@ SPEC REPOS:
     - SearchTextField
     - SGHTTPRequest
     - SGImageCache
+    - SnapSliderFilters
     - SteviaLayout
     - SwiftGifOrigin
+    - SwiftyCam
     - UPCarouselFlowLayout
     - YPImagePicker
     - Zoomy
@@ -250,10 +262,12 @@ SPEC CHECKSUMS:
   GoogleDataTransport: af0c79193dc59acd37630b4833d0dc6912ae6bd5
   GoogleSignIn: 7137d297ddc022a7e0aa4619c86d72c909fa7213
   GoogleUtilities: e121a3867449ce16b0e35ddf1797ea7a389ffdf2
+  GradientProgressBar: f11fb57cffc615a4794da558ce283171a992130a
   GTMAppAuth: 4deac854479704f348309e7b66189e604cf5e01e
   GTMSessionFetcher: 43b8b64263023d4f32caa0b40f4c8bfa3c5f36d8
   InjectableLoggers: 7bc1a68fb12d73785d3d50944a3f1744a8cea868
   leveldb-library: 55d93ee664b4007aac644a782d11da33fba316f7
+  LightweightObservable: c5ac85423a5edbed9a920b4d5c7b8f94ab3688c4
   LocationPicker: 9af49409ec3ca13fdf4bf6b39e1a3c7dec029f4a
   MGEvents: 989c1396082a25e760f03056bdc0af1b6c439c78
   nanopb: c43f40fadfe79e8b8db116583945847910cbabc9
@@ -267,12 +281,14 @@ SPEC CHECKSUMS:
   SearchTextField: 40dc3cc57def5a211f263cac263622c163bbc25a
   SGHTTPRequest: 93646208528eafd758052a92ee4dcf04e0d263c5
   SGImageCache: ef7daf2cb76a67a79c25a1c1f71fa675c5fc9672
+  SnapSliderFilters: 7f571683b05cf70b8d398e4a0e45691bd9f03a33
   SteviaLayout: c2ecdcff57d44e38fd2f65e54ad52aeae28ca0c4
   SwiftGifOrigin: fbd6cf37afcfcf97a5c3db996ddc0492e5c5c145
+  SwiftyCam: 6e57914771d972fbe508e759dc9d0150a44a93fd
   UPCarouselFlowLayout: 4c7d2c43a10ebb1597bde502a53699d378341dad
   YPImagePicker: 7a34eabd0ef544ae8fbf9785c3df9ec5bbf242e3
   Zoomy: 598d7a6d52567e4f8bf2e557907bbd9d7e725664
 
-PODFILE CHECKSUM: cb9323595e30151d017be6044facd2f353d12b29
+PODFILE CHECKSUM: 7a1b449642be1dfbdababa49270fbbaa09e0ed16
 
 COCOAPODS: 1.9.3

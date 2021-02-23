@@ -36,6 +36,24 @@ class FeedGroupPostCell: UICollectionViewCell {
             guard var videoUrl = self.groupPost?.videoUrl else { return }
             guard let groupId = self.groupPost?.group.groupId else { return }
             guard let postId = self.groupPost?.id else { return }
+            guard let isTempPost = self.groupPost?.isTempPost else { return }
+            guard let creationDate = self.groupPost?.creationDate else { return }
+            
+            if isTempPost {
+                hourglassButton.isHidden = false
+                let timeAgo = creationDate.timeAgo()
+                var pic_number = Int(floor((16*Double(timeAgo))/24)) + 1
+                if pic_number > 15 {
+                    pic_number = 15
+                }
+                hourglassButton.setImage(UIImage(named: "hourglass" + String(pic_number) + ".png"), for: .normal)
+                
+                // hour    x
+                // ---- = ----
+                //  24     15
+                // (15 * hour) / 24 = x = pic_number
+                // floor((16*hour)/24) with max of 15
+            }
             
             let sync = DispatchGroup()
             sync.enter()
@@ -132,6 +150,15 @@ class FeedGroupPostCell: UICollectionViewCell {
         return view
     }()
     
+    let hourglassButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.tintColor = UIColor.white
+        button.isUserInteractionEnabled = false
+        button.setImage(#imageLiteral(resourceName: "hourglass1").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.isHidden = true
+        return button
+    }()
+    
     static var cellId = "feedGroupPostCellId"
     
     override init(frame: CGRect) {
@@ -161,6 +188,11 @@ class FeedGroupPostCell: UICollectionViewCell {
         newDot.widthAnchor.constraint(greaterThanOrEqualToConstant: 10).isActive = true
         newDot.anchor(bottom: bottomAnchor, right: rightAnchor, paddingBottom: 10, paddingRight: 10)
         
+        insertSubview(hourglassButton, at: 5)
+        hourglassButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 20).isActive = true
+        hourglassButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 20).isActive = true
+        hourglassButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 10, paddingRight: 10)
+        
         self.readyToSetPicture = false
         
         NotificationCenter.default.addObserver(self, selector: #selector(reloadNewDot), name: NSNotification.Name(rawValue: "reloadViewedPosts"), object: nil)
@@ -176,6 +208,8 @@ class FeedGroupPostCell: UICollectionViewCell {
         self.layer.borderWidth = 0
         
         playButton.isHidden = true
+        hourglassButton.isHidden = true
+        hourglassButton.setImage(#imageLiteral(resourceName: "hourglass1").withRenderingMode(.alwaysOriginal), for: .normal)
         newDot.isHidden = true
         groupPost = nil
         viewedPost = nil

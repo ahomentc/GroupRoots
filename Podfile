@@ -30,4 +30,7 @@ target 'GroupRoots' do
   pod 'DGCollectionViewLeftAlignFlowLayout'
   pod 'LocationPicker'
   pod 'SearchTextField'
+  pod 'SwiftyCam'
+  pod 'GradientProgressBar', '~> 2.0'
+  pod "SnapSliderFilters"
 end

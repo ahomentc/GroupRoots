@@ -4069,7 +4069,7 @@ extension Database {
 //        }
 //    }
     
-    func createGroupPost(withImage image: UIImage?, withVideo video_url: URL?, caption: String, groupId: String, location: String, completion: @escaping (String) -> (), withCancel cancel: ((Error) -> ())? = nil) {
+    func createGroupPost(withImage image: UIImage?, withVideo video_url: URL?, caption: String, groupId: String, location: String, isTempPost: Bool, completion: @escaping (String) -> (), withCancel cancel: ((Error) -> ())? = nil) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
         let groupPostRef = Database.database().reference().child("posts").child(groupId).childByAutoId()
@@ -4094,7 +4094,7 @@ extension Database {
                 let avgBlue = CGFloat(bitmap[2]) / 255
                 let avgAlpha = CGFloat(bitmap[3]) / 255
                 
-                let values = ["imageUrl": postImageUrl, "caption": caption, "imageWidth": image.size.width, "imageHeight": image.size.height, "avgRed": avgRed, "avgGreen": avgGreen, "avgBlue": avgBlue, "avgAlpha": avgAlpha, "creationDate": Date().timeIntervalSince1970, "id": postId, "userUploaded": uid, "location": location] as [String : Any]
+                let values = ["imageUrl": postImageUrl, "caption": caption, "imageWidth": image.size.width, "imageHeight": image.size.height, "avgRed": avgRed, "avgGreen": avgGreen, "avgBlue": avgBlue, "avgAlpha": avgAlpha, "creationDate": Date().timeIntervalSince1970, "id": postId, "userUploaded": uid, "location": location, "isTempPost": isTempPost] as [String : Any]
                 groupPostRef.updateChildValues(values) { (err, ref) in
                     if let err = err {
                         print("Failed to save post to database", err)
@@ -4133,7 +4133,7 @@ extension Database {
             guard let video_thumbnail = image else { return }
             Storage.storage().uploadPostImageDistributed(image: video_thumbnail, groupId: groupId, filename: postId) { (postImageUrl) in
                 Storage.storage().uploadPostVideoDistributed(filePath: video_url, groupId: groupId, filename: String(postId)) { (postVideoUrl) in
-                    let values = ["imageUrl": postImageUrl, "videoUrl": postVideoUrl, "caption": caption, "videoWidth": video_thumbnail.size.width, "videoHeight": video_thumbnail.size.height, "creationDate": Date().timeIntervalSince1970, "id": postId, "userUploaded": uid, "location": location] as [String : Any]
+                    let values = ["imageUrl": postImageUrl, "videoUrl": postVideoUrl, "caption": caption, "videoWidth": video_thumbnail.size.width, "videoHeight": video_thumbnail.size.height, "creationDate": Date().timeIntervalSince1970, "id": postId, "userUploaded": uid, "location": location, "isTempPost": isTempPost] as [String : Any]
                     groupPostRef.updateChildValues(values) { (err, ref) in
                         if let err = err {
                             print("Failed to save post to database", err)

@@ -22,6 +22,7 @@ struct GroupPost: Equatable, Codable {
     let avgGreen: Double
     let avgBlue: Double
     let avgAlpha: Double
+    let isTempPost: Bool
     let location: PostLocation?
     
     var likes: Int = 0
@@ -34,6 +35,7 @@ struct GroupPost: Equatable, Codable {
         self.videoUrl = dictionary["videoUrl"] as? String ?? ""
         self.caption = dictionary["caption"] as? String ?? ""
         self.id = dictionary["id"] as? String ?? ""
+        self.isTempPost = dictionary["isTempPost"] as? Bool ?? false
         
         let secondsFrom1970 = dictionary["creationDate"] as? Double ?? 0
         self.creationDate = Date(timeIntervalSince1970: secondsFrom1970)

@@ -52,6 +52,7 @@
 		75ACAFC923F7DE8700DAE747 /* FollowPageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ACAFC823F7DE8700DAE747 /* FollowPageCell.swift */; };
 		75ACAFCB23FBADD000DAE747 /* FeedMemberCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ACAFCA23FBADD000DAE747 /* FeedMemberCell.swift */; };
 		75B0201025AED70F00292C56 /* CreateSchoolGroupController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B0200F25AED70F00292C56 /* CreateSchoolGroupController.swift */; };
+		75B5EE2225E2D170001E26CD /* TempPostCameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B5EE2125E2D170001E26CD /* TempPostCameraController.swift */; };
 		75B65DE32408F8E8006CBA0B /* ViewersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B65DE22408F8E7006CBA0B /* ViewersController.swift */; };
 		75B65DE52408FB32006CBA0B /* ViewerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B65DE42408FB32006CBA0B /* ViewerCell.swift */; };
 		75B65DE7240A506C006CBA0B /* GroupFollowersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B65DE6240A506C006CBA0B /* GroupFollowersController.swift */; };
@@ -67,6 +68,7 @@
 		75BB489523DB00E800CF008F /* MembersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BB489423DB00E800CF008F /* MembersCell.swift */; };
 		75BE32DC24E22E1800310BA4 /* ResetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DB24E22E1800310BA4 /* ResetController.swift */; };
 		75BE32DE24E29A4200310BA4 /* IntroCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */; };
+		75C6922C25E4F7240096194F /* EditTempVIdeoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C6922B25E4F7240096194F /* EditTempVIdeoController.swift */; };
 		75CAD5FC243C527E006941B2 /* MemberHeaderCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */; };
 		75CC915625E0995C00775C8D /* InviteToGroupFromIntroController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CC915525E0995C00775C8D /* InviteToGroupFromIntroController.swift */; };
 		75D6CF46254930AB0098DE13 /* EmptySearchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D6CF45254930AB0098DE13 /* EmptySearchCell.swift */; };
@@ -99,6 +101,7 @@
 		75E6258725956AAD004262D9 /* SchoolUserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E6258625956AAC004262D9 /* SchoolUserCell.swift */; };
 		75EFCCFA23F11D9D00B7580D /* EmtpyFeedCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */; };
 		75F2C2A923DD220C0037C76D /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */; };
+		75F9E3E825E3A58C009F73FF /* EditTempPhotoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F9E3E725E3A58C009F73FF /* EditTempPhotoController.swift */; };
 		9D7187601A438FC40FBC4D15 /* Pods_GroupRoots.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F29BE71F40760917CD1E06D5 /* Pods_GroupRoots.framework */; };
 		AD1F3158211B98D100262BF1 /* HomePostCellHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1F3157211B98D100262BF1 /* HomePostCellHeader.swift */; };
 		AD215F16205DA9B6000E42AD /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD215F15205DA9B6000E42AD /* Extensions.swift */; };
@@ -185,6 +188,7 @@
 		75ACAFC823F7DE8700DAE747 /* FollowPageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowPageCell.swift; sourceTree = "<group>"; };
 		75ACAFCA23FBADD000DAE747 /* FeedMemberCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedMemberCell.swift; sourceTree = "<group>"; };
 		75B0200F25AED70F00292C56 /* CreateSchoolGroupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateSchoolGroupController.swift; sourceTree = "<group>"; };
+		75B5EE2125E2D170001E26CD /* TempPostCameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempPostCameraController.swift; sourceTree = "<group>"; };
 		75B65DE22408F8E7006CBA0B /* ViewersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewersController.swift; sourceTree = "<group>"; };
 		75B65DE42408FB32006CBA0B /* ViewerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewerCell.swift; sourceTree = "<group>"; };
 		75B65DE6240A506C006CBA0B /* GroupFollowersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupFollowersController.swift; sourceTree = "<group>"; };
@@ -200,6 +204,7 @@
 		75BB489423DB00E800CF008F /* MembersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersCell.swift; sourceTree = "<group>"; };
 		75BE32DB24E22E1800310BA4 /* ResetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetController.swift; sourceTree = "<group>"; };
 		75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroCodeController.swift; sourceTree = "<group>"; };
+		75C6922B25E4F7240096194F /* EditTempVIdeoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTempVIdeoController.swift; sourceTree = "<group>"; };
 		75CAD5FB243C527E006941B2 /* MemberHeaderCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberHeaderCell.swift; sourceTree = "<group>"; };
 		75CC915525E0995C00775C8D /* InviteToGroupFromIntroController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteToGroupFromIntroController.swift; sourceTree = "<group>"; };
 		75D6CF45254930AB0098DE13 /* EmptySearchCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptySearchCell.swift; sourceTree = "<group>"; };
@@ -232,6 +237,7 @@
 		75E6258625956AAC004262D9 /* SchoolUserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolUserCell.swift; sourceTree = "<group>"; };
 		75EFCCF923F11D9D00B7580D /* EmtpyFeedCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmtpyFeedCell.swift; sourceTree = "<group>"; };
 		75F2C2A823DD220C0037C76D /* PushNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationManager.swift; sourceTree = "<group>"; };
+		75F9E3E725E3A58C009F73FF /* EditTempPhotoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTempPhotoController.swift; sourceTree = "<group>"; };
 		813799D4A56F45A1373EAB69 /* Pods-GroupRoots.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GroupRoots.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GroupRoots/Pods-GroupRoots.debug.xcconfig"; sourceTree = "<group>"; };
 		AD1F3157211B98D100262BF1 /* HomePostCellHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePostCellHeader.swift; sourceTree = "<group>"; };
 		AD215F15205DA9B6000E42AD /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
@@ -475,6 +481,9 @@
 				AD32DEC8210C10A0002F4973 /* PhotoSelectorHeader.swift */,
 				AD32DECA210C18E6002F4973 /* SharePhotoController.swift */,
 				75D86CBB2533B51E00939301 /* NewGroupInPostCell.swift */,
+				75B5EE2125E2D170001E26CD /* TempPostCameraController.swift */,
+				75F9E3E725E3A58C009F73FF /* EditTempPhotoController.swift */,
+				75C6922B25E4F7240096194F /* EditTempVIdeoController.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -698,7 +707,9 @@
 				"${BUILT_PRODUCTS_DIR}/GTMAppAuth/GTMAppAuth.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
 				"${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework",
+				"${BUILT_PRODUCTS_DIR}/GradientProgressBar/GradientProgressBar.framework",
 				"${BUILT_PRODUCTS_DIR}/InjectableLoggers/InjectableLoggers.framework",
+				"${BUILT_PRODUCTS_DIR}/LightweightObservable/LightweightObservable.framework",
 				"${BUILT_PRODUCTS_DIR}/LocationPicker/LocationPicker.framework",
 				"${BUILT_PRODUCTS_DIR}/MGEvents/MGEvents.framework",
 				"${BUILT_PRODUCTS_DIR}/NVActivityIndicatorView/NVActivityIndicatorView.framework",
@@ -711,8 +722,10 @@
 				"${BUILT_PRODUCTS_DIR}/SGHTTPRequest/SGHTTPRequest.framework",
 				"${BUILT_PRODUCTS_DIR}/SGImageCache/SGImageCache.framework",
 				"${BUILT_PRODUCTS_DIR}/SearchTextField/SearchTextField.framework",
+				"${BUILT_PRODUCTS_DIR}/SnapSliderFilters/SnapSliderFilters.framework",
 				"${BUILT_PRODUCTS_DIR}/SteviaLayout/Stevia.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftGifOrigin/SwiftGifOrigin.framework",
+				"${BUILT_PRODUCTS_DIR}/SwiftyCam/SwiftyCam.framework",
 				"${BUILT_PRODUCTS_DIR}/UPCarouselFlowLayout/UPCarouselFlowLayout.framework",
 				"${BUILT_PRODUCTS_DIR}/YPImagePicker/YPImagePicker.framework",
 				"${BUILT_PRODUCTS_DIR}/Zoomy/Zoomy.framework",
@@ -730,7 +743,9 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMAppAuth.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GradientProgressBar.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/InjectableLoggers.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/LightweightObservable.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/LocationPicker.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MGEvents.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NVActivityIndicatorView.framework",
@@ -743,8 +758,10 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SGHTTPRequest.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SGImageCache.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SearchTextField.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SnapSliderFilters.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Stevia.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftGifOrigin.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyCam.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/UPCarouselFlowLayout.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/YPImagePicker.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Zoomy.framework",
@@ -802,6 +819,7 @@
 				75A5B04425DE176A0056AE97 /* IntroGroupStepController.swift in Sources */,
 				ADAC080B21102E8D00615E62 /* UserSearchController.swift in Sources */,
 				75D86CBC2533B51E00939301 /* NewGroupInPostCell.swift in Sources */,
+				75F9E3E825E3A58C009F73FF /* EditTempPhotoController.swift in Sources */,
 				ADE95AF7210D1D6E003D9A54 /* UserProfilePhotoGridCell.swift in Sources */,
 				AD32EF772114E21900BB7B56 /* CustomAnimationPresentor.swift in Sources */,
 				75BB488E23DAB1CD00CF008F /* FeedController.swift in Sources */,
@@ -822,6 +840,7 @@
 				75D86CB025270BB600939301 /* Contacts.swift in Sources */,
 				759CB61123D593E000178673 /* LargeImageViewController.swift in Sources */,
 				7522E43A24A937F60013A351 /* LoadMoreFollowersCell.swift in Sources */,
+				75C6922C25E4F7240096194F /* EditTempVIdeoController.swift in Sources */,
 				AD32EF732114189400BB7B56 /* CameraController.swift in Sources */,
 				757B35C92472336500C9AFE1 /* ProfileFeedController.swift in Sources */,
 				75E5CBC125036ACE0080F815 /* LoginPhoneController.swift in Sources */,
@@ -876,6 +895,7 @@
 				752B5DBE250F1D1D00693A04 /* EmptyFeedUserCell.swift in Sources */,
 				759912C523DD446200B415EB /* PushNotificationSender.swift in Sources */,
 				75E5CBC52504B67A0080F815 /* SignUpPhoneVerifyController.swift in Sources */,
+				75B5EE2225E2D170001E26CD /* TempPostCameraController.swift in Sources */,
 				7521C74E24BD428E003FCFB4 /* ForceUpdateController.swift in Sources */,
 				AD3164D421152D00001F5DA7 /* Comment.swift in Sources */,
 				7521D0482434506A0028FC9C /* SearchHeader.swift in Sources */,
