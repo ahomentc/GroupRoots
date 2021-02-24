@@ -2052,18 +2052,18 @@ exports.addTempPostToBucket = functions.database.ref('/posts/{group_id}/{post_id
 	const group_id = context.params.group_id;
 
 	// check if temp post exists and has value of true
-	if (snapshot !== null && snapshot.val() !== null && snapshot.val() === "true") {
+	if (snapshot !== null && snapshot.val() !== null && snapshot.val() === true) {
 		var post_date = Date.now()
-		var hour = post_date.getHours()
+		var hour = (new Date(post_date)).getHours()
 
 		// set the group_id and post_id to the bucket
 		return snapshot.ref.root.child('/timerPostExpirations/' + hour + '/' + group_id + '/' + post_id).set(post_date/1000)
 	}
 });
 
-exports.deleteTempPosts = functions.pubsub.schedule('every hour').timeZone('America/Los_Angeles').onRun((context) => {
+exports.deleteTempPosts = functions.pubsub.schedule('0 * * * *').timeZone('America/Los_Angeles').onRun((context) => {
 	var post_date = Date.now()
-	var hour = post_date.getHours()
+	var hour = (new Date(post_date)).getHours()
 
 	const promises = []
 

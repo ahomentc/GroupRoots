@@ -385,7 +385,8 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
         label.contentHorizontalAlignment = .center
         label.isUserInteractionEnabled = false
         label.layer.zPosition = 12
-        label.setImage(#imageLiteral(resourceName: "camera_2"), for: .normal)
+//        label.setImage(#imageLiteral(resourceName: "camera_2"), for: .normal)
+        label.setImage(#imageLiteral(resourceName: "hourglass"), for: .normal)
         label.tintColor = UIColor.init(white: 0.1, alpha: 1)
         return label
     }()
@@ -476,7 +477,8 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
         galleryButton.frame = CGRect(x: 40 + (UIScreen.main.bounds.width/2-50)/2 - 15, y: UIScreen.main.bounds.height/2-40, width: 30, height: 30)
         self.view.insertSubview(galleryButton, at: 12)
         
-        cameraButton.frame = CGRect(x: 60 + UIScreen.main.bounds.width/2-50 + (UIScreen.main.bounds.width/2-50)/2 - 15, y: UIScreen.main.bounds.height/2-40, width: 30, height: 30)
+//        cameraButton.frame = CGRect(x: 60 + UIScreen.main.bounds.width/2-50 + (UIScreen.main.bounds.width/2-50)/2 - 15, y: UIScreen.main.bounds.height/2-40, width: 30, height: 30)
+        cameraButton.frame = CGRect(x: 60 + UIScreen.main.bounds.width/2-50 + (UIScreen.main.bounds.width/2-50)/2 - 20, y: UIScreen.main.bounds.height/2-45, width: 40, height: 40)
         self.view.insertSubview(cameraButton, at: 12)
         
         foreverButton.frame = CGRect(x: 40 + (UIScreen.main.bounds.width/2-50)/2 - 40, y: UIScreen.main.bounds.height/2-0, width: 80, height: 50)

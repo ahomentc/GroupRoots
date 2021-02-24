@@ -10,6 +10,7 @@ import UIKit
 import AVFoundation
 import SwiftyCam
 import GradientProgressBar
+import YPImagePicker
 
 class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewControllerDelegate {
         
@@ -28,6 +29,35 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         return button
     }()
+    
+    let galleryButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "gallery_white"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(usePicker), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        return button
+    }()
+    
+    let flashButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "flash_off"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(toggleFlash), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        return button
+    }()
+    
+    let cameraFlipButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "rotate_cam"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(flipCamera), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        return button
+    }()
+    
+    var isFlashEnabled = false
     
     let gradientProgressView: GradientProgressBar = {
         let progress = GradientProgressBar()
@@ -62,6 +92,15 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         closeButton.frame = CGRect(x: 15, y: 15, width: 40, height: 40)
         self.view.insertSubview(closeButton, at: 12)
         
+        galleryButton.frame = CGRect(x: 15, y: UIScreen.main.bounds.height - 55, width: 40, height: 40)
+        self.view.insertSubview(galleryButton, at: 12)
+        
+        flashButton.frame = CGRect(x: UIScreen.main.bounds.width - 50, y: 15, width: 35, height: 35)
+        self.view.insertSubview(flashButton, at: 12)
+        
+        cameraFlipButton.frame = CGRect(x: UIScreen.main.bounds.width - 55, y: UIScreen.main.bounds.height - 50, width: 40, height: 40)
+        self.view.insertSubview(cameraFlipButton, at: 12)
+
         self.maximumVideoDuration = 59
         self.swipeToZoomInverted = true
     }
@@ -81,8 +120,74 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
     
     var captureButtonDown = false
     
+    @objc private func usePicker() {
+        var config = YPImagePickerConfiguration()
+        config.library.isSquareByDefault = false
+        config.shouldSaveNewPicturesToAlbum = false
+        config.library.mediaType = .photoAndVideo
+        config.showsPhotoFilters = false
+        config.hidesStatusBar = false
+        config.startOnScreen = YPPickerScreen.library
+        config.targetImageSize = .cappedTo(size: 600)
+        config.video.compression = AVAssetExportPresetMediumQuality
+        let picker = YPImagePicker(configuration: config)
+        
+        var preSelectedGroup: Group?
+        if let topController = UIApplication.topViewController() {
+            if type(of: topController) == GroupProfileController.self {
+                let groupProfile = topController as? GroupProfileController
+                preSelectedGroup = groupProfile?.group
+            }
+        }
+        
+        picker.didFinishPicking { [unowned picker] items, cancelled in
+            if cancelled {
+                print("Picker was canceled")
+                picker.dismiss(animated: true, completion: nil)
+                return
+            }
+            _ = items.map { print("🧀 \($0)") }
+            if let firstItem = items.first {
+                switch firstItem {
+                case .photo(let photo):
+//                    let location = photo.asset?.location
+                    let photoViewController = EditTempPhotoController()
+                    photoViewController.backgroundImage = photo.image
+                    self.dismiss(animated: true, completion: {
+                        self.navigationController?.pushViewController(photoViewController, animated: true)
+                    })
+                case .video(let video):
+//                    let location = video.asset?.location
+                    let editTempVideoController = EditTempVideoController()
+                    editTempVideoController.videoUrl = video.url
+                    self.dismiss(animated: true, completion: {
+                        self.navigationController?.pushViewController(editTempVideoController, animated: true)
+                    })
+                }
+            }
+        }
+        present(picker, animated: true, completion: nil)
+    }
+    
     @objc private func close() {
         self.dismiss(animated: true, completion: {})
+    }
+    
+    @objc private func toggleFlash() {
+        if self.isFlashEnabled {
+            self.isFlashEnabled = false
+            self.flashButton.setImage(#imageLiteral(resourceName: "flash_off"), for: .normal)
+            flashMode = .off
+        }
+        else {
+            self.isFlashEnabled = true
+            self.flashButton.setImage(#imageLiteral(resourceName: "flash_on"), for: .normal)
+            flashMode = .on
+        }
+    }
+    
+    @objc private func flipCamera() {
+        switchCamera()
     }
     
     @objc private func tap(tapGestureRecognizer: UITapGestureRecognizer) {
@@ -149,6 +254,25 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         
     }
     
+    func focusAnimationAt(_ point: CGPoint) {
+        let focusView = UIImageView(image: #imageLiteral(resourceName: "focus"))
+        focusView.center = point
+        focusView.alpha = 0.0
+        view.addSubview(focusView)
+        
+        UIView.animate(withDuration: 0.25, delay: 0.0, options: .curveEaseInOut, animations: {
+            focusView.alpha = 1.0
+            focusView.transform = CGAffineTransform(scaleX: 1.25, y: 1.25)
+        }) { (success) in
+            UIView.animate(withDuration: 0.15, delay: 0.5, options: .curveEaseInOut, animations: {
+                focusView.alpha = 0.0
+                focusView.transform = CGAffineTransform(translationX: 0.6, y: 0.6)
+            }) { (success) in
+                focusView.removeFromSuperview()
+            }
+        }
+    }
+    
     func swiftyCamSessionDidStartRunning(_ swiftyCam: SwiftyCamViewController) {
         print("Session did start running")
 //        captureButton.buttonEnabled = true
@@ -186,7 +310,7 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
     
     func swiftyCam(_ swiftyCam: SwiftyCamViewController, didFocusAtPoint point: CGPoint) {
         print("Did focus at point: \(point)")
-//        focusAnimationAt(point)
+        focusAnimationAt(point)
     }
     
     func swiftyCamDidFailToConfigure(_ swiftyCam: SwiftyCamViewController) {

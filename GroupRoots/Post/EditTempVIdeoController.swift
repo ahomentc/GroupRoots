@@ -20,6 +20,7 @@ class EditTempVideoController: UIViewController {
     var videoUrl: URL? {
         didSet {
             guard let videoUrl = videoUrl else { return }
+            self.setVideoDimensions()
             self.player.url = videoUrl
             self.player.playFromBeginning()
         }
@@ -59,7 +60,7 @@ class EditTempVideoController: UIViewController {
         self.player.playbackLoops = true
         self.player.muted = false
         self.player.playerView.playerBackgroundColor = .black
-        self.player.fillMode = .resizeAspectFill
+//        self.player.fillMode = .resizeAspectFill
         
         nextButton.frame = CGRect(x: UIScreen.main.bounds.width-120, y: UIScreen.main.bounds.height - 70, width: 100, height: 50)
         nextButton.layer.cornerRadius = 20
@@ -114,6 +115,23 @@ class EditTempVideoController: UIViewController {
         }
 
         return UIImage(cgImage: thumbnailImageRef)
+    }
+    
+    private func setVideoDimensions(){
+        guard let videoUrl = videoUrl else { return }
+        let img = imageFromVideo(url: videoUrl, at: 0)
+        let width = img?.size.width
+        let height = img?.size.height
+        if width != nil && height != nil {
+            if width! >= height! {
+                print("wide")
+                self.player.fillMode = .resizeAspect
+            }
+            else {
+                print("tall")
+                self.player.fillMode = .resizeAspectFill
+            }
+        }
     }
     
 }

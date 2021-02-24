@@ -50,7 +50,7 @@ class EditTempPhotoController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.backgroundColor = UIColor.gray
+        self.view.backgroundColor = UIColor.black
         let backgroundImageView = UIImageView(frame: view.frame)
         backgroundImageView.contentMode = UIView.ContentMode.scaleAspectFit
 //        backgroundImageView.image = backgroundImage!.addFilter(filter: .Mono).rotate(radians: .pi/2)
