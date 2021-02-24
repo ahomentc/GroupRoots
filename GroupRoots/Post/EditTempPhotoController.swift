@@ -53,9 +53,24 @@ class EditTempPhotoController: UIViewController {
         self.view.backgroundColor = UIColor.black
         let backgroundImageView = UIImageView(frame: view.frame)
         backgroundImageView.contentMode = UIView.ContentMode.scaleAspectFit
-//        backgroundImageView.image = backgroundImage!.addFilter(filter: .Mono).rotate(radians: .pi/2)
         backgroundImageView.image = backgroundImage
         view.addSubview(backgroundImageView)
+        
+        // get the average color of the image
+        if backgroundImage != nil {
+            guard let inputImage = CIImage(image: backgroundImage!) else { return }
+            let extentVector = CIVector(x: inputImage.extent.origin.x, y: inputImage.extent.origin.y, z: inputImage.extent.size.width, w: inputImage.extent.size.height)
+            guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: inputImage, kCIInputExtentKey: extentVector]) else { return }
+            guard let outputImage = filter.outputImage else { return }
+            var bitmap = [UInt8](repeating: 0, count: 4)
+            let context = CIContext(options: [.workingColorSpace: kCFNull])
+            context.render(outputImage, toBitmap: &bitmap, rowBytes: 4, bounds: CGRect(x: 0, y: 0, width: 1, height: 1), format: .RGBA8, colorSpace: nil)
+            let avgRed = CGFloat(bitmap[0]) / 255
+            let avgGreen = CGFloat(bitmap[1]) / 255
+            let avgBlue = CGFloat(bitmap[2]) / 255
+            let avgAlpha = CGFloat(bitmap[3]) / 255
+            self.view.backgroundColor = UIColor.init(red: avgRed, green: avgGreen, blue: avgBlue, alpha: avgAlpha)
+        }
         
         nextButton.frame = CGRect(x: UIScreen.main.bounds.width-120, y: UIScreen.main.bounds.height - 70, width: 100, height: 50)
         nextButton.layer.cornerRadius = 20

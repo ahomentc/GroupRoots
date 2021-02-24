@@ -57,6 +57,15 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         return button
     }()
     
+    let memeButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "meme_icon"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(openMemePage), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        return button
+    }()
+    
     var isFlashEnabled = false
     
     let gradientProgressView: GradientProgressBar = {
@@ -98,7 +107,10 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         flashButton.frame = CGRect(x: UIScreen.main.bounds.width - 50, y: 15, width: 35, height: 35)
         self.view.insertSubview(flashButton, at: 12)
         
-        cameraFlipButton.frame = CGRect(x: UIScreen.main.bounds.width - 55, y: UIScreen.main.bounds.height - 50, width: 40, height: 40)
+        memeButton.frame = CGRect(x: 60, y: UIScreen.main.bounds.height - 70, width: 70, height: 70)
+        self.view.insertSubview(memeButton, at: 12)
+        
+        cameraFlipButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: UIScreen.main.bounds.height - 55, width: 40, height: 40)
         self.view.insertSubview(cameraFlipButton, at: 12)
 
         self.maximumVideoDuration = 59
@@ -318,5 +330,27 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         let alertController = UIAlertController(title: "AVCam", message: message, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Alert OK button"), style: .cancel, handler: nil))
         present(alertController, animated: true, completion: nil)
+    }
+    
+    func didTapMeme(image: UIImage) {
+        let photoViewController = EditTempPhotoController()
+        photoViewController.backgroundImage = image
+        navigationController?.pushViewController(photoViewController, animated: true)
+    }
+    
+    @objc private func openMemePage() {
+        // need a delegate for that too with the selectedMeme
+
+        let memeBrowserController = MemeBrowserController()
+        memeBrowserController.didFinishPicking { [unowned memeBrowserController] img, cancelled in
+            if cancelled {
+                print("Picker was canceled")
+                return
+            }
+            self.didTapMeme(image: img)
+        }
+        let navController = UINavigationController(rootViewController: memeBrowserController)
+        navController.modalPresentationStyle = .fullScreen
+        self.present(navController, animated: true, completion: nil)
     }
 }
