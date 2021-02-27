@@ -27,6 +27,7 @@ protocol InnerPostCellDelegate {
     func goToImage(for cell: FeedPostCell, isRight: Bool)
     func requestPlay(for cell: FeedPostCell)
     func requestZoomCapability(for cell: FeedPostCell)
+    func handleGroupTap()
 }
 
 class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
@@ -684,8 +685,9 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
     }
     
     @objc private func handleDidTapPostGroup() {
-        guard let groupPost = groupPost else { return }
-        delegate?.didTapGroup(group: groupPost.group)
+//        guard let groupPost = groupPost else { return }
+//        delegate?.didTapGroup(group: groupPost.group)
+        delegate?.handleGroupTap()
     }
     
     @objc private func handleOptionsTap() {

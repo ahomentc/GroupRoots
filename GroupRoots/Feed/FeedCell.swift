@@ -25,7 +25,8 @@ protocol FeedPostCellDelegate {
     func requestZoomCapability(for cell: FeedPostCell)
 }
 
-class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, InnerPostCellDelegate, FeedMembersCellDelegate {
+class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, FeedMembersCellDelegate {
+//class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, InnerPostCellDelegate, FeedMembersCellDelegate {
     func requestZoomCapability(for cell: FeedPostCell) {
         delegate?.requestZoomCapability(for: cell)
     }
@@ -217,7 +218,7 @@ class MyCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionView
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedPostCell.cellId, for: indexPath) as! FeedPostCell
                 cell.isScrollingVertically = isScrollingVertically
                 cell.isScrolling = isScrolling
-                cell.delegate = self
+//                cell.delegate = self
                 cell.emptyComment = true
                 guard let groupPosts = groupPosts else { return cell }
                 

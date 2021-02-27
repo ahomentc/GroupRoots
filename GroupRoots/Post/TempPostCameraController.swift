@@ -14,6 +14,8 @@ import YPImagePicker
 
 class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewControllerDelegate {
         
+    var isTempPost = true
+    
     lazy var captureButton: UIImageView = {
         let button = UIImageView()
         button.image = #imageLiteral(resourceName: "camera_capture")
@@ -71,7 +73,6 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
     let gradientProgressView: GradientProgressBar = {
         let progress = GradientProgressBar()
         progress.isHidden = true
-//        progress.gradientColors = [UIColor(red: 0/255, green: 191/255, blue: 124/255, alpha: 1), UIColor(red: 0/255, green: 120/255, blue: 78/255, alpha: 1), UIColor(red: 0/255, green: 92/255, blue: 68/255, alpha: 1)]
         progress.gradientColors = [UIColor(red: 0/255, green: 191/255, blue: 124/255, alpha: 1), UIColor(red: 53/255, green: 186/255, blue: 219/255, alpha: 1)]
         progress.backgroundColor = .clear
         return progress
@@ -165,6 +166,7 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
 //                    let location = photo.asset?.location
                     let photoViewController = EditTempPhotoController()
                     photoViewController.backgroundImage = photo.image
+                    photoViewController.isTempPost = self.isTempPost
                     self.dismiss(animated: true, completion: {
                         self.navigationController?.pushViewController(photoViewController, animated: true)
                     })
@@ -172,6 +174,7 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
 //                    let location = video.asset?.location
                     let editTempVideoController = EditTempVideoController()
                     editTempVideoController.videoUrl = video.url
+                    editTempVideoController.isTempPost = self.isTempPost
                     self.dismiss(animated: true, completion: {
                         self.navigationController?.pushViewController(editTempVideoController, animated: true)
                     })

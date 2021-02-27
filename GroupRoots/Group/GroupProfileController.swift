@@ -85,7 +85,6 @@ class GroupProfileController: HomePostCellViewController {
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
         self.navigationController?.navigationBar.isTranslucent = false
-//        self.navigationController?.navigationBar.backgroundColor = UIColor.white
         self.navigationController?.navigationBar.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
         self.navigationController?.navigationBar.barTintColor = UIColor.init(white: 0.98, alpha: 1)
         self.view.backgroundColor = UIColor.init(white: 0.98, alpha: 1)

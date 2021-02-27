@@ -1,11 +1,11 @@
 {
   "images" : [
     {
-      "filename" : "hourglass.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "hourglass.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

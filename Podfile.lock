@@ -17,6 +17,7 @@ PODS:
     - BSImageView (= 1.0.3)
   - BSImageView (1.0.3)
   - DGCollectionViewLeftAlignFlowLayout (1.0.4)
+  - EasyPeasy (1.10.0)
   - Firebase/Analytics (6.29.0):
     - Firebase/Core
   - Firebase/Auth (6.29.0):
@@ -157,7 +158,6 @@ PODS:
     - MGEvents (~> 1.2)
     - PromiseKit/Promise (~> 1.5)
     - SGHTTPRequest/Core (~> 1.9)
-  - SnapSliderFilters (2.0)
   - SteviaLayout (4.7.3)
   - SwiftGifOrigin (1.7.0)
   - SwiftyCam (4.0.0)
@@ -171,6 +171,7 @@ PODS:
 DEPENDENCIES:
   - BSImagePicker (~> 2.8)
   - DGCollectionViewLeftAlignFlowLayout
+  - EasyPeasy
   - Firebase/Analytics
   - Firebase/Auth
   - Firebase/Core
@@ -185,7 +186,6 @@ DEPENDENCIES:
   - Player (~> 0.13.2)
   - SearchTextField
   - SGImageCache
-  - SnapSliderFilters
   - SwiftGifOrigin (~> 1.7.0)
   - SwiftyCam
   - UPCarouselFlowLayout
@@ -200,6 +200,7 @@ SPEC REPOS:
     - BSImagePicker
     - BSImageView
     - DGCollectionViewLeftAlignFlowLayout
+    - EasyPeasy
     - Firebase
     - FirebaseAnalytics
     - FirebaseAuth
@@ -233,7 +234,6 @@ SPEC REPOS:
     - SearchTextField
     - SGHTTPRequest
     - SGImageCache
-    - SnapSliderFilters
     - SteviaLayout
     - SwiftGifOrigin
     - SwiftyCam
@@ -248,6 +248,7 @@ SPEC CHECKSUMS:
   BSImagePicker: 07404254f2fcdaf5a2eb403c0f8c337267ce8738
   BSImageView: a149459433a2687157d034c78e059d30ac7f2544
   DGCollectionViewLeftAlignFlowLayout: a0fa58797373ded039cafba8133e79373d048399
+  EasyPeasy: b9b1bae024d21a7dfa9bad26d6826d88348cc6f1
   Firebase: 57957c8d6eb3d8b80a560b1dc58be24724b89ff2
   FirebaseAnalytics: aa522dce9fd93002ba1554467d23ce7092323000
   FirebaseAuth: a818d73466d51db897d3bf3c0f3baa3dae7fd4c0
@@ -281,7 +282,6 @@ SPEC CHECKSUMS:
   SearchTextField: 40dc3cc57def5a211f263cac263622c163bbc25a
   SGHTTPRequest: 93646208528eafd758052a92ee4dcf04e0d263c5
   SGImageCache: ef7daf2cb76a67a79c25a1c1f71fa675c5fc9672
-  SnapSliderFilters: 7f571683b05cf70b8d398e4a0e45691bd9f03a33
   SteviaLayout: c2ecdcff57d44e38fd2f65e54ad52aeae28ca0c4
   SwiftGifOrigin: fbd6cf37afcfcf97a5c3db996ddc0492e5c5c145
   SwiftyCam: 6e57914771d972fbe508e759dc9d0150a44a93fd
@@ -289,6 +289,6 @@ SPEC CHECKSUMS:
   YPImagePicker: 7a34eabd0ef544ae8fbf9785c3df9ec5bbf242e3
   Zoomy: 598d7a6d52567e4f8bf2e557907bbd9d7e725664
 
-PODFILE CHECKSUM: 7a1b449642be1dfbdababa49270fbbaa09e0ed16
+PODFILE CHECKSUM: 7c779a11ad695781b9ac9c7b6d37f22e1a19f340
 
 COCOAPODS: 1.9.3

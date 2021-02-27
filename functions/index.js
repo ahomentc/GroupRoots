@@ -2046,7 +2046,6 @@ exports.updateUserAmountOnPromo = functions.database.ref("/promos/{schoolName}/p
 
 // ------------------- Timer Posts -------------------
 
-
 exports.addTempPostToBucket = functions.database.ref('/posts/{group_id}/{post_id}/isTempPost').onCreate((snapshot, context) => {	
 	const post_id = context.params.post_id;
 	const group_id = context.params.group_id;
@@ -2070,7 +2069,7 @@ exports.deleteTempPosts = functions.pubsub.schedule('0 * * * *').timeZone('Ameri
 	// get all the groups,
 	//		get all the post_ids in the group
 	//			remove the group_id/post_id in posts
-	return snapshot.ref.root.child('/timerPostExpirations/' + hour).once('value', groups_snapshot => {
+	return admin.database().ref('/timerPostExpirations/' + hour).once('value', groups_snapshot => {
 		var sync = new DispatchGroup();
 		var token_0 = sync.enter();
 		var num_groups = 0
@@ -2078,10 +2077,10 @@ exports.deleteTempPosts = functions.pubsub.schedule('0 * * * *').timeZone('Ameri
 			num_groups += 1;
 			var token = sync.enter();
 			var group_id = group.key;
-			return snapshot.ref.root.child('/timerPostExpirations/' + hour + '/' + group_id).once('value', posts_snapshot => {
+			return admin.database().ref('/timerPostExpirations/' + hour + '/' + group_id).once('value', posts_snapshot => {
 				posts_snapshot.forEach(function(post) {
 					var post_id = post.key;
-					promises.push(snapshot.ref.root.child('/posts/' + group_id + '/' + post_id).remove())
+					promises.push(admin.database().ref('/posts/' + group_id + '/' + post_id).remove())
 					sync.leave(token)
 				})
 			}).catch(() => {return null});
@@ -2090,7 +2089,7 @@ exports.deleteTempPosts = functions.pubsub.schedule('0 * * * *').timeZone('Ameri
 		sync.leave(token_0)
 		sync.notify(function() {
 			if ( num_groups > 0 ){
-				promises.push(snapshot.ref.root.child('/timerPostExpirations/' + hour).remove())
+				promises.push(admin.database().ref('/timerPostExpirations/' + hour).remove())
 				return Promise.all(promises);
 			}
 			return null;

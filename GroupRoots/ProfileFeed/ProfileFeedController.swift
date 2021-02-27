@@ -221,6 +221,12 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         return img
     }()
     
+    let logoHeaderView: UIImageView = {
+        let img = UIImageView()
+        img.image = #imageLiteral(resourceName: "icon_login_4")
+        return img
+    }()
+    
     let horizontalGifView: UIImageView = {
         let img = UIImageView()
         img.isHidden = true
@@ -680,12 +686,14 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
 //        createGroupIconButton.layer.cornerRadius = 14
 //        self.view.insertSubview(createGroupIconButton, at: 10)
         
-        followingPageButton.frame = CGRect(x: UIScreen.main.bounds.width/2 - 105, y: UIScreen.main.bounds.height/23 + 0, width: 100, height: 40)
-        self.view.insertSubview(followingPageButton, at: 10)
+//        followingPageButton.frame = CGRect(x: UIScreen.main.bounds.width/2 - 105, y: UIScreen.main.bounds.height/23 + 0, width: 100, height: 40)
+//        self.view.insertSubview(followingPageButton, at: 10)
+//
+//        schoolPageButton.frame = CGRect(x: UIScreen.main.bounds.width/2 + 5, y: UIScreen.main.bounds.height/23 + 0, width: 100, height: 40)
+//        self.view.insertSubview(schoolPageButton, at: 10)
         
-        schoolPageButton.frame = CGRect(x: UIScreen.main.bounds.width/2 + 5, y: UIScreen.main.bounds.height/23 + 0, width: 100, height: 40)
-        self.view.insertSubview(schoolPageButton, at: 10)
-        
+        logoHeaderView.frame = CGRect(x: UIScreen.main.bounds.width/2 - 60, y: 15, width: 120, height: 120)
+        self.view.addSubview(logoHeaderView)
         
         // school code stuff
         schoolCodeLabel.frame = CGRect(x: 0, y: UIScreen.main.bounds.height/2-120, width: UIScreen.main.bounds.width, height: 120)

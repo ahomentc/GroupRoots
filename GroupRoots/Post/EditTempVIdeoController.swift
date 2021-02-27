@@ -25,6 +25,17 @@ class EditTempVideoController: UIViewController {
             self.player.playFromBeginning()
         }
     }
+    
+    let hourglassButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "hourglass_24"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(toggleTempPost), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        return button
+    }()
+    
+    var isTempPost = true
 
     var player = Player()
     
@@ -67,7 +78,11 @@ class EditTempVideoController: UIViewController {
         self.view.insertSubview(nextButton, at: 4)
         
         closeButton.frame = CGRect(x: 10, y: 15, width: 40, height: 40)
+        closeButton.layer.zPosition = 20
         self.view.insertSubview(closeButton, at: 12)
+        
+        hourglassButton.frame = CGRect(x: UIScreen.main.bounds.width - 200, y: UIScreen.main.bounds.height - 75, width: 55, height: 55)
+        self.view.insertSubview(hourglassButton, at: 12)
         
         self.nextButton.addTarget(self, action: #selector(self.nextButtonDown), for: .touchDown)
         self.nextButton.addTarget(self, action: #selector(self.nextButtonDown), for: .touchDragInside)
@@ -81,7 +96,7 @@ class EditTempVideoController: UIViewController {
         self.player.pause()
         let sharePhotoController = SharePhotoController()
         sharePhotoController.selectedVideoURL = videoUrl
-        sharePhotoController.isTempPost = true
+        sharePhotoController.isTempPost = isTempPost
         sharePhotoController.selectedImage = imageFromVideo(url: videoUrl, at: 0)
         navigationController?.pushViewController(sharePhotoController, animated: true)
     }
@@ -96,6 +111,16 @@ class EditTempVideoController: UIViewController {
     
     @objc private func nextButtonUp(){
         self.nextButton.animateButtonUp()
+    }
+    
+    @objc private func toggleTempPost() {
+        isTempPost = !isTempPost
+        if isTempPost {
+            hourglassButton.setImage(#imageLiteral(resourceName: "hourglass_24"), for: .normal)
+        }
+        else {
+            hourglassButton.setImage(#imageLiteral(resourceName: "hourglass_infinity"), for: .normal)
+        }
     }
     
     func imageFromVideo(url: URL, at time: TimeInterval) -> UIImage? {

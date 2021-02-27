@@ -32,5 +32,7 @@ target 'GroupRoots' do
   pod 'SearchTextField'
   pod 'SwiftyCam'
   pod 'GradientProgressBar', '~> 2.0'
-  pod "SnapSliderFilters"
+  # pod "SnapSliderFilters"
+  # pod 'DragRotateScaleView'
+  pod "EasyPeasy"
 end

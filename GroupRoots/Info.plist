@@ -39,6 +39,8 @@
 	<string>Camera access lets you take photos and record video.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Contact access to invite and find friends on GroupRoots</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Tag your location to your post</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>To record audio with video</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

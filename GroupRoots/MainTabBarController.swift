@@ -189,7 +189,8 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
             self.selectedIndex = 3
         }
         else if self.newPost {
-            self.createNewPost()
+//            self.createNewPost()
+            self.goToPostPageForTemp()
         }
         else if self.groupToOpen != "" {
             Database.database().groupExists(groupId: self.groupToOpen, completion: { (exists) in
@@ -341,170 +342,170 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
     
     // --------- Timer Posts ----------
     
-    let timerBackgroundLeft: UIButton = {
-        let view = UIButton(type: .system)
-        view.backgroundColor = UIColor(white: 1, alpha: 1)
-        view.layer.zPosition = 11
-        view.layer.cornerRadius = 10
-        view.layer.shadowOpacity = 0.84
-        view.layer.shadowOffset = .zero
-        view.layer.shadowRadius = 20
-        view.isUserInteractionEnabled = true
-        return view
-    }()
-    
-    let timerBackgroundRight: UIButton = {
-        let view = UIButton(type: .system)
-        view.backgroundColor = UIColor(white: 1, alpha: 1)
-        view.layer.zPosition = 11
-        view.layer.cornerRadius = 10
-        view.layer.shadowOpacity = 0.84
-        view.layer.shadowOffset = .zero
-        view.layer.shadowRadius = 20
-        view.isUserInteractionEnabled = true
-        view.addTarget(self, action: #selector(goToPostPageForTemp), for: .touchUpInside)
-        return view
-    }()
-    
-    let galleryButton: UIButton = {
-        let label = UIButton(type: .system)
-        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
-        label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
-        label.contentHorizontalAlignment = .center
-        label.isUserInteractionEnabled = false
-        label.layer.zPosition = 12
-        label.setImage(#imageLiteral(resourceName: "gallery"), for: .normal)
-        label.tintColor = UIColor.init(white: 0.1, alpha: 1)
-        return label
-    }()
-    
-    let cameraButton: UIButton = {
-        let label = UIButton(type: .system)
-        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
-        label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
-        label.contentHorizontalAlignment = .center
-        label.isUserInteractionEnabled = false
-        label.layer.zPosition = 12
-//        label.setImage(#imageLiteral(resourceName: "camera_2"), for: .normal)
-        label.setImage(#imageLiteral(resourceName: "hourglass"), for: .normal)
-        label.tintColor = UIColor.init(white: 0.1, alpha: 1)
-        return label
-    }()
-    
-    let foreverButton: UIButton = {
-        let label = UIButton(type: .system)
-        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
-        label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
-        label.contentHorizontalAlignment = .center
-        label.isUserInteractionEnabled = false
-        label.layer.zPosition = 12
-        label.tintColor = UIColor.init(white: 0.1, alpha: 1)
-        label.setTitle("Forever", for: .normal)
-        label.addTarget(self, action: #selector(goToPostPage), for: .touchUpInside)
-        return label
-    }()
-    
-    let oneDayButton: UIButton = {
-        let label = UIButton(type: .system)
-        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
-        label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
-        label.contentHorizontalAlignment = .center
-        label.isUserInteractionEnabled = false
-        label.layer.zPosition = 12
-        label.setTitle("24 Hours", for: .normal)
-        label.addTarget(self, action: #selector(goToPostPageForTemp), for: .touchUpInside)
-        return label
-    }()
-    
-    @objc func closeTimerPopup(){
-        UIView.animate(withDuration: 0.5) {
-            self.timerBackgroundLeft.alpha = 0
-            self.timerBackgroundRight.alpha = 0
-            self.foreverButton.alpha = 0
-            self.oneDayButton.alpha = 0
-            self.galleryButton.alpha = 0
-            self.cameraButton.alpha = 0
-        }
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false, block: { timer in
-            self.timerBackgroundLeft.removeFromSuperview()
-            self.timerBackgroundRight.removeFromSuperview()
-            self.foreverButton.removeFromSuperview()
-            self.oneDayButton.removeFromSuperview()
-            self.galleryButton.removeFromSuperview()
-            self.cameraButton.removeFromSuperview()
-        })
-    }
-    
-    func createNewPost() {
-        timerBackgroundLeft.alpha = 0
-        timerBackgroundRight.alpha = 0
-        foreverButton.alpha = 0
-        oneDayButton.alpha = 0
-        galleryButton.alpha = 0
-        cameraButton.alpha = 0
-        
-        UIView.animate(withDuration: 0.5) {
-            self.timerBackgroundLeft.alpha = 1
-            self.timerBackgroundRight.alpha = 1
-            self.foreverButton.alpha = 1
-            self.oneDayButton.alpha = 1
-            self.galleryButton.alpha = 1
-            self.cameraButton.alpha = 1
-        }
-        
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false, block: { timer in
-            self.timerBackgroundLeft.addTarget(self, action: #selector(self.goToPostPage), for: .touchUpInside)
-            self.timerBackgroundLeft.addTarget(self, action: #selector(self.animateLeftBackgroundButtonDown), for: .touchDown)
-            self.timerBackgroundLeft.addTarget(self, action: #selector(self.animateLeftBackgroundButtonDown), for: .touchDragInside)
-            self.timerBackgroundLeft.addTarget(self, action: #selector(self.animateLeftBackgroundButtonUp), for: .touchDragExit)
-            self.timerBackgroundLeft.addTarget(self, action: #selector(self.animateLeftBackgroundButtonUp), for: .touchCancel)
-            self.timerBackgroundLeft.addTarget(self, action: #selector(self.animateLeftBackgroundButtonUp), for: .touchUpInside)
-            
-            self.timerBackgroundRight.addTarget(self, action: #selector(self.goToPostPage), for: .touchUpInside)
-            self.timerBackgroundRight.addTarget(self, action: #selector(self.animateRightBackgroundButtonDown), for: .touchDown)
-            self.timerBackgroundRight.addTarget(self, action: #selector(self.animateRightBackgroundButtonDown), for: .touchDragInside)
-            self.timerBackgroundRight.addTarget(self, action: #selector(self.animateRightBackgroundButtonUp), for: .touchDragExit)
-            self.timerBackgroundRight.addTarget(self, action: #selector(self.animateRightBackgroundButtonUp), for: .touchCancel)
-            self.timerBackgroundRight.addTarget(self, action: #selector(self.animateRightBackgroundButtonUp), for: .touchUpInside)
-        })
-        
-        timerBackgroundLeft.frame = CGRect(x: 40, y: UIScreen.main.bounds.height/2-75, width: UIScreen.main.bounds.width/2-50, height: 150)
-        self.view.insertSubview(timerBackgroundLeft, at: 11)
-        
-        timerBackgroundRight.frame = CGRect(x: 60 + UIScreen.main.bounds.width/2-50 , y: UIScreen.main.bounds.height/2-75, width: UIScreen.main.bounds.width/2-50, height: 150)
-        self.view.insertSubview(timerBackgroundRight, at: 11)
-        
-        galleryButton.frame = CGRect(x: 40 + (UIScreen.main.bounds.width/2-50)/2 - 15, y: UIScreen.main.bounds.height/2-40, width: 30, height: 30)
-        self.view.insertSubview(galleryButton, at: 12)
-        
-//        cameraButton.frame = CGRect(x: 60 + UIScreen.main.bounds.width/2-50 + (UIScreen.main.bounds.width/2-50)/2 - 15, y: UIScreen.main.bounds.height/2-40, width: 30, height: 30)
-        cameraButton.frame = CGRect(x: 60 + UIScreen.main.bounds.width/2-50 + (UIScreen.main.bounds.width/2-50)/2 - 20, y: UIScreen.main.bounds.height/2-45, width: 40, height: 40)
-        self.view.insertSubview(cameraButton, at: 12)
-        
-        foreverButton.frame = CGRect(x: 40 + (UIScreen.main.bounds.width/2-50)/2 - 40, y: UIScreen.main.bounds.height/2-0, width: 80, height: 50)
-        self.view.insertSubview(foreverButton, at: 12)
-        
-        oneDayButton.frame = CGRect(x: 60 + UIScreen.main.bounds.width/2-50 + (UIScreen.main.bounds.width/2-50)/2 - 40, y: UIScreen.main.bounds.height/2-0, width: 80, height: 50)
-        self.view.insertSubview(oneDayButton, at: 12)
-        
-    }
-    
-    @objc private func animateLeftBackgroundButtonDown(){
-        self.timerBackgroundLeft.animateButtonDown()
-    }
-    
-    @objc private func animateLeftBackgroundButtonUp(){
-        self.timerBackgroundLeft.animateButtonUp()
-    }
-    
-    @objc private func animateRightBackgroundButtonDown(){
-        self.timerBackgroundRight.animateButtonDown()
-    }
-    
-    @objc private func animateRightBackgroundButtonUp(){
-        self.timerBackgroundRight.animateButtonUp()
-    }
-    
+//    let timerBackgroundLeft: UIButton = {
+//        let view = UIButton(type: .system)
+//        view.backgroundColor = UIColor(white: 1, alpha: 1)
+//        view.layer.zPosition = 11
+//        view.layer.cornerRadius = 10
+//        view.layer.shadowOpacity = 0.84
+//        view.layer.shadowOffset = .zero
+//        view.layer.shadowRadius = 20
+//        view.isUserInteractionEnabled = true
+//        return view
+//    }()
+//
+//    let timerBackgroundRight: UIButton = {
+//        let view = UIButton(type: .system)
+//        view.backgroundColor = UIColor(white: 1, alpha: 1)
+//        view.layer.zPosition = 11
+//        view.layer.cornerRadius = 10
+//        view.layer.shadowOpacity = 0.84
+//        view.layer.shadowOffset = .zero
+//        view.layer.shadowRadius = 20
+//        view.isUserInteractionEnabled = true
+//        view.addTarget(self, action: #selector(goToPostPageForTemp), for: .touchUpInside)
+//        return view
+//    }()
+//
+//    let galleryButton: UIButton = {
+//        let label = UIButton(type: .system)
+//        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
+//        label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
+//        label.contentHorizontalAlignment = .center
+//        label.isUserInteractionEnabled = false
+//        label.layer.zPosition = 12
+//        label.setImage(#imageLiteral(resourceName: "gallery"), for: .normal)
+//        label.tintColor = UIColor.init(white: 0.1, alpha: 1)
+//        return label
+//    }()
+//
+//    let cameraButton: UIButton = {
+//        let label = UIButton(type: .system)
+//        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
+//        label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
+//        label.contentHorizontalAlignment = .center
+//        label.isUserInteractionEnabled = false
+//        label.layer.zPosition = 12
+////        label.setImage(#imageLiteral(resourceName: "camera_2"), for: .normal)
+//        label.setImage(#imageLiteral(resourceName: "hourglass"), for: .normal)
+//        label.tintColor = UIColor.init(white: 0.1, alpha: 1)
+//        return label
+//    }()
+//
+//    let foreverButton: UIButton = {
+//        let label = UIButton(type: .system)
+//        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
+//        label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
+//        label.contentHorizontalAlignment = .center
+//        label.isUserInteractionEnabled = false
+//        label.layer.zPosition = 12
+//        label.tintColor = UIColor.init(white: 0.1, alpha: 1)
+//        label.setTitle("Forever", for: .normal)
+//        label.addTarget(self, action: #selector(goToPostPage), for: .touchUpInside)
+//        return label
+//    }()
+//
+//    let oneDayButton: UIButton = {
+//        let label = UIButton(type: .system)
+//        label.setTitleColor(UIColor.init(white: 0.1, alpha: 1), for: .normal)
+//        label.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
+//        label.contentHorizontalAlignment = .center
+//        label.isUserInteractionEnabled = false
+//        label.layer.zPosition = 12
+//        label.setTitle("24 Hours", for: .normal)
+//        label.addTarget(self, action: #selector(goToPostPageForTemp), for: .touchUpInside)
+//        return label
+//    }()
+//
+//    @objc func closeTimerPopup(){
+//        UIView.animate(withDuration: 0.5) {
+//            self.timerBackgroundLeft.alpha = 0
+//            self.timerBackgroundRight.alpha = 0
+//            self.foreverButton.alpha = 0
+//            self.oneDayButton.alpha = 0
+//            self.galleryButton.alpha = 0
+//            self.cameraButton.alpha = 0
+//        }
+//        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false, block: { timer in
+//            self.timerBackgroundLeft.removeFromSuperview()
+//            self.timerBackgroundRight.removeFromSuperview()
+//            self.foreverButton.removeFromSuperview()
+//            self.oneDayButton.removeFromSuperview()
+//            self.galleryButton.removeFromSuperview()
+//            self.cameraButton.removeFromSuperview()
+//        })
+//    }
+//
+//    func createNewPost() {
+//        timerBackgroundLeft.alpha = 0
+//        timerBackgroundRight.alpha = 0
+//        foreverButton.alpha = 0
+//        oneDayButton.alpha = 0
+//        galleryButton.alpha = 0
+//        cameraButton.alpha = 0
+//
+//        UIView.animate(withDuration: 0.5) {
+//            self.timerBackgroundLeft.alpha = 1
+//            self.timerBackgroundRight.alpha = 1
+//            self.foreverButton.alpha = 1
+//            self.oneDayButton.alpha = 1
+//            self.galleryButton.alpha = 1
+//            self.cameraButton.alpha = 1
+//        }
+//
+//        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false, block: { timer in
+//            self.timerBackgroundLeft.addTarget(self, action: #selector(self.goToPostPage), for: .touchUpInside)
+//            self.timerBackgroundLeft.addTarget(self, action: #selector(self.animateLeftBackgroundButtonDown), for: .touchDown)
+//            self.timerBackgroundLeft.addTarget(self, action: #selector(self.animateLeftBackgroundButtonDown), for: .touchDragInside)
+//            self.timerBackgroundLeft.addTarget(self, action: #selector(self.animateLeftBackgroundButtonUp), for: .touchDragExit)
+//            self.timerBackgroundLeft.addTarget(self, action: #selector(self.animateLeftBackgroundButtonUp), for: .touchCancel)
+//            self.timerBackgroundLeft.addTarget(self, action: #selector(self.animateLeftBackgroundButtonUp), for: .touchUpInside)
+//
+//            self.timerBackgroundRight.addTarget(self, action: #selector(self.goToPostPage), for: .touchUpInside)
+//            self.timerBackgroundRight.addTarget(self, action: #selector(self.animateRightBackgroundButtonDown), for: .touchDown)
+//            self.timerBackgroundRight.addTarget(self, action: #selector(self.animateRightBackgroundButtonDown), for: .touchDragInside)
+//            self.timerBackgroundRight.addTarget(self, action: #selector(self.animateRightBackgroundButtonUp), for: .touchDragExit)
+//            self.timerBackgroundRight.addTarget(self, action: #selector(self.animateRightBackgroundButtonUp), for: .touchCancel)
+//            self.timerBackgroundRight.addTarget(self, action: #selector(self.animateRightBackgroundButtonUp), for: .touchUpInside)
+//        })
+//
+//        timerBackgroundLeft.frame = CGRect(x: 40, y: UIScreen.main.bounds.height/2-75, width: UIScreen.main.bounds.width/2-50, height: 150)
+//        self.view.insertSubview(timerBackgroundLeft, at: 11)
+//
+//        timerBackgroundRight.frame = CGRect(x: 60 + UIScreen.main.bounds.width/2-50 , y: UIScreen.main.bounds.height/2-75, width: UIScreen.main.bounds.width/2-50, height: 150)
+//        self.view.insertSubview(timerBackgroundRight, at: 11)
+//
+//        galleryButton.frame = CGRect(x: 40 + (UIScreen.main.bounds.width/2-50)/2 - 15, y: UIScreen.main.bounds.height/2-40, width: 30, height: 30)
+//        self.view.insertSubview(galleryButton, at: 12)
+//
+////        cameraButton.frame = CGRect(x: 60 + UIScreen.main.bounds.width/2-50 + (UIScreen.main.bounds.width/2-50)/2 - 15, y: UIScreen.main.bounds.height/2-40, width: 30, height: 30)
+//        cameraButton.frame = CGRect(x: 60 + UIScreen.main.bounds.width/2-50 + (UIScreen.main.bounds.width/2-50)/2 - 20, y: UIScreen.main.bounds.height/2-45, width: 40, height: 40)
+//        self.view.insertSubview(cameraButton, at: 12)
+//
+//        foreverButton.frame = CGRect(x: 40 + (UIScreen.main.bounds.width/2-50)/2 - 40, y: UIScreen.main.bounds.height/2-0, width: 80, height: 50)
+//        self.view.insertSubview(foreverButton, at: 12)
+//
+//        oneDayButton.frame = CGRect(x: 60 + UIScreen.main.bounds.width/2-50 + (UIScreen.main.bounds.width/2-50)/2 - 40, y: UIScreen.main.bounds.height/2-0, width: 80, height: 50)
+//        self.view.insertSubview(oneDayButton, at: 12)
+//
+//    }
+//
+//    @objc private func animateLeftBackgroundButtonDown(){
+//        self.timerBackgroundLeft.animateButtonDown()
+//    }
+//
+//    @objc private func animateLeftBackgroundButtonUp(){
+//        self.timerBackgroundLeft.animateButtonUp()
+//    }
+//
+//    @objc private func animateRightBackgroundButtonDown(){
+//        self.timerBackgroundRight.animateButtonDown()
+//    }
+//
+//    @objc private func animateRightBackgroundButtonUp(){
+//        self.timerBackgroundRight.animateButtonUp()
+//    }
+//
     // ---- end timer posts ----
 }
 
@@ -527,14 +528,15 @@ extension MainTabBarController: UITabBarControllerDelegate {
 //            tabBar.unselectedItemTintColor = UIColor.gray
         }
         if index == 2 {
-            self.createNewPost()
+//            self.createNewPost()
+            self.goToPostPageForTemp()
             return false
         }
         return true
     }
     
     @objc func goToPostPage(){
-        self.closeTimerPopup()
+//        self.closeTimerPopup()
         
         var config = YPImagePickerConfiguration()
         config.library.isSquareByDefault = false
@@ -589,7 +591,7 @@ extension MainTabBarController: UITabBarControllerDelegate {
     }
     
     @objc func goToPostPageForTemp(){
-        self.closeTimerPopup()
+//        self.closeTimerPopup()
         
         let tempPostCameraController = TempPostCameraController()
         let navController = UINavigationController(rootViewController: tempPostCameraController)
