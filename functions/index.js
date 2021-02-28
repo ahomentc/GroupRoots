@@ -745,8 +745,13 @@ exports.removeVideoWhenPostDeleted = functions.database.ref('/posts/{groupId}/{p
 	const post_id = context.params.postId;
 
 	const bucket = firebase.storage().bucket();
-	const filePath = 'group_post_videos/' + group_id  + '/' + post_id
-	return bucket.file(filePath).delete()
+	const videoFilePath = 'group_post_videos/' + group_id  + '/' + post_id
+	const photoFilePath = 'group_post_images/' + group_id  + '/' + post_id + '.jpeg'
+
+	const promises = []
+	promises.push(bucket.file(videoFilePath).delete())
+	promises.push(bucket.file(photoFilePath).delete())
+	return Promise.all(promises);
 });
 
 // NOT TESTED
