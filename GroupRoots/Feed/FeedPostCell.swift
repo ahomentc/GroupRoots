@@ -129,6 +129,8 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         label.numberOfLines = 0
         label.isUserInteractionEnabled = true
         let attributedText = NSMutableAttributedString(string: "", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)])
+        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleDidTapPoster))
+        label.addGestureRecognizer(gestureRecognizer)
         label.attributedText = attributedText
         label.textAlignment = .right
         return label
@@ -583,7 +585,8 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         let groupId = groupPost.group.groupId
         Database.database().isInGroup(groupId: groupId, completion: { (inGroup) in
             if inGroup {
-                let attributedText = NSMutableAttributedString(string: "Posted by " + groupPost.user.username, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)])
+                let attributedText = NSMutableAttributedString(string: "Posted by ", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 12)])
+                attributedText.append(NSMutableAttributedString(string: groupPost.user.username, attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 12)]))
                 self.postedByLabel.attributedText = attributedText
             }
             else {
@@ -682,6 +685,11 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
     @objc private func handleDidTapCommentUser() {
         guard let commentUser = commentUser else { return }
         delegate?.didTapUser(user: commentUser)
+    }
+    
+    @objc private func handleDidTapPoster() {
+        guard let groupPost = groupPost else { return }
+        delegate?.didTapUser(user: groupPost.user)
     }
     
     @objc private func handleDidTapPostGroup() {

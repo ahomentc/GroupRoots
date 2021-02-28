@@ -2315,46 +2315,11 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     func postToGroup(group: Group) {
-        var config = YPImagePickerConfiguration()
-        config.library.isSquareByDefault = false
-        config.shouldSaveNewPicturesToAlbum = false
-        config.library.mediaType = .photoAndVideo
-        config.hidesStatusBar = false
-        config.startOnScreen = YPPickerScreen.library
-        config.targetImageSize = .cappedTo(size: 600)
-        config.video.compression = AVAssetExportPresetMediumQuality
-        let picker = YPImagePicker(configuration: config)
-        
-        picker.didFinishPicking { [unowned picker] items, cancelled in
-            if cancelled {
-                print("Picker was canceled")
-                picker.dismiss(animated: true, completion: nil)
-                return
-            }
-            _ = items.map { print("🧀 \($0)") }
-            if let firstItem = items.first {
-                switch firstItem {
-                case .photo(let photo):
-                    let location = photo.asset?.location
-                    // need to do self.scrollToPreSelected() too
-                    let sharePhotoController = SharePhotoController()
-                    sharePhotoController.preSelectedGroup = group
-                    sharePhotoController.selectedImage = photo.image
-                    sharePhotoController.suggestedLocation = location
-                    picker.pushViewController(sharePhotoController, animated: true)
-                    
-                case .video(let video):
-                    let location = video.asset?.location
-                    let sharePhotoController = SharePhotoController()
-                    sharePhotoController.preSelectedGroup = group
-                    sharePhotoController.selectedVideoURL = video.url
-                    sharePhotoController.selectedImage = video.thumbnail
-                    sharePhotoController.suggestedLocation = location
-                    picker.pushViewController(sharePhotoController, animated: true)
-                }
-            }
-        }
-        present(picker, animated: true, completion: nil)
+        let tempPostCameraController = TempPostCameraController()
+        tempPostCameraController.preSelectedGroup = group
+        let navController = UINavigationController(rootViewController: tempPostCameraController)
+        navController.modalPresentationStyle = .fullScreen
+        self.present(navController, animated: true, completion: nil)
     }
     
     
@@ -2485,44 +2450,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     @objc internal func handleShowCreateFirstPost() {
-        var config = YPImagePickerConfiguration()
-        config.library.isSquareByDefault = false
-        config.shouldSaveNewPicturesToAlbum = false
-        config.library.mediaType = .photoAndVideo
-        config.hidesStatusBar = false
-        config.startOnScreen = YPPickerScreen.library
-        config.targetImageSize = .cappedTo(size: 600)
-        config.video.compression = AVAssetExportPresetMediumQuality
-        let picker = YPImagePicker(configuration: config)
-        
-        picker.didFinishPicking { [unowned picker] items, cancelled in
-            if cancelled {
-                print("Picker was canceled")
-                picker.dismiss(animated: true, completion: nil)
-                return
-            }
-            _ = items.map { print("🧀 \($0)") }
-            if let firstItem = items.first {
-                switch firstItem {
-                case .photo(let photo):
-                    let location = photo.asset?.location
-                    // need to do self.scrollToPreSelected() too
-                    let sharePhotoController = SharePhotoController()
-                    sharePhotoController.selectedImage = photo.image
-                    sharePhotoController.suggestedLocation = location
-                    picker.pushViewController(sharePhotoController, animated: true)
-                    
-                case .video(let video):
-                    let location = video.asset?.location
-                    let sharePhotoController = SharePhotoController()
-                    sharePhotoController.selectedVideoURL = video.url
-                    sharePhotoController.selectedImage = video.thumbnail
-                    sharePhotoController.suggestedLocation = location
-                    picker.pushViewController(sharePhotoController, animated: true)
-                }
-            }
-        }
-        present(picker, animated: true, completion: nil)
+        let tempPostCameraController = TempPostCameraController()
+        let navController = UINavigationController(rootViewController: tempPostCameraController)
+        navController.modalPresentationStyle = .fullScreen
+        self.present(navController, animated: true, completion: nil)
     }
     
     @objc internal func handleFirstGo() {

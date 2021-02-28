@@ -535,9 +535,7 @@ extension MainTabBarController: UITabBarControllerDelegate {
         return true
     }
     
-    @objc func goToPostPage(){
-//        self.closeTimerPopup()
-        
+    @objc func goToPostPage(){        
         var config = YPImagePickerConfiguration()
         config.library.isSquareByDefault = false
         config.shouldSaveNewPicturesToAlbum = false
@@ -591,64 +589,10 @@ extension MainTabBarController: UITabBarControllerDelegate {
     }
     
     @objc func goToPostPageForTemp(){
-//        self.closeTimerPopup()
-        
         let tempPostCameraController = TempPostCameraController()
         let navController = UINavigationController(rootViewController: tempPostCameraController)
         navController.modalPresentationStyle = .fullScreen
         self.present(navController, animated: true, completion: nil)
-        
-        return
-        var config = YPImagePickerConfiguration()
-        config.library.isSquareByDefault = false
-        config.shouldSaveNewPicturesToAlbum = false
-        config.library.mediaType = .photoAndVideo
-        config.hidesStatusBar = false
-        config.startOnScreen = YPPickerScreen.library
-        config.targetImageSize = .cappedTo(size: 600)
-        config.video.compression = AVAssetExportPresetMediumQuality
-        let picker = YPImagePicker(configuration: config)
-        
-        var preSelectedGroup: Group?
-        if let topController = UIApplication.topViewController() {
-            if type(of: topController) == GroupProfileController.self {
-                let groupProfile = topController as? GroupProfileController
-                preSelectedGroup = groupProfile?.group
-            }
-        }
-        
-        picker.didFinishPicking { [unowned picker] items, cancelled in
-            if cancelled {
-                print("Picker was canceled")
-                picker.dismiss(animated: true, completion: nil)
-                return
-            }
-            _ = items.map { print("🧀 \($0)") }
-            if let firstItem = items.first {
-                switch firstItem {
-                case .photo(let photo):
-                    let location = photo.asset?.location
-                    // need to do self.scrollToPreSelected() too
-                    let sharePhotoController = SharePhotoController()
-                    sharePhotoController.preSelectedGroup = preSelectedGroup
-                    sharePhotoController.selectedImage = photo.image
-                    sharePhotoController.suggestedLocation = location
-                    sharePhotoController.isTempPost = true
-                    picker.pushViewController(sharePhotoController, animated: true)
-                    
-                case .video(let video):
-                    let location = video.asset?.location
-                    let sharePhotoController = SharePhotoController()
-                    sharePhotoController.preSelectedGroup = preSelectedGroup
-                    sharePhotoController.selectedVideoURL = video.url
-                    sharePhotoController.selectedImage = video.thumbnail
-                    sharePhotoController.suggestedLocation = location
-                    sharePhotoController.isTempPost = true
-                    picker.pushViewController(sharePhotoController, animated: true)
-                }
-            }
-        }
-        present(picker, animated: true, completion: nil)
     }
 }
 

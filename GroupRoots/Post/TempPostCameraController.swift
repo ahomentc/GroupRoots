@@ -16,6 +16,8 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         
     var isTempPost = true
     
+    var preSelectedGroup: Group?
+    
     lazy var captureButton: UIImageView = {
         let button = UIImageView()
         button.image = #imageLiteral(resourceName: "camera_capture")

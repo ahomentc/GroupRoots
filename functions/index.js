@@ -1,6 +1,6 @@
 const functions = require('firebase-functions'); // coud functions for firebase sdk to create cloud functions and setup triggers
 const admin = require('firebase-admin'); // access to ifrebase realtime database
-admin.initializeApp();
+const firebase = admin.initializeApp();
 
 // --------- Start helper  ---------
 
@@ -728,6 +728,25 @@ exports.updateGroupsLastPostedWhenPostDeleted = functions.database.ref('/posts/{
 			})
 	  	}).catch(() => {return null});
 	}).catch(() => {return null});
+});
+
+// need to use imageHeight because videos also use imgUrl
+exports.removePhotoWhenPostDeleted = functions.database.ref('/posts/{groupId}/{postId}/imageHeight').onDelete((post_snapshot, context) => {
+	const group_id = context.params.groupId;
+	const post_id = context.params.postId;
+
+	const bucket = firebase.storage().bucket();
+	const filePath = 'group_post_images/' + group_id  + '/' + post_id + '.jpeg'
+	return bucket.file(filePath).delete()
+});
+
+exports.removeVideoWhenPostDeleted = functions.database.ref('/posts/{groupId}/{postId}/videoUrl').onDelete((post_snapshot, context) => {
+	const group_id = context.params.groupId;
+	const post_id = context.params.postId;
+
+	const bucket = firebase.storage().bucket();
+	const filePath = 'group_post_videos/' + group_id  + '/' + post_id
+	return bucket.file(filePath).delete()
 });
 
 // NOT TESTED
