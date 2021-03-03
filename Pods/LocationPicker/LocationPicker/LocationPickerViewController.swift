@@ -280,6 +280,25 @@ extension LocationPickerViewController: CLLocationManagerDelegate {
 		guard let location = locations.first else { return }
         currentLocationListeners.forEach { $0.action(location) }
 		currentLocationListeners = currentLocationListeners.filter { !$0.once }
+        
+        if self.location == nil {
+            let geocoder = CLGeocoder()
+            geocoder.reverseGeocodeLocation(location, completionHandler: {(placemarks, error)->Void in
+                if placemarks != nil && placemarks!.count > 0 {
+                    let placemark = placemarks![0]
+                    var name = placemark.name
+                    if placemark.areasOfInterest != nil && placemark.areasOfInterest!.count > 0 {
+                        name = placemark.areasOfInterest![0]
+                    }
+                    self.location = Location(name: name, location: location, placemark: placemark)
+                }
+                else {
+                    let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude), addressDictionary: nil)
+                    self.location = Location(name: "", location: location, placemark: placemark)
+                }
+            })
+        }
+        
 		manager.stopUpdatingLocation()
 	}
 }

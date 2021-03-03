@@ -168,6 +168,7 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
 //                    let location = photo.asset?.location
                     let photoViewController = EditTempPhotoController()
                     photoViewController.backgroundImage = photo.image
+                    photoViewController.isImageFromCamera = false
                     photoViewController.isTempPost = self.isTempPost
                     self.dismiss(animated: true, completion: {
                         self.navigationController?.pushViewController(photoViewController, animated: true)
@@ -304,6 +305,7 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         // take you to filters page or page where you can add text to image
         let photoViewController = EditTempPhotoController()
         photoViewController.backgroundImage = photo
+        photoViewController.isImageFromCamera = true
         navigationController?.pushViewController(photoViewController, animated: false)
     }
     

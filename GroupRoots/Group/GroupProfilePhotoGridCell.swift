@@ -19,6 +19,16 @@ class GroupProfilePhotoGridCell: UICollectionViewCell {
                 if self.groupPost!.videoUrl != "" {
                     self.playButton.isHidden = false
                 }
+                
+                if self.groupPost!.isTempPost  {
+                    self.hourglassButton.isHidden = false
+                    let timeAgo = self.groupPost!.creationDate.timeAgo()
+                    var pic_number = Int(floor((16*Double(timeAgo))/24)) + 1
+                    if pic_number > 15 {
+                        pic_number = 15
+                    }
+                    self.hourglassButton.setImage(UIImage(named: "hourglass" + String(pic_number) + ".png"), for: .normal)
+                }
             }
         }
     }
@@ -37,6 +47,15 @@ class GroupProfilePhotoGridCell: UICollectionViewCell {
         button.tintColor = UIColor.white
         button.isUserInteractionEnabled = false
         button.setImage(#imageLiteral(resourceName: "play").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.isHidden = true
+        return button
+    }()
+    
+    let hourglassButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.tintColor = UIColor.white
+        button.isUserInteractionEnabled = false
+        button.setImage(#imageLiteral(resourceName: "hourglass1").withRenderingMode(.alwaysOriginal), for: .normal)
         button.isHidden = true
         return button
     }()
@@ -60,6 +79,11 @@ class GroupProfilePhotoGridCell: UICollectionViewCell {
         
         insertSubview(playButton, at: 5)
         playButton.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 30, paddingLeft: 30, paddingBottom: 30, paddingRight: 30)
+        
+        insertSubview(hourglassButton, at: 6)
+        hourglassButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 5).isActive = true
+        hourglassButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 5).isActive = true
+        hourglassButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 5, paddingRight: 5)
     }
     
     override func prepareForReuse() {
@@ -67,6 +91,8 @@ class GroupProfilePhotoGridCell: UICollectionViewCell {
         playButton.isHidden = true
         photoImageView.image = CustomImageView.imageWithColor(color: .white)
         groupPost = nil
+        hourglassButton.isHidden = true
+        hourglassButton.setImage(#imageLiteral(resourceName: "hourglass1").withRenderingMode(.alwaysOriginal), for: .normal)
     }
 }
 

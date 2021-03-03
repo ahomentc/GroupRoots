@@ -337,9 +337,9 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         
         insertSubview(playButton, at: 11)
         
-        coverView.heightAnchor.constraint(equalToConstant: 250).isActive = true
+        coverView.heightAnchor.constraint(equalToConstant: 220).isActive = true
         coverView.layer.cornerRadius = 0
-        coverView.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 210, width: UIScreen.main.bounds.width, height: 250)
+        coverView.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 180, width: UIScreen.main.bounds.width, height: 220)
         coverView.isUserInteractionEnabled = false
         insertSubview(coverView, at: 3)
         
