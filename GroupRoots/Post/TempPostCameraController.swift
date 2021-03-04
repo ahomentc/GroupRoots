@@ -43,6 +43,35 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         return button
     }()
     
+    let galleryTextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Gallery", for: .normal)
+        button.backgroundColor = .clear
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        button.addTarget(self, action: #selector(usePicker), for: .touchUpInside)
+        button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.left
+        return button
+    }()
+    
+    let blankButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "blank_icon"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(openBlankPhoto), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        return button
+    }()
+    
+    let blankTextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Blank", for: .normal)
+        button.backgroundColor = .clear
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        button.addTarget(self, action: #selector(openBlankPhoto), for: .touchUpInside)
+        button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.left
+        return button
+    }()
+    
     let flashButton: UIButton = {
         let button = UIButton()
         button.setImage(#imageLiteral(resourceName: "flash_off"), for: .normal)
@@ -67,6 +96,16 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         button.backgroundColor = .clear
         button.addTarget(self, action: #selector(openMemePage), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        return button
+    }()
+    
+    let memeTextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Memes", for: .normal)
+        button.backgroundColor = .clear
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        button.addTarget(self, action: #selector(openMemePage), for: .touchUpInside)
+        button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.left
         return button
     }()
     
@@ -98,26 +137,54 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         longPressGestureRecognizer.minimumPressDuration = 0.4
         captureButton.addGestureRecognizer(longPressGestureRecognizer)
         
-        gradientProgressView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 10)
+        gradientProgressView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 15)
         self.view.insertSubview(gradientProgressView, at: 12)
         
         closeButton.frame = CGRect(x: 15, y: 15, width: 40, height: 40)
         self.view.insertSubview(closeButton, at: 12)
         
+        blankButton.frame = CGRect(x: 15, y: UIScreen.main.bounds.height - 120, width: 40, height: 40)
+        self.view.insertSubview(blankButton, at: 12)
+        
+        blankTextButton.frame = CGRect(x: 70, y: UIScreen.main.bounds.height - 120, width: 100, height: 40)
+        self.view.insertSubview(blankTextButton, at: 12)
+        
         galleryButton.frame = CGRect(x: 15, y: UIScreen.main.bounds.height - 55, width: 40, height: 40)
         self.view.insertSubview(galleryButton, at: 12)
+        
+        galleryTextButton.frame = CGRect(x: 70, y: UIScreen.main.bounds.height - 55, width: 100, height: 40)
+        self.view.insertSubview(galleryTextButton, at: 12)
         
         flashButton.frame = CGRect(x: UIScreen.main.bounds.width - 50, y: 15, width: 35, height: 35)
         self.view.insertSubview(flashButton, at: 12)
         
-        memeButton.frame = CGRect(x: 60, y: UIScreen.main.bounds.height - 70, width: 70, height: 70)
+        memeButton.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 195, width: 70, height: 70)
         self.view.insertSubview(memeButton, at: 12)
+        
+        memeTextButton.frame = CGRect(x: 70, y: UIScreen.main.bounds.height - 180, width: 100, height: 40)
+        self.view.insertSubview(memeTextButton, at: 12)
+        
+//        memeButton.frame = CGRect(x: 60, y: UIScreen.main.bounds.height - 70, width: 70, height: 70)
+//        self.view.insertSubview(memeButton, at: 12)
         
         cameraFlipButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: UIScreen.main.bounds.height - 55, width: 40, height: 40)
         self.view.insertSubview(cameraFlipButton, at: 12)
 
         self.maximumVideoDuration = 59
         self.swipeToZoomInverted = true
+        
+        Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { timer in
+            UIView.animate(withDuration: 1) {
+                self.galleryTextButton.alpha = 0
+                self.blankTextButton.alpha = 0
+                self.memeTextButton.alpha = 0
+            }
+        }
+        Timer.scheduledTimer(withTimeInterval: 4.0, repeats: false) { timer in
+            self.galleryTextButton.isHidden = true
+            self.blankTextButton.isHidden = true
+            self.memeTextButton.isHidden = true
+        }
     }
     
     func configureNavBar() {
@@ -147,14 +214,6 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         config.video.compression = AVAssetExportPresetMediumQuality
         let picker = YPImagePicker(configuration: config)
         
-        var preSelectedGroup: Group?
-        if let topController = UIApplication.topViewController() {
-            if type(of: topController) == GroupProfileController.self {
-                let groupProfile = topController as? GroupProfileController
-                preSelectedGroup = groupProfile?.group
-            }
-        }
-        
         picker.didFinishPicking { [unowned picker] items, cancelled in
             if cancelled {
                 print("Picker was canceled")
@@ -165,19 +224,34 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
             if let firstItem = items.first {
                 switch firstItem {
                 case .photo(let photo):
-//                    let location = photo.asset?.location
-                    let photoViewController = EditTempPhotoController()
-                    photoViewController.backgroundImage = photo.image
-                    photoViewController.isImageFromCamera = false
-                    photoViewController.isTempPost = self.isTempPost
+                    let location = photo.asset?.location
+                    let editTempPhotoController = EditTempPhotoController()
+                    editTempPhotoController.backgroundImage = photo.image
+                    editTempPhotoController.isTempPost = self.isTempPost
+                    editTempPhotoController.suggestedLocation = location
+                    if self.preSelectedGroup != nil {
+                        editTempPhotoController.selectedGroup = self.preSelectedGroup
+                        editTempPhotoController.setupWithSelectedGroupWithAnim = false
+                    }
+                    else {
+                        editTempPhotoController.selectedGroup = nil
+                    }
                     self.dismiss(animated: true, completion: {
-                        self.navigationController?.pushViewController(photoViewController, animated: true)
+                        self.navigationController?.pushViewController(editTempPhotoController, animated: true)
                     })
                 case .video(let video):
-//                    let location = video.asset?.location
+                    let location = video.asset?.location
                     let editTempVideoController = EditTempVideoController()
                     editTempVideoController.videoUrl = video.url
                     editTempVideoController.isTempPost = self.isTempPost
+                    editTempVideoController.suggestedLocation = location
+                    if self.preSelectedGroup != nil {
+                        editTempVideoController.selectedGroup = self.preSelectedGroup
+                        editTempVideoController.setupWithSelectedGroupWithAnim = false
+                    }
+                    else {
+                        editTempVideoController.selectedGroup = nil
+                    }
                     self.dismiss(animated: true, completion: {
                         self.navigationController?.pushViewController(editTempVideoController, animated: true)
                     })
@@ -226,11 +300,24 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
                 self.gradientProgressView.animationDuration = 59
                 self.gradientProgressView.setProgress(1.0, animated: true)
             })
+            
+            self.closeButton.isHidden = true
+            self.flashButton.isHidden = true
+            self.galleryButton.isHidden = true
+            self.blankButton.isHidden = true
+            self.memeButton.isHidden = true
+            self.cameraFlipButton.isHidden = true
         }
         if longPressGestureRecognizer.state == .ended {
             stopVideoRecording()
             endCameraVideoAnim()
             self.gradientProgressView.isHidden = true
+            self.closeButton.isHidden = false
+            self.flashButton.isHidden = false
+            self.galleryButton.isHidden = false
+            self.memeButton.isHidden = false
+            self.cameraFlipButton.isHidden = false
+            self.blankButton.isHidden = false
         }
     }
     
@@ -303,16 +390,29 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
     
     func swiftyCam(_ swiftyCam: SwiftyCamViewController, didTake photo: UIImage) {
         // take you to filters page or page where you can add text to image
-        let photoViewController = EditTempPhotoController()
-        photoViewController.backgroundImage = photo
-        photoViewController.isImageFromCamera = true
-        navigationController?.pushViewController(photoViewController, animated: false)
+        let editTempPhotoController = EditTempPhotoController()
+        editTempPhotoController.backgroundImage = photo
+        if preSelectedGroup != nil {
+            editTempPhotoController.selectedGroup = preSelectedGroup
+            editTempPhotoController.setupWithSelectedGroupWithAnim = false
+        }
+        else {
+            editTempPhotoController.selectedGroup = nil
+        }
+        navigationController?.pushViewController(editTempPhotoController, animated: false)
     }
     
     func swiftyCam(_ swiftyCam: SwiftyCamViewController, didFinishProcessVideoAt url: URL) {
         // take you to filters page
         let editTempVideoController = EditTempVideoController()
         editTempVideoController.videoUrl = url
+        if preSelectedGroup != nil {
+            editTempVideoController.selectedGroup = preSelectedGroup
+            editTempVideoController.setupWithSelectedGroupWithAnim = false
+        }
+        else {
+            editTempVideoController.selectedGroup = nil
+        }
         navigationController?.pushViewController(editTempVideoController, animated: false)
     }
     
@@ -339,10 +439,29 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         present(alertController, animated: true, completion: nil)
     }
     
+    @objc private func openBlankPhoto() {
+        let editTempPhotoController = EditTempPhotoController()
+        if preSelectedGroup != nil {
+            editTempPhotoController.selectedGroup = preSelectedGroup
+            editTempPhotoController.setupWithSelectedGroupWithAnim = false
+        }
+        else {
+            editTempPhotoController.selectedGroup = nil
+        }
+        navigationController?.pushViewController(editTempPhotoController, animated: true)
+    }
+    
     func didTapMeme(image: UIImage) {
-        let photoViewController = EditTempPhotoController()
-        photoViewController.backgroundImage = image
-        navigationController?.pushViewController(photoViewController, animated: true)
+        let editTempPhotoController = EditTempPhotoController()
+        editTempPhotoController.backgroundImage = image
+        if preSelectedGroup != nil {
+            editTempPhotoController.selectedGroup = preSelectedGroup
+            editTempPhotoController.setupWithSelectedGroupWithAnim = false
+        }
+        else {
+            editTempPhotoController.selectedGroup = nil
+        }
+        navigationController?.pushViewController(editTempPhotoController, animated: true)
     }
     
     @objc private func openMemePage() {

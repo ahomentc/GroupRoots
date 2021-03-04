@@ -271,3 +271,65 @@ class GroupProfileHeaderCell: UICollectionViewCell {
         }
     }
 }
+
+
+
+
+
+// --------------------- CreatePostHeaderCell ---------------------------
+
+
+class CreatePostHeaderCell: UICollectionViewCell {
+    
+    private let groupLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.text = "Post"
+        label.textAlignment = .center
+        return label
+    }()
+    
+    private let shareImageView: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.image = #imageLiteral(resourceName: "simple_plus_small")
+        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderWidth = 1
+        iv.backgroundColor = .white
+        iv.layer.zPosition = 10
+        return iv
+    }()
+    
+    static var cellId = "createPostHeaderCell"
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        sharedInit()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        sharedInit()
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        shareImageView.image = #imageLiteral(resourceName: "simple_plus_small")
+    }
+    
+    private func sharedInit() {
+        
+        addSubview(shareImageView)
+        shareImageView.anchor(left: leftAnchor, width: 60, height: 60)
+        shareImageView.layer.cornerRadius = 60/2
+        
+        addSubview(groupLabel)
+        groupLabel.anchor(top: shareImageView.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 5, paddingRight: 0)
+    }
+}
+
+
+
+
+

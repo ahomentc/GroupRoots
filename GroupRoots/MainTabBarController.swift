@@ -590,6 +590,14 @@ extension MainTabBarController: UITabBarControllerDelegate {
     
     @objc func goToPostPageForTemp(){
         let tempPostCameraController = TempPostCameraController()
+        
+        if let topController = UIApplication.topViewController() {
+            if type(of: topController) == GroupProfileController.self {
+                let groupProfile = topController as? GroupProfileController
+                tempPostCameraController.preSelectedGroup = groupProfile?.group
+            }
+        }
+        
         let navController = UINavigationController(rootViewController: tempPostCameraController)
         navController.modalPresentationStyle = .fullScreen
         self.present(navController, animated: true, completion: nil)

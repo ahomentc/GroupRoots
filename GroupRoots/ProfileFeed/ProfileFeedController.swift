@@ -1387,6 +1387,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                                 lower_sync.enter()
                                 Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
                                     lower_sync.leave()
+                                    self.isInGroupDict[groupId] = inGroup
                                     if inGroup {
                                         // get the viewers
                                         lower_sync.enter()
@@ -2012,6 +2013,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 feedCell.groupPostsFirstComment = groupPostsFirstCommentDict[groupId]
                 feedCell.groupPostsNumComments = groupPostsNumCommentsDict[groupId]
                 feedCell.hasViewedPosts = hasViewedDict[groupId]
+                feedCell.isInGroup = isInGroupDict[groupId] ?? false
                 feedCell.delegate = self
                 feedCell.tag = indexPath.row
                 feedCell.maxDistanceScrolled = CGFloat(0)

@@ -161,6 +161,7 @@ PODS:
   - SteviaLayout (4.7.3)
   - SwiftGifOrigin (1.7.0)
   - SwiftyCam (4.0.0)
+  - SwiftyDraw (2.4.1)
   - UPCarouselFlowLayout (1.1.2)
   - YPImagePicker (4.1.3):
     - PryntTrimmerView (~> 4.0.0)
@@ -188,6 +189,7 @@ DEPENDENCIES:
   - SGImageCache
   - SwiftGifOrigin (~> 1.7.0)
   - SwiftyCam
+  - SwiftyDraw
   - UPCarouselFlowLayout
   - YPImagePicker
   - Zoomy
@@ -237,6 +239,7 @@ SPEC REPOS:
     - SteviaLayout
     - SwiftGifOrigin
     - SwiftyCam
+    - SwiftyDraw
     - UPCarouselFlowLayout
     - YPImagePicker
     - Zoomy
@@ -285,10 +288,11 @@ SPEC CHECKSUMS:
   SteviaLayout: c2ecdcff57d44e38fd2f65e54ad52aeae28ca0c4
   SwiftGifOrigin: fbd6cf37afcfcf97a5c3db996ddc0492e5c5c145
   SwiftyCam: 6e57914771d972fbe508e759dc9d0150a44a93fd
+  SwiftyDraw: da4c80dd65fb5e1ca9c7a55f7301725f36e32d4a
   UPCarouselFlowLayout: 4c7d2c43a10ebb1597bde502a53699d378341dad
   YPImagePicker: 7a34eabd0ef544ae8fbf9785c3df9ec5bbf242e3
   Zoomy: 598d7a6d52567e4f8bf2e557907bbd9d7e725664
 
-PODFILE CHECKSUM: 7c779a11ad695781b9ac9c7b6d37f22e1a19f340
+PODFILE CHECKSUM: 8647c1d431a697732640e1e92c204fbf2152fe53
 
 COCOAPODS: 1.9.3

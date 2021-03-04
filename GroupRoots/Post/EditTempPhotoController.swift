@@ -14,6 +14,9 @@ import FirebaseAuth
 import LocationPicker
 import MapKit
 import FirebaseDatabase
+import YPImagePicker
+import AVFoundation
+import SwiftyDraw
 
 enum FilterType : String {
     case Chrome = "CIPhotoEffectChrome"
@@ -34,30 +37,74 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
     
     var isTempPost = true
     
-    var isImageFromCamera = false
-
     var backgroundImage: UIImage?
     
     var suggestedLocation: CLLocation?
+    var pickedLocation: PostLocation?
+    
+    var selectedVideoURL: URL?
     
     var selectedGroup: Group? {
         didSet {
-            self.coverView.isHidden = true
-            self.postCoverView.isHidden = false
-            self.nextButton.setTitle("Post", for: .normal)
-            self.hourglassButton.isHidden = false
-            self.showSelectedGroup()
+            if selectedGroup == nil {
+                self.nextButton.isHidden = false
+                self.postButton.isHidden = true
+                self.hourglassButton.isHidden = true
+            }
         }
     }
     
-    let selectedGroupLabel: UILabel = {
+    var setupWithSelectedGroupWithAnim: Bool? {
+        didSet {
+            guard let setupWithSelectedGroupWithAnim = setupWithSelectedGroupWithAnim else { return }
+            if setupWithSelectedGroupWithAnim {
+                self.coverView.isHidden = true
+                self.postCoverView.isHidden = false
+                self.hourglassButton.isHidden = false
+                self.showSelectedGroup()
+                
+                self.hourglassButton.alpha = 0
+                UIView.animate(withDuration: 0.2, delay: 0.0, options: [.allowUserInteraction, .curveEaseIn], animations: {
+                    self.hourglassButton.alpha = 1
+                }, completion: nil)
+                
+                //nextButton postButton
+                self.postButton.transform = CGAffineTransform(scaleX: 0, y: 0)
+                self.postButton.isHidden = false
+                UIView.animate(withDuration: 0.2, delay: 0.0, options: [.allowUserInteraction, .curveEaseIn], animations: {
+                    self.nextButton.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
+                }, completion: nil)
+                Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { timer in
+                    self.nextButton.isHidden = true
+                    UIView.animate(withDuration: 0.2, delay: 0.0, options: [.allowUserInteraction, .curveEaseIn], animations: {
+                        self.postButton.transform = CGAffineTransform.identity
+                    }, completion: nil)
+                }
+            }
+            else {
+                self.coverView.isHidden = true
+                self.postCoverView.isHidden = false
+                self.hourglassButton.isHidden = false
+                self.showSelectedGroup()
+                self.hourglassButton.isHidden = false
+                self.postButton.isHidden = false
+                self.nextButton.isHidden = true
+            }
+        }
+    }
+    
+    lazy var selectedGroupLabel: UILabel = {
         let label = UILabel()
         label.text = ""
         label.textAlignment = .right
         label.backgroundColor = UIColor.clear
         label.textColor = .white
         label.font = UIFont.boldSystemFont(ofSize: 16)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(selectGroup))
+        label.isUserInteractionEnabled = true
+        label.addGestureRecognizer(tap)
         label.isHidden = true
+        label.layer.zPosition = 10
         return label
     }()
     
@@ -67,6 +114,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.backgroundColor = .clear
         button.addTarget(self, action: #selector(close), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 10
         return button
     }()
     
@@ -78,6 +126,19 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitle("Share to", for: .normal)
+        button.layer.zPosition = 10
+        return button
+    }()
+    
+    private lazy var postButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(handleShare), for: .touchUpInside)
+        button.layer.zPosition = 4;
+        button.backgroundColor = UIColor(white: 1, alpha: 1)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        button.setTitle("Post", for: .normal)
+        button.layer.zPosition = 10
         return button
     }()
     
@@ -88,6 +149,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.addTarget(self, action: #selector(toggleTempPost), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.isHidden = true
+        button.layer.zPosition = 10
         return button
     }()
     
@@ -97,6 +159,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.backgroundColor = .clear
         button.addTarget(self, action: #selector(showCaptionTextView), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 10
         return button
     }()
     
@@ -106,6 +169,17 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.backgroundColor = .clear
         button.addTarget(self, action: #selector(pickLocation), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 10
+        return button
+    }()
+    
+    let drawButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "draw_icon"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(startDrawing), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 10
         return button
     }()
     
@@ -159,6 +233,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.addTarget(self, action: #selector(addText), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.isHidden = false
+        button.layer.zPosition = 10
         return button
     }()
     
@@ -169,6 +244,71 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.isUserInteractionEnabled = false
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.isHidden = true
+        button.layer.zPosition = 10
+        return button
+    }()
+    
+    let colorButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "color_circle"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(changeBackgroundColor), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 10
+        return button
+    }()
+    
+    let doneDrawingButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "checkmark"), for: .normal)
+        button.backgroundColor = .clear
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.isHidden = true
+        button.layer.zPosition = 20
+        button.addTarget(self, action: #selector(doneDrawing), for: .touchUpInside)
+        return button
+    }()
+    
+    let colorDrawingButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "color_circle"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(changeDrawingColor), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 10
+        button.isHidden = true
+        return button
+    }()
+    
+    let undoDrawingButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "undo_icon"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(undoDrawing), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 10
+        button.isHidden = true
+        return button
+    }()
+    
+    let galleryPlusButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "gallery_plus"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(addImageFromGallery), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 10
+        return button
+    }()
+    
+    let trashIcon: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "trash_icon"), for: .normal)
+        button.backgroundColor = .clear
+        button.isUserInteractionEnabled = false
+        button.addTarget(self, action: #selector(changeBackgroundColor), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 10
         return button
     }()
     
@@ -187,16 +327,22 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         textView.font = UIFont.systemFont(ofSize: 18)
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         textView.isHidden = true
+        textView.tag = 1
+        textView.layer.zPosition = 10
         return textView
     }()
     
+    let drawView = SwiftyDrawView()
+    
     var textViews = [UITextView]()
     var activeTextView = UITextView()
+    var imageViews = [UIImageView]()
     
     override func viewWillAppear(_ animated: Bool) {
-        self.nextButton.isHidden = false
+//        self.nextButton.isHidden = false
+//        self.postButton.isHidden = true
         self.textButton.isHidden = false
-        self.hourglassButton.isHidden = true
+//        self.hourglassButton.isHidden = true
         self.closeButton.isHidden = false
         self.upperCoverView.isHidden = false
         self.coverView.isHidden = false
@@ -204,6 +350,13 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        drawView.frame = self.view.frame
+        drawView.layer.zPosition = 20
+        drawView.isEnabled = false
+        drawView.brush.color = Color(.white)
+        drawView.brush.width = 5.0
+        self.view.insertSubview(drawView, at: 20)
         
         let tapGestureReconizer = UITapGestureRecognizer(target: self, action: #selector(closeTextViewKeyboard))
         tapGestureReconizer.cancelsTouchesInView = false
@@ -235,6 +388,10 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         nextButton.layer.cornerRadius = 20
         self.view.insertSubview(nextButton, at: 4)
         
+        postButton.frame = CGRect(x: UIScreen.main.bounds.width-120, y: UIScreen.main.bounds.height - 70, width: 100, height: 50)
+        postButton.layer.cornerRadius = 20
+        self.view.insertSubview(postButton, at: 4)
+        
         closeButton.frame = CGRect(x: 10, y: 15, width: 40, height: 40)
         closeButton.layer.zPosition = 20
         self.view.insertSubview(closeButton, at: 12)
@@ -251,14 +408,32 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         doneTextButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 15, width: 40, height: 40)
         self.view.insertSubview(doneTextButton, at: 12)
         
+        doneDrawingButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 15, width: 40, height: 40)
+        self.view.insertSubview(doneDrawingButton, at: 15)
+        
         captionButton.frame = CGRect(x: UIScreen.main.bounds.width - 55, y: 80, width: 35, height: 35)
         self.view.insertSubview(captionButton, at: 12)
         
         locationButton.frame = CGRect(x: UIScreen.main.bounds.width - 67, y: 130, width: 60, height: 60)
         self.view.insertSubview(locationButton, at: 12)
         
+        galleryPlusButton.frame = CGRect(x: UIScreen.main.bounds.width - 58, y: 200, width: 50, height: 50)
+        self.view.insertSubview(galleryPlusButton, at: 12)
+        
+        drawButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 265, width: 50, height: 50)
+        self.view.insertSubview(drawButton, at: 12)
+        
+        colorButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 325, width: 50, height: 50)
+        self.view.insertSubview(colorButton, at: 12)
+        
+        colorDrawingButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 80, width: 50, height: 50)
+        self.view.insertSubview(colorDrawingButton, at: 12)
+        
+        undoDrawingButton.frame = CGRect(x: UIScreen.main.bounds.width - 125, y: 12, width: 50, height: 50)
+        self.view.insertSubview(undoDrawingButton, at: 12)
+        
         self.view.addSubview(selectedGroupLabel)
-        self.selectedGroupLabel.anchor(top: self.nextButton.topAnchor, left: self.hourglassButton.rightAnchor, bottom: self.nextButton.bottomAnchor, right: self.nextButton.leftAnchor, paddingLeft: 10, paddingRight: 20)
+        self.selectedGroupLabel.anchor(top: self.postButton.topAnchor, left: self.hourglassButton.rightAnchor, bottom: self.postButton.bottomAnchor, right: self.postButton.leftAnchor, paddingLeft: 10, paddingRight: 20)
         
         postCoverView.heightAnchor.constraint(equalToConstant: 250).isActive = true
         postCoverView.layer.cornerRadius = 0
@@ -292,34 +467,55 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         self.nextButton.addTarget(self, action: #selector(self.nextButtonUp), for: .touchCancel)
         self.nextButton.addTarget(self, action: #selector(self.nextButtonUp), for: .touchUpInside)
         
+        self.postButton.addTarget(self, action: #selector(self.postButtonDown), for: .touchDown)
+        self.postButton.addTarget(self, action: #selector(self.postButtonDown), for: .touchDragInside)
+        self.postButton.addTarget(self, action: #selector(self.postButtonUp), for: .touchDragExit)
+        self.postButton.addTarget(self, action: #selector(self.postButtonUp), for: .touchCancel)
+        self.postButton.addTarget(self, action: #selector(self.postButtonUp), for: .touchUpInside)
+        
         self.captionTextView.caption_delegate = self
         self.view.insertSubview(captionTextView, at: 15)
     }
     
     @objc func panHandler(gestureRecognizer: UIPanGestureRecognizer){
+        if isDrawing {
+            return
+        }
         if gestureRecognizer.state == .began || gestureRecognizer.state == .changed {
             let translation = gestureRecognizer.translation(in: self.view)
             gestureRecognizer.view!.center = CGPoint(x: gestureRecognizer.view!.center.x + translation.x, y: gestureRecognizer.view!.center.y + translation.y)
             gestureRecognizer.setTranslation(CGPoint.zero, in: self.view)
         }
+        if gestureRecognizer.state == .ended {
+            let translation = gestureRecognizer.translation(in: self.view)
+            let newX = gestureRecognizer.view!.center.x + translation.x
+            let newY = gestureRecognizer.view!.center.y + translation.y
+        }
     }
     
     @objc func pinchHandler(pinch: UIPinchGestureRecognizer){
+        if isDrawing {
+            return
+        }
         if let view = pinch.view {
             view.transform = view.transform.scaledBy(x: pinch.scale, y: pinch.scale)
             pinch.scale = 1
-            (view as! UITextView).centerTextVertically()
-
-            //            textView.centerTextVertically()
-//            resizeFont(self.textView)
+            if let textView = view as? UITextView {
+                textView.centerTextVertically()
+            }
         }
     }
     
     @objc func rotateHandler(sender: UIRotationGestureRecognizer){
+        if isDrawing {
+            return
+        }
         if let view = sender.view {
             view.transform = view.transform.rotated(by: sender.rotation)
             sender.rotation = 0
-            (view as! UITextView).centerTextVertically()
+            if let textView = view as? UITextView {
+                textView.centerTextVertically()
+            }
         }
     }
     
@@ -330,6 +526,70 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         }
         self.captionTextView.resignFirstResponder()
         self.captionTextView.isHidden = true
+    }
+    
+    
+    var isDrawing = false
+    @objc func startDrawing() {
+        isDrawing = true
+        self.drawView.isEnabled = true
+        self.doneDrawingButton.isHidden = false
+        self.colorDrawingButton.isHidden = false
+        self.undoDrawingButton.isHidden = false
+        
+        self.nextButton.isHidden = true
+        self.postButton.isHidden = true
+        self.textButton.isHidden = true
+        self.hourglassButton.isHidden = true
+        self.closeButton.isHidden = true
+        self.locationButton.isHidden = true
+        self.selectedGroupLabel.isHidden = true
+        self.captionButton.isHidden = true
+        self.colorButton.isHidden = true
+        self.galleryPlusButton.isHidden = true
+        self.drawButton.isHidden = true
+        
+        for imageView in self.imageViews {
+            imageView.isUserInteractionEnabled = false
+        }
+        
+        for textView in self.textViews {
+            textView.isUserInteractionEnabled = false
+        }
+    }
+    
+    @objc func doneDrawing() {
+        isDrawing = false
+        self.drawView.isEnabled = false
+        self.doneDrawingButton.isHidden = true
+        self.colorDrawingButton.isHidden = true
+        self.undoDrawingButton.isHidden = true
+        
+        if self.selectedGroup == nil {
+            self.nextButton.isHidden = false
+        }
+        else {
+            self.postButton.isHidden = false
+            self.selectedGroupLabel.isHidden = false
+            self.hourglassButton.isHidden = false
+        }
+        self.textButton.isHidden = false
+        self.closeButton.isHidden = false
+        self.locationButton.isHidden = false
+        self.upperCoverView.isHidden = false
+        self.coverView.isHidden = false
+        self.captionButton.isHidden = false
+        self.colorButton.isHidden = false
+        self.galleryPlusButton.isHidden = false
+        self.drawButton.isHidden = false
+        
+        for imageView in self.imageViews {
+            imageView.isUserInteractionEnabled = true
+        }
+        
+        for textView in self.textViews {
+            textView.isUserInteractionEnabled = true
+        }
     }
     
     func showSelectedGroup() {
@@ -361,20 +621,80 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
                 let name = usernames
                 self.selectedGroupLabel.text = name
                 self.selectedGroupLabel.isHidden = false
+                self.selectedGroupLabel.alpha = 0
+                UIView.animate(withDuration: 0.2, delay: 0.0, options: [.allowUserInteraction, .curveEaseIn], animations: {
+                    self.selectedGroupLabel.alpha = 1
+                }, completion: nil)
             }
             else {
                 let name = selectedGroup.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
                 self.selectedGroupLabel.text = name
                 self.selectedGroupLabel.isHidden = false
+                self.selectedGroupLabel.alpha = 0
+                UIView.animate(withDuration: 0.2, delay: 0.0, options: [.allowUserInteraction, .curveEaseIn], animations: {
+                    self.selectedGroupLabel.alpha = 1
+                }, completion: nil)
             }
         }) { (_) in }
     }
     
+    @objc func undoDrawing() {
+        drawView.undo()
+    }
+    
     var isChangingTextColor = true
+    var isChangingTextBackgroundColor = false
+    var isChangingBackgroundColor = false
+    var isChangingDrawingColor = false
+    
+    @objc func changeDrawingColor() {
+        if #available(iOS 14.0, *) {
+            isChangingDrawingColor = true
+            isChangingTextColor = false
+            isChangingBackgroundColor = false
+            isChangingTextBackgroundColor = false
+            
+            let picker = UIColorPickerViewController()
+            picker.delegate = self
+            picker.selectedColor = .white
+            present(picker, animated: true, completion: nil)
+        } else {
+            if self.activeTextView.textColor == .white {
+                self.activeTextView.textColor = .black
+            }
+            else {
+                self.activeTextView.textColor = .white
+            }
+        }
+    }
+    
+    @objc func changeBackgroundColor() {
+        if #available(iOS 14.0, *) {
+            isChangingTextColor = false
+            isChangingBackgroundColor = true
+            isChangingTextBackgroundColor = false
+            isChangingDrawingColor = false
+            
+            let picker = UIColorPickerViewController()
+            picker.delegate = self
+            picker.selectedColor = .black
+            present(picker, animated: true, completion: nil)
+        } else {
+            if self.activeTextView.textColor == .white {
+                self.activeTextView.textColor = .black
+            }
+            else {
+                self.activeTextView.textColor = .white
+            }
+        }
+    }
     
     func changeTextViewColor() {
         if #available(iOS 14.0, *) {
             isChangingTextColor = true
+            isChangingBackgroundColor = false
+            isChangingTextBackgroundColor = false
+            isChangingDrawingColor = false
             let picker = UIColorPickerViewController()
             picker.delegate = self
             picker.selectedColor = .white
@@ -392,6 +712,9 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
     func changeTextBackgroundColor() {
         if #available(iOS 14.0, *) {
             isChangingTextColor = false
+            isChangingBackgroundColor = false
+            isChangingTextBackgroundColor = true
+            isChangingDrawingColor = false
             let picker = UIColorPickerViewController()
             picker.delegate = self
             picker.selectedColor = .clear
@@ -420,13 +743,18 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
     
     @available(iOS 14.0, *)
     func colorPickerViewControllerDidSelectColor(_ viewController: UIColorPickerViewController) {
+        let color = viewController.selectedColor
         if isChangingTextColor {
-            let color = viewController.selectedColor
             self.activeTextView.textColor = color
         }
-        else {
-            let color = viewController.selectedColor
+        else if isChangingTextBackgroundColor {
             self.activeTextView.backgroundColor = color
+        }
+        else if isChangingBackgroundColor {
+            self.view.backgroundColor = color
+        }
+        else if isChangingDrawingColor {
+            self.drawView.brush.color = Color(color)
         }
     }
     
@@ -447,6 +775,14 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         self.textEditBackground.isHidden = false
         self.doneTextButton.isHidden = false
         self.textButton.isHidden = true
+        
+        self.textButton.isHidden = true
+        self.closeButton.isHidden = true
+        self.locationButton.isHidden = true
+        self.captionButton.isHidden = true
+        self.colorButton.isHidden = true
+        self.galleryPlusButton.isHidden = true
+        self.drawButton.isHidden = true
     }
 
     func textViewDidEndEditing(_ textView: UITextView) {
@@ -454,6 +790,14 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         self.textEditBackground.isHidden = true
         self.doneTextButton.isHidden = true
         self.textButton.isHidden = false
+        
+        self.textButton.isHidden = false
+        self.closeButton.isHidden = false
+        self.locationButton.isHidden = false
+        self.captionButton.isHidden = false
+        self.colorButton.isHidden = false
+        self.galleryPlusButton.isHidden = false
+        self.drawButton.isHidden = false
     }
     
     func textViewDidChange(_ textView: UITextView) {
@@ -553,6 +897,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         textView.delegate = self
         textView.autocorrectionType = .no
         textView.textContainer.maximumNumberOfLines = 3;
+        textView.layer.zPosition = 4
 //        textView.textContainer.lineBreakMode = NSLineBreakByTruncatingTail;
         
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panHandler))
@@ -567,7 +912,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         rotateGesture.delegate = self
         textView.addGestureRecognizer(rotateGesture)
         
-        self.view.insertSubview(textView, at: 10)
+        self.view.insertSubview(textView, at: 4)
 //        textView.easy.layout(Left(10), Right(10), Top(200)) // this makes multi line work but weird behavior
         textView.centerTextVertically()
         
@@ -592,6 +937,58 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         }
         return numberOfLines
     }
+        
+    @objc private func addImageFromGallery() {
+        var config = YPImagePickerConfiguration()
+        config.library.isSquareByDefault = false
+        config.shouldSaveNewPicturesToAlbum = false
+        config.library.mediaType = .photoAndVideo
+        config.showsPhotoFilters = false
+        config.hidesStatusBar = false
+        config.startOnScreen = YPPickerScreen.library
+        config.targetImageSize = .cappedTo(size: 600)
+        config.video.compression = AVAssetExportPresetMediumQuality
+        let picker = YPImagePicker(configuration: config)
+        
+        picker.didFinishPicking { [unowned picker] items, cancelled in
+            if cancelled {
+                print("Picker was canceled")
+                picker.dismiss(animated: true, completion: nil)
+                return
+            }
+            _ = items.map { print("🧀 \($0)") }
+            if let firstItem = items.first {
+                switch firstItem {
+                case .photo(let photo):
+                    self.dismiss(animated: true, completion: {
+                        let imageView = UIImageView(frame: CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-75, width: 300, height: 300))
+                        imageView.image = photo.image
+                        imageView.isUserInteractionEnabled = true
+                        imageView.contentMode = .scaleAspectFit
+                        imageView.layer.zPosition = 3
+                        
+                        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(self.panHandler))
+                        panGesture.delegate = self
+                        imageView.addGestureRecognizer(panGesture)
+                        
+                        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(self.pinchHandler))
+                        pinchGesture.delegate = self
+                        imageView.addGestureRecognizer(pinchGesture)
+                        
+                        let rotateGesture = UIRotationGestureRecognizer(target: self, action: #selector(self.rotateHandler))
+                        rotateGesture.delegate = self
+                        imageView.addGestureRecognizer(rotateGesture)
+                        
+                        self.imageViews.append(imageView)
+                        self.view.insertSubview(imageView, at: 3)
+                    })
+                case .video(let video):
+                    break
+                }
+            }
+        }
+        present(picker, animated: true, completion: nil)
+    }
     
     @objc private func showCaptionTextView() {
         self.captionTextView.isHidden = false
@@ -599,12 +996,64 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         self.captionTextView.becomeFirstResponder()
     }
     
+    var isCaptionFilled = false
+    
     func didFillCaption() {
-        self.captionButton.setImage(#imageLiteral(resourceName: "caption_filled"), for: .normal)
+        if !isCaptionFilled {
+            self.captionButton.animateButtonDown()
+            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { timer in
+                self.captionButton.setImage(#imageLiteral(resourceName: "caption_filled"), for: .normal)
+                self.captionButton.animateButtonDownBig()
+            }
+            Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { timer in
+                self.captionButton.animateButtonUp()
+            }
+            isCaptionFilled = true
+        }
     }
     
     func didEmtpyCaption() {
-        self.captionButton.setImage(#imageLiteral(resourceName: "caption"), for: .normal)
+        if isCaptionFilled {
+            self.captionButton.animateButtonDown()
+            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { timer in
+                self.captionButton.setImage(#imageLiteral(resourceName: "caption"), for: .normal)
+                self.captionButton.animateButtonDownBig()
+            }
+            Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { timer in
+                self.captionButton.animateButtonUp()
+            }
+            isCaptionFilled = false
+        }
+    }
+    
+    var isLocationFilled = false
+    
+    func didFillLocation() {
+        if !isLocationFilled {
+            self.locationButton.animateButtonDown()
+            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { timer in
+                self.locationButton.setImage(#imageLiteral(resourceName: "location_icon_filled"), for: .normal)
+                self.locationButton.animateButtonDownBig()
+            }
+            Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { timer in
+                self.locationButton.animateButtonUp()
+            }
+            isLocationFilled = true
+        }
+    }
+    
+    func didEmtpyLocation() {
+        if isLocationFilled {
+            self.locationButton.animateButtonDown()
+            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { timer in
+                self.locationButton.setImage(#imageLiteral(resourceName: "location_icon"), for: .normal)
+                self.locationButton.animateButtonDownBig()
+            }
+            Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { timer in
+                self.locationButton.animateButtonUp()
+            }
+            isLocationFilled = false
+        }
     }
     
     @objc private func selectGroup() {
@@ -615,9 +1064,10 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
                 return
             }
             self.selectedGroup = group
+            self.setupWithSelectedGroupWithAnim = true
         }
         let navController = UINavigationController(rootViewController: selectGroupController)
-        navController.modalPresentationStyle = .fullScreen
+        navController.modalPresentationStyle = .overFullScreen
         self.present(navController, animated: true, completion: nil)
     }
     
@@ -627,6 +1077,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         // only modify if there is a textView
         if self.textViews.count > 0 {
             self.nextButton.isHidden = true
+            self.postButton.isHidden = true
             self.textButton.isHidden = true
             self.hourglassButton.isHidden = true
             self.closeButton.isHidden = true
@@ -635,6 +1086,10 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
             self.selectedGroupLabel.isHidden = true
             self.postCoverView.isHidden = true
             self.coverView.isHidden = true
+            self.colorButton.isHidden = true
+            self.galleryPlusButton.isHidden = true
+            self.drawButton.isHidden = true
+            self.captionButton.isHidden = true
 
             let areaSize = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height) //Your view size from where you want to make UIImage
             UIGraphicsBeginImageContext(areaSize.size);
@@ -654,26 +1109,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
     
     @objc private func pickLocation(){
         let locationPicker = LocationPickerViewController()
-
-        if suggestedLocation != nil {
-            let geocoder = CLGeocoder()
-            geocoder.reverseGeocodeLocation(suggestedLocation!, completionHandler: {(placemarks, error)->Void in
-                if placemarks != nil && placemarks!.count > 0 {
-                    let placemark = placemarks![0]
-                    var name = placemark.name
-                    if placemark.areasOfInterest != nil && placemark.areasOfInterest!.count > 0 {
-                        name = placemark.areasOfInterest![0]
-                    }
-                    locationPicker.location = Location(name: name, location: self.suggestedLocation!, placemark: placemark)
-                }
-                else {
-                    let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: self.suggestedLocation!.coordinate.latitude, longitude: self.suggestedLocation!.coordinate.longitude), addressDictionary: nil)
-                    locationPicker.location = Location(name: "", location: self.suggestedLocation!, placemark: placemark)
-                }
-            })
-            
-        }
-
+        
         // button placed on right bottom corner
         locationPicker.showCurrentLocationButton = true // default: true
 
@@ -694,20 +1130,41 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
 
         // optional region distance to be used for creation region when user selects place from search results
         locationPicker.resultRegionDistance = 500 // default: 600
-
-        locationPicker.completion = { location in
-//            self.locationLabel.text = location?.name
-//            if location?.name == nil || location?.name == "" {
-//                self.locationLabel.text = location?.address
-//            }
-//            self.selectedLocation = PostLocation(name: location?.name, longitude: "\(location?.coordinate.longitude ?? 0)", latitude: "\(location?.coordinate.latitude ?? 0)", address: location?.address)
-        }
         
         locationPicker.title = "Add Location"
-
+        
+        locationPicker.completion = { location in
+            Timer.scheduledTimer(withTimeInterval: 0.6, repeats: false) { timer in
+                self.didFillLocation()
+            }
+            self.pickedLocation = PostLocation(name: location?.name, longitude: "\(location?.coordinate.longitude ?? 0)", latitude: "\(location?.coordinate.latitude ?? 0)", address: location?.address)
+        }
+        
         let navController = UINavigationController(rootViewController: locationPicker)
         navController.modalPresentationStyle = .popover
-        present(navController, animated: true, completion: nil)
+        
+
+        if suggestedLocation != nil {
+            let geocoder = CLGeocoder()
+            geocoder.reverseGeocodeLocation(suggestedLocation!, completionHandler: {(placemarks, error)->Void in
+                if placemarks != nil && placemarks!.count > 0 {
+                    let placemark = placemarks![0]
+                    var name = placemark.name
+                    if placemark.areasOfInterest != nil && placemark.areasOfInterest!.count > 0 {
+                        name = placemark.areasOfInterest![0]
+                    }
+                    locationPicker.location = Location(name: name, location: self.suggestedLocation!, placemark: placemark)
+                }
+                else {
+                    let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: self.suggestedLocation!.coordinate.latitude, longitude: self.suggestedLocation!.coordinate.longitude), addressDictionary: nil)
+                    locationPicker.location = Location(name: "", location: self.suggestedLocation!, placemark: placemark)
+                }
+                self.present(navController, animated: true, completion: nil)
+            })
+        }
+        else {
+            self.present(navController, animated: true, completion: nil)
+        }
     }
     
     @objc private func close() {
@@ -722,6 +1179,14 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         self.nextButton.animateButtonUp()
     }
     
+    @objc private func postButtonDown(){
+        self.postButton.animateButtonDown()
+    }
+    
+    @objc private func postButtonUp(){
+        self.postButton.animateButtonUp()
+    }
+    
     @objc private func toggleTempPost() {
         isTempPost = !isTempPost
         if isTempPost {
@@ -733,63 +1198,84 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
     }
     
     @objc private func handleShare() {
-//        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-//        if selectedGroupId == "" && preSelectedGroup == nil { return }
-//
-//        if selectedGroupId == "" && preSelectedGroup != nil {
-//            selectedGroupId = preSelectedGroup!.groupId
-//        }
-//
-//        navigationItem.rightBarButtonItem?.isEnabled = false
-//        textView.isUserInteractionEnabled = false
-//
-//        var postLocation = ""
-//        do {
-//            let encoder = JSONEncoder()
-//            let data = try encoder.encode(self.selectedLocation)
-//            postLocation = (String(data: data, encoding: .utf8) ?? "").toBase64()
-//        }
-//        catch {}
-//
-//        Database.database().createGroupPost(withImage: postImage, withVideo: self.selectedVideoURL, caption: caption ?? "", groupId: self.selectedGroupId, location: postLocation, isTempPost: isTempPost, completion: { (postId) in
-//            if postId == "" {
-//                self.navigationItem.rightBarButtonItem?.isEnabled = true
-//                self.textView.isUserInteractionEnabled = true
-//
-//                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-//                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-//                self.dismiss(animated: true, completion: nil)
-//                return
-//            }
-//            Database.database().userPosted(completion: { _ in })
-//            Database.database().groupExists(groupId: self.selectedGroupId, completion: { (exists) in
-//                if exists {
-//                    Database.database().fetchGroup(groupId: self.selectedGroupId, completion: { (group) in
-//                        Database.database().fetchGroupPost(groupId: group.groupId, postId: postId, completion: { (post) in
-//                            // send the notification each each user in the group
-//                            Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
-//                                members.forEach({ (member) in
-//                                    if member.uid != currentLoggedInUserId{
-//                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: group, groupPost: post) { (err) in
-//                                            if err != nil {
-//                                                return
-//                                            }
-//                                        }
-//                                    }
-//                                })
-//                            }) { (_) in}
-//                        })
-//                    })
-//                }
-//                else {
-//                    return
-//                }
-//            })
-//            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-//            NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-//            NotificationCenter.default.post(name: NSNotification.Name("updatedUser"), object: nil)
-//            self.dismiss(animated: true, completion: nil)
-//        })
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        guard let selectedGroup = selectedGroup else { return }
+
+        var postLocation = ""
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(self.pickedLocation)
+            postLocation = (String(data: data, encoding: .utf8) ?? "").toBase64()
+        }
+        catch {}
+        
+        var imageToSend: UIImage?
+        
+        if self.textViews.count > 0 {
+            self.nextButton.isHidden = true
+            self.postButton.isHidden = true
+            self.textButton.isHidden = true
+            self.hourglassButton.isHidden = true
+            self.closeButton.isHidden = true
+            self.locationButton.isHidden = true
+            self.upperCoverView.isHidden = true
+            self.selectedGroupLabel.isHidden = true
+            self.postCoverView.isHidden = true
+            self.coverView.isHidden = true
+            self.colorButton.isHidden = true
+            self.galleryPlusButton.isHidden = true
+            self.drawButton.isHidden = true
+            self.captionButton.isHidden = true
+
+            let areaSize = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height) //Your view size from where you want to make UIImage
+            UIGraphicsBeginImageContext(areaSize.size);
+            let context : CGContext = UIGraphicsGetCurrentContext()!
+            self.view.layer.render(in: context)
+            let newImage : UIImage  = UIGraphicsGetImageFromCurrentImageContext()!
+            UIGraphicsEndImageContext();
+            imageToSend = newImage
+            
+        }
+        else {
+            imageToSend = backgroundImage!
+        }
+
+        Database.database().createGroupPost(withImage: imageToSend, withVideo: self.selectedVideoURL, caption: self.captionTextView.text ?? "", groupId: selectedGroup.groupId, location: postLocation, isTempPost: isTempPost, completion: { (postId) in
+            if postId == "" {
+                self.navigationItem.rightBarButtonItem?.isEnabled = true
+
+                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+                self.dismiss(animated: true, completion: nil)
+                return
+            }
+            Database.database().userPosted(completion: { _ in })
+            Database.database().groupExists(groupId: selectedGroup.groupId, completion: { (exists) in
+                if exists {
+                    Database.database().fetchGroupPost(groupId: selectedGroup.groupId, postId: postId, completion: { (post) in
+                        // send the notification each each user in the group
+                        Database.database().fetchGroupMembers(groupId: selectedGroup.groupId, completion: { (members) in
+                            members.forEach({ (member) in
+                                if member.uid != currentLoggedInUserId{
+                                    Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: selectedGroup, groupPost: post) { (err) in
+                                        if err != nil {
+                                            return
+                                        }
+                                    }
+                                }
+                            })
+                        }) { (_) in}
+                    })
+                }
+                else {
+                    return
+                }
+            })
+            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name("updatedUser"), object: nil)
+            self.dismiss(animated: true, completion: nil)
+        })
     }
     
 }
@@ -943,7 +1429,7 @@ class ModifyTextView: UIView, UIColorPickerViewControllerDelegate {
     }
   
     private func setupView() {
-        backgroundColor = .clear
+        backgroundColor = UIColor.init(white: 0, alpha: 0.4)
         
         alignButton.frame = CGRect(x: UIScreen.main.bounds.width/2 - 105, y: 17, width: 36, height: 36)
         self.insertSubview(alignButton, at: 12)
@@ -1021,7 +1507,7 @@ class CaptionTextView: UITextView {
     private func sharedInit() {
         NotificationCenter.default.addObserver(self, selector: #selector(handleTextChange), name: UITextView.textDidChangeNotification, object: nil)
         addSubview(placeholderLabel)
-        placeholderLabel.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 12, paddingLeft: 20)
+        placeholderLabel.anchor(top: topAnchor, left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 12, paddingLeft: 20)        
     }
     
     func showPlaceholderLabel() {

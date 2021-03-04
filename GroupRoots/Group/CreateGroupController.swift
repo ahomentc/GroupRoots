@@ -88,8 +88,8 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         let button = UIButton(type: .system)
         button.setTitle("Create", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
-        button.layer.cornerRadius = 5
-        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.layer.cornerRadius = 15
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(handleCreateGroup), for: .touchUpInside)
         button.isEnabled = true
@@ -100,8 +100,8 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         let button = UIButton(type: .system)
         button.setTitle("Public", for: .normal)
         button.backgroundColor = UIColor.white
-        button.layer.cornerRadius = 5
-        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.layer.cornerRadius = 10
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
         button.setTitleColor( UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         button.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
         button.layer.borderWidth = 1
@@ -113,8 +113,8 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         let button = UIButton(type: .system)
         button.setTitle("Private", for: .normal)
         button.backgroundColor = UIColor.white
-        button.layer.cornerRadius = 5
-        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        button.layer.cornerRadius = 10
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
         button.layer.borderColor = UIColor.gray.cgColor
         button.setTitleColor(UIColor.gray, for: .normal)
         button.addTarget(self, action: #selector(handleSelectedPrivate), for: .touchUpInside)
@@ -158,66 +158,6 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     }
     
     private func setupInputFields() {
-        
-        let storageRef = Storage.storage().reference()
-        let highSchoolsRef = storageRef.child("high_schools.json")
-        highSchoolsRef.downloadURL { url, error in
-            if let error = error {
-                print(error)
-            } else {
-                let hs_url = url!.absoluteString
-                if let url = URL(string: hs_url) {
-                   URLSession.shared.dataTask(with: url) { data, response, error in
-                      if let data = data {
-                          do {
-                            let json_string = String(data: data, encoding: .utf8)
-                            guard let data = json_string?.data(using: String.Encoding.utf8 ),
-                              let high_schools = try JSONSerialization.jsonObject(with: data, options: []) as? [String] else {
-                                fatalError()
-                                }
-                            DispatchQueue.main.async {
-                                self.linkSchools.filterStrings(high_schools)
-                            }
-                          } catch let error {
-                             print(error)
-                          }
-                       }
-                   }.resume()
-                }
-            }
-        }
-    
-        linkSchools.borderStyle = .none
-        linkSchools.theme.cellHeight = 50
-        linkSchools.comparisonOptions = [.caseInsensitive]
-        linkSchools.placeholder = "Search"
-        linkSchools.backgroundColor = .clear
-        linkSchools.startVisible = true
-        linkSchools.autocorrectionType = .no
-        linkSchools.textAlignment = .left
-        linkSchools.theme.bgColor = .white
-        linkSchools.theme.font = UIFont.systemFont(ofSize: 14)
-        linkSchools.itemSelectionHandler = { filteredResults, itemPosition in
-            // Just in case you need the item position
-            let item = filteredResults[itemPosition]
-            print("Item at position \(itemPosition): \(item.title)")
-
-            // Do whatever you want with the picked item
-            self.linkSchools.text = item.title
-            self.schoolSelected = true
-            self.linkSchools.resignFirstResponder()
-        }
-        
-        view.addSubview(schoolLabel)
-        schoolLabel.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, paddingTop: 40, paddingLeft: 40)
-        
-        view.addSubview(linkSchools)
-        linkSchools.anchor(top: schoolLabel.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: -5, paddingLeft: 40, paddingRight: 40, height: 50)
-        
-        searchSchoolBottomBorder.backgroundColor = UIColor(white: 0, alpha: 0.2)
-        self.view.addSubview(searchSchoolBottomBorder)
-        searchSchoolBottomBorder.anchor(top: linkSchools.bottomAnchor, left: linkSchools.leftAnchor, right: linkSchools.rightAnchor, height: 0.5)
-        
         let radioButtonsStack = UIStackView(arrangedSubviews: [publicGroupButton, privateGroupButton])
         radioButtonsStack.distribution = .fillEqually
         radioButtonsStack.axis = .horizontal
@@ -226,10 +166,10 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         let stackView = UIStackView(arrangedSubviews: [groupnameTextField, bioTextField, radioButtonsStack, createGroupButton])
         stackView.distribution = .fillEqually
         stackView.axis = .vertical
-        stackView.spacing = 15
+        stackView.spacing = 20
         
         view.addSubview(stackView)
-        stackView.anchor(top: linkSchools.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 25, paddingLeft: 40, paddingRight: 40, height: 230)
+        stackView.anchor(top: self.plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 50, paddingLeft: 40, paddingRight: 40, height: 250)
         
     }
     

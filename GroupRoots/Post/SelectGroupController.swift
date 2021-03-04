@@ -51,7 +51,7 @@ class SelectGroupController: UIViewController, UICollectionViewDelegate, UIColle
             overrideUserInterfaceStyle = .light
         }
         
-        view.backgroundColor = UIColor.black
+        view.backgroundColor = UIColor.init(white: 0, alpha: 0.85)
         
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(handleCancel))
         navigationItem.leftBarButtonItem?.tintColor = .white
@@ -109,9 +109,9 @@ class SelectGroupController: UIViewController, UICollectionViewDelegate, UIColle
         cell.tag = indexPath.row
         cell.delegate = self
         cell.user = User(uid: "", dictionary: ["":0])
-        if last_selected_indexpath == indexPath {
-            cell.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
-        }
+//        if last_selected_indexpath == indexPath {
+//            cell.layer.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1).cgColor
+//        }
         return cell
     }
     
@@ -128,7 +128,7 @@ class SelectGroupController: UIViewController, UICollectionViewDelegate, UIColle
         self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         self.collectionView?.register(SelectGroupCell.self, forCellWithReuseIdentifier: SelectGroupCell.cellId)
         self.collectionView?.register(NewGroupInPostCell.self, forCellWithReuseIdentifier: NewGroupInPostCell.cellId)
-        self.collectionView.backgroundColor = UIColor.black
+        self.collectionView.backgroundColor = UIColor.clear
         self.collectionView.keyboardDismissMode = .onDrag
         self.view.addSubview(self.collectionView)
     }

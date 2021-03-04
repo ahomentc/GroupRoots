@@ -273,7 +273,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 170))
         let gradient = CAGradientLayer()
         gradient.frame = backgroundView.bounds
-        let startColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.6).cgColor
+        let startColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.4).cgColor
         let endColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0).cgColor
         gradient.colors = [startColor, endColor]
         backgroundView.layer.insertSublayer(gradient, at: 3)

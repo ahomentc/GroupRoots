@@ -258,6 +258,7 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         headerCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         headerCollectionView.register(GroupProfileHeaderCell.self, forCellWithReuseIdentifier: GroupProfileHeaderCell.cellId)
         headerCollectionView.register(MemberHeaderCell.self, forCellWithReuseIdentifier: MemberHeaderCell.cellId)
+        headerCollectionView.register(CreatePostHeaderCell.self, forCellWithReuseIdentifier: CreatePostHeaderCell.cellId)
         headerCollectionView.showsHorizontalScrollIndicator = false
         headerCollectionView.isUserInteractionEnabled = true
         headerCollectionView.allowsSelection = true
@@ -417,14 +418,12 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == self.collectionView {
-            if self.isInGroup != nil && self.isInGroup! {
-                return (groupPosts?.count ?? 0) + 1
-            }
-            else {
-                return groupPosts?.count ?? 0
-            }
+            return groupPosts?.count ?? 0
         }
         else {
+            if self.isInGroup != nil && self.isInGroup! {
+                return (groupMembers?.count ?? 0) + 2
+            }
             return (groupMembers?.count ?? 0) + 1
         }
     }
@@ -432,29 +431,15 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if collectionView == self.collectionView { // collectionview for posts
             if indexPath.item == 0 {
-                if self.isInGroup != nil && self.isInGroup! {
-                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PlusCell.cellId, for: indexPath) as! PlusCell
-                    cell.parentCollectionViewSize = collectionView.numberOfItems(inSection: 0)
-                    return cell
-                }
-                else {
-                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfilePhotoGridCell.cellId, for: indexPath) as! GroupProfilePhotoGridCell
-                    cell.groupPost = groupPosts?[0]
-                    cell.photoImageView.layer.cornerRadius = 12
-                    return cell
-                }
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfilePhotoGridCell.cellId, for: indexPath) as! GroupProfilePhotoGridCell
+                cell.groupPost = groupPosts?[0]
+                cell.photoImageView.layer.cornerRadius = 12
+                return cell
             }
             else {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfilePhotoGridCell.cellId, for: indexPath) as! GroupProfilePhotoGridCell
-                if self.isInGroup != nil && self.isInGroup! {
-                    if indexPath.item - 1 < groupPosts?.count ?? 0 {
-                        cell.groupPost = groupPosts?[indexPath.item - 1]
-                    }
-                }
-                else {
-                    if indexPath.item < groupPosts?.count ?? 0 {
-                        cell.groupPost = groupPosts?[indexPath.item]
-                    }
+                if indexPath.item < groupPosts?.count ?? 0 {
+                    cell.groupPost = groupPosts?[indexPath.item]
                 }
                 cell.photoImageView.layer.cornerRadius = 12
                 return cell
@@ -473,7 +458,16 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             }
             
             if group.groupProfileImageUrl != nil && group.groupProfileImageUrl != "" {
-                if indexPath.item == 0 {
+                if indexPath.item == 0 && self.isInGroup != nil && self.isInGroup! {
+                    let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: CreatePostHeaderCell.cellId, for: indexPath) as! CreatePostHeaderCell
+                    cell.layer.backgroundColor = UIColor.clear.cgColor
+                    cell.layer.shadowColor = UIColor.black.cgColor
+                    cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+                    cell.layer.shadowOpacity = 0.2
+                    cell.layer.shadowRadius = 2.0
+                    return cell
+                }
+                else if indexPath.item == 0 || (indexPath.item == 1 && self.isInGroup != nil && self.isInGroup!) {
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
                     cell.profileImageUrl = group.groupProfileImageUrl
                     cell.groupname = group.groupname
@@ -501,9 +495,17 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     if groupMembers?.count == 0 {
                         // do soemting
                     }
-                    if indexPath.item-1 < groupMembers?.count ?? 0 {
-                        cell.user = groupMembers?[indexPath.item-1]
+                    if self.isInGroup != nil && self.isInGroup! {
+                        if indexPath.item-2 < groupMembers?.count ?? 0 {
+                            cell.user = groupMembers?[indexPath.item-2]
+                        }
                     }
+                    else {
+                        if indexPath.item-1 < groupMembers?.count ?? 0 {
+                            cell.user = groupMembers?[indexPath.item-1]
+                        }
+                    }
+                    
                     cell.group_has_profile_image = true
                     cell.layer.backgroundColor = UIColor.clear.cgColor
                     cell.layer.shadowColor = UIColor.black.cgColor
@@ -514,7 +516,16 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 }
             }
             else {
-                if indexPath.item == 0 {
+                if indexPath.item == 0 && self.isInGroup != nil && self.isInGroup! {
+                    let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: CreatePostHeaderCell.cellId, for: indexPath) as! CreatePostHeaderCell
+                    cell.layer.backgroundColor = UIColor.clear.cgColor
+                    cell.layer.shadowColor = UIColor.black.cgColor
+                    cell.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+                    cell.layer.shadowOpacity = 0.2
+                    cell.layer.shadowRadius = 2.0
+                    return cell
+                }
+                else if indexPath.item == 0 || (indexPath.item == 1 && self.isInGroup != nil && self.isInGroup!) {
                     // modify this to be two small user cells
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: GroupProfileHeaderCell.cellId, for: indexPath) as! GroupProfileHeaderCell
                     cell.groupname = group.groupname
@@ -552,12 +563,19 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                     let cell = headerCollectionView.dequeueReusableCell(withReuseIdentifier: MemberHeaderCell.cellId, for: indexPath) as! MemberHeaderCell
                     if groupMembers?.count == 0 {
                         // do something
-                        
-                        
-                        
-                        
                     }
-                    cell.user = groupMembers?[indexPath.item-1]
+                    
+                    if self.isInGroup != nil && self.isInGroup! {
+                        if indexPath.item-2 < groupMembers?.count ?? 0 {
+                            cell.user = groupMembers?[indexPath.item-2]
+                        }
+                    }
+                    else {
+                        if indexPath.item-1 < groupMembers?.count ?? 0 {
+                            cell.user = groupMembers?[indexPath.item-1]
+                        }
+                    }
+                    
                     cell.group_has_profile_image = false
                     cell.layer.backgroundColor = UIColor.clear.cgColor
                     cell.layer.shadowColor = UIColor.black.cgColor
@@ -574,39 +592,36 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if collectionView == self.collectionView { // collectionview for posts
             guard let groupPosts = self.groupPosts else { return }
-            guard let isInGroup = self.isInGroup else { return }
             if indexPath.row == 0 {
-                if self.isInGroup != nil && self.isInGroup! {
-                    guard let group = group else { return }
-                    self.delegate?.postToGroup(group: group)
-                }
-                else {
-                    if indexPath.row < groupPosts.count {
-                        delegate?.didTapGroupPost(groupPost: groupPosts[indexPath.row], index: indexPath.row)
-                    }
+                if indexPath.row < groupPosts.count {
+                    delegate?.didTapGroupPost(groupPost: groupPosts[indexPath.row], index: indexPath.row)
                 }
             }
             else if self.groupPosts?.count != 0 {
-                if isInGroup {
-                    if indexPath.row - 1 < groupPosts.count {
-                        delegate?.didTapGroupPost(groupPost: groupPosts[indexPath.row - 1], index: indexPath.row-1)
-                    }
-                }
-                else {
-                    if indexPath.row < self.groupPosts?.count ?? 0 {
-                        delegate?.didTapGroupPost(groupPost: groupPosts[indexPath.row], index: indexPath.row)
-                    }
+                if indexPath.row < self.groupPosts?.count ?? 0 {
+                    delegate?.didTapGroupPost(groupPost: groupPosts[indexPath.row], index: indexPath.row)
                 }
             }
         }
         else { // collectionview with group members
-            if indexPath.row == 0 {
-                guard let group = group else { return }
+            guard let groupPosts = self.groupPosts else { return }
+            guard let isInGroup = self.isInGroup else { return }
+            guard let group = group else { return }
+            
+            if indexPath.item == 0 && isInGroup {
+                delegate?.postToGroup(group: group)
+            }
+            else if indexPath.item == 0 || (indexPath.item == 1 && isInGroup) {
                 delegate?.didTapGroup(group: group)
             }
             else {
                 guard let groupMembers = self.groupMembers else { return }
-                delegate?.didTapUser(user: groupMembers[indexPath.row - 1])
+                if isInGroup {
+                    delegate?.didTapUser(user: groupMembers[indexPath.row - 2])
+                }
+                else {
+                    delegate?.didTapUser(user: groupMembers[indexPath.row - 1])
+                }
             }
         }
     }
@@ -707,9 +722,9 @@ extension FullGroupCell: UICollectionViewDelegateFlowLayout {
             if groupPosts?.count ?? 0 == 0 {
                 return CGSize(width: UIScreen.main.bounds.width, height: width)
             }
-            if indexPath.item == 0 && self.isInGroup != nil && self.isInGroup! {
-                return CGSize(width: width/3*2, height: width)
-            }
+//            if indexPath.item == 0 && self.isInGroup != nil && self.isInGroup! {
+//                return CGSize(width: width/3*2, height: width)
+//            }
             return CGSize(width: width, height: width)
         }
         else {
