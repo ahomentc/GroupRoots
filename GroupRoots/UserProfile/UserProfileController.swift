@@ -569,6 +569,9 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         handleDidView(groupPost: groupPost)
     }
     
+    func didExitLargeImageView() {
+    }
+    
     func didFollowFirstUser() {
         self.showFirstFollowPopup()
     }

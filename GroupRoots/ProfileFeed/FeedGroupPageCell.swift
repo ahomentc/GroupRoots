@@ -32,9 +32,16 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         }
     }
     
+    var lastCommentForPosts: [String: Comment]? {
+        didSet {
+            loadCollectionView()
+        }
+    }
+    
     func loadCollectionView() {
         guard groupPosts != nil else { return }
         guard viewedPosts != nil else { return }
+        guard lastCommentForPosts != nil else { return }
         DispatchQueue.main.async{
             self.collectionView.reloadData()
         }
@@ -80,6 +87,13 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
         if indexPath.row < self.groupPosts?.count ?? 0{
             cell.tag = indexPath.row
             cell.groupPost = self.groupPosts?[indexPath.row]
+            
+            if cell.groupPost != nil {
+                let id = cell.groupPost!.id
+                if let lastComment = self.lastCommentForPosts![id] {
+                    cell.lastComment = lastComment
+                }
+            }
             if cell.groupPost != nil {
                 cell.viewedPost = self.viewedPosts?[cell.groupPost!.id]
             }

@@ -17,6 +17,7 @@ import FirebaseDatabase
 import YPImagePicker
 import AVFoundation
 import SwiftyDraw
+import NVActivityIndicatorView
 
 enum FilterType : String {
     case Chrome = "CIPhotoEffectChrome"
@@ -92,6 +93,35 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
             }
         }
     }
+        
+    let activityIndicatorView: NVActivityIndicatorView = {
+        let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width - 30, y: UIScreen.main.bounds.height - 30, width: 20, height: 20), type: NVActivityIndicatorType.circleStrokeSpin)
+        activityIndicatorView.layer.backgroundColor = UIColor.clear.cgColor
+        activityIndicatorView.layer.shadowColor = UIColor.black.cgColor
+        activityIndicatorView.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        activityIndicatorView.layer.shadowOpacity = 0.2
+        activityIndicatorView.layer.shadowRadius = 2.0
+        activityIndicatorView.isHidden = true
+        return activityIndicatorView
+    }()
+    
+    let sharingLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Sharing"
+        label.textAlignment = .right
+        label.backgroundColor = UIColor.clear
+        label.textColor = .white
+        label.font = UIFont.boldSystemFont(ofSize: 12)
+        label.isHidden = true
+        label.layer.zPosition = 22
+        
+        label.layer.backgroundColor = UIColor.clear.cgColor
+        label.layer.shadowColor = UIColor.black.cgColor
+        label.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        label.layer.shadowOpacity = 0.2
+        label.layer.shadowRadius = 2.0
+        return label
+    }()
     
     lazy var selectedGroupLabel: UILabel = {
         let label = UILabel()
@@ -104,7 +134,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         label.isUserInteractionEnabled = true
         label.addGestureRecognizer(tap)
         label.isHidden = true
-        label.layer.zPosition = 10
+        label.layer.zPosition = 22
         return label
     }()
     
@@ -121,24 +151,24 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
     private lazy var nextButton: UIButton = {
         let button = UIButton()
         button.addTarget(self, action: #selector(selectGroup), for: .touchUpInside)
-        button.layer.zPosition = 4;
+        button.layer.zPosition = 22;
         button.backgroundColor = UIColor(white: 1, alpha: 1)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitle("Share to", for: .normal)
-        button.layer.zPosition = 10
+        button.layer.zPosition = 22
         return button
     }()
     
     private lazy var postButton: UIButton = {
         let button = UIButton()
         button.addTarget(self, action: #selector(handleShare), for: .touchUpInside)
-        button.layer.zPosition = 4;
+        button.layer.zPosition = 22;
         button.backgroundColor = UIColor(white: 1, alpha: 1)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        button.setTitle("Post", for: .normal)
-        button.layer.zPosition = 10
+        button.setTitle("Send", for: .normal)
+        button.layer.zPosition = 22
         return button
     }()
     
@@ -149,7 +179,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.addTarget(self, action: #selector(toggleTempPost), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.isHidden = true
-        button.layer.zPosition = 10
+        button.layer.zPosition = 22
         return button
     }()
     
@@ -160,6 +190,28 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.addTarget(self, action: #selector(showCaptionTextView), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.layer.zPosition = 10
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
+        return button
+    }()
+    
+    let captionTextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Caption", for: .normal)
+        button.backgroundColor = .clear
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        button.addTarget(self, action: #selector(showCaptionTextView), for: .touchUpInside)
+        button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -170,6 +222,28 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.addTarget(self, action: #selector(pickLocation), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.layer.zPosition = 10
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
+        return button
+    }()
+    
+    let locationTextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Location", for: .normal)
+        button.backgroundColor = .clear
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        button.addTarget(self, action: #selector(pickLocation), for: .touchUpInside)
+        button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -180,6 +254,28 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.addTarget(self, action: #selector(startDrawing), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.layer.zPosition = 10
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
+        return button
+    }()
+    
+    let drawTextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Draw", for: .normal)
+        button.backgroundColor = .clear
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        button.addTarget(self, action: #selector(startDrawing), for: .touchUpInside)
+        button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -234,6 +330,28 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.isHidden = false
         button.layer.zPosition = 10
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
+        return button
+    }()
+    
+    let textTextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Text", for: .normal)
+        button.backgroundColor = .clear
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        button.addTarget(self, action: #selector(addText), for: .touchUpInside)
+        button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -245,6 +363,12 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.isHidden = true
         button.layer.zPosition = 10
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -255,6 +379,28 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.addTarget(self, action: #selector(changeBackgroundColor), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.layer.zPosition = 10
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
+        return button
+    }()
+    
+    let colorTextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Background", for: .normal)
+        button.backgroundColor = .clear
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        button.addTarget(self, action: #selector(changeBackgroundColor), for: .touchUpInside)
+        button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -277,6 +423,12 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.layer.zPosition = 10
         button.isHidden = true
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -288,6 +440,12 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.layer.zPosition = 10
         button.isHidden = true
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -298,6 +456,28 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.addTarget(self, action: #selector(addImageFromGallery), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.layer.zPosition = 10
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
+        return button
+    }()
+    
+    let galleryPlusTextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Add Photo", for: .normal)
+        button.backgroundColor = .clear
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        button.addTarget(self, action: #selector(addImageFromGallery), for: .touchUpInside)
+        button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -306,9 +486,9 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.setImage(#imageLiteral(resourceName: "trash_icon"), for: .normal)
         button.backgroundColor = .clear
         button.isUserInteractionEnabled = false
-        button.addTarget(self, action: #selector(changeBackgroundColor), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
-        button.layer.zPosition = 10
+        button.layer.zPosition = 21
+        button.alpha = 0
         return button
     }()
     
@@ -327,8 +507,9 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         textView.font = UIFont.systemFont(ofSize: 18)
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         textView.isHidden = true
+        textView.textColor = .black
         textView.tag = 1
-        textView.layer.zPosition = 10
+        textView.layer.zPosition = 25
         return textView
     }()
     
@@ -337,6 +518,8 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
     var textViews = [UITextView]()
     var activeTextView = UITextView()
     var imageViews = [UIImageView]()
+    
+    var photoModified = false
     
     override func viewWillAppear(_ animated: Bool) {
 //        self.nextButton.isHidden = false
@@ -351,13 +534,6 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        drawView.frame = self.view.frame
-        drawView.layer.zPosition = 20
-        drawView.isEnabled = false
-        drawView.brush.color = Color(.white)
-        drawView.brush.width = 5.0
-        self.view.insertSubview(drawView, at: 20)
-        
         let tapGestureReconizer = UITapGestureRecognizer(target: self, action: #selector(closeTextViewKeyboard))
         tapGestureReconizer.cancelsTouchesInView = false
         view.addGestureRecognizer(tapGestureReconizer)
@@ -367,6 +543,13 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         backgroundImageView.contentMode = UIView.ContentMode.scaleAspectFit
         backgroundImageView.image = backgroundImage
         view.addSubview(backgroundImageView)
+        
+        drawView.frame = self.view.frame
+        drawView.layer.zPosition = 20
+        drawView.isEnabled = false
+        drawView.brush.color = Color(.white)
+        drawView.brush.width = 5.0
+        self.view.insertSubview(drawView, at: 20)
         
         // get the average color of the image
         if backgroundImage != nil {
@@ -384,14 +567,6 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
             self.view.backgroundColor = UIColor.init(red: avgRed, green: avgGreen, blue: avgBlue, alpha: avgAlpha)
         }
         
-        nextButton.frame = CGRect(x: UIScreen.main.bounds.width-120, y: UIScreen.main.bounds.height - 70, width: 100, height: 50)
-        nextButton.layer.cornerRadius = 20
-        self.view.insertSubview(nextButton, at: 4)
-        
-        postButton.frame = CGRect(x: UIScreen.main.bounds.width-120, y: UIScreen.main.bounds.height - 70, width: 100, height: 50)
-        postButton.layer.cornerRadius = 20
-        self.view.insertSubview(postButton, at: 4)
-        
         closeButton.frame = CGRect(x: 10, y: 15, width: 40, height: 40)
         closeButton.layer.zPosition = 20
         self.view.insertSubview(closeButton, at: 12)
@@ -405,6 +580,9 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         textButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 15, width: 45, height: 45)
         self.view.insertSubview(textButton, at: 12)
         
+        textTextButton.frame = CGRect(x: UIScreen.main.bounds.width - 175, y: 17, width: 100, height: 40)
+        self.view.insertSubview(textTextButton, at: 12)
+        
         doneTextButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 15, width: 40, height: 40)
         self.view.insertSubview(doneTextButton, at: 12)
         
@@ -414,17 +592,32 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         captionButton.frame = CGRect(x: UIScreen.main.bounds.width - 55, y: 80, width: 35, height: 35)
         self.view.insertSubview(captionButton, at: 12)
         
-        locationButton.frame = CGRect(x: UIScreen.main.bounds.width - 67, y: 130, width: 60, height: 60)
+        captionTextButton.frame = CGRect(x: UIScreen.main.bounds.width - 175, y: 77, width: 100, height: 40)
+        self.view.insertSubview(captionTextButton, at: 12)
+        
+        locationButton.frame = CGRect(x: UIScreen.main.bounds.width - 67, y: 125, width: 60, height: 60)
         self.view.insertSubview(locationButton, at: 12)
         
-        galleryPlusButton.frame = CGRect(x: UIScreen.main.bounds.width - 58, y: 200, width: 50, height: 50)
+        locationTextButton.frame = CGRect(x: UIScreen.main.bounds.width - 175, y: 137, width: 100, height: 40)
+        self.view.insertSubview(locationTextButton, at: 12)
+        
+        galleryPlusButton.frame = CGRect(x: UIScreen.main.bounds.width - 58, y: 190, width: 50, height: 50)
         self.view.insertSubview(galleryPlusButton, at: 12)
         
-        drawButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 265, width: 50, height: 50)
+        galleryPlusTextButton.frame = CGRect(x: UIScreen.main.bounds.width - 175, y: 197, width: 100, height: 40)
+        self.view.insertSubview(galleryPlusTextButton, at: 12)
+        
+        drawButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 255, width: 50, height: 50)
         self.view.insertSubview(drawButton, at: 12)
         
-        colorButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 325, width: 50, height: 50)
+        drawTextButton.frame = CGRect(x: UIScreen.main.bounds.width - 175, y: 257, width: 100, height: 40)
+        self.view.insertSubview(drawTextButton, at: 12)
+        
+        colorButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 312, width: 50, height: 50)
         self.view.insertSubview(colorButton, at: 12)
+        
+        colorTextButton.frame = CGRect(x: UIScreen.main.bounds.width - 175, y: 317, width: 100, height: 40)
+        self.view.insertSubview(colorTextButton, at: 12)
         
         colorDrawingButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 80, width: 50, height: 50)
         self.view.insertSubview(colorDrawingButton, at: 12)
@@ -432,8 +625,13 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         undoDrawingButton.frame = CGRect(x: UIScreen.main.bounds.width - 125, y: 12, width: 50, height: 50)
         self.view.insertSubview(undoDrawingButton, at: 12)
         
-        self.view.addSubview(selectedGroupLabel)
-        self.selectedGroupLabel.anchor(top: self.postButton.topAnchor, left: self.hourglassButton.rightAnchor, bottom: self.postButton.bottomAnchor, right: self.postButton.leftAnchor, paddingLeft: 10, paddingRight: 20)
+        trashIcon.frame = CGRect(x: UIScreen.main.bounds.width/2 - 25, y: UIScreen.main.bounds.height - 70, width: 50, height: 50)
+        self.view.insertSubview(trashIcon, at: 12)
+        
+        self.view.insertSubview(activityIndicatorView, at: 20)
+        
+        sharingLabel.frame = CGRect(x: UIScreen.main.bounds.width - 135, y: UIScreen.main.bounds.height - 30, width: 90, height: 30)
+        self.view.insertSubview(sharingLabel, at: 20)
         
         postCoverView.heightAnchor.constraint(equalToConstant: 250).isActive = true
         postCoverView.layer.cornerRadius = 0
@@ -459,6 +657,17 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         textEditBackground.isUserInteractionEnabled = false
         self.view.insertSubview(textEditBackground, at: 4)
         
+        nextButton.frame = CGRect(x: UIScreen.main.bounds.width-120, y: UIScreen.main.bounds.height - 70, width: 100, height: 50)
+        nextButton.layer.cornerRadius = 20
+        self.view.insertSubview(nextButton, at: 12)
+        
+        postButton.frame = CGRect(x: UIScreen.main.bounds.width-120, y: UIScreen.main.bounds.height - 70, width: 100, height: 50)
+        postButton.layer.cornerRadius = 20
+        self.view.insertSubview(postButton, at: 12)
+        
+        self.view.addSubview(selectedGroupLabel)
+        self.selectedGroupLabel.anchor(top: self.postButton.topAnchor, left: self.hourglassButton.rightAnchor, bottom: self.postButton.bottomAnchor, right: self.postButton.leftAnchor, paddingLeft: 10, paddingRight: 20)
+        
 //        UITextView.appearance().tintColor = UIColor.white
         
         self.nextButton.addTarget(self, action: #selector(self.nextButtonDown), for: .touchDown)
@@ -475,6 +684,25 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         
         self.captionTextView.caption_delegate = self
         self.view.insertSubview(captionTextView, at: 15)
+        
+        Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { timer in
+            UIView.animate(withDuration: 1) {
+                self.textTextButton.alpha = 0
+                self.captionTextButton.alpha = 0
+                self.locationTextButton.alpha = 0
+                self.galleryPlusTextButton.alpha = 0
+                self.drawTextButton.alpha = 0
+                self.colorTextButton.alpha = 0
+            }
+        }
+        Timer.scheduledTimer(withTimeInterval: 4.0, repeats: false) { timer in
+            self.textTextButton.isHidden = true
+            self.captionTextButton.isHidden = true
+            self.locationTextButton.isHidden = true
+            self.galleryPlusTextButton.isHidden = true
+            self.drawTextButton.isHidden = true
+            self.colorTextButton.isHidden = true
+        }
     }
     
     @objc func panHandler(gestureRecognizer: UIPanGestureRecognizer){
@@ -485,11 +713,70 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
             let translation = gestureRecognizer.translation(in: self.view)
             gestureRecognizer.view!.center = CGPoint(x: gestureRecognizer.view!.center.x + translation.x, y: gestureRecognizer.view!.center.y + translation.y)
             gestureRecognizer.setTranslation(CGPoint.zero, in: self.view)
+            
+            let newX = gestureRecognizer.location(in: view).x
+            let newY = gestureRecognizer.location(in: view).y
+            
+            let trashX = self.trashIcon.center.x
+            let trashY = self.trashIcon.center.y
+            
+            self.trashIcon.alpha = 0.8
+            
+            let distance = (newX - trashX) * (newX - trashX) + (newY - trashY) * (newY - trashY)
+            if distance < 3000 {
+                gestureRecognizer.view?.alpha = 0.7
+            }
+            else {
+                gestureRecognizer.view?.alpha = 1
+            }
+            
+            self.nextButton.isHidden = true
+            self.postButton.isHidden = true
+            self.textButton.isHidden = true
+            self.hourglassButton.isHidden = true
+            self.closeButton.isHidden = true
+            self.locationButton.isHidden = true
+            self.selectedGroupLabel.isHidden = true
+            self.captionButton.isHidden = true
+            self.colorButton.isHidden = true
+            self.galleryPlusButton.isHidden = true
+            self.drawButton.isHidden = true
         }
         if gestureRecognizer.state == .ended {
+            self.trashIcon.alpha = 0
+            gestureRecognizer.view?.alpha = 1
+            
             let translation = gestureRecognizer.translation(in: self.view)
-            let newX = gestureRecognizer.view!.center.x + translation.x
-            let newY = gestureRecognizer.view!.center.y + translation.y
+            let newX = gestureRecognizer.location(in: view).x
+            let newY = gestureRecognizer.location(in: view).y
+            
+            let trashX = self.trashIcon.center.x
+            let trashY = self.trashIcon.center.y
+            
+            let distance = (newX - trashX) * (newX - trashX) + (newY - trashY) * (newY - trashY)
+            if distance < 3000 {
+                gestureRecognizer.view?.removeFromSuperview()
+            }
+            
+            if self.selectedGroup == nil {
+                self.nextButton.isHidden = false
+                self.postButton.isHidden = true
+            }
+            else {
+                self.postButton.isHidden = false
+                self.nextButton.isHidden = true
+                self.selectedGroupLabel.isHidden = false
+                self.hourglassButton.isHidden = false
+            }
+            self.textButton.isHidden = false
+            self.closeButton.isHidden = false
+            self.locationButton.isHidden = false
+            self.upperCoverView.isHidden = false
+            self.coverView.isHidden = false
+            self.captionButton.isHidden = false
+            self.colorButton.isHidden = false
+            self.galleryPlusButton.isHidden = false
+            self.drawButton.isHidden = false
         }
     }
     
@@ -567,9 +854,11 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         
         if self.selectedGroup == nil {
             self.nextButton.isHidden = false
+            self.postButton.isHidden = true
         }
         else {
             self.postButton.isHidden = false
+            self.nextButton.isHidden = true
             self.selectedGroupLabel.isHidden = false
             self.hourglassButton.isHidden = false
         }
@@ -590,6 +879,8 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         for textView in self.textViews {
             textView.isUserInteractionEnabled = true
         }
+        
+        self.photoModified = true
     }
     
     func showSelectedGroup() {
@@ -669,6 +960,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
     }
     
     @objc func changeBackgroundColor() {
+        self.photoModified = true
         if #available(iOS 14.0, *) {
             isChangingTextColor = false
             isChangingBackgroundColor = true
@@ -886,6 +1178,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
     
     var first = true
     @objc private func addText() {
+        self.photoModified = true
         let textView = UITextView(frame: CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-75, width: 300, height: 100))
         textView.font = UIFont.boldSystemFont(ofSize: 20)
         textView.textColor = .white
@@ -922,7 +1215,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         textView.inputAccessoryView = modifyTextView
                 
 //        UITextView.appearance().tintColor = UIColor.white
-        
+    
         textView.becomeFirstResponder()
     }
     
@@ -939,6 +1232,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
     }
         
     @objc private func addImageFromGallery() {
+        self.photoModified = true
         var config = YPImagePickerConfiguration()
         config.library.isSquareByDefault = false
         config.shouldSaveNewPicturesToAlbum = false
@@ -1093,6 +1387,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
 
             let areaSize = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height) //Your view size from where you want to make UIImage
             UIGraphicsBeginImageContext(areaSize.size);
+//            UIGraphicsBeginImageContextWithOptions(areaSize.size, view.isOpaque, 0.0)
             let context : CGContext = UIGraphicsGetCurrentContext()!
             self.view.layer.render(in: context)
             let newImage : UIImage  = UIGraphicsGetImageFromCurrentImageContext()!
@@ -1209,26 +1504,33 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         }
         catch {}
         
+        self.nextButton.isHidden = true
+        self.postButton.isHidden = true
+        self.textButton.isHidden = true
+        self.hourglassButton.isHidden = true
+        self.closeButton.isHidden = true
+        self.locationButton.isHidden = true
+        self.upperCoverView.isHidden = true
+        self.selectedGroupLabel.isHidden = true
+        self.postCoverView.isHidden = true
+        self.coverView.isHidden = true
+        self.colorButton.isHidden = true
+        self.galleryPlusButton.isHidden = true
+        self.drawButton.isHidden = true
+        self.captionButton.isHidden = true
+        
         var imageToSend: UIImage?
         
-        if self.textViews.count > 0 {
-            self.nextButton.isHidden = true
-            self.postButton.isHidden = true
-            self.textButton.isHidden = true
-            self.hourglassButton.isHidden = true
-            self.closeButton.isHidden = true
-            self.locationButton.isHidden = true
-            self.upperCoverView.isHidden = true
-            self.selectedGroupLabel.isHidden = true
-            self.postCoverView.isHidden = true
-            self.coverView.isHidden = true
-            self.colorButton.isHidden = true
-            self.galleryPlusButton.isHidden = true
-            self.drawButton.isHidden = true
-            self.captionButton.isHidden = true
-
-            let areaSize = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height) //Your view size from where you want to make UIImage
-            UIGraphicsBeginImageContext(areaSize.size);
+        activityIndicatorView.isHidden = false
+        activityIndicatorView.color = .white
+        activityIndicatorView.startAnimating()
+        
+        sharingLabel.isHidden = false
+        
+        if self.textViews.count > 0 || self.photoModified {
+            let areaSize = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 30) //Your view size from where you want to make UIImage
+//            UIGraphicsBeginImageContext(areaSize.size);
+            UIGraphicsBeginImageContextWithOptions(areaSize.size, view.isOpaque, 0.0)
             let context : CGContext = UIGraphicsGetCurrentContext()!
             self.view.layer.render(in: context)
             let newImage : UIImage  = UIGraphicsGetImageFromCurrentImageContext()!

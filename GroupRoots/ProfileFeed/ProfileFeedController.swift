@@ -38,6 +38,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     var groupPostsTotalViewersDict = [String: [String: Int]]()          // Dict inside dict. First key is the groupId. Within the value is another key with postId
     var groupPostsVisibleViewersDict = [String: [String: [User]]]()     //    same   ^
     var groupPostsFirstCommentDict = [String: [String: Comment]]()      //    same   |
+    var groupPostsLastCommentDict = [String: [String: Comment]]()       //    same   |
     var hasViewedDict = [String: [String: Bool]]()                      //    same   |
     var groupPostsNumCommentsDict = [String: [String: Int]]()           // -- same --|
     
@@ -577,6 +578,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             }
         }
         
+        self.collectionView.contentOffset.y = CGFloat(self.scrollViewOffset)
         self.collectionView.scrollToNearestVisibleCollectionViewCell()
     }
     
@@ -865,6 +867,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         groupPostsTotalViewersDict = [String: [String: Int]]()
         groupPostsVisibleViewersDict = [String: [String: [User]]]()
         groupPostsFirstCommentDict = [String: [String: Comment]]()
+        groupPostsLastCommentDict = [String: [String: Comment]]()
         groupPostsNumCommentsDict = [String: [String: Int]]()
         hasViewedDict = [String: [String: Bool]]()
         oldestRetrievedDate = 10000000000000.0
@@ -1353,6 +1356,24 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                                         else {
                                             self.groupPostsNumCommentsDict[groupId]![groupPost.id] = commentsCount // it is def not nil so safe to unwrap
                                         }
+                                        lower_sync.leave()
+                                    }
+                                }) { (err) in }
+                                
+                                // get the latest comment for the post
+                                lower_sync.enter()
+                                Database.database().fetchLastCommentForPost(withId: groupPost.id, completion: { (comments) in
+                                    if comments.count > 0 {
+                                        let existingPostsForLastCommentInGroup = self.groupPostsLastCommentDict[groupId]
+                                        if existingPostsForLastCommentInGroup == nil {
+                                            self.groupPostsLastCommentDict[groupId] = [groupPost.id: comments[0]]
+                                        }
+                                        else {
+                                            self.groupPostsLastCommentDict[groupId]![groupPost.id] = comments[0] // it is def not nil so safe to unwrap
+                                        }
+                                        lower_sync.leave()
+                                    }
+                                    else {
                                         lower_sync.leave()
                                     }
                                 }) { (err) in }
@@ -2011,6 +2032,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 feedCell.groupPostsTotalViewers = groupPostsTotalViewersDict[groupId]
                 feedCell.groupPostsViewers = groupPostsVisibleViewersDict[groupId]
                 feedCell.groupPostsFirstComment = groupPostsFirstCommentDict[groupId]
+                feedCell.groupPostsLastComment = groupPostsLastCommentDict[groupId]
                 feedCell.groupPostsNumComments = groupPostsNumCommentsDict[groupId]
                 feedCell.hasViewedPosts = hasViewedDict[groupId]
                 feedCell.isInGroup = isInGroupDict[groupId] ?? false
@@ -2324,12 +2346,16 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         self.present(navController, animated: true, completion: nil)
     }
     
+    private var scrollViewOffset = 0.0
     
     func viewFullScreen(group: Group, indexPath: IndexPath) {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         layout.minimumLineSpacing = CGFloat(0)
+        
+        // save postion of group
+        self.scrollViewOffset = Double(collectionView.contentOffset.y)
         
         let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
         largeImageViewController.group = group
@@ -2345,6 +2371,10 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
         userProfileController.user = selectedUser
         navigationController?.pushViewController(userProfileController, animated: true)
+    }
+    
+    func didExitLargeImageView() {
+        self.collectionView.contentOffset.y = CGFloat(self.scrollViewOffset)
     }
     
     func showMoreMembers(group: Group) {

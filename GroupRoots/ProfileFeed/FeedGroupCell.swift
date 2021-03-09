@@ -111,6 +111,12 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         }
     }
     
+    var groupPostsLastComment: [String: Comment]? { // key is the postId
+        didSet {
+            self.reloadGroupData()
+        }
+    }
+    
     var groupPostsNumComments: [String: Int]? { // key is the postId
         didSet {
             guard let groupPostsNumComments = groupPostsNumComments else { return }
@@ -184,6 +190,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         guard groupPostsNumComments != nil else { return }
         guard let groupMembers = groupMembers else { return }
         guard hasViewedPosts != nil else { return }
+        guard groupPostsLastComment != nil else { return }
         
         self.collectionView.reloadData() // this is causing or uncovering some problems where video is playing over itself
         self.collectionView.layoutIfNeeded()
@@ -376,9 +383,18 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             
             let slicedArr = (groupPosts ?? [])[startPos..<endPos]
             
+            // get the groupPosts in slicedArr
+            var lastCommentForPosts = [String: Comment]()
+            if groupPostsLastComment != nil {
+                for groupPost in slicedArr {
+                    lastCommentForPosts[groupPost.id] = groupPostsLastComment![groupPost.id]
+                }
+            }
+            
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedGroupPageCell.cellId, for: indexPath) as! FeedGroupPageCell
             cell.groupPosts = Array(slicedArr)
             cell.viewedPosts = viewedPosts
+            cell.lastCommentForPosts = lastCommentForPosts
             cell.delegate = self
             cell.tag = indexPath.row
             return cell

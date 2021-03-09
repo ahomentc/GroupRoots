@@ -289,6 +289,9 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
         navigationController?.pushViewController(groupProfileController, animated: true)
     }
     
+    func didExitLargeImageView() {
+    }
+    
     private func presentLoginController() {
         DispatchQueue.main.async { // wait until MainTabBarController is inside UI
             let loginController = LoginPhoneController()

@@ -141,6 +141,9 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         fetchMoreNotifications() // for now we don't clear for testing
     }
     
+    func didExitLargeImageView() {
+    }
+    
     func handleShowGroup(group: Group) {
         let groupProfileController = GroupProfileController(collectionViewLayout: UICollectionViewFlowLayout())
         groupProfileController.group = group

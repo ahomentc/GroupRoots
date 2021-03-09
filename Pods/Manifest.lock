@@ -138,6 +138,7 @@ PODS:
   - NVActivityIndicatorView (4.8.0):
     - NVActivityIndicatorView/Presenter (= 4.8.0)
   - NVActivityIndicatorView/Presenter (4.8.0)
+  - PanModal (1.2.7)
   - PhoneNumberKit (3.2.0):
     - PhoneNumberKit/PhoneNumberKitCore (= 3.2.0)
     - PhoneNumberKit/UIKit (= 3.2.0)
@@ -183,6 +184,7 @@ DEPENDENCIES:
   - GradientProgressBar (~> 2.0)
   - LocationPicker
   - NVActivityIndicatorView
+  - PanModal
   - PhoneNumberKit (~> 3.1)
   - Player (~> 0.13.2)
   - SearchTextField
@@ -227,6 +229,7 @@ SPEC REPOS:
     - MGEvents
     - nanopb
     - NVActivityIndicatorView
+    - PanModal
     - PhoneNumberKit
     - Player
     - PromiseKit
@@ -276,6 +279,7 @@ SPEC CHECKSUMS:
   MGEvents: 989c1396082a25e760f03056bdc0af1b6c439c78
   nanopb: c43f40fadfe79e8b8db116583945847910cbabc9
   NVActivityIndicatorView: d24b7ebcf80af5dcd994adb650e2b6c93379270f
+  PanModal: 3e16ead1a907fb06f4df3f13492fd00149fa4974
   PhoneNumberKit: df411d46177d1492da84e10b6c093846dd861452
   Player: 7a2bcad3631034fa47d4b6fdedf7c4075fc236fe
   PromiseKit: 9007df2f9e2ef725467084ab3880cf932ab935a4
@@ -293,6 +297,6 @@ SPEC CHECKSUMS:
   YPImagePicker: 7a34eabd0ef544ae8fbf9785c3df9ec5bbf242e3
   Zoomy: 598d7a6d52567e4f8bf2e557907bbd9d7e725664
 
-PODFILE CHECKSUM: 8647c1d431a697732640e1e92c204fbf2152fe53
+PODFILE CHECKSUM: 8a17de40666ce777602ddee32db453afe12ae73e
 
 COCOAPODS: 1.9.3

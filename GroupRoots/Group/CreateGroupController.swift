@@ -22,7 +22,7 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
     var delegate: CreateGroupControllerDelegate?
     var delegateForInvite: InviteToGroupWhenCreateControllerDelegate?
     
-    private var isPrivate: Bool = false
+    private var isPrivate: Bool = true
     private var schoolSelected: Bool = false
     
     var preSetSchool: String? {
@@ -102,9 +102,9 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         button.backgroundColor = UIColor.white
         button.layer.cornerRadius = 10
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
-        button.setTitleColor( UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
-        button.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
-        button.layer.borderWidth = 1
+        button.setTitleColor(UIColor.gray, for: .normal)
+        button.layer.borderColor = UIColor.gray.cgColor
+        button.layer.borderWidth = 0
         button.addTarget(self, action: #selector(handleSelectedPublic), for: .touchUpInside)
         return button
     }()
@@ -115,10 +115,11 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         button.backgroundColor = UIColor.white
         button.layer.cornerRadius = 10
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
-        button.layer.borderColor = UIColor.gray.cgColor
-        button.setTitleColor(UIColor.gray, for: .normal)
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1).cgColor
+        button.setTitleColor( UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1), for: .normal)
         button.addTarget(self, action: #selector(handleSelectedPrivate), for: .touchUpInside)
-        button.layer.borderWidth = 0
+        
         return button
     }()
     

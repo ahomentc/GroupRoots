@@ -23,6 +23,17 @@
 		754295C423E162F600893EFD /* InviteSelectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754295C323E162F600893EFD /* InviteSelectionController.swift */; };
 		754295C623E3E3AE00893EFD /* check.png in Resources */ = {isa = PBXBuildFile; fileRef = 754295C523E3E3AD00893EFD /* check.png */; };
 		755D9EE8243AB0C500915999 /* EditGroupController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755D9EE7243AB0C500915999 /* EditGroupController.swift */; };
+		75677FE625F1B47600C81180 /* MessageInputAccessoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75677FE525F1B47600C81180 /* MessageInputAccessoryView.swift */; };
+		75677FE925F1C67500C81180 /* MessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75677FE825F1C67500C81180 /* MessageCell.swift */; };
+		75677FF225F3701000C81180 /* GroupRootsClipApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75677FF125F3701000C81180 /* GroupRootsClipApp.swift */; };
+		75677FF425F3701000C81180 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75677FF325F3701000C81180 /* ContentView.swift */; };
+		75677FF625F3701300C81180 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75677FF525F3701300C81180 /* Assets.xcassets */; };
+		75677FF925F3701300C81180 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75677FF825F3701300C81180 /* Preview Assets.xcassets */; };
+		75677FFB25F3701300C81180 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75677FFA25F3701300C81180 /* Persistence.swift */; };
+		75677FFE25F3701300C81180 /* GroupRootsClip.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 75677FFC25F3701300C81180 /* GroupRootsClip.xcdatamodeld */; };
+		7567800A25F3701400C81180 /* GroupRootsClipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7567800925F3701400C81180 /* GroupRootsClipTests.swift */; };
+		7567801525F3701400C81180 /* GroupRootsClipUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7567801425F3701400C81180 /* GroupRootsClipUITests.swift */; };
+		7567801925F3701400C81180 /* GroupRootsClip.app in Embed App Clips */ = {isa = PBXBuildFile; fileRef = 75677FEF25F3701000C81180 /* GroupRootsClip.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		756D72C9242B2D2D008B6F42 /* InviteToGroupController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 756D72C8242B2D2D008B6F42 /* InviteToGroupController.swift */; };
 		756D72CB242B3247008B6F42 /* InviteToGroupCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 756D72CA242B3247008B6F42 /* InviteToGroupCell.swift */; };
 		756E3D17243980BD00E167BA /* EditProfileController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 756E3D16243980BB00E167BA /* EditProfileController.swift */; };
@@ -68,6 +79,7 @@
 		75BB489523DB00E800CF008F /* MembersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BB489423DB00E800CF008F /* MembersCell.swift */; };
 		75BE32DC24E22E1800310BA4 /* ResetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DB24E22E1800310BA4 /* ResetController.swift */; };
 		75BE32DE24E29A4200310BA4 /* IntroCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */; };
+		75C1412125F174EE005CB29E /* MessagesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C1412025F174ED005CB29E /* MessagesController.swift */; };
 		75C6922C25E4F7240096194F /* EditTempVIdeoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C6922B25E4F7240096194F /* EditTempVIdeoController.swift */; };
 		75C6922F25E600F70096194F /* MemeBrowserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C6922E25E600F70096194F /* MemeBrowserController.swift */; };
 		75C6923225E602D50096194F /* Meme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C6923125E602D50096194F /* Meme.swift */; };
@@ -146,6 +158,44 @@
 		ADE95AFE210D6F34003D9A54 /* HomePostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADE95AFD210D6F34003D9A54 /* HomePostCell.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		7567800625F3701400C81180 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AD2A2CA5205C88DE0023D5C8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 75677FEE25F3701000C81180;
+			remoteInfo = GroupRootsClip;
+		};
+		7567801125F3701400C81180 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AD2A2CA5205C88DE0023D5C8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 75677FEE25F3701000C81180;
+			remoteInfo = GroupRootsClip;
+		};
+		7567801725F3701400C81180 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AD2A2CA5205C88DE0023D5C8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 75677FEE25F3701000C81180;
+			remoteInfo = GroupRootsClip;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7567801D25F3701400C81180 /* Embed App Clips */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/AppClips";
+			dstSubfolderSpec = 16;
+			files = (
+				7567801925F3701400C81180 /* GroupRootsClip.app in Embed App Clips */,
+			);
+			name = "Embed App Clips";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		09578B8F3D737CD5AC684ECA /* Pods-InstagramClone.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InstagramClone.release.xcconfig"; path = "Pods/Target Support Files/Pods-InstagramClone/Pods-InstagramClone.release.xcconfig"; sourceTree = "<group>"; };
 		1C383EEE11376846BE6FC2A1 /* Pods-GroupRoots.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GroupRoots.release.xcconfig"; path = "Pods/Target Support Files/Pods-GroupRoots/Pods-GroupRoots.release.xcconfig"; sourceTree = "<group>"; };
@@ -165,6 +215,23 @@
 		754295C323E162F600893EFD /* InviteSelectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteSelectionController.swift; sourceTree = "<group>"; };
 		754295C523E3E3AD00893EFD /* check.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = check.png; path = Assets.xcassets/check.png; sourceTree = "<group>"; };
 		755D9EE7243AB0C500915999 /* EditGroupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditGroupController.swift; sourceTree = "<group>"; };
+		75677FE525F1B47600C81180 /* MessageInputAccessoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageInputAccessoryView.swift; sourceTree = "<group>"; };
+		75677FE825F1C67500C81180 /* MessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCell.swift; sourceTree = "<group>"; };
+		75677FEF25F3701000C81180 /* GroupRootsClip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GroupRootsClip.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		75677FF125F3701000C81180 /* GroupRootsClipApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupRootsClipApp.swift; sourceTree = "<group>"; };
+		75677FF325F3701000C81180 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		75677FF525F3701300C81180 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		75677FF825F3701300C81180 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		75677FFA25F3701300C81180 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
+		75677FFD25F3701300C81180 /* GroupRootsClip.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = GroupRootsClip.xcdatamodel; sourceTree = "<group>"; };
+		75677FFF25F3701300C81180 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7567800025F3701300C81180 /* GroupRootsClip.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GroupRootsClip.entitlements; sourceTree = "<group>"; };
+		7567800525F3701400C81180 /* GroupRootsClipTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GroupRootsClipTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7567800925F3701400C81180 /* GroupRootsClipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupRootsClipTests.swift; sourceTree = "<group>"; };
+		7567800B25F3701400C81180 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7567801025F3701400C81180 /* GroupRootsClipUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GroupRootsClipUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7567801425F3701400C81180 /* GroupRootsClipUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupRootsClipUITests.swift; sourceTree = "<group>"; };
+		7567801625F3701400C81180 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		756D72C8242B2D2D008B6F42 /* InviteToGroupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteToGroupController.swift; sourceTree = "<group>"; };
 		756D72CA242B3247008B6F42 /* InviteToGroupCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteToGroupCell.swift; sourceTree = "<group>"; };
 		756E3D16243980BB00E167BA /* EditProfileController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileController.swift; sourceTree = "<group>"; };
@@ -210,6 +277,7 @@
 		75BB489423DB00E800CF008F /* MembersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersCell.swift; sourceTree = "<group>"; };
 		75BE32DB24E22E1800310BA4 /* ResetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetController.swift; sourceTree = "<group>"; };
 		75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroCodeController.swift; sourceTree = "<group>"; };
+		75C1412025F174ED005CB29E /* MessagesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesController.swift; sourceTree = "<group>"; };
 		75C6922B25E4F7240096194F /* EditTempVIdeoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTempVIdeoController.swift; sourceTree = "<group>"; };
 		75C6922E25E600F70096194F /* MemeBrowserController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemeBrowserController.swift; sourceTree = "<group>"; };
 		75C6923125E602D50096194F /* Meme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meme.swift; sourceTree = "<group>"; };
@@ -293,6 +361,27 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		75677FEC25F3701000C81180 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7567800225F3701400C81180 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7567800D25F3701400C81180 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AD2A2CAA205C88DE0023D5C8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -331,6 +420,47 @@
 				75DD552824A2F89800FE9E7D /* LoadMoreNotificationsCell.swift */,
 			);
 			path = Notification;
+			sourceTree = "<group>";
+		};
+		75677FF025F3701000C81180 /* GroupRootsClip */ = {
+			isa = PBXGroup;
+			children = (
+				75677FF125F3701000C81180 /* GroupRootsClipApp.swift */,
+				75677FF325F3701000C81180 /* ContentView.swift */,
+				75677FF525F3701300C81180 /* Assets.xcassets */,
+				75677FFA25F3701300C81180 /* Persistence.swift */,
+				75677FFF25F3701300C81180 /* Info.plist */,
+				7567800025F3701300C81180 /* GroupRootsClip.entitlements */,
+				75677FFC25F3701300C81180 /* GroupRootsClip.xcdatamodeld */,
+				75677FF725F3701300C81180 /* Preview Content */,
+			);
+			path = GroupRootsClip;
+			sourceTree = "<group>";
+		};
+		75677FF725F3701300C81180 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				75677FF825F3701300C81180 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		7567800825F3701400C81180 /* GroupRootsClipTests */ = {
+			isa = PBXGroup;
+			children = (
+				7567800925F3701400C81180 /* GroupRootsClipTests.swift */,
+				7567800B25F3701400C81180 /* Info.plist */,
+			);
+			path = GroupRootsClipTests;
+			sourceTree = "<group>";
+		};
+		7567801325F3701400C81180 /* GroupRootsClipUITests */ = {
+			isa = PBXGroup;
+			children = (
+				7567801425F3701400C81180 /* GroupRootsClipUITests.swift */,
+				7567801625F3701400C81180 /* Info.plist */,
+			);
+			path = GroupRootsClipUITests;
 			sourceTree = "<group>";
 		};
 		7578BB1823D27C8900AF9BFB /* Group */ = {
@@ -403,6 +533,16 @@
 			path = Feed;
 			sourceTree = "<group>";
 		};
+		75C1411F25F174B4005CB29E /* Messages */ = {
+			isa = PBXGroup;
+			children = (
+				75C1412025F174ED005CB29E /* MessagesController.swift */,
+				75677FE525F1B47600C81180 /* MessageInputAccessoryView.swift */,
+				75677FE825F1C67500C81180 /* MessageCell.swift */,
+			);
+			path = Messages;
+			sourceTree = "<group>";
+		};
 		AD1F3159211B9F0800262BF1 /* Comment */ = {
 			isa = PBXGroup;
 			children = (
@@ -435,6 +575,9 @@
 				752B5DB7250DEB8A00693A04 /* horiz.gif */,
 				75914803244592E600285546 /* GoogleService-Info.plist */,
 				AD2A2CAF205C88DE0023D5C8 /* GroupRoots */,
+				75677FF025F3701000C81180 /* GroupRootsClip */,
+				7567800825F3701400C81180 /* GroupRootsClipTests */,
+				7567801325F3701400C81180 /* GroupRootsClipUITests */,
 				AD2A2CAE205C88DE0023D5C8 /* Products */,
 				354EB8B59B9FB83F5FDFE2F9 /* Pods */,
 				04009A40F60E05C6AA80D182 /* Frameworks */,
@@ -445,6 +588,9 @@
 			isa = PBXGroup;
 			children = (
 				AD2A2CAD205C88DE0023D5C8 /* GroupRoots.app */,
+				75677FEF25F3701000C81180 /* GroupRootsClip.app */,
+				7567800525F3701400C81180 /* GroupRootsClipTests.xctest */,
+				7567801025F3701400C81180 /* GroupRootsClipUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -455,6 +601,7 @@
 				AD2A2CB0205C88DE0023D5C8 /* AppDelegate.swift */,
 				AD4D8CEB2060634600A49BA4 /* MainTabBarController.swift */,
 				7521C74D24BD428E003FCFB4 /* ForceUpdateController.swift */,
+				75C1411F25F174B4005CB29E /* Messages */,
 				757B35C72472334200C9AFE1 /* ProfileFeed */,
 				75BB488B23DAB1CD00CF008F /* Feed */,
 				750FA44823D3052B00D33CF8 /* Notification */,
@@ -600,6 +747,59 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		75677FEE25F3701000C81180 /* GroupRootsClip */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7567801A25F3701400C81180 /* Build configuration list for PBXNativeTarget "GroupRootsClip" */;
+			buildPhases = (
+				75677FEB25F3701000C81180 /* Sources */,
+				75677FEC25F3701000C81180 /* Frameworks */,
+				75677FED25F3701000C81180 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GroupRootsClip;
+			productName = GroupRootsClip;
+			productReference = 75677FEF25F3701000C81180 /* GroupRootsClip.app */;
+			productType = "com.apple.product-type.application.on-demand-install-capable";
+		};
+		7567800425F3701400C81180 /* GroupRootsClipTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7567801E25F3701400C81180 /* Build configuration list for PBXNativeTarget "GroupRootsClipTests" */;
+			buildPhases = (
+				7567800125F3701400C81180 /* Sources */,
+				7567800225F3701400C81180 /* Frameworks */,
+				7567800325F3701400C81180 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7567800725F3701400C81180 /* PBXTargetDependency */,
+			);
+			name = GroupRootsClipTests;
+			productName = GroupRootsClipTests;
+			productReference = 7567800525F3701400C81180 /* GroupRootsClipTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		7567800F25F3701400C81180 /* GroupRootsClipUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7567802125F3701400C81180 /* Build configuration list for PBXNativeTarget "GroupRootsClipUITests" */;
+			buildPhases = (
+				7567800C25F3701400C81180 /* Sources */,
+				7567800D25F3701400C81180 /* Frameworks */,
+				7567800E25F3701400C81180 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7567801225F3701400C81180 /* PBXTargetDependency */,
+			);
+			name = GroupRootsClipUITests;
+			productName = GroupRootsClipUITests;
+			productReference = 7567801025F3701400C81180 /* GroupRootsClipUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		AD2A2CAC205C88DE0023D5C8 /* GroupRoots */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AD2A2CBF205C88DE0023D5C8 /* Build configuration list for PBXNativeTarget "GroupRoots" */;
@@ -610,10 +810,12 @@
 				AD2A2CAB205C88DE0023D5C8 /* Resources */,
 				4EC4568FA215CC5B0AC33863 /* [CP] Embed Pods Frameworks */,
 				465417772EA18AC59C92AE99 /* [CP] Copy Pods Resources */,
+				7567801D25F3701400C81180 /* Embed App Clips */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				7567801825F3701400C81180 /* PBXTargetDependency */,
 			);
 			name = GroupRoots;
 			productName = InstagramClone;
@@ -626,10 +828,24 @@
 		AD2A2CA5205C88DE0023D5C8 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0920;
+				LastSwiftUpdateCheck = 1230;
 				LastUpgradeCheck = 0940;
 				ORGANIZATIONNAME = "Andrei Homentcovschi";
 				TargetAttributes = {
+					75677FEE25F3701000C81180 = {
+						CreatedOnToolsVersion = 12.3;
+						ProvisioningStyle = Automatic;
+					};
+					7567800425F3701400C81180 = {
+						CreatedOnToolsVersion = 12.3;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 75677FEE25F3701000C81180;
+					};
+					7567800F25F3701400C81180 = {
+						CreatedOnToolsVersion = 12.3;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 75677FEE25F3701000C81180;
+					};
 					AD2A2CAC205C88DE0023D5C8 = {
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1000;
@@ -651,11 +867,37 @@
 			projectRoot = "";
 			targets = (
 				AD2A2CAC205C88DE0023D5C8 /* GroupRoots */,
+				75677FEE25F3701000C81180 /* GroupRootsClip */,
+				7567800425F3701400C81180 /* GroupRootsClipTests */,
+				7567800F25F3701400C81180 /* GroupRootsClipUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		75677FED25F3701000C81180 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				75677FF925F3701300C81180 /* Preview Assets.xcassets in Resources */,
+				75677FF625F3701300C81180 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7567800325F3701400C81180 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7567800E25F3701400C81180 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AD2A2CAB205C88DE0023D5C8 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -732,6 +974,7 @@
 				"${BUILT_PRODUCTS_DIR}/LocationPicker/LocationPicker.framework",
 				"${BUILT_PRODUCTS_DIR}/MGEvents/MGEvents.framework",
 				"${BUILT_PRODUCTS_DIR}/NVActivityIndicatorView/NVActivityIndicatorView.framework",
+				"${BUILT_PRODUCTS_DIR}/PanModal/PanModal.framework",
 				"${BUILT_PRODUCTS_DIR}/PhoneNumberKit/PhoneNumberKit.framework",
 				"${BUILT_PRODUCTS_DIR}/Player/Player.framework",
 				"${BUILT_PRODUCTS_DIR}/PromiseKit/PromiseKit.framework",
@@ -769,6 +1012,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/LocationPicker.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MGEvents.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NVActivityIndicatorView.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PanModal.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PhoneNumberKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Player.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PromiseKit.framework",
@@ -796,6 +1040,33 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		75677FEB25F3701000C81180 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				75677FFB25F3701300C81180 /* Persistence.swift in Sources */,
+				75677FF425F3701000C81180 /* ContentView.swift in Sources */,
+				75677FF225F3701000C81180 /* GroupRootsClipApp.swift in Sources */,
+				75677FFE25F3701300C81180 /* GroupRootsClip.xcdatamodeld in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7567800125F3701400C81180 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7567800A25F3701400C81180 /* GroupRootsClipTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7567800C25F3701400C81180 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7567801525F3701400C81180 /* GroupRootsClipUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AD2A2CA9205C88DE0023D5C8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -855,6 +1126,7 @@
 				756E3D17243980BD00E167BA /* EditProfileController.swift in Sources */,
 				75BB489523DB00E800CF008F /* MembersCell.swift in Sources */,
 				AD2CC6D6211FA0C40091E7D9 /* UserProfileEmptyStateCell.swift in Sources */,
+				75C1412125F174EE005CB29E /* MessagesController.swift in Sources */,
 				75B65DEF24144284006CBA0B /* SubscriptionsController.swift in Sources */,
 				75E5CBBB24FB84800080F815 /* AddedUserCell.swift in Sources */,
 				75D86CAC252094E100939301 /* ImportContactsCell.swift in Sources */,
@@ -876,6 +1148,7 @@
 				750FA44A23D3055900D33CF8 /* NotificationsController.swift in Sources */,
 				7578BB2223D28F4B00AF9BFB /* GroupPost.swift in Sources */,
 				ADAC0808210FD4C900615E62 /* FirebaseUtilities.swift in Sources */,
+				75677FE925F1C67500C81180 /* MessageCell.swift in Sources */,
 				AD3164D221152935001F5DA7 /* CommentCell.swift in Sources */,
 				75C6922F25E600F70096194F /* MemeBrowserController.swift in Sources */,
 				750FA45223D41B3600D33CF8 /* MembersController.swift in Sources */,
@@ -894,6 +1167,7 @@
 				75ACAFC523F6768A00DAE747 /* FollowPageController.swift in Sources */,
 				AD32EF752114D05000BB7B56 /* PreviewPhotoContainerView.swift in Sources */,
 				AD3164D621167401001F5DA7 /* CommentInputAccessoryView.swift in Sources */,
+				75677FE625F1B47600C81180 /* MessageInputAccessoryView.swift in Sources */,
 				755D9EE8243AB0C500915999 /* EditGroupController.swift in Sources */,
 				AD4D8CF42060A70E00A49BA4 /* LoginController.swift in Sources */,
 				7582758F23DD65BC00D64D4C /* Notification.swift in Sources */,
@@ -934,6 +1208,24 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		7567800725F3701400C81180 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 75677FEE25F3701000C81180 /* GroupRootsClip */;
+			targetProxy = 7567800625F3701400C81180 /* PBXContainerItemProxy */;
+		};
+		7567801225F3701400C81180 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 75677FEE25F3701000C81180 /* GroupRootsClip */;
+			targetProxy = 7567801125F3701400C81180 /* PBXContainerItemProxy */;
+		};
+		7567801825F3701400C81180 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 75677FEE25F3701000C81180 /* GroupRootsClip */;
+			targetProxy = 7567801725F3701400C81180 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXVariantGroup section */
 		AD2A2CB9205C88DE0023D5C8 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
@@ -946,6 +1238,141 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		7567801B25F3701400C81180 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_ENTITLEMENTS = GroupRootsClip/GroupRootsClip.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 32;
+				DEVELOPMENT_ASSET_PATHS = "\"GroupRootsClip/Preview Content\"";
+				DEVELOPMENT_TEAM = PVFH9G54XH;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = GroupRootsClip/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 2.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots.Clip;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		7567801C25F3701400C81180 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_ENTITLEMENTS = GroupRootsClip/GroupRootsClip.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 32;
+				DEVELOPMENT_ASSET_PATHS = "\"GroupRootsClip/Preview Content\"";
+				DEVELOPMENT_TEAM = PVFH9G54XH;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = GroupRootsClip/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 2.1;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots.Clip;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		7567801F25F3701400C81180 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = PVFH9G54XH;
+				INFOPLIST_FILE = GroupRootsClipTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots.GroupRootsClipTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GroupRootsClip.app/GroupRootsClip";
+			};
+			name = Debug;
+		};
+		7567802025F3701400C81180 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = PVFH9G54XH;
+				INFOPLIST_FILE = GroupRootsClipTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots.GroupRootsClipTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GroupRootsClip.app/GroupRootsClip";
+			};
+			name = Release;
+		};
+		7567802225F3701400C81180 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = PVFH9G54XH;
+				INFOPLIST_FILE = GroupRootsClipUITests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots.GroupRootsClipUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GroupRootsClip;
+			};
+			name = Debug;
+		};
+		7567802325F3701400C81180 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = PVFH9G54XH;
+				INFOPLIST_FILE = GroupRootsClipUITests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrei.GroupRoots.GroupRootsClipUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GroupRootsClip;
+			};
+			name = Release;
+		};
 		AD2A2CBD205C88DE0023D5C8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1061,6 +1488,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 813799D4A56F45A1373EAB69 /* Pods-GroupRoots.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GroupRoots.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -1080,6 +1508,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1C383EEE11376846BE6FC2A1 /* Pods-GroupRoots.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GroupRoots.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -1098,6 +1527,33 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		7567801A25F3701400C81180 /* Build configuration list for PBXNativeTarget "GroupRootsClip" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7567801B25F3701400C81180 /* Debug */,
+				7567801C25F3701400C81180 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7567801E25F3701400C81180 /* Build configuration list for PBXNativeTarget "GroupRootsClipTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7567801F25F3701400C81180 /* Debug */,
+				7567802025F3701400C81180 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7567802125F3701400C81180 /* Build configuration list for PBXNativeTarget "GroupRootsClipUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7567802225F3701400C81180 /* Debug */,
+				7567802325F3701400C81180 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		AD2A2CA8205C88DE0023D5C8 /* Build configuration list for PBXProject "GroupRoots" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1117,6 +1573,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		75677FFC25F3701300C81180 /* GroupRootsClip.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				75677FFD25F3701300C81180 /* GroupRootsClip.xcdatamodel */,
+			);
+			currentVersion = 75677FFD25F3701300C81180 /* GroupRootsClip.xcdatamodel */;
+			path = GroupRootsClip.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = AD2A2CA5205C88DE0023D5C8 /* Project object */;
 }

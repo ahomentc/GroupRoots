@@ -167,6 +167,16 @@ class FeedGroupPostCell: UICollectionViewCell {
             }
         }
     }
+    
+    var lastComment: Comment? {
+        didSet {
+            // make an icon that shows whether there is an unread comment or not
+            // whenever read a comment, mark the id as the most recent one and save it in device memory or firebase
+            // (maybe firebase better since if you log out and log in it'll mark all as unread)
+            // compare last comment id or date with that
+            print(lastComment!)
+        }
+    }
 
     public let photoImageView: CustomImageView = {
         let iv = CustomImageView()

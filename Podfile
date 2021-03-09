@@ -33,7 +33,6 @@ target 'GroupRoots' do
   pod 'SwiftyCam'
   pod 'GradientProgressBar', '~> 2.0'
   pod 'SwiftyDraw'
-  # pod "SnapSliderFilters"
-  # pod 'DragRotateScaleView'
   pod "EasyPeasy"
+  pod 'PanModal'
 end

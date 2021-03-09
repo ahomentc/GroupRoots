@@ -15,9 +15,11 @@ import Zoomy
 import NVActivityIndicatorView
 import SGImageCache
 import Photos
+import PanModal
 
 protocol LargeImageViewControllerDelegate {
     func didTapGroup(group: Group)
+    func didExitLargeImageView()
 }
 
 class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate, ViewersControllerDelegate {
@@ -43,6 +45,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     var groupPosts = [GroupPost]()
     var groupPostMembers = [User]()
     var firstCommentForPosts = [String: Comment]()
+    var lastCommentForPosts = [String: Comment]()
     var viewersForPosts = [String: [User]]()
     var numViewsForPost = [String: Int]()
     var numCommentsForPosts = [String: Int]()
@@ -73,6 +76,11 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         label.contentHorizontalAlignment = .center
         label.isUserInteractionEnabled = true
         label.addTarget(self, action: #selector(handleGroupTap), for: .touchUpInside)
+        
+        label.layer.shadowColor = UIColor.black.cgColor
+        label.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        label.layer.shadowOpacity = 0.4
+        label.layer.shadowRadius = 5.0
         return label
     }()
     
@@ -83,6 +91,11 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         button.tintColor = UIColor.white
         button.addTarget(self, action: #selector(handleCloseFullscreen), for: .touchUpInside)
         button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
+        
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.35
+        button.layer.shadowRadius = 2.5
         return button
     }()
     
@@ -121,11 +134,14 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                         })
                         self.sendCloseNotifications(animatedScroll: false)
                         NotificationCenter.default.post(name: NSNotification.Name("reloadViewedPosts"), object: nil)
+                        self.delegate?.didExitLargeImageView()
                         Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false) { timer in
                             self.collectionView.isHidden = true
                             self.view.backgroundColor = .clear
 //                            self.sendCloseNotifications(animatedScroll: true)
-                            self.dismiss(animated: false, completion: nil)
+                            self.dismiss(animated: false, completion: {
+                                self.delegate?.didExitLargeImageView()
+                            })
                         }
                     }
                 default:
@@ -213,44 +229,51 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                 Database.database().numberOfCommentsForPost(postId: groupPost.id) { (commentsCount) in
                     self.numCommentsForPosts[groupPost.id] = commentsCount
                     
-                    Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
-                        self.numViewsForPost[groupPost.id] = views_count
-                        Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
-                            sync.leave()
-                            if inGroup {
-                                sync.enter()
-                                Database.database().fetchPostVisibleViewers(postId: groupPost.id, completion: { (viewer_ids) in
-                                    sync.leave()
-                                    self.numViewsForPost[groupPost.id] = views_count
-                                    if viewer_ids.count > 0 {
-                                        var viewers = [User]()
-                                        let viewersSync = DispatchGroup()
-                                        sync.enter()
-                                        viewer_ids.forEach({ (viewer_id) in
-                                            viewersSync.enter()
-                                            Database.database().userExists(withUID: viewer_id, completion: { (exists) in
-                                                if exists{
-                                                    Database.database().fetchUser(withUID: viewer_id, completion: { (user) in
-                                                        viewers.append(user)
-                                                        viewersSync.leave()
-                                                    })
-                                                }
-                                                else {
-                                                    viewersSync.leave()
-                                                }
-                                            })
-                                        })
-                                        viewersSync.notify(queue: .main) {
-                                            self.viewersForPosts[groupPost.id] = viewers
-                                            sync.leave()
-                                        }
-                                    }
-                                }) { (err) in
-                                }
-                            }
-                        }) { (err) in
-                            return
+                    // get the latest comment for the post
+                    Database.database().fetchLastCommentForPost(withId: groupPost.id, completion: { (comments) in
+                        if comments.count > 0 {
+                            self.lastCommentForPosts[groupPost.id] = comments[0]
                         }
+                        
+                        Database.database().fetchNumPostViewers(postId: groupPost.id, completion: {(views_count) in
+                            self.numViewsForPost[groupPost.id] = views_count
+                            Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
+                                sync.leave()
+                                if inGroup {
+                                    sync.enter()
+                                    Database.database().fetchPostVisibleViewers(postId: groupPost.id, completion: { (viewer_ids) in
+                                        sync.leave()
+                                        self.numViewsForPost[groupPost.id] = views_count
+                                        if viewer_ids.count > 0 {
+                                            var viewers = [User]()
+                                            let viewersSync = DispatchGroup()
+                                            sync.enter()
+                                            viewer_ids.forEach({ (viewer_id) in
+                                                viewersSync.enter()
+                                                Database.database().userExists(withUID: viewer_id, completion: { (exists) in
+                                                    if exists{
+                                                        Database.database().fetchUser(withUID: viewer_id, completion: { (user) in
+                                                            viewers.append(user)
+                                                            viewersSync.leave()
+                                                        })
+                                                    }
+                                                    else {
+                                                        viewersSync.leave()
+                                                    }
+                                                })
+                                            })
+                                            viewersSync.notify(queue: .main) {
+                                                self.viewersForPosts[groupPost.id] = viewers
+                                                sync.leave()
+                                            }
+                                        }
+                                    }) { (err) in
+                                    }
+                                }
+                            }) { (err) in
+                                return
+                            }
+                        }) { (err) in }
                     }) { (err) in }
                 }
             })
@@ -323,6 +346,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         self.view.backgroundColor = UIColor.black
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleCloseFullscreen), name: NSNotification.Name(rawValue: "closeFullScreenViewController"), object: nil)
+        
     }
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
@@ -349,6 +373,9 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
             }
             if numCommentsForPosts[post_id] != nil {
                 cell.numComments = numCommentsForPosts[post_id]
+            }
+            if lastCommentForPosts[post_id] != nil {
+                cell.lastComment = lastCommentForPosts[post_id]
             }
             if numViewsForPost[post_id] != nil {
                 cell.numViewsForPost = numViewsForPost[post_id]
@@ -383,7 +410,9 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         // if animate it will look weird
         sendCloseNotifications(animatedScroll: false)
         NotificationCenter.default.post(name: NSNotification.Name("reloadViewedPosts"), object: nil)
-        self.dismiss(animated: true, completion: {})
+        self.dismiss(animated: true, completion: {
+            self.delegate?.didExitLargeImageView()
+        })
     }
     
     func configureHeader() {        
@@ -594,6 +623,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         
         self.dismiss(animated: true, completion: {
             NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
+            self.delegate?.didExitLargeImageView()
             self.delegate?.didTapGroup(group: group)
         })
     }
@@ -601,13 +631,14 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     //MARK: - InnerPostCellDelegate
     
     func didTapComment(groupPost: GroupPost) {
-        let commentsController = CommentsController()
-        commentsController.groupPost = groupPost
-        navigationController?.pushViewController(commentsController, animated: true)
+        let messagesController = MessagesController()
+        messagesController.groupPost = groupPost
+        messagesController.modalPresentationStyle = .overCurrentContext
+        presentPanModal(messagesController)
         
-//        let navController = UINavigationController(rootViewController: commentsController)
-//        navController.modalPresentationStyle = .popover
-//        self.present(navController, animated: true, completion: nil)
+//        let commentsController = CommentsController()
+//        commentsController.groupPost = groupPost
+//        navigationController?.pushViewController(commentsController, animated: true)
     }
     
     func didTapUser(user: User) {

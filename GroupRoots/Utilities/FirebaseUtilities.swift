@@ -4076,76 +4076,92 @@ extension Database {
         
         guard let postId = groupPostRef.key else { return }
         
-        // if video_url is empty then its a picture
-        if video_url == nil {
-            guard let image = image else { return }
-            Storage.storage().uploadPostImageDistributed(image: image, groupId: groupId, filename: postId) { (postImageUrl) in
-                
-                // get the average color of the image
-                guard let inputImage = CIImage(image: image) else { return }
-                let extentVector = CIVector(x: inputImage.extent.origin.x, y: inputImage.extent.origin.y, z: inputImage.extent.size.width, w: inputImage.extent.size.height)
-                guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: inputImage, kCIInputExtentKey: extentVector]) else { return }
-                guard let outputImage = filter.outputImage else { return }
-                var bitmap = [UInt8](repeating: 0, count: 4)
-                let context = CIContext(options: [.workingColorSpace: kCFNull])
-                context.render(outputImage, toBitmap: &bitmap, rowBytes: 4, bounds: CGRect(x: 0, y: 0, width: 1, height: 1), format: .RGBA8, colorSpace: nil)
-                let avgRed = CGFloat(bitmap[0]) / 255
-                let avgGreen = CGFloat(bitmap[1]) / 255
-                let avgBlue = CGFloat(bitmap[2]) / 255
-                let avgAlpha = CGFloat(bitmap[3]) / 255
-                
-                let values = ["imageUrl": postImageUrl, "caption": caption, "imageWidth": image.size.width, "imageHeight": image.size.height, "avgRed": avgRed, "avgGreen": avgGreen, "avgBlue": avgBlue, "avgAlpha": avgAlpha, "creationDate": Date().timeIntervalSince1970, "id": postId, "userUploaded": uid, "location": location, "isTempPost": isTempPost] as [String : Any]
-                groupPostRef.updateChildValues(values) { (err, ref) in
-                    if let err = err {
-                        print("Failed to save post to database", err)
-                        completion("")
-                    }
-                    // update lastPostedDate for group
-                    // if wanted to skip the date and just do ordering but in reverse, could do 10000000000000 - Date().timeIntervalSince1970
-                    let lastPostedValue = ["lastPostedDate": Int(Date().timeIntervalSince1970)] as [String : Int]
-                    Database.database().reference().child("groups").child(groupId).updateChildValues(lastPostedValue) { (err, ref) in
-                        if let err = err {
-                            print("Failed to save post to database", err)
-                            completion("")
-                        }
-                        // also update lastPostedDate for groupsFollowing for the user uploading since it takes time for cloud function
-                        // also check if following group though
-                        Database.database().isFollowingGroup(groupId: groupId, completion: { (following) in
-                            if following {
-                                Database.database().reference().child("groupsFollowing").child(uid).child(groupId).updateChildValues(lastPostedValue) { (err, ref) in
-                                    if let err = err {
-                                        print("Failed to save post to database", err)
-                                        completion("")
-                                    }
-                                    completion(postId)
-                                }
-                            }
-                            else {
-                                completion(postId)
-                            }
-                        }){ (err) in }
-                    }
+        let sync = DispatchGroup()
+        sync.enter()
+        if caption != "" {
+            Database.database().addCommentToPost(withId: postId, text: caption) { (err) in
+                if err != nil {
+                    return
                 }
+                sync.leave()
             }
         }
         else {
-            guard let video_url = video_url else { return }
-            guard let video_thumbnail = image else { return }
-            Storage.storage().uploadPostImageDistributed(image: video_thumbnail, groupId: groupId, filename: postId) { (postImageUrl) in
-                Storage.storage().uploadPostVideoDistributed(filePath: video_url, groupId: groupId, filename: String(postId)) { (postVideoUrl) in
-                    let values = ["imageUrl": postImageUrl, "videoUrl": postVideoUrl, "caption": caption, "videoWidth": video_thumbnail.size.width, "videoHeight": video_thumbnail.size.height, "creationDate": Date().timeIntervalSince1970, "id": postId, "userUploaded": uid, "location": location, "isTempPost": isTempPost] as [String : Any]
+            sync.leave()
+        }
+        
+        sync.notify(queue: .main) {
+            // if video_url is empty then its a picture
+            if video_url == nil {
+                guard let image = image else { return }
+                Storage.storage().uploadPostImageDistributed(image: image, groupId: groupId, filename: postId) { (postImageUrl) in
+                    
+                    // get the average color of the image
+                    guard let inputImage = CIImage(image: image) else { return }
+                    let extentVector = CIVector(x: inputImage.extent.origin.x, y: inputImage.extent.origin.y, z: inputImage.extent.size.width, w: inputImage.extent.size.height)
+                    guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: inputImage, kCIInputExtentKey: extentVector]) else { return }
+                    guard let outputImage = filter.outputImage else { return }
+                    var bitmap = [UInt8](repeating: 0, count: 4)
+                    let context = CIContext(options: [.workingColorSpace: kCFNull])
+                    context.render(outputImage, toBitmap: &bitmap, rowBytes: 4, bounds: CGRect(x: 0, y: 0, width: 1, height: 1), format: .RGBA8, colorSpace: nil)
+                    let avgRed = CGFloat(bitmap[0]) / 255
+                    let avgGreen = CGFloat(bitmap[1]) / 255
+                    let avgBlue = CGFloat(bitmap[2]) / 255
+                    let avgAlpha = CGFloat(bitmap[3]) / 255
+                    
+                    let values = ["imageUrl": postImageUrl, "caption": caption, "imageWidth": image.size.width, "imageHeight": image.size.height, "avgRed": avgRed, "avgGreen": avgGreen, "avgBlue": avgBlue, "avgAlpha": avgAlpha, "creationDate": Date().timeIntervalSince1970, "id": postId, "userUploaded": uid, "location": location, "isTempPost": isTempPost] as [String : Any]
                     groupPostRef.updateChildValues(values) { (err, ref) in
                         if let err = err {
                             print("Failed to save post to database", err)
                             completion("")
                         }
+                        // update lastPostedDate for group
+                        // if wanted to skip the date and just do ordering but in reverse, could do 10000000000000 - Date().timeIntervalSince1970
                         let lastPostedValue = ["lastPostedDate": Int(Date().timeIntervalSince1970)] as [String : Int]
                         Database.database().reference().child("groups").child(groupId).updateChildValues(lastPostedValue) { (err, ref) in
                             if let err = err {
                                 print("Failed to save post to database", err)
                                 completion("")
                             }
-                            completion(postId)
+                            // also update lastPostedDate for groupsFollowing for the user uploading since it takes time for cloud function
+                            // also check if following group though
+                            Database.database().isFollowingGroup(groupId: groupId, completion: { (following) in
+                                if following {
+                                    Database.database().reference().child("groupsFollowing").child(uid).child(groupId).updateChildValues(lastPostedValue) { (err, ref) in
+                                        if let err = err {
+                                            print("Failed to save post to database", err)
+                                            completion("")
+                                        }
+                                        completion(postId)
+                                    }
+                                }
+                                else {
+                                    completion(postId)
+                                }
+                            }){ (err) in }
+                        }
+                    }
+                }
+            }
+            else {
+                guard let video_url = video_url else { return }
+                guard let video_thumbnail = image else { return }
+                Storage.storage().uploadPostImageDistributed(image: video_thumbnail, groupId: groupId, filename: postId) { (postImageUrl) in
+                    Storage.storage().uploadPostVideoDistributed(filePath: video_url, groupId: groupId, filename: String(postId)) { (postVideoUrl) in
+                        let values = ["imageUrl": postImageUrl, "videoUrl": postVideoUrl, "caption": caption, "videoWidth": video_thumbnail.size.width, "videoHeight": video_thumbnail.size.height, "creationDate": Date().timeIntervalSince1970, "id": postId, "userUploaded": uid, "location": location, "isTempPost": isTempPost] as [String : Any]
+                        groupPostRef.updateChildValues(values) { (err, ref) in
+                            if let err = err {
+                                print("Failed to save post to database", err)
+                                completion("")
+                            }
+                            let lastPostedValue = ["lastPostedDate": Int(Date().timeIntervalSince1970)] as [String : Int]
+                            Database.database().reference().child("groups").child(groupId).updateChildValues(lastPostedValue) { (err, ref) in
+                                if let err = err {
+                                    print("Failed to save post to database", err)
+                                    completion("")
+                                }
+                                completion(postId)
+                            }
                         }
                     }
                 }
@@ -4622,6 +4638,53 @@ extension Database {
         }
     }
     
+    func fetchLastCommentForPost(withId postId: String, completion: @escaping ([Comment]) -> (), withCancel cancel: ((Error) -> ())?) {
+        let commentsReference = Database.database().reference().child("comments").child(postId)
+        commentsReference.queryOrderedByKey().queryLimited(toLast: 1).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard let dictionaries = snapshot.value as? [String: Any] else {
+                completion([])
+                return
+            }
+                    
+            var comments = [Comment]()
+            
+            // this for loop only has 2 iterations
+            // just used it to get value since dictionaries are unorganized
+            // could also use loop to find the newest, most relevent, etc comment and return it
+            // or return 2 comments potentially so returning an array
+            let sync = DispatchGroup()
+            for (_, value) in dictionaries {
+                guard let commentDictionary = value as? [String: Any] else { return }
+                guard let uid = commentDictionary["uid"] as? String else { return }
+                sync.enter()
+                
+                self.userExists(withUID: uid, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchUser(withUID: uid) { (user) in
+                            let comment = Comment(user: user, dictionary: commentDictionary)
+                            comments.append(comment)
+                            sync.leave()
+                        }
+                    }
+                    else{
+                        sync.leave()
+                    }
+                })
+            }
+            sync.notify(queue: .main) {
+                if comments.count >= 2 {
+                    completion(Array(comments[0 ..< 2]))
+                } else {
+                    completion(comments)
+                }
+                return
+            }
+        }) { (err) in
+            print("Failed to fetch comments:", err)
+            cancel?(err)
+        }
+    }
+    
     func addToViewedPosts(postId: String, completion: @escaping (Error?) -> ()) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
@@ -4942,27 +5005,37 @@ extension Database {
                 }
             case .groupPostComment:
                 guard let group = group else { return }
+                guard let message = message else { return }
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
                     
                     // could add a check to see if the currentLoggedInUser is following the user in the group.
                     // if not following, then could not send a notification for them.
                     // could add this here, before this function is called, + have default and change from settings
                     
-                    var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
-                    if groupname == "" { groupname = "your group" }
-                    let pushMessage = user.username + " commented on " + groupname + "'s post"
-                    PushNotificationSender().sendPushNotification(to: token, title: "Comment", body: pushMessage)
+//                    var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
+//                    if groupname == "" { groupname = "your group" }
+//                    let pushMessage = user.username + " commented on " + groupname + "'s post"
+//                    PushNotificationSender().sendPushNotification(to: token, title: "Comment", body: pushMessage)
                     
-                    // Save the notification
-                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group.groupId, "group_post_id": groupPost!.id, "type": "groupPostComment", "creationDate": Date().timeIntervalSince1970] as [String : Any]
-                    notificationRef.updateChildValues(values) { (err, ref) in
-                        if let err = err {
-                            print("Failed to save post to database", err)
-                            completion(err)
-                            return
-                        }
-                        completion(nil)
-                    }
+                    var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
+                    if groupname == "" { groupname = "Group" }
+                    let pushMessage = user.username + ": " + message
+                    PushNotificationSender().sendPushNotification(to: token, title: groupname + " Message", body: pushMessage)
+                    
+                    completion(nil)
+                    
+                    // Don't save the notification for a message actually
+                    
+                    // Save the notification:
+//                    let values = ["id": notificationId, "from_id": currentLoggedInUserId, "group_id": group.groupId, "group_post_id": groupPost!.id, "type": "groupPostComment", "creationDate": Date().timeIntervalSince1970] as [String : Any]
+//                    notificationRef.updateChildValues(values) { (err, ref) in
+//                        if let err = err {
+//                            print("Failed to save post to database", err)
+//                            completion(err)
+//                            return
+//                        }
+//                        completion(nil)
+//                    }
                 }
             case .newGroupPost:
                 guard let group = group else { return }
