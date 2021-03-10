@@ -129,12 +129,16 @@ PODS:
   - leveldb-library (1.22)
   - LightweightObservable (2.1.2)
   - LocationPicker (1.4.2)
+  - MarqueeLabel (4.0.5)
   - MGEvents (1.2.1)
   - nanopb (1.30905.0):
     - nanopb/decode (= 1.30905.0)
     - nanopb/encode (= 1.30905.0)
   - nanopb/decode (1.30905.0)
   - nanopb/encode (1.30905.0)
+  - NotificationBannerSwift (3.0.6):
+    - MarqueeLabel (~> 4.0.5)
+    - SnapKit (~> 5.0.1)
   - NVActivityIndicatorView (4.8.0):
     - NVActivityIndicatorView/Presenter (= 4.8.0)
   - NVActivityIndicatorView/Presenter (4.8.0)
@@ -159,6 +163,7 @@ PODS:
     - MGEvents (~> 1.2)
     - PromiseKit/Promise (~> 1.5)
     - SGHTTPRequest/Core (~> 1.9)
+  - SnapKit (5.0.1)
   - SteviaLayout (4.7.3)
   - SwiftGifOrigin (1.7.0)
   - SwiftyCam (4.0.0)
@@ -183,6 +188,7 @@ DEPENDENCIES:
   - GoogleSignIn
   - GradientProgressBar (~> 2.0)
   - LocationPicker
+  - NotificationBannerSwift
   - NVActivityIndicatorView
   - PanModal
   - PhoneNumberKit (~> 3.1)
@@ -226,8 +232,10 @@ SPEC REPOS:
     - leveldb-library
     - LightweightObservable
     - LocationPicker
+    - MarqueeLabel
     - MGEvents
     - nanopb
+    - NotificationBannerSwift
     - NVActivityIndicatorView
     - PanModal
     - PhoneNumberKit
@@ -239,6 +247,7 @@ SPEC REPOS:
     - SearchTextField
     - SGHTTPRequest
     - SGImageCache
+    - SnapKit
     - SteviaLayout
     - SwiftGifOrigin
     - SwiftyCam
@@ -276,8 +285,10 @@ SPEC CHECKSUMS:
   leveldb-library: 55d93ee664b4007aac644a782d11da33fba316f7
   LightweightObservable: c5ac85423a5edbed9a920b4d5c7b8f94ab3688c4
   LocationPicker: 9af49409ec3ca13fdf4bf6b39e1a3c7dec029f4a
+  MarqueeLabel: 00cc0bcd087111dca575878b3531af980559707d
   MGEvents: 989c1396082a25e760f03056bdc0af1b6c439c78
   nanopb: c43f40fadfe79e8b8db116583945847910cbabc9
+  NotificationBannerSwift: 7021be2338f8f29cf424b0aca43da462bf9e2a1a
   NVActivityIndicatorView: d24b7ebcf80af5dcd994adb650e2b6c93379270f
   PanModal: 3e16ead1a907fb06f4df3f13492fd00149fa4974
   PhoneNumberKit: df411d46177d1492da84e10b6c093846dd861452
@@ -289,6 +300,7 @@ SPEC CHECKSUMS:
   SearchTextField: 40dc3cc57def5a211f263cac263622c163bbc25a
   SGHTTPRequest: 93646208528eafd758052a92ee4dcf04e0d263c5
   SGImageCache: ef7daf2cb76a67a79c25a1c1f71fa675c5fc9672
+  SnapKit: 97b92857e3df3a0c71833cce143274bf6ef8e5eb
   SteviaLayout: c2ecdcff57d44e38fd2f65e54ad52aeae28ca0c4
   SwiftGifOrigin: fbd6cf37afcfcf97a5c3db996ddc0492e5c5c145
   SwiftyCam: 6e57914771d972fbe508e759dc9d0150a44a93fd
@@ -297,6 +309,6 @@ SPEC CHECKSUMS:
   YPImagePicker: 7a34eabd0ef544ae8fbf9785c3df9ec5bbf242e3
   Zoomy: 598d7a6d52567e4f8bf2e557907bbd9d7e725664
 
-PODFILE CHECKSUM: 8a17de40666ce777602ddee32db453afe12ae73e
+PODFILE CHECKSUM: d6369a020b882ee332b83211f93e04c0e0ad9457
 
 COCOAPODS: 1.9.3

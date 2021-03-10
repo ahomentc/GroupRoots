@@ -35,6 +35,8 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     var viewedPosts = [String: Bool]()
     var isInGroup: Bool = false
     
+    static var cellId = "feedGroupCellId"
+    
     
     // extremely ugly and bad bandaid solution so will explain in detail
     // PLEASE FIX. running out of time and just want to release already
@@ -62,6 +64,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
     var hasDisappeared = false
     
     override func prepareForReuse() {
+        print("reusing")
         super.prepareForReuse()
         groupMembers = nil
         groupPosts = nil
@@ -111,8 +114,10 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         }
     }
     
+    var lastCommentSet = false
     var groupPostsLastComment: [String: Comment]? { // key is the postId
         didSet {
+            self.lastCommentSet = true
             self.reloadGroupData()
         }
     }
@@ -190,7 +195,8 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         guard groupPostsNumComments != nil else { return }
         guard let groupMembers = groupMembers else { return }
         guard hasViewedPosts != nil else { return }
-        guard groupPostsLastComment != nil else { return }
+        if !lastCommentSet { return }
+//        guard groupPostsLastComment != nil else { return }
         
         self.collectionView.reloadData() // this is causing or uncovering some problems where video is playing over itself
         self.collectionView.layoutIfNeeded()

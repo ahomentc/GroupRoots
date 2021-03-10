@@ -30,10 +30,12 @@ protocol InnerPostCellDelegate {
     func handleGroupTap()
 }
 
-class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
+class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate, MessagesControllerDelegate {
     
     var delegate: InnerPostCellDelegate?
     var timer = Timer()
+    
+    var commentsReference = DatabaseReference()
     
     var groupPost: GroupPost? {
         didSet {
@@ -231,6 +233,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         button.setImage(#imageLiteral(resourceName: "play").withRenderingMode(.alwaysOriginal), for: .normal)
         button.isHidden = true
         button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        button.layer.zPosition = 12
         
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
@@ -326,6 +329,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         backgroundView.layer.cornerRadius = 15
         backgroundView.layer.zPosition = 10
         backgroundView.isUserInteractionEnabled = true
+        backgroundView.alpha = 0
 
         backgroundView.layer.shadowColor = UIColor.black.cgColor
         backgroundView.layer.shadowOffset = CGSize(width: 0, height: 1.0)
@@ -468,7 +472,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         
         let outgoingMessageLayer = CAShapeLayer()
         outgoingMessageLayer.path = bezierPath.cgPath
-        outgoingMessageLayer.frame = CGRect(x: UIScreen.main.bounds.width - width - 30, y: (UIScreen.main.bounds.height - UIScreen.main.bounds.height/10) - 75 + 10, width: width, height: height)
+        outgoingMessageLayer.frame = CGRect(x: UIScreen.main.bounds.width - width - 30, y: (UIScreen.main.bounds.height - (UIScreen.main.bounds.height/7 - 35)) - 75 + 10, width: width, height: height)
         outgoingMessageLayer.fillColor = UIColor(red: 38/255, green: 118/255, blue: 255/255, alpha: 1).cgColor
         outgoingMessageLayer.zPosition = 14
 
@@ -476,7 +480,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         addedLayers.append(outgoingMessageLayer)
         label.layer.zPosition = 15
 
-        label.frame = CGRect(x: UIScreen.main.bounds.width - width - 19, y: (UIScreen.main.bounds.height - UIScreen.main.bounds.height/10) - 75 + 10, width: width, height: height)
+        label.frame = CGRect(x: UIScreen.main.bounds.width - width - 19, y: (UIScreen.main.bounds.height - (UIScreen.main.bounds.height/7 - 35)) - 75 + 10, width: width, height: height)
         insertSubview(label, at: 21)
         addedViews.append(label)
     }
@@ -525,7 +529,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
 
         let outgoingMessageLayer = CAShapeLayer()
         outgoingMessageLayer.path = bezierPath.cgPath
-        outgoingMessageLayer.frame = CGRect(x: 35, y: (UIScreen.main.bounds.height - UIScreen.main.bounds.height/10) - 75 + 10, width: width, height: height)
+        outgoingMessageLayer.frame = CGRect(x: 35, y: (UIScreen.main.bounds.height - (UIScreen.main.bounds.height/7 - 35)) - 75 + 10, width: width, height: height)
         outgoingMessageLayer.fillColor = UIColor.init(white: 0.2, alpha: 1).cgColor
         outgoingMessageLayer.zPosition = 14
 
@@ -533,7 +537,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         addedLayers.append(outgoingMessageLayer)
         label.layer.zPosition = 15
 
-        label.frame = CGRect(x: 50, y: (UIScreen.main.bounds.height - UIScreen.main.bounds.height/10) - 75 + 10, width: width, height: height)
+        label.frame = CGRect(x: 50, y: (UIScreen.main.bounds.height - (UIScreen.main.bounds.height/7 - 35)) - 75 + 10, width: width, height: height)
         insertSubview(label, at: 21)
         addedViews.append(label)
     }
@@ -542,18 +546,12 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         
         insertSubview(playButton, at: 11)
         
-        coverView.heightAnchor.constraint(equalToConstant: 150).isActive = true
-        coverView.layer.cornerRadius = 0
-        coverView.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 110, width: UIScreen.main.bounds.width, height: 150)
-        coverView.isUserInteractionEnabled = false
-        insertSubview(coverView, at: 3)
-        
         photoImageBackgroundView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height/3).isActive = true
         photoImageBackgroundView.layer.cornerRadius = 15
         photoImageBackgroundView.alpha = 0.5
         photoImageBackgroundView.clipsToBounds = true
         insertSubview(photoImageBackgroundView, at: 1)
-        photoImageBackgroundView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding + 10, paddingBottom: UIScreen.main.bounds.height/10, paddingRight: padding + 10, height: 75)
+        photoImageBackgroundView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding + 10, paddingBottom: UIScreen.main.bounds.height/7 - 35, paddingRight: padding + 10, height: 75)
         photoImageBackgroundView.isHidden = false
 
         photoImageView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
@@ -569,6 +567,12 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         player.playbackResumesWhenBecameActive = false
         player.playbackResumesWhenEnteringForeground = false
         player.playerDelegate = self
+        
+        coverView.heightAnchor.constraint(equalToConstant: 150).isActive = true
+        coverView.layer.cornerRadius = 0
+        coverView.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 110, width: UIScreen.main.bounds.width, height: 150)
+        coverView.isUserInteractionEnabled = false
+        insertSubview(coverView, at: 5)
         
 //        insertSubview(imageBackground, at: 1)
 //        imageBackground.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
@@ -590,10 +594,10 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleComment))
         blurredEffectView.addGestureRecognizer(gestureRecognizer)
         insertSubview(blurredEffectView, at: 10)
-        blurredEffectView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding + 10, paddingBottom: UIScreen.main.bounds.height/10, paddingRight: padding + 10, height: 75)
+        blurredEffectView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding + 10, paddingBottom: UIScreen.main.bounds.height/7 - 35, paddingRight: padding + 10, height: 75)
         
         insertSubview(messagePreviewBackground, at: 11)
-        messagePreviewBackground.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding + 10, paddingBottom: UIScreen.main.bounds.height/10, paddingRight: padding + 10, height: 75)
+        messagePreviewBackground.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding + 10, paddingBottom: UIScreen.main.bounds.height/7 - 35, paddingRight: padding + 10, height: 75)
         messagePreviewBackground.alpha = 0
         
         addSubview(expandRightButton)
@@ -755,6 +759,44 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
                 }
             }
         }
+        
+        // this will continuously listen for refreshes in comments
+        self.commentsReference = Database.database().reference().child("comments").child(groupPost.id)
+        self.commentsReference.queryOrderedByKey().queryLimited(toLast: 1).observe(.value) { snapshot in
+            guard let dictionaries = snapshot.value as? [String: Any] else {
+                return
+            }
+            
+            var comments = [Comment]()
+                
+            let sync = DispatchGroup()
+            dictionaries.forEach({ (key, value) in
+                guard let commentDictionary = value as? [String: Any] else { return }
+                guard let uid = commentDictionary["uid"] as? String else { return }
+                sync.enter()
+                Database.database().userExists(withUID: uid, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchUser(withUID: uid) { (user) in
+                            let comment = Comment(user: user, dictionary: commentDictionary)
+                            comments.append(comment)
+                            sync.leave()
+                        }
+                    }
+                    else{
+                        sync.leave()
+                    }
+                })
+            })
+            sync.notify(queue: .main) {
+                if comments.count > 0 {
+                    if !(self.lastComment != nil && self.lastComment?.creationDate == comments[0].creationDate) {
+                        if comments.count > 0 {
+                            self.lastComment = comments[comments.count - 1]
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private func setImageDimensions(){
@@ -867,6 +909,13 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         guard let lastComment = lastComment else { return }
         
+        for view in addedViews {
+            view.removeFromSuperview()
+        }
+        for layer in addedLayers {
+            layer.removeFromSuperlayer()
+        }
+        
         if lastComment.user.uid == currentLoggedInUserId {
             showOutgoingMessage(message: lastComment.text)
             self.expandLeftButton.isHidden = false
@@ -938,6 +987,13 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
             self.delegate?.didTapComment(groupPost: groupPost)
         }
+    }
+
+    // this will never be called since LargeImageViewController sets calls MessagesController and sets
+    // delegate. But okay for now. Later on pass to LargeImageViewController the commentsReference and
+    // remove it there
+    func didCloseMessage() {
+        commentsReference.removeAllObservers()
     }
     
     @objc private func handleDidTapCommentUser() {

@@ -124,7 +124,7 @@ class MessageInputAccessoryView: UIView, UITextViewDelegate {
     @objc private func handleSubmit() {
         guard let commentText = commentTextView.text else { return }
         checkForAtInput(text: commentText + " ", submitAfterCheck: true)
-        commentTextView.resignFirstResponder()
+//        commentTextView.resignFirstResponder()
         delegate?.didSubmit(comment: commentText)
     }
     

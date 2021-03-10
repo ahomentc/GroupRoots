@@ -12,9 +12,15 @@ import FirebaseAuth
 import FirebaseDatabase
 import PanModal
 
+protocol MessagesControllerDelegate {
+    func didCloseMessage()
+}
+
 class MessagesController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, PanModalPresentable {
     
     var hasLoaded = false
+    
+    var delegate: MessagesControllerDelegate?
     
     var panScrollable: UIScrollView? {
         return nil
@@ -54,6 +60,8 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
     var commentsCollectionView: UICollectionView!
     
     var original_height = 0.0
+    
+    var commentsReference = DatabaseReference()
     
     private lazy var messageInputAccessoryView: MessageInputAccessoryView = {
         let frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 50)
@@ -120,13 +128,12 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
         searchCollectionView.keyboardDismissMode = .onDrag
         self.view.insertSubview(searchCollectionView, at: 5)
         
-        let refreshControl = UIRefreshControl()
-        refreshControl.addTarget(self, action: #selector(fetchComments), for: .valueChanged)
-        commentsCollectionView?.refreshControl = refreshControl
+//        let refreshControl = UIRefreshControl()
+//        refreshControl.addTarget(self, action: #selector(fetchComments), for: .valueChanged)
+//        commentsCollectionView?.refreshControl = refreshControl
         
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
-         
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -137,6 +144,8 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         tabBarController?.tabBar.isHidden = false
+        commentsReference.removeAllObservers()
+        self.delegate?.didCloseMessage()
     }
     
     @objc private func fetchComments() {
@@ -148,7 +157,7 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
             self.commentsCollectionView.performBatchUpdates(nil, completion: {
                 (result) in
                 self.commentsCollectionView!.scrollToItem(at: IndexPath.init(row: comments.count - 1, section: 0), at: UICollectionView.ScrollPosition.bottom, animated: false)
-                
+
                 if comments.count > 5 {
                     let bottomOffset = CGPoint(x: 0, y: self.commentsCollectionView.contentSize.height - self.commentsCollectionView.bounds.height + self.commentsCollectionView.contentInset.bottom)
                     self.commentsCollectionView.setContentOffset(bottomOffset, animated: true)
@@ -156,6 +165,49 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
             })
             self.commentsCollectionView?.refreshControl?.endRefreshing()
         }) { (err) in }
+        
+        // this will continuously listen for refreshes in comments
+        commentsReference = Database.database().reference().child("comments").child(postId)
+        commentsReference.queryOrderedByKey().queryLimited(toLast: 1).observe(.value) { snapshot in
+            self.commentsCollectionView?.refreshControl?.beginRefreshing()
+            
+            guard let dictionaries = snapshot.value as? [String: Any] else {
+                return
+            }
+            
+            var comments = [Comment]()
+                
+            let sync = DispatchGroup()
+            dictionaries.forEach({ (key, value) in
+                guard let commentDictionary = value as? [String: Any] else { return }
+                guard let uid = commentDictionary["uid"] as? String else { return }
+                sync.enter()
+                Database.database().userExists(withUID: uid, completion: { (exists) in
+                    if exists{
+                        Database.database().fetchUser(withUID: uid) { (user) in
+                            let comment = Comment(user: user, dictionary: commentDictionary)
+                            comments.append(comment)
+                            sync.leave()
+                        }
+                    }
+                    else{
+                        sync.leave()
+                    }
+                })
+            })
+            sync.notify(queue: .main) {
+                // check if the first comment is the same as previous one and don't put if there
+                if !(self.comments.count > 0 && comments.count > 0 && self.comments[self.comments.count-1].creationDate == comments[0].creationDate) {
+                    self.comments += comments
+                }
+                self.comments.sort(by: { (comment1, comment2) -> Bool in
+                    return comment1.creationDate.compare(comment2.creationDate) == .orderedAscending
+                })
+                self.commentsCollectionView.reloadData()
+                self.commentsCollectionView?.refreshControl?.endRefreshing()
+                return
+            }
+        }
     }
         
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -215,14 +267,16 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
     @objc func keyboardWillShow(notification: NSNotification) {
         if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
             if self.comments.count > 3 {
-                self.commentsCollectionView.bounds.origin.y = 20 + keyboardSize.height
+//                self.commentsCollectionView.bounds.origin.y = 20 + keyboardSize.height
+                let bottomOffset = CGPoint(x: 0, y: self.commentsCollectionView.contentSize.height - self.commentsCollectionView.bounds.height + self.commentsCollectionView.contentInset.bottom + keyboardSize.height - 20)
+                self.commentsCollectionView.setContentOffset(bottomOffset, animated: true)
             }
         }
     }
 
     @objc func keyboardWillHide(notification: NSNotification) {
         if self.comments.count > 3 {
-            self.commentsCollectionView.bounds.origin.y = 20
+//            self.commentsCollectionView.bounds.origin.y = 20
         }
     }
 }
@@ -335,7 +389,7 @@ extension MessagesController: MessageInputAccessoryViewDelegate {
                 })
             }) { (_) in}
             self.messageInputAccessoryView.clearCommentTextField()
-            self.fetchComments()
+//            self.fetchComments()
         }
     }
 }

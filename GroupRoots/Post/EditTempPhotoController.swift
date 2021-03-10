@@ -1528,7 +1528,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         sharingLabel.isHidden = false
         
         if self.textViews.count > 0 || self.photoModified {
-            let areaSize = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 30) //Your view size from where you want to make UIImage
+            let areaSize = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 35) //Your view size from where you want to make UIImage
 //            UIGraphicsBeginImageContext(areaSize.size);
             UIGraphicsBeginImageContextWithOptions(areaSize.size, view.isOpaque, 0.0)
             let context : CGContext = UIGraphicsGetCurrentContext()!

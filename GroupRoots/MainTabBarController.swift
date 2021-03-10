@@ -16,6 +16,17 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
         }
     }
     
+    var messageFromAppDelegate: String? {
+        didSet {
+//            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { timer in
+//                guard let messageFromAppDelegate = self.messageFromAppDelegate else { return }
+//                let alert = UIAlertController(title: "Message", message: messageFromAppDelegate, preferredStyle: .alert)
+//                alert.addAction(UIAlertAction(title: "Ok", style: .cancel, handler: nil))
+//                self.present(alert, animated: true)
+//            }
+        }
+    }
+    
     var newPost: Bool = false
     var groupToOpen: String = ""
     var groupMemberRequestorsToOpenFor: String = ""
@@ -265,11 +276,11 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
             layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
             layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
             layout.minimumLineSpacing = CGFloat(0)
-            
-            let postIdAndGroupIdArr = self.postAndGroupToOpen.split(separator: "_")
+
+            let postIdAndGroupIdArr = self.postAndGroupToOpen.split(separator: "*")
             let postId = String(postIdAndGroupIdArr[0])
             let groupId = String(postIdAndGroupIdArr[1])
-            
+
             Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
                 let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
                 largeImageViewController.group = post.group

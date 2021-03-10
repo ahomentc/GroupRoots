@@ -12,8 +12,20 @@ import UIKit
 import UserNotifications
 import FirebaseAuth
 import FirebaseDatabase
+import NotificationBannerSwift
 
-class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCenterDelegate {
+class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCenterDelegate, LargeImageViewControllerDelegate {
+    func didTapGroup(group: Group) {
+        
+    }
+    
+    func didExitLargeImageView() {
+        
+    }
+    
+    
+    
+    
 //    let userID: String
 //    init(userID: String) {
 //        self.userID = userID
@@ -50,15 +62,106 @@ class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCe
         }
     }
 
-    func messaging(_ messaging: Messaging, didReceive remoteMessage: MessagingRemoteMessage) {
-        print(remoteMessage.appData) // or do whatever
-    }
-
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String) {
         updatePushTokenIfNeeded()
     }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        // this will handle what happens when the app is open in background when the notification is recieved
+        print("notification recieved when app in background")
+        
+        if response.notification.request.content.categoryIdentifier.contains("open_post") {
+            let layout = UICollectionViewFlowLayout()
+            layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
+            layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+            layout.minimumLineSpacing = CGFloat(0)
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        print(response)
+            let postIdAndGroupId = response.notification.request.content.categoryIdentifier.replacingOccurrences(of: "open_post_", with: "")
+            let postIdAndGroupIdArr = postIdAndGroupId.split(separator: "*")
+            let postId = String(postIdAndGroupIdArr[0])
+            let groupId = String(postIdAndGroupIdArr[1])
+
+            Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
+                let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
+                largeImageViewController.group = post.group
+                largeImageViewController.postToScrollToId = post.id
+                largeImageViewController.delegate = self
+                let navController = UINavigationController(rootViewController: largeImageViewController)
+                navController.modalPresentationStyle = .overCurrentContext
+                
+                let viewController = UIApplication.shared.keyWindow!.rootViewController as! MainTabBarController
+                viewController.present(navController, animated: true, completion: nil)
+            })
+        }
+    }
+
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // this will handle what happens when the app is opened already when the notification is recieved
+        print("notification recieved when app already opened")
+        
+        if notification.request.content.categoryIdentifier.contains("open_post") {
+            let postIdAndGroupId = notification.request.content.categoryIdentifier.replacingOccurrences(of: "open_post_", with: "")
+            let postIdAndGroupIdArr = postIdAndGroupId.split(separator: "*")
+            let postId = String(postIdAndGroupIdArr[0])
+            let groupId = String(postIdAndGroupIdArr[1])
+            
+            if let topController = UIApplication.topViewController() {
+                if type(of: topController) == MessagesController.self {
+                    let messagesController = topController as? MessagesController
+                    let post_id = messagesController?.groupPost?.id
+                    if post_id == postId {
+                        return
+                    }
+                }
+                else if type(of: topController) == LargeImageViewController.self {
+                    let largeImageViewController = topController as? LargeImageViewController
+                    largeImageViewController?.collectionView.visibleCells.forEach { cell in
+                        if cell is FeedPostCell {
+                            let post_id = (cell as! FeedPostCell).groupPost?.id
+                            if post_id == postId {
+                                return
+                            }
+                        }
+                    }
+                }
+            }
+
+            Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
+
+                let banner = FloatingNotificationBanner(title: notification.request.content.title, subtitle: notification.request.content.body, style: .success)
+                banner.backgroundColor = UIColor.init(white: 0.98, alpha: 1)
+                banner.titleLabel?.textColor = .black
+//                banner.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+                banner.subtitleLabel?.textColor = .black
+//                banner.layer.cornerRadius = 20
+//                banner.clipsToBounds = true
+//                banner.layer.borderWidth = 1
+//                banner.layer.borderColor = UIColor.init(white: 0.9, alpha: 1).cgColor
+                banner.onTap = {
+                    let layout = UICollectionViewFlowLayout()
+                    layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
+                    layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+                    layout.minimumLineSpacing = CGFloat(0)
+                    
+                    let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
+                    largeImageViewController.group = post.group
+                    largeImageViewController.postToScrollToId = post.id
+                    largeImageViewController.delegate = self
+                    let navController = UINavigationController(rootViewController: largeImageViewController)
+                    navController.modalPresentationStyle = .overCurrentContext
+                    
+                    let viewController = UIApplication.shared.keyWindow!.rootViewController as! MainTabBarController
+                    viewController.present(navController, animated: true, completion: nil)
+                
+                }
+                banner.show()
+            })
+        }
+//        completionHandler(UNNotificationPresentationOptions.sound) // play sound
     }
 }

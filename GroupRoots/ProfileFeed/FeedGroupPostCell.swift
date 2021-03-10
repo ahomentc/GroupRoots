@@ -126,12 +126,13 @@ class FeedGroupPostCell: UICollectionViewCell {
                     self.photoImageView.image = image   // image loaded immediately from cache
                     self.upperCoverView.isHidden = false
                     self.coverView.isHidden = false
-                    if image.size.width >  image.size.height {
-                        self.photoImageView.contentMode = .scaleAspectFit
-                    }
-                    else {
-                        self.photoImageView.contentMode = .scaleAspectFill
-                    }
+//                    if image.size.width >  image.size.height {
+//                        self.photoImageView.contentMode = .scaleAspectFit
+//                    }
+//                    else {
+//                        self.photoImageView.contentMode = .scaleAspectFill
+//                    }
+                    self.photoImageView.contentMode = .scaleAspectFill
                 } else {
                     self.photoImageView.image = CustomImageView.imageWithColor(color: .white)
                     self.readyToSetPicture = true

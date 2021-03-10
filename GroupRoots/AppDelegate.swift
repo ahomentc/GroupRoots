@@ -9,7 +9,15 @@ import UserNotifications
 class AppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDelegate {
 
     var window: UIWindow?
+    
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
 
+        print("hi there")
+        
+        
+    }
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         FirebaseApp.configure()
         let pushManager = PushNotificationManager()
@@ -30,6 +38,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDelegat
             let aps = remoteNotif!["aps"] as? [String:Any]
             if aps != nil {
                 let category = aps!["category"] as? String
+                mainTabBarController.messageFromAppDelegate = category ?? ""
                 if category == nil {
                     // default action when no category is to go to notifications page
                     mainTabBarController.loadedFromNotif = true
@@ -41,6 +50,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDelegat
                         mainTabBarController.newPost = true
                     }
                     else if category!.contains("open_post") {
+                        print("open post selected")
                         // for viewed by notification
                         // add a thing to open viewers directly too
                         
@@ -48,6 +58,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDelegat
                         // format of open_post_<post_id>_<group_id>
                         let postIdAndGroupId = category!.replacingOccurrences(of: "open_post_", with: "")
                         mainTabBarController.postAndGroupToOpen = postIdAndGroupId
+//                        mainTabBarController.messageFromAppDelegate = postIdAndGroupId
                     }
                     else if category!.contains("open_group_member_requestors") {
                         // format of open_group_member_requestors_<group_id>

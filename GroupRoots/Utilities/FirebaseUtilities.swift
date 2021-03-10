@@ -5006,6 +5006,7 @@ extension Database {
             case .groupPostComment:
                 guard let group = group else { return }
                 guard let message = message else { return }
+                guard let groupPost = groupPost else { return }
                 Database.database().fetchUser(withUID: currentLoggedInUserId) { (user) in
                     
                     // could add a check to see if the currentLoggedInUser is following the user in the group.
@@ -5017,10 +5018,15 @@ extension Database {
 //                    let pushMessage = user.username + " commented on " + groupname + "'s post"
 //                    PushNotificationSender().sendPushNotification(to: token, title: "Comment", body: pushMessage)
                     
+                    var short_message = message
+                    if message.count > 40 {
+                        short_message = String(message.prefix(40)) + "..."
+                    }
+                    
                     var groupname = group.groupname.replacingOccurrences(of: "_-a-_", with: " ").replacingOccurrences(of: "_-b-_", with: "‘")
-                    if groupname == "" { groupname = "Group" }
-                    let pushMessage = user.username + ": " + message
-                    PushNotificationSender().sendPushNotification(to: token, title: groupname + " Message", body: pushMessage)
+                    if groupname == "" { groupname = "Group Message" }
+                    let pushMessage = user.username + ": " + short_message
+                    PushNotificationSender().sendPushNotification(to: token, title: groupname, body: pushMessage, click_action: "open_post_" + groupPost.id + "*" + group.groupId)
                     
                     completion(nil)
                     

@@ -35,4 +35,5 @@ target 'GroupRoots' do
   pod 'SwiftyDraw'
   pod "EasyPeasy"
   pod 'PanModal'
+  pod 'NotificationBannerSwift'
 end

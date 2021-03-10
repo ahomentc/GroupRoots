@@ -694,7 +694,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
 //        schoolPageButton.frame = CGRect(x: UIScreen.main.bounds.width/2 + 5, y: UIScreen.main.bounds.height/23 + 0, width: 100, height: 40)
 //        self.view.insertSubview(schoolPageButton, at: 10)
         
-        logoHeaderView.frame = CGRect(x: UIScreen.main.bounds.width/2 - 60, y: 15, width: 120, height: 120)
+        logoHeaderView.frame = CGRect(x: UIScreen.main.bounds.width/2 - 60, y: UIScreen.main.bounds.height/15 - 30, width: 120, height: 120)
         self.view.addSubview(logoHeaderView)
         
         // school code stuff
@@ -769,7 +769,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         self.view.insertSubview(unlockFollowButton, at: 4)
         
         collectionView?.frame = CGRect(x: 0, y: UIScreen.main.bounds.height/9, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - UIScreen.main.bounds.height/8)
-        collectionView?.register(FeedGroupCell.self, forCellWithReuseIdentifier: "cellId")
+        collectionView?.register(FeedGroupCell.self, forCellWithReuseIdentifier: FeedGroupCell.cellId)
         collectionView?.register(EmptyFeedPostCell.self, forCellWithReuseIdentifier: EmptyFeedPostCell.cellId)
         collectionView?.allowsSelection = false
         collectionView?.showsVerticalScrollIndicator = false
@@ -2016,7 +2016,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             return cell
         }
         else {
-            let feedCell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! FeedGroupCell
+            let feedCell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedGroupCell.cellId, for: indexPath) as! FeedGroupCell
             if indexPath.row == groupPosts2D.count {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: EmptyFeedPostCell.cellId, for: indexPath) as! EmptyFeedPostCell
                 cell.fetchedAllGroups = fetchedAllGroups
