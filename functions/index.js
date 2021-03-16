@@ -169,27 +169,29 @@ exports.autoSubscribeFollowers = functions.database.ref('/groups/{groupId}/membe
 								// add to groupFollowPending with autoSubscribed: true... what if they were already in groupFollowPending with autoSubscribed as false?
 								// add new_member_id to membersFollowing for groupFollowPending of new_member_follower_id
 	
-								var lower_sync = new DispatchGroup();
-								var lower_token = lower_sync.enter();
-								snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id).once('value', in_follow_pending_snapshot => {
-									let is_in_follow_pending = (in_follow_pending_snapshot.val() !== null);
-									if (is_in_follow_pending) {
-										// do nothing
-									}
-									else {
-										// add user to groupFollowPending with autoSubscribed: true
-										let promise = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id + '/autoSubscribed').set(true);
-										promises.push(promise);
-									}
-									lower_sync.leave(lower_token);
-								});						
+								// var lower_sync = new DispatchGroup();
+								// var lower_token = lower_sync.enter();
+								// snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id).once('value', in_follow_pending_snapshot => {
+								// 	let is_in_follow_pending = (in_follow_pending_snapshot.val() !== null);
+								// 	if (is_in_follow_pending) {
+								// 		// do nothing
+								// 	}
+								// 	else {
+								// 		// add user to groupFollowPending with autoSubscribed: true
+								// 		let promise = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id + '/autoSubscribed').set(true);
+								// 		promises.push(promise);
+								// 	}
+								// 	lower_sync.leave(lower_token);
+								// });						
 
-								lower_sync.notify(function() {
-                   	 				let promise = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id + '/membersFollowing/' + new_member_id).set(current_time);
-									promises.push(promise);
-									sync.leave(token);
-                				})
+								// lower_sync.notify(function() {
+        //            	 				let promise = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id + '/membersFollowing/' + new_member_id).set(current_time);
+								// 	promises.push(promise);
+								// 	sync.leave(token);
+        //         				})
                 				// tested with 1 follower
+
+                				sync.leave(token);
 							}
 							else {
 								// add to followers/following and autoFollow (since group is public would have auto became subscribed if manually clicked subscribe button)

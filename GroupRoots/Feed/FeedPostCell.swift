@@ -546,13 +546,13 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate, MessagesControll
         
         insertSubview(playButton, at: 11)
         
-        photoImageBackgroundView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height/3).isActive = true
-        photoImageBackgroundView.layer.cornerRadius = 15
-        photoImageBackgroundView.alpha = 0.5
-        photoImageBackgroundView.clipsToBounds = true
-        insertSubview(photoImageBackgroundView, at: 1)
-        photoImageBackgroundView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding + 10, paddingBottom: UIScreen.main.bounds.height/7 - 35, paddingRight: padding + 10, height: 75)
-        photoImageBackgroundView.isHidden = false
+//        photoImageBackgroundView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height/3).isActive = true
+//        photoImageBackgroundView.layer.cornerRadius = 15
+//        photoImageBackgroundView.alpha = 0.5
+//        photoImageBackgroundView.clipsToBounds = true
+//        insertSubview(photoImageBackgroundView, at: 1)
+//        photoImageBackgroundView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding + 10, paddingBottom: UIScreen.main.bounds.height/7 - 35, paddingRight: padding + 10, height: 75)
+//        photoImageBackgroundView.isHidden = false
 
         photoImageView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
         photoImageView.layer.cornerRadius = 5

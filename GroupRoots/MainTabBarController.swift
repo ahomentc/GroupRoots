@@ -152,6 +152,7 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarColor), name: NSNotification.Name(rawValue: "tabBarColor"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarDisappear), name: NSNotification.Name(rawValue: "tabBarDisappear"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(makeNotificationIconRead), name: NSNotification.Name(rawValue: "notification_icon_read"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.requestCameraWithGroup(_:)), name: NSNotification.Name(rawValue: "requestCameraWithGroup"), object: nil)
     }
     
     func setupViewControllers() {
@@ -613,8 +614,21 @@ extension MainTabBarController: UITabBarControllerDelegate {
         }
         
         let navController = UINavigationController(rootViewController: tempPostCameraController)
-        navController.modalPresentationStyle = .fullScreen
+        navController.modalPresentationStyle = .overCurrentContext
         self.present(navController, animated: true, completion: nil)
+    }
+    
+    @objc private func requestCameraWithGroup(_ notification: NSNotification){
+        if let dict = notification.userInfo as NSDictionary? {
+            if let group = dict["group"] as? Group{
+                let tempPostCameraController = TempPostCameraController()
+                tempPostCameraController.preSelectedGroup = group
+                
+                let navController = UINavigationController(rootViewController: tempPostCameraController)
+                navController.modalPresentationStyle = .overCurrentContext
+                self.present(navController, animated: true, completion: nil)
+            }
+        }
     }
 }
 

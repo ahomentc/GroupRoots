@@ -124,6 +124,8 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         
         cameraDelegate = self
         
+//        self.allowBackgroundAudio = false
+        
         configureNavBar()
         
         captureButton.frame = CGRect(x: UIScreen.main.bounds.width/2-50, y: UIScreen.main.bounds.height-150, width: 100, height: 100)
@@ -289,6 +291,7 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
     
     @objc private func longPress (longPressGestureRecognizer: UILongPressGestureRecognizer) {
         if longPressGestureRecognizer.state == .began {
+            self.allowBackgroundAudio = true
             startVideoRecording()
             startCameraVideoAnim()
             self.captureButtonDown = true

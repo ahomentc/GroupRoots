@@ -17,6 +17,7 @@ import FirebaseAuth
 import LocationPicker
 import MapKit
 import FirebaseDatabase
+import NVActivityIndicatorView
 
 class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UITextViewDelegate, ModifyTextViewDelegate, UIColorPickerViewControllerDelegate, UIFontPickerViewControllerDelegate, CaptionTextDelegate {
     
@@ -100,6 +101,12 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         label.isUserInteractionEnabled = true
         label.addGestureRecognizer(tap)
         label.isHidden = true
+        
+        label.layer.backgroundColor = UIColor.clear.cgColor
+        label.layer.shadowColor = UIColor.black.cgColor
+        label.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        label.layer.shadowOpacity = 0.2
+        label.layer.shadowRadius = 2.0
         return label
     }()
     
@@ -109,13 +116,19 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.backgroundColor = .clear
         button.addTarget(self, action: #selector(close), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
     private lazy var nextButton: UIButton = {
         let button = UIButton()
         button.addTarget(self, action: #selector(selectGroup), for: .touchUpInside)
-        button.layer.zPosition = 4;
+        button.layer.zPosition = 22;
         button.backgroundColor = UIColor(white: 1, alpha: 1)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
@@ -126,7 +139,7 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
     private lazy var postButton: UIButton = {
         let button = UIButton()
         button.addTarget(self, action: #selector(handleShare), for: .touchUpInside)
-        button.layer.zPosition = 4;
+        button.layer.zPosition = 22;
         button.backgroundColor = UIColor(white: 1, alpha: 1)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
@@ -140,6 +153,12 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.backgroundColor = .clear
         button.addTarget(self, action: #selector(toggleTempPost), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -149,6 +168,12 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.backgroundColor = .clear
         button.addTarget(self, action: #selector(showCaptionTextView), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -158,6 +183,12 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.backgroundColor = .clear
         button.addTarget(self, action: #selector(pickLocation), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -211,6 +242,12 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.addTarget(self, action: #selector(addText), for: .touchUpInside)
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.isHidden = false
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -221,6 +258,12 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.isUserInteractionEnabled = false
         button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         button.isHidden = true
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
         return button
     }()
     
@@ -240,6 +283,36 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         textView.isHidden = true
         return textView
+    }()
+    
+    let activityIndicatorView: NVActivityIndicatorView = {
+        let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width - 30, y: UIScreen.main.bounds.height - 30, width: 20, height: 20), type: NVActivityIndicatorType.circleStrokeSpin)
+        activityIndicatorView.layer.backgroundColor = UIColor.clear.cgColor
+        activityIndicatorView.layer.shadowColor = UIColor.black.cgColor
+        activityIndicatorView.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        activityIndicatorView.layer.shadowOpacity = 0.2
+        activityIndicatorView.layer.shadowRadius = 2.0
+        activityIndicatorView.isHidden = true
+        activityIndicatorView.layer.zPosition = 22
+        return activityIndicatorView
+    }()
+    
+    let sharingLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Sharing"
+        label.textAlignment = .right
+        label.backgroundColor = UIColor.clear
+        label.textColor = .white
+        label.font = UIFont.boldSystemFont(ofSize: 12)
+        label.isHidden = true
+        label.layer.zPosition = 22
+        
+        label.layer.backgroundColor = UIColor.clear.cgColor
+        label.layer.shadowColor = UIColor.black.cgColor
+        label.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        label.layer.shadowOpacity = 0.2
+        label.layer.shadowRadius = 2.0
+        return label
     }()
     
     var textViews = [UITextView]()
@@ -275,11 +348,11 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         
         nextButton.frame = CGRect(x: UIScreen.main.bounds.width-120, y: UIScreen.main.bounds.height - 70, width: 100, height: 50)
         nextButton.layer.cornerRadius = 20
-        self.view.insertSubview(nextButton, at: 4)
+        self.view.insertSubview(nextButton, at: 22)
         
         postButton.frame = CGRect(x: UIScreen.main.bounds.width-120, y: UIScreen.main.bounds.height - 70, width: 100, height: 50)
         postButton.layer.cornerRadius = 20
-        self.view.insertSubview(postButton, at: 4)
+        self.view.insertSubview(postButton, at: 22)
         
         closeButton.frame = CGRect(x: 10, y: 15, width: 40, height: 40)
         closeButton.layer.zPosition = 20
@@ -312,17 +385,22 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         postCoverView.isUserInteractionEnabled = false
         self.view.insertSubview(postCoverView, at: 3)
         
+        self.view.insertSubview(activityIndicatorView, at: 20)
+
+        sharingLabel.frame = CGRect(x: UIScreen.main.bounds.width - 135, y: UIScreen.main.bounds.height - 30, width: 90, height: 30)
+        self.view.insertSubview(sharingLabel, at: 20)
+        
         coverView.heightAnchor.constraint(equalToConstant: 250).isActive = true
         coverView.layer.cornerRadius = 0
         coverView.frame = CGRect(x: 0, y: UIScreen.main.bounds.height - 210, width: UIScreen.main.bounds.width, height: 250)
         coverView.isUserInteractionEnabled = false
         self.view.insertSubview(coverView, at: 3)
         
-        upperCoverView.heightAnchor.constraint(equalToConstant: 170).isActive = true
-        upperCoverView.layer.cornerRadius = 0
-        upperCoverView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 170)
-        upperCoverView.isUserInteractionEnabled = false
-        self.view.insertSubview(upperCoverView, at: 3)
+//        upperCoverView.heightAnchor.constraint(equalToConstant: 170).isActive = true
+//        upperCoverView.layer.cornerRadius = 0
+//        upperCoverView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 170)
+//        upperCoverView.isUserInteractionEnabled = false
+//        self.view.insertSubview(upperCoverView, at: 3)
         
         textEditBackground.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
         textEditBackground.layer.cornerRadius = 0
@@ -735,7 +813,7 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
     
     @objc private func goToShare() {
         guard let videoUrl = videoUrl else { return }
-        self.player.pause()
+        self.player.stop()
         let sharePhotoController = SharePhotoController()
         sharePhotoController.selectedVideoURL = videoUrl
         sharePhotoController.isTempPost = isTempPost
@@ -804,6 +882,7 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
     }
     
     @objc private func close() {
+        self.player.pause()
         _ = navigationController?.popViewController(animated: false)
     }
     
@@ -874,9 +953,26 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         guard let selectedGroup = selectedGroup else { return }
         guard let videoUrl = videoUrl else { return }
         
-        self.player.pause()
+//        self.player.pause()
         
         self.postButton.isHidden = true
+        
+        self.nextButton.isHidden = true
+        self.postButton.isHidden = true
+        self.textButton.isHidden = true
+        self.hourglassButton.isHidden = true
+        self.closeButton.isHidden = true
+        self.locationButton.isHidden = true
+        self.upperCoverView.isHidden = true
+        self.selectedGroupLabel.isHidden = true
+        self.postCoverView.isHidden = true
+        self.coverView.isHidden = true
+        self.captionButton.isHidden = true
+        
+        activityIndicatorView.isHidden = false
+        activityIndicatorView.color = .white
+        activityIndicatorView.startAnimating()
+        sharingLabel.isHidden = false
 
         var postLocation = ""
         do {
@@ -892,7 +988,9 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
 
                 NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
                 NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-                self.dismiss(animated: true, completion: nil)
+                self.dismiss(animated: true, completion: {
+                    self.player.pause()
+                })
                 return
             }
             Database.database().userPosted(completion: { _ in })
@@ -920,7 +1018,9 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
             NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
             NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
             NotificationCenter.default.post(name: NSNotification.Name("updatedUser"), object: nil)
-            self.dismiss(animated: true, completion: nil)
+            self.dismiss(animated: true, completion: {
+                self.player.stop()
+            })
         })
     }
     

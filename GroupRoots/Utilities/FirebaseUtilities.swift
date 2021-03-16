@@ -262,6 +262,31 @@ extension Storage {
             })
         })
     }
+    
+    // distributes into folders
+    fileprivate func uploadStickerImageDistributed(image: UIImage, uid: String, filename: String, completion: @escaping (String) -> ()) {
+//        guard let uploadData = image.jpegData(compressionQuality: 0.95) else { return } //changed from 0.5
+        
+        // needs to be png for transparency
+        guard let uploadData = image.pngData() else { return }
+        
+        let storageRef = Storage.storage().reference().child("group_sticker_images").child(uid).child(filename + ".png")
+        storageRef.putData(uploadData, metadata: nil, completion: { (_, err) in
+            if let err = err {
+                print("Failed to upload post image:", err)
+                return
+            }
+            
+            storageRef.downloadURL(completion: { (downloadURL, err) in
+                if let err = err {
+                    print("Failed to obtain download url for post image:", err)
+                    return
+                }
+                guard let stickerImageUrl = downloadURL?.absoluteString else { return }
+                completion(stickerImageUrl)
+            })
+        })
+    }
 }
 
 extension Database {
@@ -964,13 +989,13 @@ extension Database {
  *   - For B's groups:
  *       - If user A is not subscribed and isn't in inUserRemoved:
  *           - If the group is public, add B to membersFollowing for the group in A's groupsFollowing
- *           - If the group is private add B to A's memberFollowing for the request to subscribe to the group, right under the autoSubscribed
+ *           - (removing) If the group is private add B to A's memberFollowing for the request to subscribe to the group, right under the autoSubscribed
  *       - If user A is subscribed:
- *           - add B to membersFollowing for the group in A's groupsFollowing
+ *           - Add B to membersFollowing for the group in A's groupsFollowing
  *   - Subscribe user A to B's groups that are public if the following conditions are met:
  *       - A is not already subscribed
  *       - A isn't in the group's inUserRemoved
- *   - Add A to the groupFollowPending for B's groups that are private with info that it was B who A followed. If following conditions are met:
+ *   - (removing) Add A to the groupFollowPending for B's groups that are private with info that it was B who A followed. If following conditions are met:
  *       - A is not already subscribed
  *       - A isn't in the group's inUserRemoved
  *       - A is not in already in groupFollowPending
@@ -978,7 +1003,6 @@ extension Database {
     
     func followUser(withUID uid: String, completion: @escaping (Error?) -> ()) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-        
         
         let values = [uid: Date().timeIntervalSince1970]
         Database.database().reference().child("following").child(currentLoggedInUserId).updateChildValues(values) { (err, ref) in
@@ -1013,6 +1037,7 @@ extension Database {
                                 // do this only if the group is public
                                 Database.database().isFollowingGroup(groupId: groupItem.groupId, completion: { (following) in
                                     let lower_sync = DispatchGroup()
+                                    lower_sync.enter()
                                     let groupId = groupItem.groupId
                                     
                                     // This is the membersFollowing part:
@@ -1032,17 +1057,17 @@ extension Database {
                                     }
                                     else {
                                         if isPrivate {
-                                            // add B to A's memberFollowing for the request to subscribe to the group, right under the autoSubscribed
-                                            let values = [uid: 1]
-                                            lower_sync.enter()
-                                            let ref = Database.database().reference().child("groupFollowPending").child(groupId).child(currentLoggedInUserId).child("membersFollowing")
-                                            ref.updateChildValues(values) { (err, ref) in
-                                                if let err = err {
-                                                    completion(err)
-                                                    return
-                                                }
-                                                lower_sync.leave()
-                                            }
+//                                            // add B to A's memberFollowing for the request to subscribe to the group, right under the autoSubscribed
+//                                            let values = [uid: 1]
+//                                            lower_sync.enter()
+//                                            let ref = Database.database().reference().child("groupFollowPending").child(groupId).child(currentLoggedInUserId).child("membersFollowing")
+//                                            ref.updateChildValues(values) { (err, ref) in
+//                                                if let err = err {
+//                                                    completion(err)
+//                                                    return
+//                                                }
+//                                                lower_sync.leave()
+//                                            }
                                         }
                                         else { //  add B to membersFollowing for the group in A's groupsFollowing
                                             let values = [uid: 1]
@@ -1058,6 +1083,7 @@ extension Database {
                                         }
                                     }
                                     
+                                    lower_sync.leave()
                                     // This is the actual following part:
                                     lower_sync.notify(queue: .main){
                                         // A follows B
@@ -1069,37 +1095,38 @@ extension Database {
                                                     Database.database().isInUserRemovedGroups(groupId: groupItem.groupId, withUID: currentLoggedInUserId, completion: { (inUserRemoved) in
                                                         if !inUserRemoved {
                                                             if isPrivate{
-                                                                // private group
-                                                                Database.database().isInGroupFollowPending(groupId: groupItem.groupId, withUID: currentLoggedInUserId, completion: { (inGroupPending) in
-                                                                    if !inGroupPending {
-                                                                        Database.database().addToGroupFollowPending(groupId: groupItem.groupId, withUID: currentLoggedInUserId, autoSubscribed: true) { (err) in
-                                                                            if err != nil {
-                                                                                completion(err);return
-                                                                            }
-                                                                            // sending notification (aysnc ok)
-                                                                            Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
-                                                                                Database.database().fetchGroupMembers(groupId: groupItem.groupId, completion: { (members) in
-                                                                                    members.forEach({ (member) in
-                                                                                        if user.uid != member.uid {
-                                                                                            // send notification for subscription request to all members of group
-                                                                                            Database.database().createNotification(to: member, notificationType: NotificationType.groupSubscribeRequest, subjectUser: user, group: groupItem) { (err) in
-                                                                                                if err != nil {
-                                                                                                    return
-                                                                                                }
-                                                                                            }
-                                                                                        }
-                                                                                    })
-                                                                                }) { (_) in}
-                                                                            })
-                                                                            sync.leave()
-                                                                        }
-                                                                    }
-                                                                    else {
-                                                                        sync.leave()
-                                                                    }
-                                                                }) { (err) in
-                                                                    completion(err);return
-                                                                }
+//                                                                // private group
+//                                                                Database.database().isInGroupFollowPending(groupId: groupItem.groupId, withUID: currentLoggedInUserId, completion: { (inGroupPending) in
+//                                                                    if !inGroupPending {
+//                                                                        Database.database().addToGroupFollowPending(groupId: groupItem.groupId, withUID: currentLoggedInUserId, autoSubscribed: true) { (err) in
+//                                                                            if err != nil {
+//                                                                                completion(err);return
+//                                                                            }
+//                                                                            // sending notification (aysnc ok)
+//                                                                            Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
+//                                                                                Database.database().fetchGroupMembers(groupId: groupItem.groupId, completion: { (members) in
+//                                                                                    members.forEach({ (member) in
+//                                                                                        if user.uid != member.uid {
+//                                                                                            // send notification for subscription request to all members of group
+//                                                                                            Database.database().createNotification(to: member, notificationType: NotificationType.groupSubscribeRequest, subjectUser: user, group: groupItem) { (err) in
+//                                                                                                if err != nil {
+//                                                                                                    return
+//                                                                                                }
+//                                                                                            }
+//                                                                                        }
+//                                                                                    })
+//                                                                                }) { (_) in}
+//                                                                            })
+//                                                                            sync.leave()
+//                                                                        }
+//                                                                    }
+//                                                                    else {
+//                                                                        sync.leave()
+//                                                                    }
+//                                                                }) { (err) in
+//                                                                    completion(err);return
+//                                                                }
+                                                                sync.leave()
                                                             }
                                                             else {
                                                                 // public group
@@ -3397,6 +3424,134 @@ extension Database {
             }
         }) { (err) in
             print("Failed to check if following:", err)
+            cancel?(err)
+        }
+    }
+    
+    //MARK: Stickers
+    func createSticker(withImage image: UIImage?, groupId: String? = nil, completion: @escaping (String) -> (), withCancel cancel: ((Error) -> ())? = nil) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        let groupStickersRef = Database.database().reference().child("stickers").child(uid).childByAutoId()
+        
+        guard let stickerId = groupStickersRef.key else { return }
+        
+        guard let image = image else { return }
+        Storage.storage().uploadStickerImageDistributed(image: image, uid: uid, filename: stickerId) { (stickerImageUrl) in
+            
+            if groupId == nil {
+                let values = ["imageUrl": stickerImageUrl, "imageWidth": image.size.width, "imageHeight": image.size.height, "id": stickerId, "userUploaded": uid] as [String : Any]
+                groupStickersRef.updateChildValues(values) { (err, ref) in
+                    if let err = err {
+                        print("Failed to save sticker to database", err)
+                        completion("")
+                    }
+                    completion(stickerId)
+                }
+            }
+            else {
+                let values = ["imageUrl": stickerImageUrl, "imageWidth": image.size.width, "imageHeight": image.size.height, "id": stickerId, "userUploaded": uid, "groupId": groupId!] as [String : Any]
+                groupStickersRef.updateChildValues(values) { (err, ref) in
+                    if let err = err {
+                        print("Failed to save sticker to database", err)
+                        completion("")
+                    }
+                    
+                    // connect this sticker to the group too
+                    Database.database().addToGroupsStickers(groupId: groupId!, stickerId: stickerId) { (err) in
+                        if err != nil {
+                            return
+                        }
+                        // notification to refresh
+                        completion(stickerId)
+                    }
+                }
+            }
+        }
+    }
+    
+    func addToGroupsStickers(groupId: String, stickerId: String, completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        
+        // get group
+        self.groupExists(groupId: groupId, completion: { (exists) in
+            if exists {
+                let values = [stickerId: currentLoggedInUserId]
+                // holds only the sticker Id, which can be gotten from /stickers
+                Database.database().reference().child("groupStickers").child(groupId).updateChildValues(values) { (err, ref) in
+                    if let err = err {
+                        completion(err)
+                        return
+                    }
+                    completion(nil)
+                }
+            }
+        })
+    }
+    
+    func fetchSticker(stickerId: String, withUID uid: String, completion: @escaping (Sticker) -> ()) {
+        Database.database().reference().child("stickers").child(uid).child(stickerId).observeSingleEvent(of: .value, with: { (snapshot) in
+            guard let stickerDictionary = snapshot.value as? [String: Any] else {
+                print("sticker not found")
+                return
+            }
+            let sticker = Sticker(dictionary: stickerDictionary)
+            completion(sticker)
+        }) { (err) in
+            print("Failed to fetch user from database:", err)
+        }
+    }
+    
+    // get user's stickers
+    func fetchUserStickers(completion: @escaping ([Sticker]) -> (), withCancel cancel: ((Error) -> ())?) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        
+        let ref = Database.database().reference().child("stickers").child(currentLoggedInUserId)
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            var stickers = [Sticker]()
+            
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                sync.enter()
+                let stickerId = child.key
+                Database.database().fetchSticker(stickerId: stickerId, withUID: currentLoggedInUserId, completion: { (sticker) in
+                    stickers.append(sticker)
+                    sync.leave()
+                })
+            }
+            sync.notify(queue: .main) {
+                completion(stickers)
+                return
+            }
+        }) { (err) in
+            print("Failed to fetch all users from database:", (err))
+            cancel?(err)
+        }
+    }
+    
+    // get group's stickers
+    func fetchGroupStickers(groupId: String, completion: @escaping ([Sticker]) -> (), withCancel cancel: ((Error) -> ())?) {
+        let ref = Database.database().reference().child("groupStickers").child(groupId)
+        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+            var stickers = [Sticker]()
+            
+            let sync = DispatchGroup()
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                sync.enter()
+                let stickerId = child.key
+                let uid = child.value as? String
+                
+                Database.database().fetchSticker(stickerId: stickerId, withUID: uid ?? "", completion: { (sticker) in
+                    stickers.append(sticker)
+                    sync.leave()
+                })
+            }
+            sync.notify(queue: .main) {
+                completion(stickers)
+                return
+            }
+        }) { (err) in
+            print("Failed to fetch all users from database:", (err))
             cancel?(err)
         }
     }

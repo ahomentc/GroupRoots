@@ -10,7 +10,7 @@ import UIKit
 import Firebase
 
 protocol FeedGroupPageCellDelegate {
-    func didTapPostCell(for_cell cell: FeedGroupPageCell, cell_number: Int)
+    func didTapPostCell(groupPostId: String)
     func didView(groupPost: GroupPost)
 }
 
@@ -64,17 +64,19 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     
     func setupViews() {
         let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - UIScreen.main.bounds.height/9)
+        layout.itemSize = CGSize(width: (self.frame.width - 32) / 2, height: (self.frame.width - 32) / 2)
         layout.minimumLineSpacing = CGFloat(0)
 
         // obviously not good cuz would be different on different screens but just for visual purposes
-        collectionView = UICollectionView(frame: CGRect(x: 15, y: UIScreen.main.bounds.height/8, width: self.frame.width - 30, height: self.frame.height), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 15, y: 0, width: self.frame.width - 30, height: self.frame.height), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         collectionView?.register(FeedGroupPostCell.self, forCellWithReuseIdentifier: FeedGroupPostCell.cellId)
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
+        collectionView.isScrollEnabled = false
+//        collectionView?.semanticContentAttribute = .forceRightToLeft
         contentView.addSubview(collectionView)        
     }
     
@@ -84,7 +86,8 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedGroupPostCell.cellId, for: indexPath) as! FeedGroupPostCell
-        if indexPath.row < self.groupPosts?.count ?? 0{
+        
+        if indexPath.row < self.groupPosts?.count ?? 0 {
             cell.tag = indexPath.row
             cell.groupPost = self.groupPosts?[indexPath.row]
             
@@ -102,16 +105,14 @@ class FeedGroupPageCell: UICollectionViewCell, UICollectionViewDataSource, UICol
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        if indexPath.row < self.groupPosts?.count ?? 0{
-            delegate?.didTapPostCell(for_cell: self, cell_number: indexPath.row)
-            
-            let post = groupPosts?[indexPath.row]
-            if post != nil {
-                delegate?.didView(groupPost: post!)
+        if collectionView.cellForItem(at: indexPath) is FeedGroupPostCell {
+            let cell = collectionView.cellForItem(at: indexPath) as! FeedGroupPostCell
+            if cell.groupPost?.id != "" {
+                delegate?.didTapPostCell(groupPostId: cell.groupPost!.id)
+                delegate?.didView(groupPost: cell.groupPost!)
             }
         }
     }
-    
 }
 
 extension FeedGroupPageCell: UICollectionViewDelegateFlowLayout {

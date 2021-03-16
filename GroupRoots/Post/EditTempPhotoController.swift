@@ -12,6 +12,7 @@ import SwiftUI
 import EasyPeasy
 import FirebaseAuth
 import LocationPicker
+import SGImageCache
 import MapKit
 import FirebaseDatabase
 import YPImagePicker
@@ -102,6 +103,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         activityIndicatorView.layer.shadowOpacity = 0.2
         activityIndicatorView.layer.shadowRadius = 2.0
         activityIndicatorView.isHidden = true
+        activityIndicatorView.layer.zPosition = 22
         return activityIndicatorView
     }()
     
@@ -156,14 +158,12 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitle("Share to", for: .normal)
-        button.layer.zPosition = 22
         return button
     }()
     
     private lazy var postButton: UIButton = {
         let button = UIButton()
         button.addTarget(self, action: #selector(handleShare), for: .touchUpInside)
-        button.layer.zPosition = 22;
         button.backgroundColor = UIColor(white: 1, alpha: 1)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
@@ -206,6 +206,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
         button.addTarget(self, action: #selector(showCaptionTextView), for: .touchUpInside)
         button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        button.layer.zPosition = 12
         
         button.layer.backgroundColor = UIColor.clear.cgColor
         button.layer.shadowColor = UIColor.black.cgColor
@@ -238,6 +239,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
         button.addTarget(self, action: #selector(pickLocation), for: .touchUpInside)
         button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        button.layer.zPosition = 12
         
         button.layer.backgroundColor = UIColor.clear.cgColor
         button.layer.shadowColor = UIColor.black.cgColor
@@ -270,6 +272,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
         button.addTarget(self, action: #selector(startDrawing), for: .touchUpInside)
         button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        button.layer.zPosition = 12
         
         button.layer.backgroundColor = UIColor.clear.cgColor
         button.layer.shadowColor = UIColor.black.cgColor
@@ -346,6 +349,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
         button.addTarget(self, action: #selector(addText), for: .touchUpInside)
         button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        button.layer.zPosition = 12
         
         button.layer.backgroundColor = UIColor.clear.cgColor
         button.layer.shadowColor = UIColor.black.cgColor
@@ -395,6 +399,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
         button.addTarget(self, action: #selector(changeBackgroundColor), for: .touchUpInside)
         button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        button.layer.zPosition = 12
         
         button.layer.backgroundColor = UIColor.clear.cgColor
         button.layer.shadowColor = UIColor.black.cgColor
@@ -472,6 +477,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
         button.addTarget(self, action: #selector(addImageFromGallery), for: .touchUpInside)
         button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        button.layer.zPosition = 12
         
         button.layer.backgroundColor = UIColor.clear.cgColor
         button.layer.shadowColor = UIColor.black.cgColor
@@ -513,11 +519,45 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         return textView
     }()
     
+    let stickerButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "sticker_icon_2"), for: .normal)
+        button.backgroundColor = .clear
+        button.addTarget(self, action: #selector(selectSticker), for: .touchUpInside)
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 10
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
+        return button
+    }()
+    
+    let stickerTextButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Group Stickers", for: .normal)
+        button.backgroundColor = .clear
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        button.addTarget(self, action: #selector(selectSticker), for: .touchUpInside)
+        button.contentHorizontalAlignment = UIControl.ContentHorizontalAlignment.right
+        button.layer.zPosition = 12
+        
+        button.layer.backgroundColor = UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 2.0
+        return button
+    }()
+    
     let drawView = SwiftyDrawView()
     
     var textViews = [UITextView]()
     var activeTextView = UITextView()
     var imageViews = [UIImageView]()
+    var locationViews = [UILabel]()
     
     var photoModified = false
     
@@ -538,11 +578,27 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         tapGestureReconizer.cancelsTouchesInView = false
         view.addGestureRecognizer(tapGestureReconizer)
         
+        let backgroundImageBlurView = UIImageView(frame: view.frame)
+        backgroundImageBlurView.contentMode = UIView.ContentMode.scaleAspectFill
+        backgroundImageBlurView.image = backgroundImage
+        backgroundImageBlurView.layer.zPosition = 0
+        view.insertSubview(backgroundImageBlurView, at: 0)
+        
+        let blurEffect = UIBlurEffect(style: .regular)
+        let blurredEffectView = UIVisualEffectView(effect: blurEffect)
+        blurredEffectView.frame = view.frame
+        blurredEffectView.isUserInteractionEnabled = false
+        blurredEffectView.layer.zPosition = 1
+        view.insertSubview(blurredEffectView, at: 1)
+        
         self.view.backgroundColor = UIColor.black
         let backgroundImageView = UIImageView(frame: view.frame)
         backgroundImageView.contentMode = UIView.ContentMode.scaleAspectFit
         backgroundImageView.image = backgroundImage
-        view.addSubview(backgroundImageView)
+        backgroundImageView.layer.zPosition = 2
+        backgroundImageView.layer.cornerRadius = 5
+        backgroundImageView.clipsToBounds = true
+        view.insertSubview(backgroundImageView, at: 2)
         
         drawView.frame = self.view.frame
         drawView.layer.zPosition = 20
@@ -628,6 +684,12 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         trashIcon.frame = CGRect(x: UIScreen.main.bounds.width/2 - 25, y: UIScreen.main.bounds.height - 70, width: 50, height: 50)
         self.view.insertSubview(trashIcon, at: 12)
         
+        stickerButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 372, width: 50, height: 50)
+        self.view.insertSubview(stickerButton, at: 12)
+        
+        stickerTextButton.frame = CGRect(x: UIScreen.main.bounds.width - 175, y: 377, width: 100, height: 40)
+        self.view.insertSubview(stickerTextButton, at: 12)
+        
         self.view.insertSubview(activityIndicatorView, at: 20)
         
         sharingLabel.frame = CGRect(x: UIScreen.main.bounds.width - 135, y: UIScreen.main.bounds.height - 30, width: 90, height: 30)
@@ -665,7 +727,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         postButton.layer.cornerRadius = 20
         self.view.insertSubview(postButton, at: 12)
         
-        self.view.addSubview(selectedGroupLabel)
+        self.view.insertSubview(selectedGroupLabel, at: 12)
         self.selectedGroupLabel.anchor(top: self.postButton.topAnchor, left: self.hourglassButton.rightAnchor, bottom: self.postButton.bottomAnchor, right: self.postButton.leftAnchor, paddingLeft: 10, paddingRight: 20)
         
 //        UITextView.appearance().tintColor = UIColor.white
@@ -693,6 +755,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
                 self.galleryPlusTextButton.alpha = 0
                 self.drawTextButton.alpha = 0
                 self.colorTextButton.alpha = 0
+                self.stickerTextButton.alpha = 0
             }
         }
         Timer.scheduledTimer(withTimeInterval: 4.0, repeats: false) { timer in
@@ -702,6 +765,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
             self.galleryPlusTextButton.isHidden = true
             self.drawTextButton.isHidden = true
             self.colorTextButton.isHidden = true
+            self.stickerTextButton.isHidden = true
         }
     }
     
@@ -741,6 +805,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
             self.colorButton.isHidden = true
             self.galleryPlusButton.isHidden = true
             self.drawButton.isHidden = true
+            self.stickerButton.isHidden = true
         }
         if gestureRecognizer.state == .ended {
             self.trashIcon.alpha = 0
@@ -756,6 +821,15 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
             let distance = (newX - trashX) * (newX - trashX) + (newY - trashY) * (newY - trashY)
             if distance < 3000 {
                 gestureRecognizer.view?.removeFromSuperview()
+                
+                // if is the location label:
+                if gestureRecognizer.view is UILabel {
+                    let locationLabel = gestureRecognizer.view as! UILabel
+                    if locationLabel.tag == 12 { // check to see if it's actually locationLabel
+                        // remove the location
+                        self.didEmtpyLocation()
+                    }
+                }
             }
             
             if self.selectedGroup == nil {
@@ -777,6 +851,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
             self.colorButton.isHidden = false
             self.galleryPlusButton.isHidden = false
             self.drawButton.isHidden = false
+            self.stickerButton.isHidden = false
         }
     }
     
@@ -835,6 +910,11 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         self.colorButton.isHidden = true
         self.galleryPlusButton.isHidden = true
         self.drawButton.isHidden = true
+        self.stickerButton.isHidden = true
+        
+        for view in self.locationViews {
+            view.isUserInteractionEnabled = false
+        }
         
         for imageView in self.imageViews {
             imageView.isUserInteractionEnabled = false
@@ -871,6 +951,11 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         self.colorButton.isHidden = false
         self.galleryPlusButton.isHidden = false
         self.drawButton.isHidden = false
+        self.stickerButton.isHidden = false
+        
+        for view in self.locationViews {
+            view.isUserInteractionEnabled = false
+        }
         
         for imageView in self.imageViews {
             imageView.isUserInteractionEnabled = true
@@ -1075,6 +1160,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         self.colorButton.isHidden = true
         self.galleryPlusButton.isHidden = true
         self.drawButton.isHidden = true
+        self.stickerButton.isHidden = true
     }
 
     func textViewDidEndEditing(_ textView: UITextView) {
@@ -1090,6 +1176,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         self.colorButton.isHidden = false
         self.galleryPlusButton.isHidden = false
         self.drawButton.isHidden = false
+        self.stickerButton.isHidden = false
     }
     
     func textViewDidChange(_ textView: UITextView) {
@@ -1190,7 +1277,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         textView.delegate = self
         textView.autocorrectionType = .no
         textView.textContainer.maximumNumberOfLines = 3;
-        textView.layer.zPosition = 4
+        textView.layer.zPosition = 10
 //        textView.textContainer.lineBreakMode = NSLineBreakByTruncatingTail;
         
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panHandler))
@@ -1205,7 +1292,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         rotateGesture.delegate = self
         textView.addGestureRecognizer(rotateGesture)
         
-        self.view.insertSubview(textView, at: 4)
+        self.view.insertSubview(textView, at: 10)
 //        textView.easy.layout(Left(10), Right(10), Top(200)) // this makes multi line work but weird behavior
         textView.centerTextVertically()
         
@@ -1236,7 +1323,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         var config = YPImagePickerConfiguration()
         config.library.isSquareByDefault = false
         config.shouldSaveNewPicturesToAlbum = false
-        config.library.mediaType = .photoAndVideo
+        config.library.mediaType = .photo
         config.showsPhotoFilters = false
         config.hidesStatusBar = false
         config.startOnScreen = YPPickerScreen.library
@@ -1259,7 +1346,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
                         imageView.image = photo.image
                         imageView.isUserInteractionEnabled = true
                         imageView.contentMode = .scaleAspectFit
-                        imageView.layer.zPosition = 3
+                        imageView.layer.zPosition = 9
                         
                         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(self.panHandler))
                         panGesture.delegate = self
@@ -1274,9 +1361,9 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
                         imageView.addGestureRecognizer(rotateGesture)
                         
                         self.imageViews.append(imageView)
-                        self.view.insertSubview(imageView, at: 3)
+                        self.view.insertSubview(imageView, at: 9)
                     })
-                case .video(let video):
+                case .video(let _):
                     break
                 }
             }
@@ -1284,10 +1371,97 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         present(picker, animated: true, completion: nil)
     }
     
+    @objc private func addLocationSticker(location: String) {
+        self.photoModified = true
+        
+        for view in self.locationViews {
+            view.removeFromSuperview()
+        }
+        
+        let width = 12 * location.count + 15
+        
+        let label = UILabel(frame: CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-75, width: CGFloat(width), height: 50))
+        label.font = UIFont.boldSystemFont(ofSize: 22)
+        label.textColor = .white
+        label.isUserInteractionEnabled = true
+        label.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
+        label.textAlignment = .center
+        label.text = location
+        label.layer.cornerRadius = 10
+        label.clipsToBounds = true
+        label.layer.zPosition = 10
+        label.tag = 12
+        
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panHandler))
+        panGesture.delegate = self
+        label.addGestureRecognizer(panGesture)
+        
+        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(pinchHandler))
+        pinchGesture.delegate = self
+        label.addGestureRecognizer(pinchGesture)
+        
+        let rotateGesture = UIRotationGestureRecognizer(target: self, action: #selector(rotateHandler))
+        rotateGesture.delegate = self
+        label.addGestureRecognizer(rotateGesture)
+        
+        self.view.insertSubview(label, at: 10)
+        
+        self.locationViews.append(label)
+    }
+    
     @objc private func showCaptionTextView() {
         self.captionTextView.isHidden = false
 //        UITextView.appearance().tintColor = UIColor.black
         self.captionTextView.becomeFirstResponder()
+    }
+    
+    @objc private func selectSticker() {
+        let groupStickersController = GroupStickersController()
+        groupStickersController.group = self.selectedGroup
+        groupStickersController.backgroundImage = self.backgroundImage
+        groupStickersController.didFinishPicking { [unowned groupStickersController] sticker, cancelled in
+            if !cancelled {
+                
+                let sync = DispatchGroup()
+                sync.enter()
+                var sticker_img = CustomImageView.imageWithColor(color: .clear)
+                if let image = SGImageCache.image(forURL: sticker.imageUrl) {
+                    sticker_img = image
+                    sync.leave()
+                } else {
+                    SGImageCache.getImage(url: sticker.imageUrl) { [weak self] image in
+                        sticker_img = image ?? CustomImageView.imageWithColor(color: .clear)
+                        sync.leave()
+                    }
+                }
+                
+                sync.notify(queue: .main) {
+                    let imageView = UIImageView(frame: CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-75, width: 300, height: 300))
+                    imageView.image = sticker_img
+                    imageView.isUserInteractionEnabled = true
+                    imageView.contentMode = .scaleAspectFit
+                    imageView.layer.zPosition = 9
+                    
+                    let panGesture = UIPanGestureRecognizer(target: self, action: #selector(self.panHandler))
+                    panGesture.delegate = self
+                    imageView.addGestureRecognizer(panGesture)
+                    
+                    let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(self.pinchHandler))
+                    pinchGesture.delegate = self
+                    imageView.addGestureRecognizer(pinchGesture)
+                    
+                    let rotateGesture = UIRotationGestureRecognizer(target: self, action: #selector(self.rotateHandler))
+                    rotateGesture.delegate = self
+                    imageView.addGestureRecognizer(rotateGesture)
+                    
+                    self.imageViews.append(imageView)
+                    self.view.insertSubview(imageView, at: 9)
+                }
+            }
+        }
+        let navController = UINavigationController(rootViewController: groupStickersController)
+        navController.modalPresentationStyle = .overFullScreen
+        self.present(navController, animated: true, completion: nil)
     }
     
     var isCaptionFilled = false
@@ -1384,6 +1558,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
             self.galleryPlusButton.isHidden = true
             self.drawButton.isHidden = true
             self.captionButton.isHidden = true
+            self.stickerButton.isHidden = true
 
             let areaSize = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height) //Your view size from where you want to make UIImage
             UIGraphicsBeginImageContext(areaSize.size);
@@ -1433,6 +1608,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
                 self.didFillLocation()
             }
             self.pickedLocation = PostLocation(name: location?.name, longitude: "\(location?.coordinate.longitude ?? 0)", latitude: "\(location?.coordinate.latitude ?? 0)", address: location?.address)
+            self.addLocationSticker(location: self.pickedLocation?.name ?? "")
         }
         
         let navController = UINavigationController(rootViewController: locationPicker)
@@ -1518,6 +1694,7 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         self.galleryPlusButton.isHidden = true
         self.drawButton.isHidden = true
         self.captionButton.isHidden = true
+        self.stickerButton.isHidden = true
         
         var imageToSend: UIImage?
         
@@ -1530,11 +1707,18 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
         if self.textViews.count > 0 || self.photoModified {
             let areaSize = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 35) //Your view size from where you want to make UIImage
 //            UIGraphicsBeginImageContext(areaSize.size);
-            UIGraphicsBeginImageContextWithOptions(areaSize.size, view.isOpaque, 0.0)
-            let context : CGContext = UIGraphicsGetCurrentContext()!
-            self.view.layer.render(in: context)
-            let newImage : UIImage  = UIGraphicsGetImageFromCurrentImageContext()!
-            UIGraphicsEndImageContext();
+            
+//            UIGraphicsBeginImageContextWithOptions(areaSize.size, view.isOpaque, 0.0)
+//            let context : CGContext = UIGraphicsGetCurrentContext()!
+//            self.view.layer.render(in: context)
+//            let newImage : UIImage  = UIGraphicsGetImageFromCurrentImageContext()!
+//            UIGraphicsEndImageContext();
+            
+            UIGraphicsBeginImageContextWithOptions(areaSize.size, false, 0)
+            view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
+            let newImage = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            
             imageToSend = newImage
             
         }

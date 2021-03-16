@@ -138,7 +138,6 @@ class IntroGroupStepController: UIViewController, UINavigationControllerDelegate
         label.contentHorizontalAlignment = .center
         label.isUserInteractionEnabled = true
         label.setTitle("skip", for: .normal)
-        label.isHidden = true
         label.addTarget(self, action: #selector(doneSelected), for: .touchUpInside)
         return label
     }()
@@ -170,11 +169,11 @@ class IntroGroupStepController: UIViewController, UINavigationControllerDelegate
         setupInputFields()
         
         // check to see if we should should the skip button
-        Database.database().isForceCreateGroupEnabled(completion: { (isEnabled) in
-            if !isEnabled {
-                self.skipLabel.isHidden = false
-            }
-        })
+//        Database.database().isForceCreateGroupEnabled(completion: { (isEnabled) in
+//            if !isEnabled {
+//                self.skipLabel.isHidden = false
+//            }
+//        })
     }
     
     @objc private func doneSelected(){

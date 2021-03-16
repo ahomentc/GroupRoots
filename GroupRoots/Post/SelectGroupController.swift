@@ -22,6 +22,8 @@ class SelectGroupController: UIViewController, UICollectionViewDelegate, UIColle
     private var collectionView: UICollectionView!
     var last_selected_indexpath: IndexPath?
     
+    var for_sticker: Bool?
+    
     let separatorView: UIView = {
         let view = UIView()
         return view
@@ -45,6 +47,16 @@ class SelectGroupController: UIViewController, UICollectionViewDelegate, UIColle
         return button
     }()
     
+    private let creatForGroupLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.isHidden = true
+        label.textColor = .white
+        label.text = "Save To Group"
+        label.textAlignment = .center
+        return label
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         if #available(iOS 13.0, *) {
@@ -53,18 +65,28 @@ class SelectGroupController: UIViewController, UICollectionViewDelegate, UIColle
         
         view.backgroundColor = UIColor.init(white: 0, alpha: 0.85)
         
-        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(handleCancel))
-        navigationItem.leftBarButtonItem?.tintColor = .white
-//        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(handleShare))
+//        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(handleCancel))
+//        navigationItem.leftBarButtonItem?.tintColor = .white
         
         self.navigationController?.navigationBar.height(CGFloat(50))
         self.navigationController?.isNavigationBarHidden = false
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
-//        self.navigationController?.navigationBar.shadowImage = UIImage()
         self.navigationController?.navigationBar.isTranslucent = false
         self.navigationController?.navigationBar.backgroundColor = UIColor.init(white: 0, alpha: 1)
         self.navigationController?.navigationBar.barTintColor = UIColor.init(white: 0, alpha: 1)
         
+        if for_sticker != nil && for_sticker! == true {
+            self.newGroupButton.setTitle("Create for a new group", for: .normal)
+            self.navigationItem.title = "Select Group For Sticker"
+            let textAttributes = [NSAttributedString.Key.foregroundColor:UIColor.white]
+            self.navigationController?.navigationBar.titleTextAttributes = textAttributes
+            navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Skip", style: .plain, target: self, action: #selector(handleCancel))
+            navigationItem.leftBarButtonItem?.tintColor = .white
+        }
+        else {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(handleCancel))
+            navigationItem.leftBarButtonItem?.tintColor = .white
+        }
         
         layoutViews()
         
@@ -72,7 +94,9 @@ class SelectGroupController: UIViewController, UICollectionViewDelegate, UIColle
     }
     
     @objc private func handleCancel() {
-        dismiss(animated: true, completion: nil)
+        dismiss(animated: true, completion: {
+            self._didFinishPicking?(Group(groupId: "", dictionary: Dictionary()), true)
+        })
     }
     
     private func layoutViews() {

@@ -134,7 +134,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                         })
                         self.sendCloseNotifications(animatedScroll: false)
                         NotificationCenter.default.post(name: NSNotification.Name("reloadViewedPosts"), object: nil)
-                        self.delegate?.didExitLargeImageView()
+//                        self.delegate?.didExitLargeImageView()
                         Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false) { timer in
                             self.collectionView.isHidden = true
                             self.view.backgroundColor = .clear
@@ -215,7 +215,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
             let posts = countAndPosts[1] as! [GroupPost]
             self.groupPosts = posts
             self.groupPosts.sort(by: { (p1, p2) -> Bool in
-                return p1.creationDate.compare(p2.creationDate) == .orderedDescending
+                return p1.creationDate.compare(p2.creationDate) == .orderedAscending
             })
             
             self.configureHeader()
@@ -328,6 +328,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.isPagingEnabled = true
         collectionView.contentInsetAdjustmentBehavior = .never
+//        collectionView?.semanticContentAttribute = .forceRightToLeft
         
         self.configureNavigationBar()
         

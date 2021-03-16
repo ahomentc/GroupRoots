@@ -56,6 +56,7 @@
 		759912C523DD446200B415EB /* PushNotificationSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759912C423DD446200B415EB /* PushNotificationSender.swift */; };
 		759CB61123D593E000178673 /* LargeImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759CB61023D593E000178673 /* LargeImageViewController.swift */; };
 		759CB61323D62CE100178673 /* MembersHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759CB61223D62CE100178673 /* MembersHeader.swift */; };
+		75A5A33525FF32AD00A2E22B /* PageNumberCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75A5A33425FF32AD00A2E22B /* PageNumberCell.swift */; };
 		75A5B04125DE17480056AE97 /* IntroDescriptionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75A5B04025DE17480056AE97 /* IntroDescriptionController.swift */; };
 		75A5B04425DE176A0056AE97 /* IntroGroupStepController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75A5B04325DE176A0056AE97 /* IntroGroupStepController.swift */; };
 		75ACAFC523F6768A00DAE747 /* FollowPageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ACAFC423F6768A00DAE747 /* FollowPageController.swift */; };
@@ -80,6 +81,9 @@
 		75BE32DC24E22E1800310BA4 /* ResetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DB24E22E1800310BA4 /* ResetController.swift */; };
 		75BE32DE24E29A4200310BA4 /* IntroCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */; };
 		75C1412125F174EE005CB29E /* MessagesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C1412025F174ED005CB29E /* MessagesController.swift */; };
+		75C41CCE25FC853D009B8501 /* GroupStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C41CCD25FC853D009B8501 /* GroupStickersController.swift */; };
+		75C41CD425FC85F7009B8501 /* Sticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C41CD325FC85F7009B8501 /* Sticker.swift */; };
+		75C41CDA25FC87D6009B8501 /* StickerPhotoGridCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C41CD925FC87D6009B8501 /* StickerPhotoGridCell.swift */; };
 		75C6922C25E4F7240096194F /* EditTempVIdeoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C6922B25E4F7240096194F /* EditTempVIdeoController.swift */; };
 		75C6922F25E600F70096194F /* MemeBrowserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C6922E25E600F70096194F /* MemeBrowserController.swift */; };
 		75C6923225E602D50096194F /* Meme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C6923125E602D50096194F /* Meme.swift */; };
@@ -89,6 +93,7 @@
 		75CD27B125E790640061173B /* StickerTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CD27B025E790630061173B /* StickerTextView.swift */; };
 		75CFEA7F25EEFE810023AB61 /* SelectGroupController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CFEA7E25EEFE810023AB61 /* SelectGroupController.swift */; };
 		75CFEA8225EF03120023AB61 /* SelectGroupCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CFEA8125EF03120023AB61 /* SelectGroupCell.swift */; };
+		75D07D0225FBF7D50034409C /* CreateStickerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D07D0125FBF7D50034409C /* CreateStickerController.swift */; };
 		75D6CF46254930AB0098DE13 /* EmptySearchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D6CF45254930AB0098DE13 /* EmptySearchCell.swift */; };
 		75D86CAC252094E100939301 /* ImportContactsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CAB252094E100939301 /* ImportContactsCell.swift */; };
 		75D86CAE2524478A00939301 /* FullGroupCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D86CAD2524478A00939301 /* FullGroupCell.swift */; };
@@ -254,6 +259,7 @@
 		759912C423DD446200B415EB /* PushNotificationSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationSender.swift; sourceTree = "<group>"; };
 		759CB61023D593E000178673 /* LargeImageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeImageViewController.swift; sourceTree = "<group>"; };
 		759CB61223D62CE100178673 /* MembersHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersHeader.swift; sourceTree = "<group>"; };
+		75A5A33425FF32AD00A2E22B /* PageNumberCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageNumberCell.swift; sourceTree = "<group>"; };
 		75A5B04025DE17480056AE97 /* IntroDescriptionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroDescriptionController.swift; sourceTree = "<group>"; };
 		75A5B04325DE176A0056AE97 /* IntroGroupStepController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroGroupStepController.swift; sourceTree = "<group>"; };
 		75ACAFC423F6768A00DAE747 /* FollowPageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowPageController.swift; sourceTree = "<group>"; };
@@ -278,6 +284,9 @@
 		75BE32DB24E22E1800310BA4 /* ResetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetController.swift; sourceTree = "<group>"; };
 		75BE32DD24E29A4200310BA4 /* IntroCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroCodeController.swift; sourceTree = "<group>"; };
 		75C1412025F174ED005CB29E /* MessagesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesController.swift; sourceTree = "<group>"; };
+		75C41CCD25FC853D009B8501 /* GroupStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStickersController.swift; sourceTree = "<group>"; };
+		75C41CD325FC85F7009B8501 /* Sticker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sticker.swift; sourceTree = "<group>"; };
+		75C41CD925FC87D6009B8501 /* StickerPhotoGridCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerPhotoGridCell.swift; sourceTree = "<group>"; };
 		75C6922B25E4F7240096194F /* EditTempVIdeoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTempVIdeoController.swift; sourceTree = "<group>"; };
 		75C6922E25E600F70096194F /* MemeBrowserController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemeBrowserController.swift; sourceTree = "<group>"; };
 		75C6923125E602D50096194F /* Meme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meme.swift; sourceTree = "<group>"; };
@@ -287,6 +296,7 @@
 		75CD27B025E790630061173B /* StickerTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerTextView.swift; sourceTree = "<group>"; };
 		75CFEA7E25EEFE810023AB61 /* SelectGroupController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectGroupController.swift; sourceTree = "<group>"; };
 		75CFEA8125EF03120023AB61 /* SelectGroupCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectGroupCell.swift; sourceTree = "<group>"; };
+		75D07D0125FBF7D50034409C /* CreateStickerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateStickerController.swift; sourceTree = "<group>"; };
 		75D6CF45254930AB0098DE13 /* EmptySearchCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptySearchCell.swift; sourceTree = "<group>"; };
 		75D86CAB252094E100939301 /* ImportContactsCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportContactsCell.swift; sourceTree = "<group>"; };
 		75D86CAD2524478A00939301 /* FullGroupCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullGroupCell.swift; sourceTree = "<group>"; };
@@ -511,6 +521,7 @@
 				75E6258325955B30004262D9 /* SchoolUsersCell.swift */,
 				75E6258625956AAC004262D9 /* SchoolUserCell.swift */,
 				75E21FBD25A52470004F695F /* SchoolGroupCell.swift */,
+				75A5A33425FF32AD00A2E22B /* PageNumberCell.swift */,
 			);
 			path = ProfileFeed;
 			sourceTree = "<group>";
@@ -648,6 +659,9 @@
 				75CD27B025E790630061173B /* StickerTextView.swift */,
 				75CFEA7E25EEFE810023AB61 /* SelectGroupController.swift */,
 				75CFEA8125EF03120023AB61 /* SelectGroupCell.swift */,
+				75D07D0125FBF7D50034409C /* CreateStickerController.swift */,
+				75C41CCD25FC853D009B8501 /* GroupStickersController.swift */,
+				75C41CD925FC87D6009B8501 /* StickerPhotoGridCell.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -729,6 +743,7 @@
 				75E5CBB424FACF550080F815 /* Contact.swift */,
 				75D86CC12536B8A200939301 /* PostLocation.swift */,
 				75C6923125E602D50096194F /* Meme.swift */,
+				75C41CD325FC85F7009B8501 /* Sticker.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1081,6 +1096,7 @@
 				751E3163259AEDC3001BECCB /* InstaPromoController.swift in Sources */,
 				75D86CB42530307A00939301 /* SignUpAfterPhoneController.swift in Sources */,
 				7521D04A243463480028FC9C /* GroupSearchCell.swift in Sources */,
+				75C41CD425FC85F7009B8501 /* Sticker.swift in Sources */,
 				756D72CB242B3247008B6F42 /* InviteToGroupCell.swift in Sources */,
 				7578BB0A23D1B1C000AF9BFB /* Group.swift in Sources */,
 				75D86CBA2533063000939301 /* PlusCell.swift in Sources */,
@@ -1140,6 +1156,7 @@
 				75D86CB025270BB600939301 /* Contacts.swift in Sources */,
 				759CB61123D593E000178673 /* LargeImageViewController.swift in Sources */,
 				7522E43A24A937F60013A351 /* LoadMoreFollowersCell.swift in Sources */,
+				75A5A33525FF32AD00A2E22B /* PageNumberCell.swift in Sources */,
 				75C6922C25E4F7240096194F /* EditTempVIdeoController.swift in Sources */,
 				AD32EF732114189400BB7B56 /* CameraController.swift in Sources */,
 				75C6923525E628130096194F /* MemePhotoGridCell.swift in Sources */,
@@ -1153,6 +1170,7 @@
 				75E5CBB924FB6F280080F815 /* SearchUserForInvitationController.swift in Sources */,
 				750FA44A23D3055900D33CF8 /* NotificationsController.swift in Sources */,
 				7578BB2223D28F4B00AF9BFB /* GroupPost.swift in Sources */,
+				75D07D0225FBF7D50034409C /* CreateStickerController.swift in Sources */,
 				ADAC0808210FD4C900615E62 /* FirebaseUtilities.swift in Sources */,
 				75677FE925F1C67500C81180 /* MessageCell.swift in Sources */,
 				AD3164D221152935001F5DA7 /* CommentCell.swift in Sources */,
@@ -1161,6 +1179,7 @@
 				ADAC0806210FCB6C00615E62 /* User.swift in Sources */,
 				AD4D8CEC2060634600A49BA4 /* MainTabBarController.swift in Sources */,
 				AD3164D821167E4E001F5DA7 /* PlaceholderTextView.swift in Sources */,
+				75C41CCE25FC853D009B8501 /* GroupStickersController.swift in Sources */,
 				75CC915625E0995C00775C8D /* InviteToGroupFromIntroController.swift in Sources */,
 				7578BB1C23D27CDC00AF9BFB /* GroupProfilePhotoGridCell.swift in Sources */,
 				AD4D8CF12060827500A49BA4 /* UserProfileHeader.swift in Sources */,
@@ -1188,6 +1207,7 @@
 				75B65DEB240A5594006CBA0B /* GroupFollowersHeader.swift in Sources */,
 				AD3164D02114F0A1001F5DA7 /* CommentsController.swift in Sources */,
 				AD32DEC5210BEF6F002F4973 /* PhotoSelectorController.swift in Sources */,
+				75C41CDA25FC87D6009B8501 /* StickerPhotoGridCell.swift in Sources */,
 				75D86CC22536B8A300939301 /* PostLocation.swift in Sources */,
 				75E5CBBD24FF895C0080F815 /* InviteToGroupWhenCreateController.swift in Sources */,
 				757B35D12474DBB200C9AFE1 /* ProfileFeedCellHeader.swift in Sources */,
