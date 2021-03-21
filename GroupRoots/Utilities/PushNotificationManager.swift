@@ -14,17 +14,8 @@ import FirebaseAuth
 import FirebaseDatabase
 import NotificationBannerSwift
 
-class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCenterDelegate, LargeImageViewControllerDelegate {
-    func didTapGroup(group: Group) {
-        
-    }
-    
-    func didExitLargeImageView() {
-        
-    }
-    
-    
-    
+class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCenterDelegate {
+
     
 //    let userID: String
 //    init(userID: String) {
@@ -87,7 +78,12 @@ class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCe
                 let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
                 largeImageViewController.group = post.group
                 largeImageViewController.postToScrollToId = post.id
-                largeImageViewController.delegate = self
+                if let topController = UIApplication.topViewController() {
+                    if type(of: topController) == ProfileFeedController.self {
+                        let profileFeedController = topController as? ProfileFeedController
+                        largeImageViewController.delegate = profileFeedController
+                    }
+                }
                 let navController = UINavigationController(rootViewController: largeImageViewController)
                 navController.modalPresentationStyle = .overCurrentContext
                 
@@ -118,17 +114,6 @@ class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCe
                         return
                     }
                 }
-                else if type(of: topController) == LargeImageViewController.self {
-                    let largeImageViewController = topController as? LargeImageViewController
-                    largeImageViewController?.collectionView.visibleCells.forEach { cell in
-                        if cell is FeedPostCell {
-                            let post_id = (cell as! FeedPostCell).groupPost?.id
-                            if post_id == postId {
-                                return
-                            }
-                        }
-                    }
-                }
             }
 
             Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
@@ -143,20 +128,48 @@ class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCe
 //                banner.layer.borderWidth = 1
 //                banner.layer.borderColor = UIColor.init(white: 0.9, alpha: 1).cgColor
                 banner.onTap = {
-                    let layout = UICollectionViewFlowLayout()
-                    layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
-                    layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-                    layout.minimumLineSpacing = CGFloat(0)
+                    if let topController = UIApplication.topViewController() {
+                        if type(of: topController) == LargeImageViewController.self {
+                            let largeImageViewController = topController as? LargeImageViewController
+                            largeImageViewController?.handleCloseFullscreen()
+                        }
+                        else if type(of: topController) == MessagesController.self {
+                            let messagesController = topController as? MessagesController
+                            messagesController?.dismiss(animated: false, completion: {
+                                
+                                if let topController = UIApplication.topViewController() {
+                                    if type(of: topController) == LargeImageViewController.self {
+                                        let largeImageViewController = topController as? LargeImageViewController
+                                        largeImageViewController?.handleCloseFullscreen()
+                                    }
+                                }
+                                
+                            })
+                        }
+                    }
                     
-                    let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
-                    largeImageViewController.group = post.group
-                    largeImageViewController.postToScrollToId = post.id
-                    largeImageViewController.delegate = self
-                    let navController = UINavigationController(rootViewController: largeImageViewController)
-                    navController.modalPresentationStyle = .overCurrentContext
-                    
-                    let viewController = UIApplication.shared.keyWindow!.rootViewController as! MainTabBarController
-                    viewController.present(navController, animated: true, completion: nil)
+                    Timer.scheduledTimer(withTimeInterval: 1 , repeats: false) { timer in
+                        let layout = UICollectionViewFlowLayout()
+                        layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
+                        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+                        layout.minimumLineSpacing = CGFloat(0)
+                        
+                        let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
+                        largeImageViewController.group = post.group
+                        largeImageViewController.postToScrollToId = post.id
+                        
+                        if let topController = UIApplication.topViewController() {
+                            if type(of: topController) == ProfileFeedController.self {
+                                let profileFeedController = topController as? ProfileFeedController
+                                largeImageViewController.delegate = profileFeedController
+                            }
+                        }
+                        let navController = UINavigationController(rootViewController: largeImageViewController)
+                        navController.modalPresentationStyle = .overCurrentContext
+                        
+                        let viewController = UIApplication.shared.keyWindow!.rootViewController as! MainTabBarController
+                        viewController.present(navController, animated: true, completion: nil)
+                    }
                 
                 }
                 banner.show()

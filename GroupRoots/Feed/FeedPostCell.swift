@@ -117,6 +117,8 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate, MessagesControll
         self.player.url = URL(string: "")
         self.activityIndicatorView.isHidden = true
         
+        commentsReference.removeAllObservers()
+        
         for view in addedViews {
             view.removeFromSuperview()
         }
@@ -760,6 +762,11 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate, MessagesControll
             }
         }
         
+        self.listenForComments()
+    }
+    
+    public func listenForComments() {
+        guard let groupPost = groupPost else { return }
         // this will continuously listen for refreshes in comments
         self.commentsReference = Database.database().reference().child("comments").child(groupPost.id)
         self.commentsReference.queryOrderedByKey().queryLimited(toLast: 1).observe(.value) { snapshot in

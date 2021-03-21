@@ -206,6 +206,7 @@ class NotificationsController: HomePostCellViewController, NotificationCellDeleg
         largeImageViewController.group = group
         largeImageViewController.postToScrollToId = post.id
         largeImageViewController.delegate = self
+        largeImageViewController.isInverted = false
         let navController = UINavigationController(rootViewController: largeImageViewController)
 //        navController.modalPresentationStyle = .fullScreen
         navController.modalPresentationStyle = .overCurrentContext

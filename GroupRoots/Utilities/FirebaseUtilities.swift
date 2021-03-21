@@ -4840,6 +4840,92 @@ extension Database {
         }
     }
     
+    func setLatestViewPostMessage(postId: String, completion: @escaping (Error?) -> ()) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        
+        print("setting ", postId)
+        
+        let time = Date().timeIntervalSince1970
+        let values = [postId: time]
+        Database.database().reference().child("usersLastViewedPostMessage").child(currentLoggedInUserId).updateChildValues(values) { (err, ref) in
+            if let err = err {
+                completion(err)
+                return
+            }
+            
+            // save to userDefaults of viewedPosts
+            // first fetch those already viewed, then add to it, then save it
+            var latestViewPostMessage = [String: Int]()
+            if let latestViewPostMessageRetrieved = UserDefaults.standard.object(forKey: "latestViewPostMessage") as? Data {
+                guard let allLatestViewPostMessage = try? JSONDecoder().decode([String: Int].self, from: latestViewPostMessageRetrieved) else {
+                    print("Error: Couldn't decode data into Blog")
+                    return
+                }
+                latestViewPostMessage = allLatestViewPostMessage
+            }
+            latestViewPostMessage[postId] = Int(time)
+            if let latestViewPostMessageEncodedData = try? JSONEncoder().encode(latestViewPostMessage) {
+                UserDefaults.standard.set(latestViewPostMessageEncodedData, forKey: "latestViewPostMessage")
+            }
+            
+            completion(nil)
+        }
+    }
+
+    // functions this ugly shoulnd't exist
+    func fetchLastTimeUserViewedPostMessages(postId: String, completion: @escaping (Int) -> (), withCancel cancel: ((Error) -> ())?) {
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+
+        // first check to see if it's in userdefaults and use that
+        if let latestViewPostMessageRetrieved = UserDefaults.standard.object(forKey: "latestViewPostMessage") as? Data {
+            guard let allLatestViewPostMessage = try? JSONDecoder().decode([String: Int].self, from: latestViewPostMessageRetrieved) else {
+                Database.database().reference().child("usersLastViewedPostMessage").child(currentLoggedInUserId).child(postId).observeSingleEvent(of: .value, with: { (snapshot) in
+                    if let val = snapshot.value as? Int {
+                        completion(val)
+                    }
+                    else {
+                        completion(-1)
+                    }
+                }) { (err) in
+                    print("Failed to check if following:", err)
+                    cancel?(err)
+                }
+                return
+            }
+            if let messageTime = allLatestViewPostMessage[postId] {
+                completion(messageTime)
+                return
+            }
+            else {
+                Database.database().reference().child("usersLastViewedPostMessage").child(currentLoggedInUserId).child(postId).observeSingleEvent(of: .value, with: { (snapshot) in
+                    if let val = snapshot.value as? Int {
+                        completion(val)
+                    }
+                    else {
+                        completion(-1)
+                    }
+                }) { (err) in
+                    print("Failed to check if following:", err)
+                    cancel?(err)
+                }
+            }
+
+        }
+        else {
+            Database.database().reference().child("usersLastViewedPostMessage").child(currentLoggedInUserId).child(postId).observeSingleEvent(of: .value, with: { (snapshot) in
+                if let val = snapshot.value as? Int {
+                    completion(val)
+                }
+                else {
+                    completion(-1)
+                }
+            }) { (err) in
+                print("Failed to check if following:", err)
+                cancel?(err)
+            }
+        }
+    }
+    
     func addToViewedPosts(postId: String, completion: @escaping (Error?) -> ()) {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         

@@ -234,6 +234,9 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             let groupPostsCount = groupPosts.count
             let count = Int(ceil(Double(groupPostsCount)/4))
             self.pageCollectionView.scrollToItem(at: IndexPath(item: count + 2, section: 0), at: .centeredHorizontally, animated: false)
+            Timer.scheduledTimer(withTimeInterval: 0.05, repeats: false) { timer in
+                self.pageCollectionView.scrollToNearestVisibleCollectionViewCell()
+            }
         })
         
         if groupPosts.count > 0 {
@@ -328,9 +331,7 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: pageHeight )
         layout.minimumLineSpacing = CGFloat(0)
 
-        
-        
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: 160, width: UIScreen.main.bounds.width, height: pageHeight), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 80 + UIScreen.main.bounds.height/8, width: UIScreen.main.bounds.width, height: pageHeight), collectionViewLayout: layout)
 //        CGRect(x: 0, y: 220, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 220)
         
         collectionView.delegate = self
@@ -349,10 +350,11 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 
         let page_layout = UICollectionViewFlowLayout()
         page_layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
-        page_layout.itemSize = CGSize(width: 50, height: 50)
-        page_layout.minimumLineSpacing = CGFloat(20)
+        page_layout.itemSize = CGSize(width: UIScreen.main.bounds.width/5, height: 50)
+//        page_layout.minimumLineSpacing = CGFloat(20)
+        page_layout.minimumLineSpacing = CGFloat(0)
         
-        pageCollectionView = UICollectionView(frame: CGRect(x: 0, y: 90 + UIScreen.main.bounds.width - 30 + UIScreen.main.bounds.height/8, width: UIScreen.main.bounds.width, height: 50), collectionViewLayout: page_layout)
+        pageCollectionView = UICollectionView(frame: CGRect(x: 0, y: 10 + UIScreen.main.bounds.height/8 + UIScreen.main.bounds.width - 30 + UIScreen.main.bounds.height/8, width: UIScreen.main.bounds.width, height: 50), collectionViewLayout: page_layout)
         pageCollectionView.delegate = self
         pageCollectionView.dataSource = self
         pageCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -857,7 +859,7 @@ extension FeedGroupCell: UICollectionViewDelegateFlowLayout {
             //            }
         }
         else {
-            return UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+            return UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 20)
         }
     }
 }

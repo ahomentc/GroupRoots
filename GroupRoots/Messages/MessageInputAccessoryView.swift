@@ -20,7 +20,7 @@ class MessageInputAccessoryView: UIView, UITextViewDelegate {
     
     var delegate: MessageInputAccessoryViewDelegate?
     
-    private let commentTextView: MessageTextView = {
+    public let commentTextView: MessageTextView = {
         let tv = MessageTextView()
         tv.placeholderLabel.text = "Aa"
         tv.isScrollEnabled = false

@@ -17,13 +17,15 @@ import Photos
 
  // This will be the basis of group profile controller
 
-class GroupProfileController: HomePostCellViewController {
+class GroupProfileController: HomePostCellViewController, LargeImageViewControllerDelegate {
 
     var group: Group? {
         didSet {
             configureGroup()
         }
     }
+    
+    var groupPostsLastComment = [String: Comment]()
     
     var canView: Bool? = nil
     var isInFollowPending: Bool? = nil
@@ -224,6 +226,22 @@ class GroupProfileController: HomePostCellViewController {
         }) { (_) in}
     }
     
+    func didExitLargeImageView() {
+        collectionView.visibleCells.forEach { cell in
+            if let feedGroupCell = cell as? FeedGroupCell {
+                feedGroupCell.collectionView.visibleCells.forEach { cell in
+                    if let feedGroupPageCell = cell as? FeedGroupPageCell {
+                        feedGroupPageCell.collectionView.visibleCells.forEach { cell in
+                            if let feedGroupPostCell = cell as? FeedGroupPostCell {
+                                feedGroupPostCell.listenForLastComment()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     @objc private func updateGroup(){
         guard let group = group else { return }
         Database.database().fetchGroup(groupId: group.groupId, completion: { (group) in
@@ -338,6 +356,8 @@ class GroupProfileController: HomePostCellViewController {
         }
         collectionView?.refreshControl?.beginRefreshing()
         groupPosts.removeAll()
+        let sync = DispatchGroup()
+        sync.enter()
         Database.database().canViewGroupPosts(groupId: groupId, completion: { (canView) in
             if canView{
                 self.canView = true
@@ -348,20 +368,19 @@ class GroupProfileController: HomePostCellViewController {
                         self.groupPosts.sort(by: { (p1, p2) -> Bool in
                             return p1.creationDate.compare(p2.creationDate) == .orderedDescending
                         })
+                        sync.leave()
                     }
-                    self.collectionView?.reloadData()
-                    self.collectionView?.refreshControl?.endRefreshing()
-                }) { (err) in
-                    self.collectionView?.refreshControl?.endRefreshing()
-                }
+                    else {
+                        sync.leave()
+                    }
+                }) { (err) in }
                 self.header?.reloadGroupData()
             }
             else {
                 self.canView = false
                 Database.database().isInGroupFollowPending(groupId: groupId, withUID: currentLoggedInUserId, completion: { (followPending) in
                     self.isInFollowPending = followPending
-                    self.collectionView?.reloadData()
-                    self.collectionView?.refreshControl?.endRefreshing()
+                    sync.leave()
                 }) { (err) in
                     return
                 }
@@ -370,6 +389,27 @@ class GroupProfileController: HomePostCellViewController {
             return
         }
         
+        sync.notify(queue: .main) {
+            
+            // set the message icons
+            let sync_after = DispatchGroup()
+            sync_after.enter()
+            for groupPost in self.groupPosts {
+                sync_after.enter()
+                Database.database().fetchLastCommentForPost(withId: groupPost.id, completion: { (comments) in
+                    if comments.count > 0 {
+                        let comment = comments[0]
+                        self.groupPostsLastComment[groupPost.id] = comment
+                    }
+                    sync_after.leave()
+                }) { (err) in }
+            }
+            sync_after.leave()
+            sync_after.notify(queue: .main) {
+                self.collectionView?.reloadData()
+                self.collectionView?.refreshControl?.endRefreshing()
+            }
+        }
     }
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -385,6 +425,7 @@ class GroupProfileController: HomePostCellViewController {
         let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
         largeImageViewController.group = group
         largeImageViewController.indexPath = indexPath
+        largeImageViewController.isInverted = false
         let navController = UINavigationController(rootViewController: largeImageViewController)
 //        navController.modalPresentationStyle = .fullScreen
         navController.modalPresentationStyle = .overCurrentContext
@@ -412,14 +453,9 @@ class GroupProfileController: HomePostCellViewController {
             return cell
         }
 
-        if isGridView {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfilePhotoGridCell.cellId, for: indexPath) as! GroupProfilePhotoGridCell
-            cell.groupPost = groupPosts[indexPath.item]
-            return cell
-        }
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HomePostCell.cellId, for: indexPath) as! HomePostCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GroupProfilePhotoGridCell.cellId, for: indexPath) as! GroupProfilePhotoGridCell
         cell.groupPost = groupPosts[indexPath.item]
-        cell.delegate = self
+        cell.lastComment = groupPostsLastComment[groupPosts[indexPath.item].id]
         return cell
     }
 

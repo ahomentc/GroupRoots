@@ -24,7 +24,7 @@ protocol LargeImageViewControllerDelegate {
 
 class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate, ViewersControllerDelegate {
     
-    override var prefersStatusBarHidden: Bool { return true }
+    override var prefersStatusBarHidden: Bool { return false }
     // the group posts loaded so far
     // When calling to fetch posts, we pass the last post in this set
     // we compare the date of the last post will all posts and retreive the n posts
@@ -50,6 +50,8 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     var numViewsForPost = [String: Int]()
     var numCommentsForPosts = [String: Int]()
     var isScrolling = false
+    
+    var isInverted = true
     
     let header = LargeImageViewHeader()
     
@@ -134,6 +136,8 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                         })
                         self.sendCloseNotifications(animatedScroll: false)
                         NotificationCenter.default.post(name: NSNotification.Name("reloadViewedPosts"), object: nil)
+                        NotificationCenter.default.post(name: NSNotification.Name("reloadNumMessages"), object: nil)
+                        
 //                        self.delegate?.didExitLargeImageView()
                         Timer.scheduledTimer(withTimeInterval: 0.8, repeats: false) { timer in
                             self.collectionView.isHidden = true
@@ -157,6 +161,14 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         
         // not actually scrolling but enables video play
         self.isScrolling = false
+        
+        print("large image view appeared")
+        // get the visible cell and set it's comment listener
+        collectionView.visibleCells.forEach { cell in
+            if cell is FeedPostCell {
+                (cell as! FeedPostCell).listenForComments()
+            }
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -215,7 +227,12 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
             let posts = countAndPosts[1] as! [GroupPost]
             self.groupPosts = posts
             self.groupPosts.sort(by: { (p1, p2) -> Bool in
-                return p1.creationDate.compare(p2.creationDate) == .orderedAscending
+                if self.isInverted {
+                    return p1.creationDate.compare(p2.creationDate) == .orderedAscending
+                }
+                else {
+                    return p1.creationDate.compare(p2.creationDate) == .orderedDescending
+                }
             })
             
             self.configureHeader()
@@ -411,6 +428,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         // if animate it will look weird
         sendCloseNotifications(animatedScroll: false)
         NotificationCenter.default.post(name: NSNotification.Name("reloadViewedPosts"), object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name("reloadNumMessages"), object: nil)
         self.dismiss(animated: true, completion: {
             self.delegate?.didExitLargeImageView()
         })

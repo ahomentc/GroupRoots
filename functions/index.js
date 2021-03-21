@@ -2089,6 +2089,8 @@ exports.addTempPostToBucket = functions.database.ref('/posts/{group_id}/{post_id
 exports.deleteTempPosts = functions.pubsub.schedule('0 * * * *').timeZone('America/Los_Angeles').onRun((context) => {
 	var post_date = Date.now()
 	var hour = (new Date(post_date)).getHours()
+	console.log("deleting temp posts")
+	console.log(hour)
 
 	const promises = []
 
@@ -2099,13 +2101,16 @@ exports.deleteTempPosts = functions.pubsub.schedule('0 * * * *').timeZone('Ameri
 		var sync = new DispatchGroup();
 		var token_0 = sync.enter();
 		var num_groups = 0
+		console.log("checking timerPostExpirations to find groups")
 		groups_snapshot.forEach(function(group) {
 			num_groups += 1;
 			var token = sync.enter();
 			var group_id = group.key;
+			console.log("in group " + group_id)
 			return admin.database().ref('/timerPostExpirations/' + hour + '/' + group_id).once('value', posts_snapshot => {
 				posts_snapshot.forEach(function(post) {
 					var post_id = post.key;
+					console.log("deleting post " + post_id)
 					promises.push(admin.database().ref('/posts/' + group_id + '/' + post_id).remove())
 					sync.leave(token)
 				})
@@ -2122,9 +2127,6 @@ exports.deleteTempPosts = functions.pubsub.schedule('0 * * * *').timeZone('Ameri
 		})
 	}).catch(() => {return null});
 });
-
-
-// TODO: function to delete media from storage when post is deleted
 
 
 

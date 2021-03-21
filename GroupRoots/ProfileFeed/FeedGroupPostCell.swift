@@ -56,9 +56,15 @@ class FeedGroupPostCell: UICollectionViewCell {
         return backgroundView
     }()
     
+    var commentsReference = DatabaseReference()
+    
     var groupPost: GroupPost? {
         didSet {
             guard let groupPost = self.groupPost else { return }
+            if groupPost.id == "" {
+                return
+            }
+            
             guard var imageUrl = self.groupPost?.imageUrl else { return }
             guard var videoUrl = self.groupPost?.videoUrl else { return }
             guard let groupId = self.groupPost?.group.groupId else { return }
@@ -170,6 +176,8 @@ class FeedGroupPostCell: UICollectionViewCell {
                 // for when the picture is loaded without the data above this being set
                 // viewing a picture wouldn't reload the whole collectionview so viewed info stored in viewdPosts
                 self.reloadNewDot()
+                
+                self.listenForLastComment()
             }
         }
     }
@@ -181,6 +189,9 @@ class FeedGroupPostCell: UICollectionViewCell {
             // (maybe firebase better since if you log out and log in it'll mark all as unread)
             // compare last comment id or date with that
 //            print(lastComment!)
+            if lastComment != nil && lastComment!.creationDate.timeIntervalSince1970 > 0 {
+                self.reloadMessageIcon()
+            }
         }
     }
 
@@ -234,6 +245,24 @@ class FeedGroupPostCell: UICollectionViewCell {
         view.layer.shadowOpacity = 0.35
         view.layer.shadowRadius = 2.5
         return view
+    }()
+    
+    public let unreadMessageIcon: CustomImageView = {
+        let iv = CustomImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.backgroundColor = UIColor.clear
+        iv.image = #imageLiteral(resourceName: "read_message")
+        iv.isHidden = true
+        
+        iv.layer.shadowColor = UIColor.black.cgColor
+        iv.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        iv.layer.shadowOpacity = 0.2
+        iv.layer.shadowRadius = 1.5
+//        iv.layer.cornerRadius = 5
+//        let path = UIBezierPath(roundedRect: iv.frame, cornerRadius: 50.0)
+//        iv.layer.shadowPath = [UIBezierPath bezierPathWithRoundedRect:self.pic.frame cornerRadius:50.0].CGPath;
+        return iv
     }()
     
     let hourglassButton: UIButton = {
@@ -293,13 +322,21 @@ class FeedGroupPostCell: UICollectionViewCell {
         newDot.layer.zPosition = 6
         newDot.heightAnchor.constraint(greaterThanOrEqualToConstant: 10).isActive = true
         newDot.widthAnchor.constraint(greaterThanOrEqualToConstant: 10).isActive = true
-        newDot.anchor(bottom: bottomAnchor, right: rightAnchor, paddingBottom: 10, paddingRight: 10)
+        newDot.anchor(top: topAnchor, right: rightAnchor, paddingTop: 10, paddingRight: 10)
+        
+        insertSubview(unreadMessageIcon, at: 6)
+        unreadMessageIcon.layer.zPosition = 6
+        unreadMessageIcon.heightAnchor.constraint(greaterThanOrEqualToConstant: 10).isActive = true
+        unreadMessageIcon.widthAnchor.constraint(greaterThanOrEqualToConstant: 10).isActive = true
+        unreadMessageIcon.anchor(bottom: bottomAnchor, right: rightAnchor, paddingBottom: 15, paddingRight: 15)
+//        let path = UIBezierPath(roundedRect: unreadMessageIcon.frame, cornerRadius: 10)
+//        unreadMessageIcon.layer.shadowPath = path.cgPath
         
         insertSubview(hourglassButton, at: 6)
         hourglassButton.layer.zPosition = 6
         hourglassButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 20).isActive = true
         hourglassButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 20).isActive = true
-        hourglassButton.anchor(top: topAnchor, right: rightAnchor, paddingTop: 10, paddingRight: 10)
+        hourglassButton.anchor(left: leftAnchor, bottom: bottomAnchor, paddingLeft: 10, paddingBottom: 10)
         
         self.readyToSetPicture = false
         
@@ -314,6 +351,8 @@ class FeedGroupPostCell: UICollectionViewCell {
 //        upperCoverView.isUserInteractionEnabled = false
         
         NotificationCenter.default.addObserver(self, selector: #selector(reloadNewDot), name: NSNotification.Name(rawValue: "reloadViewedPosts"), object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(reloadMessageIcon), name: NSNotification.Name(rawValue: "reloadNumMessages"), object: nil)
     }
     
     override func prepareForReuse() {
@@ -334,17 +373,26 @@ class FeedGroupPostCell: UICollectionViewCell {
         hourglassButton.isHidden = true
         hourglassButton.setImage(#imageLiteral(resourceName: "hourglass1").withRenderingMode(.alwaysOriginal), for: .normal)
         newDot.isHidden = true
+        unreadMessageIcon.image = #imageLiteral(resourceName: "read_message")
+        unreadMessageIcon.isHidden = true
         groupPost = nil
         viewedPost = nil
+        lastComment = nil
         
         self.upperCoverView.isHidden = true
         self.coverView.isHidden = true
         
         self.readyToSetPicture = false
+        
+        // remove listener
+        commentsReference.removeAllObservers()
     }
     
     @objc func reloadNewDot(){
         guard let groupPost = groupPost else { return }
+        if groupPost.id == "" {
+            return
+        }
         if let viewedPostsRetrieved = UserDefaults.standard.object(forKey: "viewedPosts") as? Data {
             guard let allViewedPosts = try? JSONDecoder().decode([String: Bool].self, from: viewedPostsRetrieved) else {
                 print("Error: Couldn't decode data into Blog")
@@ -353,6 +401,62 @@ class FeedGroupPostCell: UICollectionViewCell {
             let viewedPost = allViewedPosts[groupPost.id] != nil
             if viewedPost {
                 self.newDot.isHidden = true
+            }
+        }
+    }
+    
+    @objc func reloadMessageIcon() {
+        guard let groupPost = groupPost else { return }
+        if groupPost.id == "" {
+            return
+        }
+        guard let lastComment = lastComment else { return }
+        unreadMessageIcon.isHidden = false
+        Database.database().fetchLastTimeUserViewedPostMessages(postId: groupPost.id, completion: {(time_viewed) in
+            if Int(lastComment.creationDate.timeIntervalSince1970) > time_viewed && time_viewed > 0 {
+                self.unreadMessageIcon.image = #imageLiteral(resourceName: "unread_message")
+            }
+            else {
+                self.unreadMessageIcon.image = #imageLiteral(resourceName: "read_message")
+            }
+        }) { (err) in return }
+    }
+    
+    func listenForLastComment() {
+        guard let groupPost = groupPost else { return }
+        // this will continuously listen for refreshes in comments to update the messages icon
+        if groupPost.id != "" {
+            self.commentsReference = Database.database().reference().child("comments").child(groupPost.id)
+            self.commentsReference.queryOrderedByKey().queryLimited(toLast: 1).observe(.value) { snapshot in
+                guard let dictionaries = snapshot.value as? [String: Any] else {
+                    return
+                }
+                
+                var comments = [Comment]()
+                
+                let sync = DispatchGroup()
+                dictionaries.forEach({ (key, value) in
+                    guard let commentDictionary = value as? [String: Any] else { return }
+                    guard let uid = commentDictionary["uid"] as? String else { return }
+                    sync.enter()
+                    Database.database().userExists(withUID: uid, completion: { (exists) in
+                        if exists{
+                            Database.database().fetchUser(withUID: uid) { (user) in
+                                let comment = Comment(user: user, dictionary: commentDictionary)
+                                comments.append(comment)
+                                sync.leave()
+                            }
+                        }
+                        else{
+                            sync.leave()
+                        }
+                    })
+                })
+                sync.notify(queue: .main) {
+                    if comments.count > 0 {
+                        self.lastComment = comments[0]
+                    }
+                }
             }
         }
     }

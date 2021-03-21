@@ -561,6 +561,7 @@ class UserProfileController: HomePostCellViewController, CreateGroupControllerDe
         largeImageViewController.group = groupPost.group
         largeImageViewController.delegate = self
         largeImageViewController.indexPath = IndexPath(item: index, section: 0)
+        largeImageViewController.isInverted = false
         let navController = UINavigationController(rootViewController: largeImageViewController)
         navController.modalPresentationStyle = .overCurrentContext
         

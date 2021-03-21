@@ -50,6 +50,12 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
     var groupPost: GroupPost? {
         didSet {
             fetchComments()
+            
+            // new message was sent so update the lastestViewedMessage
+            print("setting latest viewed message")
+            if groupPost != nil && groupPost!.id != "" {
+                Database.database().setLatestViewPostMessage(postId: groupPost!.id, completion: { _ in })
+            }
         }
     }
     
@@ -62,7 +68,7 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
     var original_height = 0.0
     
     var commentsReference = DatabaseReference()
-    
+        
     private lazy var messageInputAccessoryView: MessageInputAccessoryView = {
         let frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 50)
         let messageInputAccessoryView = MessageInputAccessoryView(frame: frame)
@@ -72,7 +78,7 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
     
     override var canBecomeFirstResponder: Bool { return true }
     
-    override var inputAccessoryView: UIView? { return messageInputAccessoryView }
+    override var inputAccessoryView: MessageInputAccessoryView? { return messageInputAccessoryView }
     
     override func viewDidAppear(_ animated: Bool) {
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
@@ -134,6 +140,8 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
         
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+        self.hideKeyboardWhenTappedAround()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -150,26 +158,24 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
     
     @objc private func fetchComments() {
         guard let postId = groupPost?.id else { return }
-        self.commentsCollectionView?.refreshControl?.beginRefreshing()
         Database.database().fetchCommentsForPost(withId: postId, completion: { (comments) in
             self.comments = comments
             self.commentsCollectionView.reloadData()
             self.commentsCollectionView.performBatchUpdates(nil, completion: {
                 (result) in
-                self.commentsCollectionView!.scrollToItem(at: IndexPath.init(row: comments.count - 1, section: 0), at: UICollectionView.ScrollPosition.bottom, animated: false)
-
-                if comments.count > 5 {
-                    let bottomOffset = CGPoint(x: 0, y: self.commentsCollectionView.contentSize.height - self.commentsCollectionView.bounds.height + self.commentsCollectionView.contentInset.bottom)
-                    self.commentsCollectionView.setContentOffset(bottomOffset, animated: true)
+                if self.comments.count > 5 {
+//                    let bottomOffset = CGPoint(x: 0, y: self.commentsCollectionView.contentSize.height - self.commentsCollectionView.bounds.height + self.commentsCollectionView.contentInset.bottom + 100)
+//                    self.commentsCollectionView.setContentOffset(bottomOffset, animated: true)
+                    self.commentsCollectionView!.scrollToItem(at: IndexPath.init(row: self.comments.count - 1, section: 0), at: UICollectionView.ScrollPosition.bottom, animated: false)
+                    let navbarHeight = self.navigationController?.navigationBar.frame.size.height ?? 0
+                    self.commentsCollectionView.frame = CGRect(x: 0, y: 20, width: UIScreen.main.bounds.width, height: 550 - 70 - navbarHeight - 50)
                 }
             })
-            self.commentsCollectionView?.refreshControl?.endRefreshing()
         }) { (err) in }
         
         // this will continuously listen for refreshes in comments
         commentsReference = Database.database().reference().child("comments").child(postId)
         commentsReference.queryOrderedByKey().queryLimited(toLast: 1).observe(.value) { snapshot in
-            self.commentsCollectionView?.refreshControl?.beginRefreshing()
             
             guard let dictionaries = snapshot.value as? [String: Any] else {
                 return
@@ -200,12 +206,20 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
                 if !(self.comments.count > 0 && comments.count > 0 && self.comments[self.comments.count-1].creationDate == comments[0].creationDate) {
                     self.comments += comments
                 }
+                
+                // new message was sent so update the lastestViewedMessage
+                if self.groupPost != nil && self.groupPost!.id != "" {
+                    Database.database().setLatestViewPostMessage(postId: self.groupPost!.id, completion: { _ in })
+                }
+                
                 self.comments.sort(by: { (comment1, comment2) -> Bool in
                     return comment1.creationDate.compare(comment2.creationDate) == .orderedAscending
                 })
                 self.commentsCollectionView.reloadData()
-                self.commentsCollectionView?.refreshControl?.endRefreshing()
-                return
+
+                Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { timer in
+                    self.commentsCollectionView!.scrollToItem(at: IndexPath.init(row: self.comments.count - 1, section: 0), at: UICollectionView.ScrollPosition.bottom, animated: true)
+                }
             }
         }
     }
@@ -268,8 +282,13 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
         if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
             if self.comments.count > 3 {
 //                self.commentsCollectionView.bounds.origin.y = 20 + keyboardSize.height
-                let bottomOffset = CGPoint(x: 0, y: self.commentsCollectionView.contentSize.height - self.commentsCollectionView.bounds.height + self.commentsCollectionView.contentInset.bottom + keyboardSize.height - 20)
-                self.commentsCollectionView.setContentOffset(bottomOffset, animated: true)
+//                let bottomOffset = CGPoint(x: 0, y: self.commentsCollectionView.contentSize.height - self.commentsCollectionView.bounds.height + self.commentsCollectionView.contentInset.bottom + keyboardSize.height - 20)
+//                self.commentsCollectionView.setContentOffset(bottomOffset, animated: false)
+                
+                let navbarHeight = self.navigationController?.navigationBar.frame.size.height ?? 0
+                commentsCollectionView.frame = CGRect(x: 0, y: 20, width: UIScreen.main.bounds.width, height: 550 - 70 - navbarHeight - keyboardSize.height)
+                self.commentsCollectionView!.scrollToItem(at: IndexPath.init(row: self.comments.count - 1, section: 0), at: UICollectionView.ScrollPosition.bottom, animated: true)
+
             }
         }
     }
@@ -277,6 +296,10 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
     @objc func keyboardWillHide(notification: NSNotification) {
         if self.comments.count > 3 {
 //            self.commentsCollectionView.bounds.origin.y = 20
+            
+            let navbarHeight = self.navigationController?.navigationBar.frame.size.height ?? 0
+            commentsCollectionView.frame = CGRect(x: 0, y: 20, width: UIScreen.main.bounds.width, height: 550 - 70 - navbarHeight)
+            self.commentsCollectionView!.scrollToItem(at: IndexPath.init(row: self.comments.count - 1, section: 0), at: UICollectionView.ScrollPosition.bottom, animated: true)
         }
     }
 }
@@ -409,3 +432,15 @@ extension MessagesController: MessageCellDelegate {
     }
 }
 
+
+extension MessagesController {
+    func hideKeyboardWhenTappedAround() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(self.dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+    }
+    
+    @objc func dismissKeyboard() {
+        self.inputAccessoryView?.commentTextView.resignFirstResponder()
+    }
+}

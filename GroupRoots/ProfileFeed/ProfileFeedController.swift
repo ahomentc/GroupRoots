@@ -1162,6 +1162,25 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 refreshControl.addTarget(self, action: #selector(self.handleRefresh), for: .valueChanged)
                 self.collectionView?.refreshControl = refreshControl
                 
+                // delete temp posts that weren't caught by the server and refresh
+                // can't do this cuz of permission
+//                let sync = DispatchGroup()
+//                for row in tempGroupPosts2D {
+//                    for post in row {
+//                        if post.isTempPost && post.creationDate.timeAgo() > 24 {
+//                            sync.enter()
+//                            Database.database().deleteGroupPost(groupId: post.group.groupId, postId: post.id) { (_) in
+//                                sync.leave()
+//                            }
+//                        }
+//                    }
+//                }
+//                sync.notify(queue: .main) {
+//                    self.handleRefresh()
+//                }
+                
+                
+                
                 DispatchQueue.main.async {
                     self.collectionView?.reloadData()
                     self.collectionView?.refreshControl?.endRefreshing()
@@ -1529,12 +1548,16 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         largeImageViewController.group = groupPost.group
         largeImageViewController.indexPath = IndexPath(item: index, section: 0)
         largeImageViewController.delegate = self
+        largeImageViewController.isInverted = true
         let navController = UINavigationController(rootViewController: largeImageViewController)
         navController.modalPresentationStyle = .fullScreen
         
         self.present(navController, animated: true, completion: nil)
         
         handleDidView(groupPost: groupPost)
+        
+        // new message was sent so update the lastestViewedMessage
+        Database.database().setLatestViewPostMessage(postId: groupPost.id, completion: { _ in })
     }
     
     func handleDidView(groupPost: GroupPost) {
@@ -1570,6 +1593,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
 //        largeImageViewController.indexPath = indexPath
         largeImageViewController.postToScrollToId = groupPostId
         largeImageViewController.delegate = self
+        largeImageViewController.isInverted = true
         let navController = UINavigationController(rootViewController: largeImageViewController)
         navController.modalPresentationStyle = .overFullScreen
         self.present(navController, animated: true, completion: nil)
@@ -1584,6 +1608,20 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     func didExitLargeImageView() {
 //        self.collectionView.contentOffset.y = CGFloat(self.scrollViewOffset)
         
+        // get visible FeedGroupCell and pass signal to update message icon
+        collectionView.visibleCells.forEach { cell in
+            if let feedGroupCell = cell as? FeedGroupCell {
+                feedGroupCell.collectionView.visibleCells.forEach { cell in
+                    if let feedGroupPageCell = cell as? FeedGroupPageCell {
+                        feedGroupPageCell.collectionView.visibleCells.forEach { cell in
+                            if let feedGroupPostCell = cell as? FeedGroupPostCell {
+                                feedGroupPostCell.listenForLastComment()
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     
     func showMoreMembers(group: Group) {
