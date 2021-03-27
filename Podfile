@@ -36,4 +36,5 @@ target 'GroupRoots' do
   pod "EasyPeasy"
   pod 'PanModal'
   pod 'NotificationBannerSwift'
+  pod 'CenterTextLayer'
 end

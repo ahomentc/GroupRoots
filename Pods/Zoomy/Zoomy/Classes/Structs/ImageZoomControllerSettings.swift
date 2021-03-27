@@ -88,6 +88,10 @@ public extension ImageZoomControllerSettings {
     static var instaZoomSettings: Settings {
         return backgroundEnabledSettings.with(zoomCancelingThreshold: .infinity).with(defaultAnimators: DefaultAnimators().with(dismissalAnimator: SpringAnimator(duration: 0.6, springDamping:1)))
     }
+    
+    static var customSettings1: Settings {
+        return backgroundEnabledSettings.with(zoomCancelingThreshold: .infinity).with(defaultAnimators: DefaultAnimators().with(dismissalAnimator: SpringAnimator(duration: 0.15, springDamping:1)))
+    }
 }
 
 //MARK: Alterations

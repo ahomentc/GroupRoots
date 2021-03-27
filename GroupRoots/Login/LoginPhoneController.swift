@@ -16,15 +16,33 @@ class LoginPhoneController: UIViewController {
         return label
     }()
     
-    private lazy var phoneTextField: UITextField = {
-        let tf = UITextField()
+//    private lazy var phoneTextField: UITextField = {
+//        let tf = UITextField()
+//        tf.autocorrectionType = .no
+//        tf.autocapitalizationType = .none
+//        tf.keyboardType = .phonePad
+//        tf.placeholder = "Phone number"
+//        tf.backgroundColor = UIColor(white: 0, alpha: 0)
+//        tf.borderStyle = .roundedRect
+//        tf.font = UIFont.systemFont(ofSize: 16)
+//        tf.delegate = self
+//        tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
+//        return tf
+//    }()
+    
+    private lazy var phoneTextField: PhoneNumberTextField = {
+        let tf = PhoneNumberTextField()
         tf.autocorrectionType = .no
         tf.autocapitalizationType = .none
         tf.keyboardType = .phonePad
         tf.placeholder = "Phone number"
         tf.backgroundColor = UIColor(white: 0, alpha: 0)
-        tf.borderStyle = .roundedRect
-        tf.font = UIFont.systemFont(ofSize: 16)
+        tf.borderStyle = .none
+        tf.font = UIFont.systemFont(ofSize: 27)
+        
+        tf.withPrefix = true
+        tf.withExamplePlaceholder = true
+        tf.withFlag = true
         tf.delegate = self
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -34,7 +52,7 @@ class LoginPhoneController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle("Continue", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
-        button.layer.cornerRadius = 5
+        button.layer.cornerRadius = 20
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
@@ -91,10 +109,10 @@ class LoginPhoneController: UIViewController {
     private func setupInputFields() {
         let stackView = UIStackView(arrangedSubviews: [phoneTextField, nextButton])
         stackView.axis = .vertical
-        stackView.spacing = 10
+        stackView.spacing = 25
         stackView.distribution = .fillEqually
         view.addSubview(stackView)
-        stackView.anchor(top: view.topAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 250, paddingLeft: 40, paddingRight: 40, height: 100)
+        stackView.anchor(top: view.topAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 250, paddingLeft: 40, paddingRight: 40, height: 115)
     }
     
     private func resetInputFields() {

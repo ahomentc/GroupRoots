@@ -30,7 +30,7 @@ protocol InnerPostCellDelegate {
     func handleGroupTap()
 }
 
-class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate, MessagesControllerDelegate {
+class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate {
     
     var delegate: InnerPostCellDelegate?
     var timer = Timer()
@@ -41,6 +41,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate, MessagesControll
         didSet {
             if groupPost != nil {
                 configurePost()
+                setupMessagePreview()
             }
         }
     }
@@ -117,7 +118,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate, MessagesControll
         self.player.url = URL(string: "")
         self.activityIndicatorView.isHidden = true
         
-        commentsReference.removeAllObservers()
+//        commentsReference.removeAllObservers()
         
         for view in addedViews {
             view.removeFromSuperview()
@@ -556,7 +557,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate, MessagesControll
 //        photoImageBackgroundView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, paddingLeft: padding + 10, paddingBottom: UIScreen.main.bounds.height/7 - 35, paddingRight: padding + 10, height: 75)
 //        photoImageBackgroundView.isHidden = false
 
-        photoImageView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
+//        photoImageView.heightAnchor.constraint(equalToConstant: UIScreen.main.bounds.height).isActive = true
         photoImageView.layer.cornerRadius = 5
         photoImageView.frame = CGRect(x: 0, y: 0, width: self.frame.width, height: self.frame.height)
         photoImageView.center = CGPoint(x: self.frame.width  / 2, y: self.frame.height / 2)
@@ -914,7 +915,7 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate, MessagesControll
     
     private func setupMessagePreview() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
-        guard let lastComment = lastComment else { return }
+        guard let groupPost = groupPost else { return }
         
         for view in addedViews {
             view.removeFromSuperview()
@@ -923,17 +924,28 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate, MessagesControll
             layer.removeFromSuperlayer()
         }
         
-        if lastComment.user.uid == currentLoggedInUserId {
-            showOutgoingMessage(message: lastComment.text)
-            self.expandLeftButton.isHidden = false
-            self.expandRightButton.isHidden = true
-            self.openMessagesButton.isHidden = true
+        if self.lastComment == nil || self.lastComment!.text.contains("Shared by") {
+            if groupPost.user.uid == currentLoggedInUserId {
+                self.openMessagesButton.setTitle("Message", for: .normal)
+            }
+            else {
+                var name = groupPost.user.username
+                self.openMessagesButton.setTitle("Reply to " + name, for: .normal)
+            }
         }
         else {
-            showIncomingMessage(message: lastComment.text)
-            self.expandLeftButton.isHidden = true
-            self.expandRightButton.isHidden = false
-            self.openMessagesButton.isHidden = true
+            if lastComment!.user.uid == currentLoggedInUserId {
+                showOutgoingMessage(message: lastComment!.text)
+                self.expandLeftButton.isHidden = false
+                self.expandRightButton.isHidden = true
+                self.openMessagesButton.isHidden = true
+            }
+            else {
+                showIncomingMessage(message: lastComment!.text)
+                self.expandLeftButton.isHidden = true
+                self.expandRightButton.isHidden = false
+                self.openMessagesButton.isHidden = true
+            }
         }
     }
 
@@ -994,13 +1006,6 @@ class FeedPostCell: UICollectionViewCell, UIScrollViewDelegate, MessagesControll
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
             self.delegate?.didTapComment(groupPost: groupPost)
         }
-    }
-
-    // this will never be called since LargeImageViewController sets calls MessagesController and sets
-    // delegate. But okay for now. Later on pass to LargeImageViewController the commentsReference and
-    // remove it there
-    func didCloseMessage() {
-        commentsReference.removeAllObservers()
     }
     
     @objc private func handleDidTapCommentUser() {

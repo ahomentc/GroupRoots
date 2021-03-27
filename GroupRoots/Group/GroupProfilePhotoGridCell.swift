@@ -130,7 +130,7 @@ class GroupProfilePhotoGridCell: UICollectionViewCell {
         unreadMessageIcon.image = #imageLiteral(resourceName: "read_message")
         unreadMessageIcon.isHidden = true
         
-        commentsReference.removeAllObservers()
+//        commentsReference.removeAllObservers()
     }
     
     @objc func reloadMessageIcon() {

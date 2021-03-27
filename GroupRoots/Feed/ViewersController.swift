@@ -1,14 +1,28 @@
 import UIKit
 import Firebase
+import PanModal
 
 protocol ViewersControllerDelegate {
 //    func dismissViewersController(_ controller: UIViewController)
     func didTapUser(user: User)
 }
 
-class ViewersController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate  {
+class ViewersController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, PanModalPresentable  {
     
     var delegate: ViewersControllerDelegate?
+    
+    var shortFormHeight: PanModalHeight {
+//        return .maxHeight
+        return .contentHeight(550)
+    }
+
+    var longFormHeight: PanModalHeight {
+        return .maxHeightWithTopInset(100)
+    }
+    
+    var panScrollable: UIScrollView? {
+        return nil
+    }
     
     var viewers: [User]? {
         didSet {
@@ -38,18 +52,28 @@ class ViewersController: UIViewController, UICollectionViewDataSource, UICollect
         }
                 
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Close", style: .plain, target: self, action: #selector(doneSelected))
-        navigationItem.leftBarButtonItem?.tintColor = .black
+        navigationItem.leftBarButtonItem?.tintColor = .white
         navigationItem.title = "Viewers"
+        let textAttributes = [NSAttributedString.Key.foregroundColor:UIColor.white]
+        navigationController?.navigationBar.titleTextAttributes = textAttributes
+        
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = false
+        self.navigationController?.navigationBar.backgroundColor = UIColor.black
+        
+        self.view.backgroundColor = UIColor.init(white: 0, alpha: 0.75)
         
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
-        self.collectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height), collectionViewLayout: layout)
+        let navbarHeight = self.navigationController?.navigationBar.frame.size.height ?? 0
+        self.collectionView = UICollectionView(frame: CGRect(x: 0, y: 10, width: view.frame.width, height: view.frame.height - navbarHeight - 50 - 20), collectionViewLayout: layout)
         self.collectionView.delegate = self
         self.collectionView.dataSource = self
         self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         self.collectionView?.register(ViewerCell.self, forCellWithReuseIdentifier: ViewerCell.cellId)
         self.collectionView?.register(NumHiddenCell.self, forCellWithReuseIdentifier: NumHiddenCell.cellId)
-        self.collectionView.backgroundColor = UIColor.white
+        self.collectionView.backgroundColor = UIColor.clear
         view.addSubview(self.collectionView)
                 
     }
@@ -61,10 +85,21 @@ class ViewersController: UIViewController, UICollectionViewDataSource, UICollect
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
         navigationController?.view.setNeedsLayout()
         navigationController?.view.layoutIfNeeded()
-        self.collectionView?.refreshControl?.endRefreshing()
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = false
+        self.navigationController?.navigationBar.backgroundColor = UIColor.black
     }
     
     @objc private func doneSelected(){

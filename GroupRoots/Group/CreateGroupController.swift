@@ -171,7 +171,6 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         
         view.addSubview(stackView)
         stackView.anchor(top: self.plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 50, paddingLeft: 40, paddingRight: 40, height: 250)
-        
     }
     
     private func resetInputFields() {
@@ -231,7 +230,6 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
         
         if groupname != nil && groupname != "" {
             formatedGroupname = groupname!.replacingOccurrences(of: " ", with: "_-a-_").replacingOccurrences(of: "‘", with: "_-b-_").replacingOccurrences(of: "'", with: "_-b-_").replacingOccurrences(of: "’", with: "_-b-_")
-            print(formatedGroupname)
             if formatedGroupname.range(of: #"^[a-zA-Z0-9‘_ -]*$"#, options: .regularExpression) == nil {
                 let alert = UIAlertController(title: "Group name invalid", message: "Please enter a Group name with no symbols", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
@@ -254,10 +252,6 @@ class CreateGroupController: UIViewController, UINavigationControllerDelegate {
                 self.resetInputFields()
                 return
             }
-//            self.dismiss(animated: true, completion: {
-//                self.delegate?.shouldOpenGroup(groupId: groupId)
-//            })
-//            NotificationCenter.default.post(name: NSNotification.Name("createdGroup"), object: nil)
             NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
             NotificationCenter.default.post(name: NSNotification.Name.updateGroupsToPostTo, object: nil)
             Database.database().groupExists(groupId: groupId, completion: { (exists) in

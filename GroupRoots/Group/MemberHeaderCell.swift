@@ -284,7 +284,7 @@ class CreatePostHeaderCell: UICollectionViewCell {
     private let groupLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12)
-        label.text = "Post"
+        label.text = "Share"
         label.textAlignment = .center
         return label
     }()

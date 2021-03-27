@@ -16,9 +16,9 @@
 		7521D04A243463480028FC9C /* GroupSearchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521D049243463480028FC9C /* GroupSearchCell.swift */; };
 		7522E43A24A937F60013A351 /* LoadMoreFollowersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7522E43924A937F60013A351 /* LoadMoreFollowersCell.swift */; };
 		7522E43C24B07A520013A351 /* LoadMoreGroupFollowersCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7522E43B24B07A500013A351 /* LoadMoreGroupFollowersCell.swift */; };
-		752B5DB8250DEB8A00693A04 /* horiz.gif in Resources */ = {isa = PBXBuildFile; fileRef = 752B5DB7250DEB8A00693A04 /* horiz.gif */; };
 		752B5DBC250E074700693A04 /* vert.gif in Resources */ = {isa = PBXBuildFile; fileRef = 752B5DBB250E074700693A04 /* vert.gif */; };
 		752B5DBE250F1D1D00693A04 /* EmptyFeedUserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752B5DBD250F1D1D00693A04 /* EmptyFeedUserCell.swift */; };
+		754058C6260DBEF80004E334 /* horiz_inv.gif in Resources */ = {isa = PBXBuildFile; fileRef = 754058C5260DBEF80004E334 /* horiz_inv.gif */; };
 		754295C223DFFB6E00893EFD /* NotificationCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754295C123DFFB6E00893EFD /* NotificationCell.swift */; };
 		754295C423E162F600893EFD /* InviteSelectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 754295C323E162F600893EFD /* InviteSelectionController.swift */; };
 		754295C623E3E3AE00893EFD /* check.png in Resources */ = {isa = PBXBuildFile; fileRef = 754295C523E3E3AD00893EFD /* check.png */; };
@@ -213,9 +213,9 @@
 		7521D049243463480028FC9C /* GroupSearchCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSearchCell.swift; sourceTree = "<group>"; };
 		7522E43924A937F60013A351 /* LoadMoreFollowersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadMoreFollowersCell.swift; sourceTree = "<group>"; };
 		7522E43B24B07A500013A351 /* LoadMoreGroupFollowersCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadMoreGroupFollowersCell.swift; sourceTree = "<group>"; };
-		752B5DB7250DEB8A00693A04 /* horiz.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = horiz.gif; path = ../Desktop/horiz.gif; sourceTree = "<group>"; };
 		752B5DBB250E074700693A04 /* vert.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = vert.gif; path = ../Desktop/vert.gif; sourceTree = "<group>"; };
 		752B5DBD250F1D1D00693A04 /* EmptyFeedUserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyFeedUserCell.swift; sourceTree = "<group>"; };
+		754058C5260DBEF80004E334 /* horiz_inv.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = horiz_inv.gif; path = ../Desktop/horiz_inv.gif; sourceTree = "<group>"; };
 		754295C123DFFB6E00893EFD /* NotificationCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCell.swift; sourceTree = "<group>"; };
 		754295C323E162F600893EFD /* InviteSelectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteSelectionController.swift; sourceTree = "<group>"; };
 		754295C523E3E3AD00893EFD /* check.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = check.png; path = Assets.xcassets/check.png; sourceTree = "<group>"; };
@@ -582,8 +582,8 @@
 		AD2A2CA4205C88DE0023D5C8 = {
 			isa = PBXGroup;
 			children = (
+				754058C5260DBEF80004E334 /* horiz_inv.gif */,
 				752B5DBB250E074700693A04 /* vert.gif */,
-				752B5DB7250DEB8A00693A04 /* horiz.gif */,
 				75914803244592E600285546 /* GoogleService-Info.plist */,
 				AD2A2CAF205C88DE0023D5C8 /* GroupRoots */,
 				75677FF025F3701000C81180 /* GroupRootsClip */,
@@ -918,12 +918,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				7576D91F23D8382E0073E905 /* Logo3.png in Resources */,
+				754058C6260DBEF80004E334 /* horiz_inv.gif in Resources */,
 				754295C623E3E3AE00893EFD /* check.png in Resources */,
 				75914804244592E600285546 /* GoogleService-Info.plist in Resources */,
 				AD2A2CBB205C88DE0023D5C8 /* LaunchScreen.storyboard in Resources */,
 				752B5DBC250E074700693A04 /* vert.gif in Resources */,
 				AD2A2CB8205C88DE0023D5C8 /* Assets.xcassets in Resources */,
-				752B5DB8250DEB8A00693A04 /* horiz.gif in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -978,6 +978,7 @@
 				"${BUILT_PRODUCTS_DIR}/BSGridCollectionViewLayout/BSGridCollectionViewLayout.framework",
 				"${BUILT_PRODUCTS_DIR}/BSImagePicker/BSImagePicker.framework",
 				"${BUILT_PRODUCTS_DIR}/BSImageView/BSImageView.framework",
+				"${BUILT_PRODUCTS_DIR}/CenterTextLayer/CenterTextLayer.framework",
 				"${BUILT_PRODUCTS_DIR}/DGCollectionViewLeftAlignFlowLayout/DGCollectionViewLeftAlignFlowLayout.framework",
 				"${BUILT_PRODUCTS_DIR}/EasyPeasy/EasyPeasy.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMAppAuth/GTMAppAuth.framework",
@@ -1019,6 +1020,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/BSGridCollectionViewLayout.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/BSImagePicker.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/BSImageView.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CenterTextLayer.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DGCollectionViewLeftAlignFlowLayout.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/EasyPeasy.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMAppAuth.framework",
@@ -1273,7 +1275,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = GroupRootsClip/GroupRootsClip.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 36;
 				DEVELOPMENT_ASSET_PATHS = "\"GroupRootsClip/Preview Content\"";
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				ENABLE_PREVIEWS = YES;
@@ -1299,7 +1301,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = GroupRootsClip/GroupRootsClip.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 36;
 				DEVELOPMENT_ASSET_PATHS = "\"GroupRootsClip/Preview Content\"";
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				ENABLE_PREVIEWS = YES;
@@ -1518,7 +1520,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GroupRoots.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 36;
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				INFOPLIST_FILE = GroupRoots/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -1538,7 +1540,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GroupRoots.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 36;
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				INFOPLIST_FILE = GroupRoots/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

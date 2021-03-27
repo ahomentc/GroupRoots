@@ -85,7 +85,7 @@ class SignUpAfterPhoneController: UIViewController, UINavigationControllerDelega
         let button = UIButton(type: .system)
         button.setTitle("Next", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
-        button.layer.cornerRadius = 5
+        button.layer.cornerRadius = 20
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(handleNext), for: .touchUpInside)

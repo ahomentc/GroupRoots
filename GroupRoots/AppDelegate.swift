@@ -20,6 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDelegat
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         FirebaseApp.configure()
+//        Database.database().isPersistenceEnabled = true
         let pushManager = PushNotificationManager()
         pushManager.registerForPushNotifications()
         
@@ -58,6 +59,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UITabBarControllerDelegat
                         // format of open_post_<post_id>_<group_id>
                         let postIdAndGroupId = category!.replacingOccurrences(of: "open_post_", with: "")
                         mainTabBarController.postAndGroupToOpen = postIdAndGroupId
+//                        mainTabBarController.messageFromAppDelegate = postIdAndGroupId
+                    }
+                    else if category!.contains("open_message") {
+                        print("open post selected")
+                        // for viewed by notification
+                        // add a thing to open viewers directly too
+                        
+                        // opens a specific post
+                        // format of open_post_<post_id>_<group_id>
+                        let postIdAndGroupId = category!.replacingOccurrences(of: "open_message_", with: "")
+                        mainTabBarController.postAndGroupToOpenWithMessage = postIdAndGroupId
+                        
 //                        mainTabBarController.messageFromAppDelegate = postIdAndGroupId
                     }
                     else if category!.contains("open_group_member_requestors") {

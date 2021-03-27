@@ -15,9 +15,6 @@ import PhoneNumberKit
 import DGCollectionViewLeftAlignFlowLayout
 import NVActivityIndicatorView
 
-protocol InviteToGroupFromIntroControllerDelegate {
-    func shouldOpenGroup(groupId: String)
-}
 
 class InviteToGroupFromIntroController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, ContactCellDelegate, AddedUserCellDelegate {
     
@@ -31,9 +28,7 @@ class InviteToGroupFromIntroController: UIViewController, UICollectionViewDataSo
     
     var isPromoActive = false
     var school = ""
-    
-    var delegate: InviteToGroupFromIntroControllerDelegate?
-    
+        
     private lazy var contactsLabel: UILabel = {
         let label = UILabel()
         label.backgroundColor = UIColor(white: 0.9, alpha: 1)
@@ -180,8 +175,8 @@ class InviteToGroupFromIntroController: UIViewController, UICollectionViewDataSo
         self.view.insertSubview(addLabel, at: 5)
         addLabel.anchor(top: view.topAnchor, right: view.rightAnchor, paddingTop: 37, paddingRight: 25)
         
-        self.view.insertSubview(backLabel, at: 5)
-        backLabel.anchor(top: view.topAnchor, left: view.leftAnchor, paddingTop: 37, paddingLeft: 25)
+//        self.view.insertSubview(backLabel, at: 5)
+//        backLabel.anchor(top: view.topAnchor, left: view.leftAnchor, paddingTop: 37, paddingLeft: 25)
 
         let added_layout = DGCollectionViewLeftAlignFlowLayout()
         added_layout.scrollDirection = UICollectionView.ScrollDirection.vertical
@@ -273,12 +268,8 @@ class InviteToGroupFromIntroController: UIViewController, UICollectionViewDataSo
     }
     
     @objc private func inviteButtonClicked(){
-        guard let groupname = self.groupname else { return }
-        guard let bio = self.bio else { return }
-        guard let isPrivate = self.isPrivate else { return }
-        guard let selectedSchool = self.selectedSchool else { return }
-        
-        if contactsToInvite.count == 0 && users.count == 0 {
+        guard let group = group else { return }
+        if false && contactsToInvite.count == 0 && users.count == 0 { // skipping this for now
             let alert = UIAlertController(title: "", message: "Please add at least one member", preferredStyle: .alert)
             self.present(alert, animated: true, completion: nil)
             let when = DispatchTime.now() + 2
@@ -287,133 +278,103 @@ class InviteToGroupFromIntroController: UIViewController, UICollectionViewDataSo
             }
         }
         else {
-            self.activityIndicatorView.isHidden = false
-            activityIndicatorView.startAnimating()
+            let sync = DispatchGroup()
+            var alertsToPresent: [UIAlertController] = []
+            var skippedAddingFirstAlertToList = false
             
-            // create the group here
-            let create_group_sync = DispatchGroup()
-            create_group_sync.enter()
-            Database.database().createGroup(groupname: groupname, bio: bio, image: self.image, isPrivate: isPrivate, selectedSchool: selectedSchool) { (err, groupId) in
-                if err != nil {
-                    return
-                }
-                NotificationCenter.default.post(name: NSNotification.Name.updateGroupsToPostTo, object: nil)
-                Database.database().groupExists(groupId: groupId, completion: { (exists) in
-                    if exists {
-                        Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                            self.group = group
-                            create_group_sync.leave()
-                        })
-                    }
-                    else {
-                        self.activityIndicatorView.isHidden = true
+            for user in users {
+                sync.enter()
+                Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinInvitation, group: group) { (err) in
+                    if err != nil {
                         return
                     }
-                })
-            }
-        
-            // after the group is created, do the invitations
-            create_group_sync.notify(queue: .main) {
-                self.activityIndicatorView.isHidden = true
-                guard let group = self.group else { return }
-                let sync = DispatchGroup()
-                var alertsToPresent: [UIAlertController] = []
-                var skippedAddingFirstAlertToList = false
-                
-                for user in self.users {
-                    sync.enter()
-                    Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinInvitation, group: group) { (err) in
+                    Database.database().addUserToGroupInvited(withUID: user.uid, groupId: group.groupId) { (err) in
                         if err != nil {
                             return
                         }
-                        Database.database().addUserToGroupInvited(withUID: user.uid, groupId: group.groupId) { (err) in
-                            if err != nil {
-                                return
-                            }
-                            sync.leave()
-                        }
+                        sync.leave()
                     }
                 }
-                
-                for contact in self.contactsToInvite {
-                    sync.enter()
-                    var new_contact = contact
-                    if contact.phone_numbers.count == 1 {
-                        // create a new contact with the selected one
-                        new_contact = Contact(contact: contact.contact, selected_number: contact.phone_numbers.first!)
-                        Database.database().inviteContact(contact: new_contact, group: group) { (err) in
-                            if err != nil {
-                                return
-                            }
-                            sync.leave()
+            }
+            
+            for contact in contactsToInvite {
+                sync.enter()
+                var new_contact = contact
+                if contact.phone_numbers.count == 1 {
+                    // create a new contact with the selected one
+                    new_contact = Contact(contact: contact.contact, selected_number: contact.phone_numbers.first!)
+                    Database.database().inviteContact(contact: new_contact, group: group) { (err) in
+                        if err != nil {
+                            return
                         }
+                        sync.leave()
                     }
-                    else {
-                        let alert = UIAlertController(title: "Pick a number for " + contact.given_name + " " + contact.family_name, message: "", preferredStyle: .alert)
-                        
-                        let closure = { (index: Int) in
-                            { (action: UIAlertAction!) -> Void in
-                                let selected_phone = contact.phone_numbers[index]
-                                new_contact = Contact(contact: contact.contact, selected_number: selected_phone)
-                                Database.database().inviteContact(contact: new_contact, group: group) { (err) in
-                                    if err != nil {
-                                        // should probably check this in some other way than comparing the description
-                                        if err?.localizedDescription == "Phone number not valid" {
-                                            let err_alert = UIAlertController(title: "Phone number not valid", message: "Please select a valid number for " + contact.given_name + " " + contact.family_name, preferredStyle: .alert)
-                                            self.present(err_alert, animated: true, completion: nil)
-                                            let when = DispatchTime.now() + 3
-                                            DispatchQueue.main.asyncAfter(deadline: when){
-                                                err_alert.dismiss(animated: true, completion: nil)
-                                                return
-                                            }
+                }
+                else {
+                    let alert = UIAlertController(title: "Pick a number for " + contact.given_name + " " + contact.family_name, message: "", preferredStyle: .alert)
+                    
+                    let closure = { (index: Int) in
+                        { (action: UIAlertAction!) -> Void in
+                            let selected_phone = contact.phone_numbers[index]
+                            new_contact = Contact(contact: contact.contact, selected_number: selected_phone)
+                            Database.database().inviteContact(contact: new_contact, group: group) { (err) in
+                                if err != nil {
+                                    // should probably check this in some other way than comparing the description
+                                    if err?.localizedDescription == "Phone number not valid" {
+                                        let err_alert = UIAlertController(title: "Phone number not valid", message: "Please select a valid number for " + contact.given_name + " " + contact.family_name, preferredStyle: .alert)
+                                        self.present(err_alert, animated: true, completion: nil)
+                                        let when = DispatchTime.now() + 3
+                                        DispatchQueue.main.asyncAfter(deadline: when){
+                                            err_alert.dismiss(animated: true, completion: nil)
+                                            return
                                         }
                                     }
-                                    else {
-                                        if alertsToPresent.count > 0 {
-                                            self.present(alertsToPresent[0], animated: true)
-                                            alertsToPresent.removeFirst()
-                                        }
-                                        sync.leave()
+                                }
+                                else {
+                                    if alertsToPresent.count > 0 {
+                                        self.present(alertsToPresent[0], animated: true)
+                                        alertsToPresent.removeFirst()
                                     }
+                                    sync.leave()
                                 }
                             }
                         }
-                        
-                        let cancel_closure = { () in
-                           { (action: UIAlertAction!) -> Void in
-                                self.present(alertsToPresent[0], animated: true)
-                                alertsToPresent.removeFirst()
-                                sync.leave()
-                           }
-                        }
-                        
-                        for (i, number) in contact.phone_numbers.enumerated() {
-                            let action = UIAlertAction(title: number?.value.stringValue, style: .default, handler: closure(i))
-                            alert.addAction(action)
-                        }
-                        
-                        let cancel = UIAlertAction(title: "Cancel", style: .destructive, handler: cancel_closure())
-                        alert.addAction(cancel)
-                        if skippedAddingFirstAlertToList {
-                            alertsToPresent.append(alert)
-                        }
-                        else {
-                            skippedAddingFirstAlertToList = true
-                        }
-                        self.present(alert, animated: true)
                     }
-                }
-                
-                sync.notify(queue: .main) {
-                    if let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController {
-                        mainTabBarController.setupViewControllers()
-                        mainTabBarController.selectedIndex = 0
-                        self.dismiss(animated: true, completion: nil)
+                    
+                    let cancel_closure = { () in
+                       { (action: UIAlertAction!) -> Void in
+                            self.present(alertsToPresent[0], animated: true)
+                            alertsToPresent.removeFirst()
+                            sync.leave()
+                       }
                     }
-                    NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-                    NotificationCenter.default.post(name: NSNotification.Name("createdGroup"), object: nil)
-                    // also add a little message for when this closes saying something about invited
+                    
+                    for (i, number) in contact.phone_numbers.enumerated() {
+                        let action = UIAlertAction(title: number?.value.stringValue, style: .default, handler: closure(i))
+                        alert.addAction(action)
+                    }
+                    
+                    let cancel = UIAlertAction(title: "Cancel", style: .destructive, handler: cancel_closure())
+                    alert.addAction(cancel)
+                    if skippedAddingFirstAlertToList {
+                        alertsToPresent.append(alert)
+                    }
+                    else {
+                        skippedAddingFirstAlertToList = true
+                    }
+                    self.present(alert, animated: true)
                 }
+            }
+            
+            sync.notify(queue: .main) {
+                if let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController {
+                    mainTabBarController.setupViewControllers()
+                    mainTabBarController.selectedIndex = 0
+                    self.dismiss(animated: true, completion: nil)
+                }
+                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name("createdGroup"), object: nil)
+                // also add a little message for when this closes saying something about invited
             }
         }
     }

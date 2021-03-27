@@ -197,7 +197,10 @@ class CommentCell: UICollectionViewCell, UITextViewDelegate {
     
     @objc private func handleTap() {
         guard let user = comment?.user else { return }
-        delegate?.didTapUser(user: user)
+        if user.uid != "bot" {
+            delegate?.didTapUser(user: user)
+        }
+        
     }
     
     func textView(_ textView: UITextView, shouldInteractWith URL_Interacted: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {

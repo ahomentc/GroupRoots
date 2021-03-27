@@ -114,7 +114,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
         attributedText.append(NSMutableAttributedString(string: "Photos and videos from groups you\nfollow will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSMutableAttributedString(string: "When you follow someone, you'll see\nposts from their public groups.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
@@ -129,7 +128,6 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
         attributedText.append(NSMutableAttributedString(string: "Photos and videos from groups you\nfollow will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSMutableAttributedString(string: "When you follow someone, you'll see\nposts from their public groups.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
@@ -539,7 +537,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         self.view.addSubview(logoImageView)
         
         horizontalGifView.frame = CGRect(x: view.frame.width/2 - 101.25, y: UIScreen.main.bounds.height/3 - 45, width: 202.5, height: 360)
-        horizontalGifView.loadGif(name: "horiz")
+        horizontalGifView.loadGif(name: "horiz_inv")
         self.view.addSubview(horizontalGifView)
         
         verticalGifView.frame = CGRect(x: view.frame.width/2 - 101.25, y: UIScreen.main.bounds.height/3 - 10, width: 202.5, height: 300.15)
@@ -636,8 +634,13 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         
         configureNavigationBar()
         
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false, block: { timer in
-            self.loadingScreenView.isHidden = true
+        Timer.scheduledTimer(withTimeInterval: 1, repeats: false, block: { timer in
+            UIView.animate(withDuration: 0.5) {
+                self.loadingScreenView.alpha = 0
+            }
+            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false, block: { timer in
+                self.loadingScreenView.isHidden = true
+            })
         })
         
         PushNotificationManager().updatePushTokenIfNeeded()
@@ -1164,22 +1167,24 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
                 
                 // delete temp posts that weren't caught by the server and refresh
                 // can't do this cuz of permission
-//                let sync = DispatchGroup()
-//                for row in tempGroupPosts2D {
-//                    for post in row {
-//                        if post.isTempPost && post.creationDate.timeAgo() > 24 {
-//                            sync.enter()
-//                            Database.database().deleteGroupPost(groupId: post.group.groupId, postId: post.id) { (_) in
-//                                sync.leave()
-//                            }
-//                        }
-//                    }
-//                }
-//                sync.notify(queue: .main) {
-//                    self.handleRefresh()
-//                }
-                
-                
+                let sync = DispatchGroup()
+                var has_deleted = false
+                for row in tempGroupPosts2D {
+                    for post in row {
+                        if post.isTempPost && post.creationDate.timeAgo() > 24 {
+                            sync.enter()
+                            Database.database().deleteGroupPost(groupId: post.group.groupId, postId: post.id) { (_) in
+                                has_deleted = true
+                                sync.leave()
+                            }
+                        }
+                    }
+                }
+                sync.notify(queue: .main) {
+                    if has_deleted {
+                        self.handleRefresh()
+                    }
+                }
                 
                 DispatchQueue.main.async {
                     self.collectionView?.reloadData()
@@ -1729,10 +1734,24 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
     }
     
     @objc internal func handleShowCreateFirstPost() {
-        let tempPostCameraController = TempPostCameraController()
-        let navController = UINavigationController(rootViewController: tempPostCameraController)
-        navController.modalPresentationStyle = .overCurrentContext
-        self.present(navController, animated: true, completion: nil)
+//        let tempPostCameraController = TempPostCameraController()
+//        let navController = UINavigationController(rootViewController: tempPostCameraController)
+//        navController.modalPresentationStyle = .overCurrentContext
+//        self.present(navController, animated: true, completion: nil)
+        
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
+        
+        Database.database().numberOfGroupsForUser(withUID: currentLoggedInUserId, completion: { (groupsCount) in
+            if groupsCount > 0 {
+                Database.database().fetchFirstGroup(withUID: currentLoggedInUserId, completion: { (group) in
+                    let userDataDict:[String: Group] = ["group": group]
+                    NotificationCenter.default.post(name: NSNotification.Name("requestCameraWithGroup"), object: nil, userInfo: userDataDict)
+                }) { (_) in }
+            }
+            else {
+                NotificationCenter.default.post(name: NSNotification.Name("requestCamera"), object: nil)
+            }
+        })
     }
     
     @objc internal func handleFirstGo() {
@@ -1832,7 +1851,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { timer in
             self.animationsButton.isHidden = true
             self.verticalGifView.isHidden = true
-            self.animationsLabel.attributedText = NSMutableAttributedString(string: "Swipe left to see all of a group’s posts.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)])
+            self.animationsLabel.attributedText = NSMutableAttributedString(string: "Swipe right to see a group's older posts", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)])
         }
     }
     

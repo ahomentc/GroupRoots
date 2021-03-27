@@ -211,36 +211,50 @@ class MessageCell: UICollectionViewCell, UITextViewDelegate {
         let bubble_width = bubbleSize.width
         let bubble_height = bubbleSize.height
         self.bubble_height = bubble_height
-
+        
         let bezierPath = UIBezierPath()
-        bezierPath.move(to: CGPoint(x: 22, y: bubble_height))
-        bezierPath.addLine(to: CGPoint(x: bubble_width - 17, y: bubble_height))
-        bezierPath.addCurve(to: CGPoint(x: bubble_width, y: bubble_height - 17), controlPoint1: CGPoint(x: bubble_width - 7.61, y: bubble_height), controlPoint2: CGPoint(x: bubble_width, y: bubble_height - 7.61))
-        bezierPath.addLine(to: CGPoint(x: bubble_width, y: 17))
-        bezierPath.addCurve(to: CGPoint(x: bubble_width - 17, y: 0), controlPoint1: CGPoint(x: bubble_width, y: 7.61), controlPoint2: CGPoint(x: bubble_width - 7.61, y: 0))
-        bezierPath.addLine(to: CGPoint(x: 21, y: 0))
-        bezierPath.addCurve(to: CGPoint(x: 4, y: 17), controlPoint1: CGPoint(x: 11.61, y: 0), controlPoint2: CGPoint(x: 4, y: 7.61))
-        bezierPath.addLine(to: CGPoint(x: 4, y: bubble_height - 11))
-        bezierPath.addCurve(to: CGPoint(x: 0, y: bubble_height), controlPoint1: CGPoint(x: 4, y: bubble_height - 1), controlPoint2: CGPoint(x: 0, y: bubble_height))
-        bezierPath.addLine(to: CGPoint(x: -0.05, y: bubble_height - 0.01))
-        bezierPath.addCurve(to: CGPoint(x: 11.04, y: bubble_height - 4.04), controlPoint1: CGPoint(x: 4.07, y: bubble_height + 0.43), controlPoint2: CGPoint(x: 8.16, y: bubble_height - 1.06))
-        bezierPath.addCurve(to: CGPoint(x: 22, y: bubble_height), controlPoint1: CGPoint(x: 16, y: bubble_height), controlPoint2: CGPoint(x: 19, y: bubble_height))
-        bezierPath.close()
-
-        let outgoingMessageLayer = CAShapeLayer()
-        outgoingMessageLayer.path = bezierPath.cgPath
-        outgoingMessageLayer.fillColor = UIColor.init(white: 0.2, alpha: 1).cgColor
-        outgoingMessageLayer.zPosition = 14
-        if hasPrev {
-            outgoingMessageLayer.frame = CGRect(x: 50, y: 5, width: bubble_width, height: bubble_height)
+        if hasNext {
+            bezierPath.move(to: CGPoint(x: 21, y: bubble_height))
+            bezierPath.addLine(to: CGPoint(x: bubble_width - 17, y: bubble_height))
+            bezierPath.addCurve(to: CGPoint(x: bubble_width, y: bubble_height - 17), controlPoint1: CGPoint(x: bubble_width - 7.61, y: bubble_height), controlPoint2: CGPoint(x: bubble_width, y: bubble_height - 7.61))
+            bezierPath.addLine(to: CGPoint(x: bubble_width, y: 17))
+            bezierPath.addCurve(to: CGPoint(x: bubble_width - 17, y: 0), controlPoint1: CGPoint(x: bubble_width, y: 7.61), controlPoint2: CGPoint(x: bubble_width - 7.61, y: 0))
+            bezierPath.addLine(to: CGPoint(x: 21, y: 0))
+            bezierPath.addCurve(to: CGPoint(x: 4, y: 17), controlPoint1: CGPoint(x: 11.61, y: 0), controlPoint2: CGPoint(x: 4, y: 7.61))
+            bezierPath.addLine(to: CGPoint(x: 4, y: bubble_height - 17))
+            bezierPath.addCurve(to: CGPoint(x: 21, y: bubble_height), controlPoint1: CGPoint(x: 4, y: bubble_height - 7.61), controlPoint2: CGPoint(x: 11.61, y: bubble_height))
+            bezierPath.close()
         }
         else {
-            outgoingMessageLayer.frame = CGRect(x: 50, y: 35, width: bubble_width, height: bubble_height)
+            bezierPath.move(to: CGPoint(x: 22, y: bubble_height))
+            bezierPath.addLine(to: CGPoint(x: bubble_width - 17, y: bubble_height))
+            bezierPath.addCurve(to: CGPoint(x: bubble_width, y: bubble_height - 17), controlPoint1: CGPoint(x: bubble_width - 7.61, y: bubble_height), controlPoint2: CGPoint(x: bubble_width, y: bubble_height - 7.61))
+            bezierPath.addLine(to: CGPoint(x: bubble_width, y: 17))
+            bezierPath.addCurve(to: CGPoint(x: bubble_width - 17, y: 0), controlPoint1: CGPoint(x: bubble_width, y: 7.61), controlPoint2: CGPoint(x: bubble_width - 7.61, y: 0))
+            bezierPath.addLine(to: CGPoint(x: 21, y: 0))
+            bezierPath.addCurve(to: CGPoint(x: 4, y: 17), controlPoint1: CGPoint(x: 11.61, y: 0), controlPoint2: CGPoint(x: 4, y: 7.61))
+            bezierPath.addLine(to: CGPoint(x: 4, y: bubble_height - 11))
+            bezierPath.addCurve(to: CGPoint(x: 0, y: bubble_height), controlPoint1: CGPoint(x: 4, y: bubble_height - 1), controlPoint2: CGPoint(x: 0, y: bubble_height))
+            bezierPath.addLine(to: CGPoint(x: -0.05, y: bubble_height - 0.01))
+            bezierPath.addCurve(to: CGPoint(x: 11.04, y: bubble_height - 4.04), controlPoint1: CGPoint(x: 4.07, y: bubble_height + 0.43), controlPoint2: CGPoint(x: 8.16, y: bubble_height - 1.06))
+            bezierPath.addCurve(to: CGPoint(x: 22, y: bubble_height), controlPoint1: CGPoint(x: 16, y: bubble_height), controlPoint2: CGPoint(x: 19, y: bubble_height))
+            bezierPath.close()
         }
 
-        layer.insertSublayer(outgoingMessageLayer, at: 20)
+        let incomingMessageLayer = CAShapeLayer()
+        incomingMessageLayer.path = bezierPath.cgPath
+        incomingMessageLayer.fillColor = UIColor.init(white: 0.2, alpha: 1).cgColor
+        incomingMessageLayer.zPosition = 14
+        if hasPrev {
+            incomingMessageLayer.frame = CGRect(x: 50, y: 5, width: bubble_width, height: bubble_height)
+        }
+        else {
+            incomingMessageLayer.frame = CGRect(x: 50, y: 35, width: bubble_width, height: bubble_height)
+        }
+
+        layer.insertSublayer(incomingMessageLayer, at: 20)
         label.layer.zPosition = 15
-        layer.addSublayer(outgoingMessageLayer)
+        layer.addSublayer(incomingMessageLayer)
         
         
         if hasPrev {
@@ -252,7 +266,7 @@ class MessageCell: UICollectionViewCell, UITextViewDelegate {
         insertSubview(label, at: 21)
 //        insertSubview(label, at: 21)
         
-        addedLayers.append(outgoingMessageLayer)
+        addedLayers.append(incomingMessageLayer)
         addedViews.append(label)
     }
     
@@ -380,18 +394,23 @@ class MessageCell: UICollectionViewCell, UITextViewDelegate {
             }
         }
         
-        if let profileImageUrl = comment.user.profileImageUrl {
-            self.incomingProfileImageView.loadImage(urlString: profileImageUrl)
-//            self.outgoingProfileImageView.loadImage(urlString: profileImageUrl)
-        } else {
-            self.incomingProfileImageView.image = #imageLiteral(resourceName: "user")
-//            self.outgoingProfileImageView.image = #imageLiteral(resourceName: "user")
+        if comment.user.uid == "bot" {
+            incomingProfileImageView.image = #imageLiteral(resourceName: "bot_icon")
+        }
+        else {
+            if let profileImageUrl = comment.user.profileImageUrl {
+                self.incomingProfileImageView.loadImage(urlString: profileImageUrl)
+            } else {
+                self.incomingProfileImageView.image = #imageLiteral(resourceName: "user")
+            }
         }
     }
     
     @objc private func handleTap() {
         guard let user = comment?.user else { return }
-        delegate?.didTapUser(user: user)
+        if user.uid != "bot" {
+            delegate?.didTapUser(user: user)
+        }
     }
     
     func textView(_ textView: UITextView, shouldInteractWith URL_Interacted: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {

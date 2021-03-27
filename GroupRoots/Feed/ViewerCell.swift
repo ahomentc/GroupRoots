@@ -21,6 +21,7 @@ class ViewerCell: UICollectionViewCell {
     private let usernameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 14)
+        label.textColor = .white
         return label
     }()
     

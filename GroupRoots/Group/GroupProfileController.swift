@@ -147,6 +147,7 @@ class GroupProfileController: HomePostCellViewController, LargeImageViewControll
 
     private func configureAlertController() {
         guard let group = group else { return }
+        guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
         alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
@@ -163,6 +164,38 @@ class GroupProfileController: HomePostCellViewController, LargeImageViewControll
             }
         }
         alertController.addAction(edit_profile)
+        
+        
+        Database.database().isGroupMutedForUser(withUID: currentLoggedInUserId, groupId: group.groupId, completion: { (isMuted) in
+            if isMuted {
+                let unmute_group = UIAlertAction(title: "Unmute", style: .default) { (_) in
+                    do {
+                        Database.database().unmuteGroup(groupId: group.groupId){ (err) in
+                            if err != nil {
+                                return
+                            }
+                            self.configureAlertController()
+                        }
+                    }
+                }
+                self.alertController.addAction(unmute_group)
+            }
+            else {
+                let mute_group = UIAlertAction(title: "Mute", style: .default) { (_) in
+                    do {
+                        Database.database().muteGroup(groupId: group.groupId){ (err) in
+                            if err != nil {
+                                return
+                            }
+                            self.configureAlertController()
+                        }
+                    }
+                }
+                self.alertController.addAction(mute_group)
+            }
+        }) { (err) in
+            return
+        }
         
         Database.database().isGroupHiddenOnProfile(groupId: group.groupId, completion: { (isHidden) in
             if isHidden {

@@ -230,10 +230,10 @@ class CreateStickerController: UIViewController, UIGestureRecognizerDelegate, Sw
         closeButton.layer.zPosition = 20
         self.view.insertSubview(closeButton, at: 12)
         
-        doneDrawingButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 15, width: 40, height: 40)
+        doneDrawingButton.frame = CGRect(x: UIScreen.main.bounds.width - 60, y: 35, width: 40, height: 40)
         self.view.insertSubview(doneDrawingButton, at: 15)
         
-        undoDrawingButton.frame = CGRect(x: UIScreen.main.bounds.width - 125, y: 12, width: 50, height: 50)
+        undoDrawingButton.frame = CGRect(x: UIScreen.main.bounds.width - 125, y: 32, width: 50, height: 50)
         self.view.insertSubview(undoDrawingButton, at: 12)
         
         keepPhotoButton.frame = CGRect(x: UIScreen.main.bounds.width/2 - 150 - 7, y:  UIScreen.main.bounds.height/2-50, width: 150, height: 100)

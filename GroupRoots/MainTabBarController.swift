@@ -32,6 +32,7 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
     var groupMemberRequestorsToOpenFor: String = ""
     var groupSubscribeRequestorsToOpenFor: String = ""
     var postAndGroupToOpen: String = ""
+    var postAndGroupToOpenWithMessage: String = ""
     
     private let loadingScreenView: CustomImageView = {
         let iv = CustomImageView()
@@ -69,34 +70,33 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
         // check if the current version of the app is valid or needs to be updated
         // only run this if there is internet
         if Reachability.isConnectedToNetwork(){
-            Database.database().currentVersionIsValid(completion: { (is_valid) in
-                if is_valid {
-                    self.loadingScreenView.isHidden = true
-                    if Auth.auth().currentUser == nil {
-                        self.presentLoginController()
-                    } else {
-                        self.setupViewControllers()
-                        
-                        Database.database().openedApp(completion: { _ in })
-                        Database.database().groupRootsUserExists(withUID: Auth.auth().currentUser!.uid, completion: { (exists) in
-                            if exists {
-        //                        self.setupViewControllers()
-                            }
-                            else {
-                                do {
-                                    try Auth.auth().signOut()
-                                    let loginController = LoginPhoneController()
-                                    let navController = UINavigationController(rootViewController: loginController)
-                                    navController.modalPresentationStyle = .fullScreen
-                                    self.present(navController, animated: true, completion: nil)
-                                } catch let err {
-                                    print("Failed to sign out:", err)
-                                }
-                            }
-                        })
+            self.loadingScreenView.isHidden = true
+            if Auth.auth().currentUser == nil {
+                self.presentLoginController()
+            } else {
+                self.setupViewControllers()
+                
+                Database.database().openedApp(completion: { _ in })
+                Database.database().groupRootsUserExists(withUID: Auth.auth().currentUser!.uid, completion: { (exists) in
+                    if exists {
+//                        self.setupViewControllers()
                     }
-                }
-                else {
+                    else {
+                        do {
+                            try Auth.auth().signOut()
+                            let loginController = LoginPhoneController()
+                            let navController = UINavigationController(rootViewController: loginController)
+                            navController.modalPresentationStyle = .fullScreen
+                            self.present(navController, animated: true, completion: nil)
+                        } catch let err {
+                            print("Failed to sign out:", err)
+                        }
+                    }
+                })
+            }
+            
+            Database.database().currentVersionIsValid(completion: { (is_valid) in
+                if !is_valid {
                     // present force update screen
                     self.loadingScreenView.isHidden = true
                     self.presentForceUpdateController()
@@ -153,6 +153,7 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
         NotificationCenter.default.addObserver(self, selector: #selector(makeTabBarDisappear), name: NSNotification.Name(rawValue: "tabBarDisappear"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(makeNotificationIconRead), name: NSNotification.Name(rawValue: "notification_icon_read"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.requestCameraWithGroup(_:)), name: NSNotification.Name(rawValue: "requestCameraWithGroup"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(requestCamera), name: NSNotification.Name(rawValue: "requestCamera"), object: nil)
     }
     
     func setupViewControllers() {
@@ -273,6 +274,8 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
             })
         }
         else if self.postAndGroupToOpen != "" {
+            UIApplication.shared.applicationIconBadgeNumber = 0
+            
             let layout = UICollectionViewFlowLayout()
             layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
             layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
@@ -286,6 +289,29 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
                 let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
                 largeImageViewController.group = post.group
                 largeImageViewController.postToScrollToId = post.id
+                largeImageViewController.delegate = self
+                let navController = UINavigationController(rootViewController: largeImageViewController)
+                navController.modalPresentationStyle = .overCurrentContext
+                self.present(navController, animated: true, completion: nil)
+            })
+        }
+        else if self.postAndGroupToOpenWithMessage != "" {
+            UIApplication.shared.applicationIconBadgeNumber = 0
+            
+            let layout = UICollectionViewFlowLayout()
+            layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
+            layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+            layout.minimumLineSpacing = CGFloat(0)
+
+            let postIdAndGroupIdArr = self.postAndGroupToOpen.split(separator: "*")
+            let postId = String(postIdAndGroupIdArr[0])
+            let groupId = String(postIdAndGroupIdArr[1])
+
+            Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
+                let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
+                largeImageViewController.group = post.group
+                largeImageViewController.postToScrollToId = post.id
+                largeImageViewController.shouldOpenMessage = true
                 largeImageViewController.delegate = self
                 let navController = UINavigationController(rootViewController: largeImageViewController)
                 navController.modalPresentationStyle = .overCurrentContext
@@ -629,6 +655,14 @@ extension MainTabBarController: UITabBarControllerDelegate {
                 self.present(navController, animated: true, completion: nil)
             }
         }
+    }
+    
+    @objc private func requestCamera() {
+        let tempPostCameraController = TempPostCameraController()
+        
+        let navController = UINavigationController(rootViewController: tempPostCameraController)
+        navController.modalPresentationStyle = .overCurrentContext
+        self.present(navController, animated: true, completion: nil)
     }
 }
 

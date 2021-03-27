@@ -86,7 +86,7 @@ class IntroGroupStepController: UIViewController, UINavigationControllerDelegate
         let button = UIButton(type: .system)
         button.setTitle("Next", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
-        button.layer.cornerRadius = 5
+        button.layer.cornerRadius = 20
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(handleCreateGroup), for: .touchUpInside)
@@ -124,7 +124,7 @@ class IntroGroupStepController: UIViewController, UINavigationControllerDelegate
         let label = UILabel()
         label.textColor = UIColor.black
         label.layer.zPosition = 5
-        let attributedText = NSMutableAttributedString(string: "Create a group profile", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
+        let attributedText = NSMutableAttributedString(string: "Create a group", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
         label.attributedText = attributedText
         label.numberOfLines = 0
         label.textAlignment = .center
@@ -189,96 +189,18 @@ class IntroGroupStepController: UIViewController, UINavigationControllerDelegate
     }
     
     private func setupInputFields() {
-        
-        let storageRef = Storage.storage().reference()
-        let highSchoolsRef = storageRef.child("high_schools.json")
-        highSchoolsRef.downloadURL { url, error in
-            if let error = error {
-                print(error)
-            } else {
-                let hs_url = url!.absoluteString
-                if let url = URL(string: hs_url) {
-                   URLSession.shared.dataTask(with: url) { data, response, error in
-                      if let data = data {
-                          do {
-                            let json_string = String(data: data, encoding: .utf8)
-                            guard let data = json_string?.data(using: String.Encoding.utf8 ),
-                              let high_schools = try JSONSerialization.jsonObject(with: data, options: []) as? [String] else {
-                                fatalError()
-                                }
-                            DispatchQueue.main.async {
-                                self.linkSchools.filterStrings(high_schools)
-                            }
-                          } catch let error {
-                             print(error)
-                          }
-                       }
-                   }.resume()
-                }
-            }
-        }
-    
-        linkSchools.borderStyle = .none
-        linkSchools.theme.cellHeight = 50
-        linkSchools.comparisonOptions = [.caseInsensitive]
-        linkSchools.placeholder = "Search"
-        linkSchools.backgroundColor = .clear
-        linkSchools.startVisible = true
-        linkSchools.autocorrectionType = .no
-        linkSchools.textAlignment = .left
-        linkSchools.theme.bgColor = .white
-        linkSchools.theme.font = UIFont.systemFont(ofSize: 14)
-        linkSchools.itemSelectionHandler = { filteredResults, itemPosition in
-            // Just in case you need the item position
-            let item = filteredResults[itemPosition]
-            print("Item at position \(itemPosition): \(item.title)")
-
-            // Do whatever you want with the picked item
-            self.linkSchools.text = item.title
-            self.schoolSelected = true
-            self.linkSchools.resignFirstResponder()
-        }
-        
-        view.addSubview(schoolLabel)
-        schoolLabel.anchor(top: plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, paddingTop: 40, paddingLeft: 40)
-        
-        view.addSubview(linkSchools)
-        linkSchools.anchor(top: schoolLabel.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: -5, paddingLeft: 40, paddingRight: 40, height: 50)
-        
-        searchSchoolBottomBorder.backgroundColor = UIColor(white: 0, alpha: 0.2)
-        self.view.addSubview(searchSchoolBottomBorder)
-        searchSchoolBottomBorder.anchor(top: linkSchools.bottomAnchor, left: linkSchools.leftAnchor, right: linkSchools.rightAnchor, height: 0.5)
-        
         let radioButtonsStack = UIStackView(arrangedSubviews: [publicGroupButton, privateGroupButton])
         radioButtonsStack.distribution = .fillEqually
         radioButtonsStack.axis = .horizontal
         radioButtonsStack.spacing = 10
         
-        let stackViewSchool = UIStackView(arrangedSubviews: [groupnameTextField, bioTextField, radioButtonsStack, createGroupButton])
-        stackViewSchool.distribution = .fillEqually
-        stackViewSchool.axis = .vertical
-        stackViewSchool.spacing = 15
-        stackViewSchool.isHidden = false
+        let stackView = UIStackView(arrangedSubviews: [groupnameTextField, bioTextField, radioButtonsStack, createGroupButton])
+        stackView.distribution = .fillEqually
+        stackView.axis = .vertical
+        stackView.spacing = 20
         
-        view.addSubview(stackViewSchool)
-        stackViewSchool.anchor(top: linkSchools.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 25, paddingLeft: 40, paddingRight: 40, height: 230)
-        
-        radioButtonsStack.alpha = 0
-        stackViewSchool.alpha = 0
-        searchSchoolBottomBorder.alpha = 0
-        linkSchools.alpha = 0
-        schoolLabel.alpha = 0
-        plusPhotoButton.alpha = 0
-        groupProfileTitle.alpha = 0
-        UIView.animate(withDuration: 0.5) {
-            radioButtonsStack.alpha = 1
-            stackViewSchool.alpha = 1
-            self.searchSchoolBottomBorder.alpha = 1
-            self.linkSchools.alpha = 1
-            self.schoolLabel.alpha = 1
-            self.plusPhotoButton.alpha = 1
-            self.groupProfileTitle.alpha = 1
-        }
+        view.addSubview(stackView)
+        stackView.anchor(top: self.plusPhotoButton.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 50, paddingLeft: 40, paddingRight: 40, height: 250)
     }
     
     private func resetInputFields() {
@@ -348,43 +270,33 @@ class IntroGroupStepController: UIViewController, UINavigationControllerDelegate
         }
 
         let selectedSchool = linkSchools.text?.replacingOccurrences(of: " ", with: "_-a-_") ?? ""
-        if groupname != nil && groupname != "" {
-            Database.database().groupnameExists(groupname: groupname!, completion: { (exists) in
-                if exists {
-                    self.navigationItem.rightBarButtonItem?.isEnabled = true
+        Database.database().createGroup(groupname: formatedGroupname, bio: bio ?? "", image: profileImage, isPrivate: isPrivate, selectedSchool: selectedSchool) { (err, groupId) in
+            if err != nil {
+                self.navigationItem.rightBarButtonItem?.isEnabled = true
+                guard let error = err else { self.resetInputFields(); return }
+                if error.localizedDescription == "Groupname Taken" {
                     let alert = UIAlertController(title: "Group name Taken", message: "Please select a different Group name", preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                     self.present(alert, animated: true)
-                    self.resetInputFields()
-                    return
+                }
+                self.resetInputFields()
+                return
+            }
+            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name.updateGroupsToPostTo, object: nil)
+            Database.database().groupExists(groupId: groupId, completion: { (exists) in
+                if exists {
+                    Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                        let inviteToGroupController = InviteToGroupFromIntroController()
+                        inviteToGroupController.group = group
+//                        inviteToGroupController.delegate = self.delegateForInvite
+                        self.navigationController?.pushViewController(inviteToGroupController, animated: true)
+                    })
                 }
                 else {
-                    self.groupnameTextField.isUserInteractionEnabled = true
-                    self.bioTextField.isUserInteractionEnabled = true
-                    self.createGroupButton.isEnabled = true
-                    
-                    let inviteToGroupController = InviteToGroupFromIntroController()
-                    inviteToGroupController.groupname = formatedGroupname
-                    inviteToGroupController.bio = bio ?? ""
-                    inviteToGroupController.image = self.profileImage
-                    inviteToGroupController.isPrivate = self.isPrivate
-                    inviteToGroupController.selectedSchool = selectedSchool
-                    self.navigationController?.pushViewController(inviteToGroupController, animated: true)
+                    return
                 }
             })
-        }
-        else {
-            self.groupnameTextField.isUserInteractionEnabled = true
-            self.bioTextField.isUserInteractionEnabled = true
-            self.createGroupButton.isEnabled = true
-            
-            let inviteToGroupController = InviteToGroupFromIntroController()
-            inviteToGroupController.groupname = formatedGroupname
-            inviteToGroupController.bio = bio ?? ""
-            inviteToGroupController.image = self.profileImage
-            inviteToGroupController.isPrivate = self.isPrivate
-            inviteToGroupController.selectedSchool = selectedSchool
-            self.navigationController?.pushViewController(inviteToGroupController, animated: true)
         }
     }
     

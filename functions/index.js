@@ -1267,7 +1267,7 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 							    	message += ' just added you to group "' + groupname.split("_-a-_").join(" ").split("_-b-_").join("'") + '"'
 							    }
 
-							    message += " on GroupRoots! Download the app from: https://apps.apple.com/us/app/id1525863510"
+							    message += " on GroupRoots Beta! Download the app from: https://testflight.apple.com/join/5zCu1oG6"
 
 							    const textMessageFirst = {
 							        body: message,
@@ -1278,12 +1278,10 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 							        // body: "Share your best group moments collectively and see what groups your friends belong to",
 							        // share group moments to your followers through group profiles
 							        // body: "Share your group moments to your followers through group profiles. Show your followers what groups you belong to",
-							        body: "Share photos and videos to your groups, for your followers to see! Show your friends what groups you belong to",
+							        // body: "Share photos and videos to your groups, for your followers to see! Show your friends what groups you belong to",
+							        body: "Your group is a shared space for photos, videos, and memes. Add to its ongoing story… or post for 24 hours to keep it casual and fun.",
 							        to: number,  // Text to this number
 							        from: twilioNumber // From a valid Twilio number
-							    }
-							    if (school_for_group !== "") {
-							    	textMessageSecond.body = "See the friend groups in " + school_for_group + " and build up your group's profile together with photos and videos."
 							    }
 
 							    const stopMessage = {

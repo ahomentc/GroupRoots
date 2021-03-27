@@ -114,10 +114,15 @@ class SignUpPhoneController: UIViewController, UINavigationControllerDelegate {
     }
 
     @objc private func skip() {
-        guard let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController else { return }
-        mainTabBarController.setupViewControllers()
-        mainTabBarController.selectedIndex = 0
-        self.dismiss(animated: true, completion: nil)
+//        guard let mainTabBarController = UIApplication.shared.keyWindow?.rootViewController as? MainTabBarController else { return }
+//        mainTabBarController.setupViewControllers()
+//        mainTabBarController.selectedIndex = 0
+//        self.dismiss(animated: true, completion: nil)
+        
+        // take to IntroDescriptionController
+        let introDescriptionController = IntroDescriptionController()
+        introDescriptionController.isInvited = false
+        self.navigationController?.pushViewController(introDescriptionController, animated: false)
     }
     
     @objc private func handleSignUp() {

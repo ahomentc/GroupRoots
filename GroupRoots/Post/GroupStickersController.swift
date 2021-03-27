@@ -9,13 +9,14 @@
 import Foundation
 import UIKit
 import FirebaseDatabase
+import PanModal
 
 // should have two collection views
 // view 1 is My Stickers
 // view 2 is Group Stickers
 // there can be overlap as in my stickers can have stickers that are in groupstickers too
 
-class GroupStickersController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate {
+class GroupStickersController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, PanModalPresentable {
     
     override var prefersStatusBarHidden: Bool {
         return true
@@ -26,6 +27,18 @@ class GroupStickersController: UIViewController, UICollectionViewDataSource, UIC
     
     var isGroupStickers = true
     
+    var panScrollable: UIScrollView? {
+        return nil
+    }
+    
+    var shortFormHeight: PanModalHeight {
+//        return .maxHeight
+        return .contentHeight(550)
+    }
+
+    var longFormHeight: PanModalHeight {
+        return .maxHeightWithTopInset(100)
+    }
     
     private lazy var groupStickersButton: UIButton = {
         let button = UIButton()
@@ -120,7 +133,8 @@ class GroupStickersController: UIViewController, UICollectionViewDataSource, UIC
         layout.itemSize = CGSize(width: (view.frame.width - 2) / 3, height: (view.frame.width - 2) / 3 )
         layout.minimumLineSpacing = CGFloat(0)
 
-        collectionView = UICollectionView(frame: CGRect(x: 0, y: 160, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 200), collectionViewLayout: layout)
+        let navbarHeight = self.navigationController?.navigationBar.frame.size.height ?? 0
+        collectionView = UICollectionView(frame: CGRect(x: 0, y: 145, width: UIScreen.main.bounds.width, height: (550 - 20 - navbarHeight) - 145), collectionViewLayout: layout)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
@@ -130,10 +144,10 @@ class GroupStickersController: UIViewController, UICollectionViewDataSource, UIC
         collectionView?.keyboardDismissMode = .onDrag
         self.view.insertSubview(collectionView, at: 5)
         
-        groupStickersButton.frame = CGRect(x: UIScreen.main.bounds.width/2 - 125, y: 5, width: 120, height: 40)
+        groupStickersButton.frame = CGRect(x: UIScreen.main.bounds.width/2 - 125, y: 10, width: 120, height: 40)
         self.view.insertSubview(groupStickersButton, at: 10)
 
-        myStickersButton.frame = CGRect(x: UIScreen.main.bounds.width/2 + 5, y: 5, width: 120, height: 40)
+        myStickersButton.frame = CGRect(x: UIScreen.main.bounds.width/2 + 5, y: 10, width: 120, height: 40)
         self.view.insertSubview(myStickersButton, at: 10)
         
         self.view.addSubview(createStickerButton)

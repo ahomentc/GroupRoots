@@ -18,6 +18,10 @@ import LocationPicker
 import MapKit
 import FirebaseDatabase
 import NVActivityIndicatorView
+import AVKit
+import MobileCoreServices
+import CenterTextLayer
+
 
 class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UITextViewDelegate, ModifyTextViewDelegate, UIColorPickerViewControllerDelegate, UIFontPickerViewControllerDelegate, CaptionTextDelegate {
     
@@ -29,10 +33,30 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         didSet {
             guard let videoUrl = videoUrl else { return }
             self.setVideoDimensions()
+            self.setOverlaySize(fromVideoAt: videoUrl)
             self.player.url = videoUrl
             self.player.playFromBeginning()
         }
     }
+    
+    var notFromCamera: Bool?
+    
+//    var videoUrl: URL? {
+//        didSet {
+//            guard let videoUrl = videoUrl else { return }
+//            print("1")
+//            self.makeVideo(fromVideoAt: videoUrl, forName: "Stefan") { exportedURL in
+//              guard let exportedURL = exportedURL else {
+//                return
+//              }
+//                self.setVideoDimensions()
+//                self.player.url = exportedURL
+//                self.player.playFromBeginning()
+//            }
+//        }
+//    }
+    
+    
     
     var isTempPost = true
 
@@ -40,6 +64,8 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
     
     var suggestedLocation: CLLocation?
     var pickedLocation: PostLocation?
+    
+    let overlayLayer = CALayer()
     
     var selectedGroup: Group? {
         didSet {
@@ -107,7 +133,20 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         label.layer.shadowOffset = CGSize(width: 0, height: 1.0)
         label.layer.shadowOpacity = 0.2
         label.layer.shadowRadius = 2.0
+        
+        label.layer.zPosition = 22
         return label
+    }()
+    
+    let trashIcon: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "trash_icon"), for: .normal)
+        button.backgroundColor = .clear
+        button.isUserInteractionEnabled = false
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 21
+        button.alpha = 0
+        return button
     }()
     
     let closeButton: UIButton = {
@@ -159,6 +198,7 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         button.layer.shadowOffset = CGSize(width: 0, height: 1.0)
         button.layer.shadowOpacity = 0.2
         button.layer.shadowRadius = 2.0
+        button.layer.zPosition = 22
         return button
     }()
     
@@ -286,7 +326,7 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
     }()
     
     let activityIndicatorView: NVActivityIndicatorView = {
-        let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width - 30, y: UIScreen.main.bounds.height - 30, width: 20, height: 20), type: NVActivityIndicatorType.circleStrokeSpin)
+        let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width - 40, y: UIScreen.main.bounds.height - 40, width: 20, height: 20), type: NVActivityIndicatorType.circleStrokeSpin)
         activityIndicatorView.layer.backgroundColor = UIColor.clear.cgColor
         activityIndicatorView.layer.shadowColor = UIColor.black.cgColor
         activityIndicatorView.layer.shadowOffset = CGSize(width: 0, height: 1.0)
@@ -317,15 +357,24 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
     
     var textViews = [UITextView]()
     var activeTextView = UITextView()
-    
+    var locationViews = [UILabel]()
+        
     override func viewWillAppear(_ animated: Bool) {
 //        self.nextButton.isHidden = false
 //        self.postButton.isHidden = true
-        self.textButton.isHidden = false
+//        self.textButton.isHidden = false
 //        self.hourglassButton.isHidden = true
         self.closeButton.isHidden = false
         self.upperCoverView.isHidden = false
         self.coverView.isHidden = false
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        self.player.stop()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        self.player.stop()
     }
 
     override func viewDidLoad() {
@@ -376,6 +425,9 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         locationButton.frame = CGRect(x: UIScreen.main.bounds.width - 67, y: 130, width: 60, height: 60)
         self.view.insertSubview(locationButton, at: 12)
         
+        trashIcon.frame = CGRect(x: UIScreen.main.bounds.width/2 - 25, y: UIScreen.main.bounds.height - 70, width: 50, height: 50)
+        self.view.insertSubview(trashIcon, at: 12)
+        
         self.view.addSubview(selectedGroupLabel)
         self.selectedGroupLabel.anchor(top: self.postButton.topAnchor, left: self.hourglassButton.rightAnchor, bottom: self.postButton.bottomAnchor, right: self.postButton.leftAnchor, paddingLeft: 10, paddingRight: 20)
         
@@ -387,7 +439,7 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         
         self.view.insertSubview(activityIndicatorView, at: 20)
 
-        sharingLabel.frame = CGRect(x: UIScreen.main.bounds.width - 135, y: UIScreen.main.bounds.height - 30, width: 90, height: 30)
+        sharingLabel.frame = CGRect(x: UIScreen.main.bounds.width - 145, y: UIScreen.main.bounds.height - 30, width: 90, height: 30)
         self.view.insertSubview(sharingLabel, at: 20)
         
         coverView.heightAnchor.constraint(equalToConstant: 250).isActive = true
@@ -422,6 +474,12 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         
         self.captionTextView.caption_delegate = self
         self.view.insertSubview(captionTextView, at: 15)
+        
+        if notFromCamera != nil && notFromCamera! == true {
+            locationButton.isHidden = true
+            textButton.isHidden = true
+            captionButton.frame = CGRect(x: UIScreen.main.bounds.width - 55, y: 15, width: 35, height: 35)
+        }
     }
     
     @objc func panHandler(gestureRecognizer: UIPanGestureRecognizer){
@@ -429,6 +487,74 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
             let translation = gestureRecognizer.translation(in: self.view)
             gestureRecognizer.view!.center = CGPoint(x: gestureRecognizer.view!.center.x + translation.x, y: gestureRecognizer.view!.center.y + translation.y)
             gestureRecognizer.setTranslation(CGPoint.zero, in: self.view)
+            
+            let newX = gestureRecognizer.location(in: view).x
+            let newY = gestureRecognizer.location(in: view).y
+            
+            let trashX = self.trashIcon.center.x
+            let trashY = self.trashIcon.center.y
+            
+            self.trashIcon.alpha = 0.8
+            
+            let distance = (newX - trashX) * (newX - trashX) + (newY - trashY) * (newY - trashY)
+            if distance < 3000 {
+                gestureRecognizer.view?.alpha = 0.7
+            }
+            else {
+                gestureRecognizer.view?.alpha = 1
+            }
+            
+            self.nextButton.isHidden = true
+            self.postButton.isHidden = true
+            self.textButton.isHidden = true
+            self.hourglassButton.isHidden = true
+            self.closeButton.isHidden = true
+            self.locationButton.isHidden = true
+            self.selectedGroupLabel.isHidden = true
+            self.captionButton.isHidden = true
+        }
+        if gestureRecognizer.state == .ended {
+            self.trashIcon.alpha = 0
+            gestureRecognizer.view?.alpha = 1
+            
+            let translation = gestureRecognizer.translation(in: self.view)
+            let newX = gestureRecognizer.location(in: view).x
+            let newY = gestureRecognizer.location(in: view).y
+            
+            let trashX = self.trashIcon.center.x
+            let trashY = self.trashIcon.center.y
+            
+            let distance = (newX - trashX) * (newX - trashX) + (newY - trashY) * (newY - trashY)
+            if distance < 3000 {
+                gestureRecognizer.view?.removeFromSuperview()
+                gestureRecognizer.view?.tag = -1 // set tag so we know what which views to remove
+                
+                // if is the location label:
+                if gestureRecognizer.view is UILabel {
+                    let locationLabel = gestureRecognizer.view as! UILabel
+                    if locationLabel.tag == 12 { // check to see if it's actually locationLabel
+                        // remove the location
+                        self.didEmtpyLocation()
+                    }
+                }
+            }
+            
+            if self.selectedGroup == nil {
+                self.nextButton.isHidden = false
+                self.postButton.isHidden = true
+            }
+            else {
+                self.postButton.isHidden = false
+                self.nextButton.isHidden = true
+                self.selectedGroupLabel.isHidden = false
+                self.hourglassButton.isHidden = false
+            }
+            self.textButton.isHidden = false
+            self.closeButton.isHidden = false
+            self.locationButton.isHidden = false
+            self.upperCoverView.isHidden = false
+            self.coverView.isHidden = false
+            self.captionButton.isHidden = false
         }
     }
     
@@ -676,6 +802,50 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         return true
     }
     
+    @objc private func addLocationSticker(location: String) {
+        for view in self.locationViews {
+            view.removeFromSuperview()
+            view.tag = -1
+        }
+        
+        let width = 12 * location.count + 15
+        
+        let label = UILabel(frame: CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-75, width: CGFloat(width), height: 50))
+        label.font = UIFont.boldSystemFont(ofSize: 22)
+        label.textColor = .white
+        label.isUserInteractionEnabled = true
+        label.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
+        label.textAlignment = .center
+        label.text = location
+        label.layer.cornerRadius = 10
+        label.clipsToBounds = true
+        label.layer.zPosition = 10
+        label.tag = 12
+        label.alpha = 0
+        
+        Timer.scheduledTimer(withTimeInterval: 0.6, repeats: false) { timer in
+            UIView.animate(withDuration: 0.5) {
+                label.alpha = 1
+            }
+        }
+        
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panHandler))
+        panGesture.delegate = self
+        label.addGestureRecognizer(panGesture)
+        
+//        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(pinchHandler))
+//        pinchGesture.delegate = self
+//        label.addGestureRecognizer(pinchGesture)
+//
+//        let rotateGesture = UIRotationGestureRecognizer(target: self, action: #selector(rotateHandler))
+//        rotateGesture.delegate = self
+//        label.addGestureRecognizer(rotateGesture)
+        
+        self.view.insertSubview(label, at: 10)
+        
+        self.locationViews.append(label)
+    }
+    
     var first = true
     @objc private func addText() {
         let textView = UITextView(frame: CGRect(x: UIScreen.main.bounds.width/2-150, y: UIScreen.main.bounds.height/2-75, width: 300, height: 100))
@@ -689,31 +859,27 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         textView.delegate = self
         textView.autocorrectionType = .no
         textView.textContainer.maximumNumberOfLines = 3;
-//        textView.textContainer.lineBreakMode = NSLineBreakByTruncatingTail;
         
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panHandler))
         panGesture.delegate = self
         textView.addGestureRecognizer(panGesture)
         
-        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(pinchHandler))
-        pinchGesture.delegate = self
-        textView.addGestureRecognizer(pinchGesture)
-        
-        let rotateGesture = UIRotationGestureRecognizer(target: self, action: #selector(rotateHandler))
-        rotateGesture.delegate = self
-        textView.addGestureRecognizer(rotateGesture)
+//        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(pinchHandler))
+//        pinchGesture.delegate = self
+//        textView.addGestureRecognizer(pinchGesture)
+
+//        let rotateGesture = UIRotationGestureRecognizer(target: self, action: #selector(rotateHandler))
+//        rotateGesture.delegate = self
+//        textView.addGestureRecognizer(rotateGesture)
         
         self.view.insertSubview(textView, at: 10)
-//        textView.easy.layout(Left(10), Right(10), Top(200)) // this makes multi line work but weird behavior
         textView.centerTextVertically()
         
         self.textViews.append(textView)
         let modifyTextView = ModifyTextView(frame: CGRect(x: 0, y: 0, width: 10, height: 70))
         modifyTextView.delegate = self
         textView.inputAccessoryView = modifyTextView
-                
-//        UITextView.appearance().tintColor = UIColor.white
-        
+                        
         textView.becomeFirstResponder()
     }
     
@@ -852,6 +1018,7 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
                 self.didFillLocation()
             }
             self.pickedLocation = PostLocation(name: location?.name, longitude: "\(location?.coordinate.longitude ?? 0)", latitude: "\(location?.coordinate.latitude ?? 0)", address: location?.address)
+            self.addLocationSticker(location: self.pickedLocation?.name ?? "")
         }
         
         let navController = UINavigationController(rootViewController: locationPicker)
@@ -948,13 +1115,101 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         }
     }
     
+    func scale(from transform: CGAffineTransform) -> Double {
+        return sqrt(Double(transform.a * transform.a + transform.c * transform.c));
+    }
+    
     @objc private func handleShare() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         guard let selectedGroup = selectedGroup else { return }
         guard let videoUrl = videoUrl else { return }
         
-//        self.player.pause()
+        textViews.removeAll { $0.tag == -1 }
+        locationViews.removeAll { $0.tag == -1 }
+
+        for view in textViews {
+            var scaledBy = CGFloat(scale(from: view.transform))
+            let ratio = self.overlayLayer.frame.width / UIScreen.main.bounds.width
+
+            let textLayer = CenterTextLayer()
+            
+            var scaleTranslation = scaledBy
+            if scaledBy > 1 {
+                scaleTranslation = -1 * scaledBy
+            }
+//            textLayer.frame = CGRect(x: view.frame.origin.x * ratio * scaleTranslation, y: self.overlayLayer.frame.height - view.frame.origin.y * ratio - ratio * 100, width: ratio * 300, height: ratio * 100)
+            textLayer.frame = CGRect(x: view.frame.origin.x * ratio, y: self.overlayLayer.frame.height - view.frame.origin.y * ratio - ratio * 100, width: ratio * 300, height: ratio * 110)
+            textLayer.string = view.text
+            textLayer.fontSize = view.font!.pointSize * ratio
+            textLayer.font = view.font
+            textLayer.isWrapped = true
+            textLayer.foregroundColor = view.textColor?.cgColor
+            textLayer.shouldRasterize = true
+            textLayer.rasterizationScale = UIScreen.main.scale
+            textLayer.backgroundColor = view.backgroundColor?.cgColor
+            
+            if view.textAlignment == .center {
+                textLayer.alignmentMode = .center
+            }
+            else if view.textAlignment == .left {
+                textLayer.alignmentMode = .left
+            }
+            else if view.textAlignment == .right {
+                textLayer.alignmentMode = .right
+            }
+            
+            textLayer.transform = CATransform3DMakeScale(CGFloat(scaledBy), CGFloat(scaledBy), 1);
+
+            let radians = atan2(view.transform.b, view.transform.a)
+            textLayer.transform = CATransform3DMakeRotation(-radians, 0.0, 0.0, 1.0)
+            
+            overlayLayer.addSublayer(textLayer)
+        }
         
+        for view in locationViews {
+            var scaledBy = CGFloat(scale(from: view.transform))
+            let ratio = self.overlayLayer.frame.width / UIScreen.main.bounds.width
+
+            let textLayer = CenterTextLayer()
+            
+            var scaleTranslation = scaledBy
+            if scaledBy > 1 {
+                scaleTranslation = -1 * scaledBy
+            }
+            
+            if view.text == nil {
+                return
+            }
+            
+            let variable_width = 12 * view.text!.count + 15
+            textLayer.frame = CGRect(x: view.frame.origin.x * ratio, y: self.overlayLayer.frame.height - view.frame.origin.y * ratio - ratio * 50, width: ratio * CGFloat(variable_width), height: ratio * 50)
+            textLayer.string = view.text
+            textLayer.fontSize = view.font!.pointSize * ratio
+            textLayer.font = view.font
+            textLayer.isWrapped = true
+            textLayer.foregroundColor = view.textColor?.cgColor
+            textLayer.shouldRasterize = true
+            textLayer.cornerRadius = 20
+            textLayer.rasterizationScale = UIScreen.main.scale
+            textLayer.backgroundColor = view.backgroundColor?.cgColor
+            
+            if view.textAlignment == .center {
+                textLayer.alignmentMode = .center
+            }
+            else if view.textAlignment == .left {
+                textLayer.alignmentMode = .left
+            }
+            else if view.textAlignment == .right {
+                textLayer.alignmentMode = .right
+            }
+            
+            textLayer.transform = CATransform3DMakeScale(CGFloat(scaledBy), CGFloat(scaledBy), 1);
+
+            let radians = atan2(view.transform.b, view.transform.a)
+            textLayer.transform = CATransform3DMakeRotation(-radians, 0.0, 0.0, 1.0)
+            
+            overlayLayer.addSublayer(textLayer)
+        }
         self.postButton.isHidden = true
         
         self.nextButton.isHidden = true
@@ -969,61 +1224,284 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         self.coverView.isHidden = true
         self.captionButton.isHidden = true
         
-        activityIndicatorView.isHidden = false
-        activityIndicatorView.color = .white
-        activityIndicatorView.startAnimating()
-        sharingLabel.isHidden = false
-
-        var postLocation = ""
-        do {
-            let encoder = JSONEncoder()
-            let data = try encoder.encode(self.pickedLocation)
-            postLocation = (String(data: data, encoding: .utf8) ?? "").toBase64()
-        }
-        catch {}
-
-        Database.database().createGroupPost(withImage: imageFromVideo(url: videoUrl, at: 0), withVideo: videoUrl, caption: self.captionTextView.text ?? "", groupId: selectedGroup.groupId, location: postLocation, isTempPost: isTempPost, completion: { (postId) in
-            if postId == "" {
-                self.navigationItem.rightBarButtonItem?.isEnabled = true
-
-                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-                self.dismiss(animated: true, completion: {
-                    self.player.pause()
-                })
-                return
+        self.activityIndicatorView.isHidden = false
+        self.activityIndicatorView.color = .white
+        self.activityIndicatorView.startAnimating()
+        self.sharingLabel.isHidden = false
+        
+        self.makeVideo(fromVideoAt: videoUrl) { exportedURL in
+          guard let exportedURL = exportedURL else {
+            return
+          }
+//            This is to test
+//            self.setVideoDimensions()
+//            self.player.url = exportedURL
+//            self.player.playFromBeginning()
+            
+            var postLocation = ""
+            do {
+                let encoder = JSONEncoder()
+                let data = try encoder.encode(self.pickedLocation)
+                postLocation = (String(data: data, encoding: .utf8) ?? "").toBase64()
             }
-            Database.database().userPosted(completion: { _ in })
-            Database.database().groupExists(groupId: selectedGroup.groupId, completion: { (exists) in
-                if exists {
-                    Database.database().fetchGroupPost(groupId: selectedGroup.groupId, postId: postId, completion: { (post) in
-                        // send the notification each each user in the group
-                        Database.database().fetchGroupMembers(groupId: selectedGroup.groupId, completion: { (members) in
-                            members.forEach({ (member) in
-                                if member.uid != currentLoggedInUserId{
-                                    Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: selectedGroup, groupPost: post) { (err) in
-                                        if err != nil {
-                                            return
-                                        }
-                                    }
-                                }
-                            })
-                        }) { (_) in}
+            catch {}
+
+            Database.database().createGroupPost(withImage: self.imageFromVideo(url: exportedURL, at: 0), withVideo: exportedURL, caption: self.captionTextView.text ?? "", groupId: selectedGroup.groupId, location: postLocation, isTempPost: self.isTempPost, completion: { (postId) in
+                if postId == "" {
+                    self.navigationItem.rightBarButtonItem?.isEnabled = true
+
+                    NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                    NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+                    self.dismiss(animated: true, completion: {
+                        self.player.pause()
                     })
-                }
-                else {
                     return
                 }
+                Database.database().userPosted(completion: { _ in })
+                Database.database().groupExists(groupId: selectedGroup.groupId, completion: { (exists) in
+                    if exists {
+                        Database.database().fetchGroupPost(groupId: selectedGroup.groupId, postId: postId, completion: { (post) in
+                            // send the notification each each user in the group
+                            Database.database().fetchGroupMembers(groupId: selectedGroup.groupId, completion: { (members) in
+                                members.forEach({ (member) in
+                                    if member.uid != currentLoggedInUserId{
+                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: selectedGroup, groupPost: post) { (err) in
+                                            if err != nil {
+                                                return
+                                            }
+                                        }
+                                    }
+                                })
+                            }) { (_) in}
+                        })
+                    }
+                    else {
+                        return
+                    }
+                })
+                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name("updatedUser"), object: nil)
+                self.dismiss(animated: true, completion: {
+                    self.player.stop()
+                })
             })
-            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-            NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-            NotificationCenter.default.post(name: NSNotification.Name("updatedUser"), object: nil)
-            self.dismiss(animated: true, completion: {
-                self.player.stop()
-            })
-        })
+        }
     }
     
+    // -------------------------------------------------------
+    // MARK: VIDEO EDITOR
+    
+    func setOverlaySize(fromVideoAt videoURL: URL){
+        let asset = AVURLAsset(url: videoURL)
+        guard let assetTrack = asset.tracks(withMediaType: .video).first else { return }
+        let videoInfo = orientation(from: assetTrack.preferredTransform)
+        
+        let videoSize: CGSize
+        if videoInfo.isPortrait {
+          videoSize = CGSize(
+            width: assetTrack.naturalSize.height,
+            height: assetTrack.naturalSize.width)
+        } else {
+          videoSize = assetTrack.naturalSize
+        }
+        
+        self.overlayLayer.frame = CGRect(origin: .zero, size: videoSize)
+    }
+    
+    func makeVideo(fromVideoAt videoURL: URL, onComplete: @escaping (URL?) -> Void) {
+      let asset = AVURLAsset(url: videoURL)
+      let composition = AVMutableComposition()
+      
+      guard
+        let compositionTrack = composition.addMutableTrack(
+          withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
+        let assetTrack = asset.tracks(withMediaType: .video).first
+        else {
+          print("Something is wrong with the asset.")
+          onComplete(nil)
+          return
+      }
+      
+      do {
+        let timeRange = CMTimeRange(start: .zero, duration: asset.duration)
+        try compositionTrack.insertTimeRange(timeRange, of: assetTrack, at: .zero)
+        
+        if let audioAssetTrack = asset.tracks(withMediaType: .audio).first,
+          let compositionAudioTrack = composition.addMutableTrack(
+            withMediaType: .audio,
+            preferredTrackID: kCMPersistentTrackID_Invalid) {
+          try compositionAudioTrack.insertTimeRange(
+            timeRange,
+            of: audioAssetTrack,
+            at: .zero)
+        }
+      } catch {
+        print(error)
+        onComplete(nil)
+        return
+      }
+      
+        compositionTrack.preferredTransform = assetTrack.preferredTransform
+        let videoInfo = orientation(from: assetTrack.preferredTransform)
+      
+        let videoSize: CGSize
+            if videoInfo.isPortrait {
+                videoSize = CGSize(
+                    width: assetTrack.naturalSize.height,
+                    height: assetTrack.naturalSize.width
+                )
+            } else {
+                videoSize = assetTrack.naturalSize
+        }
+      
+        
+        let backgroundLayer = CALayer()
+        backgroundLayer.frame = CGRect(origin: .zero, size: videoSize)
+        let videoLayer = CALayer()
+        videoLayer.frame = CGRect(origin: .zero, size: videoSize)
+        overlayLayer.frame = CGRect(origin: CGPoint(x: 0, y: 0), size: videoSize)
+        videoLayer.frame = CGRect(origin: CGPoint(x: 0, y: 0), size: videoSize)
+        
+      
+      let outputLayer = CALayer()
+      outputLayer.frame = CGRect(origin: .zero, size: videoSize)
+//      outputLayer.addSublayer(backgroundLayer)
+      outputLayer.addSublayer(videoLayer)
+      outputLayer.addSublayer(overlayLayer)
+        
+      let videoComposition = AVMutableVideoComposition()
+      videoComposition.renderSize = videoSize
+      videoComposition.frameDuration = CMTime(value: 1, timescale: 30)
+        videoComposition.renderScale = 1.0
+      videoComposition.animationTool = AVVideoCompositionCoreAnimationTool(
+        postProcessingAsVideoLayer: videoLayer,
+        in: outputLayer)
+      
+      let instruction = AVMutableVideoCompositionInstruction()
+      instruction.timeRange = CMTimeRange(
+        start: .zero,
+        duration: composition.duration)
+      videoComposition.instructions = [instruction]
+      let layerInstruction = compositionLayerInstruction(
+        for: compositionTrack,
+        assetTrack: assetTrack)
+      instruction.layerInstructions = [layerInstruction]
+      
+      guard let export = AVAssetExportSession(
+        asset: composition,
+        presetName: AVAssetExportPresetHighestQuality)
+        else {
+          print("Cannot create export session.")
+          onComplete(nil)
+          return
+      }
+      
+      let videoName = UUID().uuidString
+      let exportURL = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appendingPathComponent(videoName)
+        .appendingPathExtension("mov")
+      
+      export.videoComposition = videoComposition
+      export.outputFileType = .mov
+      export.outputURL = exportURL
+      
+      export.exportAsynchronously {
+        DispatchQueue.main.async {
+          switch export.status {
+          case .completed:
+            onComplete(exportURL)
+          default:
+            print("Something went wrong during export.")
+            print(export.error ?? "unknown error")
+            onComplete(nil)
+            break
+          }
+        }
+      }
+    }
+    
+    private func addImage(to layer: CALayer, videoSize: CGSize) {
+      let image = #imageLiteral(resourceName: "arrow_left")
+      let imageLayer = CALayer()
+      
+      let aspect: CGFloat = image.size.width / image.size.height
+      let width = videoSize.width
+      let height = width / aspect
+      imageLayer.frame = CGRect(
+        x: 0,
+        y: -height * 0.15,
+        width: width,
+        height: height)
+      
+      imageLayer.contents = image.cgImage
+      layer.addSublayer(imageLayer)
+    }
+    
+    private func add(text: String, to layer: CALayer, videoSize: CGSize) {
+      let attributedText = NSAttributedString(
+        string: text,
+        attributes: [
+          .font: UIFont(name: "ArialRoundedMTBold", size: 60) as Any,
+            .foregroundColor: UIColor.green,
+          .strokeColor: UIColor.white,
+          .strokeWidth: -3])
+      
+      let textLayer = CATextLayer()
+      textLayer.string = attributedText
+      textLayer.shouldRasterize = true
+      textLayer.rasterizationScale = UIScreen.main.scale
+      textLayer.backgroundColor = UIColor.clear.cgColor
+      textLayer.alignmentMode = .center
+      
+      textLayer.frame = CGRect(
+        x: 0,
+        y: videoSize.height * 0.66,
+        width: videoSize.width,
+        height: 150)
+      textLayer.displayIfNeeded()
+      
+      let scaleAnimation = CABasicAnimation(keyPath: "transform.scale")
+      scaleAnimation.fromValue = 0.8
+      scaleAnimation.toValue = 1.2
+      scaleAnimation.duration = 0.5
+      scaleAnimation.repeatCount = .greatestFiniteMagnitude
+      scaleAnimation.autoreverses = true
+      scaleAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+      
+      scaleAnimation.beginTime = AVCoreAnimationBeginTimeAtZero
+      scaleAnimation.isRemovedOnCompletion = false
+      textLayer.add(scaleAnimation, forKey: "scale")
+      
+      layer.addSublayer(textLayer)
+    }
+    
+    private func orientation(from transform: CGAffineTransform) -> (orientation: UIImage.Orientation, isPortrait: Bool) {
+      var assetOrientation = UIImage.Orientation.up
+      var isPortrait = false
+      if transform.a == 0 && transform.b == 1.0 && transform.c == -1.0 && transform.d == 0 {
+        assetOrientation = .right
+        isPortrait = true
+      } else if transform.a == 0 && transform.b == -1.0 && transform.c == 1.0 && transform.d == 0 {
+        assetOrientation = .left
+        isPortrait = true
+      } else if transform.a == 1.0 && transform.b == 0 && transform.c == 0 && transform.d == 1.0 {
+        assetOrientation = .up
+      } else if transform.a == -1.0 && transform.b == 0 && transform.c == 0 && transform.d == -1.0 {
+        assetOrientation = .down
+      }
+      
+      return (assetOrientation, isPortrait)
+    }
+    
+    private func compositionLayerInstruction(for track: AVCompositionTrack, assetTrack: AVAssetTrack) -> AVMutableVideoCompositionLayerInstruction {
+      let instruction = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
+      let transform = assetTrack.preferredTransform
+      
+      instruction.setTransform(transform, at: .zero)
+      
+      return instruction
+    }
 }
 
 
@@ -1049,3 +1527,37 @@ extension EditTempVideoController: PlayerDelegate {
     }
 }
 
+
+
+extension UIView {
+    
+    // Using a function since `var image` might conflict with an existing variable
+    // (like on `UIImageView`)
+    func asImage() -> UIImage {
+        let renderer = UIGraphicsImageRenderer(bounds: bounds)
+        return renderer.image { rendererContext in
+            layer.render(in: rendererContext.cgContext)
+        }
+    }
+    
+    
+    func toImage() -> UIImage {
+        UIGraphicsBeginImageContextWithOptions(self.bounds.size, self.isOpaque, 0.0)
+        self.drawHierarchy(in: self.bounds, afterScreenUpdates: false)
+        let snapshotImageFromMyView = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return snapshotImageFromMyView!
+    }
+    
+ 
+    
+    @objc func toImageView() -> UIImageView {
+        let tempImageView = UIImageView()
+        tempImageView.image = toImage()
+        tempImageView.frame = frame
+        tempImageView.contentMode = .scaleAspectFit
+        return tempImageView
+    }
+    
+   
+}

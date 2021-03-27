@@ -11,9 +11,11 @@ import Firebase
 import FirebaseAuth
 import FirebaseDatabase
 import PanModal
+import NVActivityIndicatorView
 
 protocol MessagesControllerDelegate {
     func didCloseMessage()
+    func didTapUser(user: User)
 }
 
 class MessagesController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, PanModalPresentable {
@@ -59,6 +61,8 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
         }
     }
     
+    let activityIndicatorView = NVActivityIndicatorView(frame: CGRect(x: UIScreen.main.bounds.width/2 - 35, y: UIScreen.main.bounds.height/2 - 35, width: 70, height: 70), type: NVActivityIndicatorType.circleStrokeSpin)
+    
     private var comments = [Comment]()
     private var atUsers = [User]()
     
@@ -66,6 +70,8 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
     var commentsCollectionView: UICollectionView!
     
     var original_height = 0.0
+    
+    var fetched_initial_comments = false
     
     var commentsReference = DatabaseReference()
         
@@ -119,7 +125,14 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
         commentsCollectionView.backgroundColor = UIColor.clear
         commentsCollectionView.alwaysBounceVertical = true
         commentsCollectionView.keyboardDismissMode = .onDrag
+        commentsCollectionView.alpha = 0
         self.view.insertSubview(commentsCollectionView, at: 5)
+        
+        activityIndicatorView.frame = CGRect(x: UIScreen.main.bounds.width/2 - 35, y: (550 - 70 - navbarHeight)/2 - 35, width: 70, height: 70)
+        self.view.insertSubview(activityIndicatorView, at: 20)
+        activityIndicatorView.isHidden = false
+        activityIndicatorView.color = .white
+        activityIndicatorView.startAnimating()
         
         let search_layout = UICollectionViewFlowLayout()
         searchCollectionView = UICollectionView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height - 70 - navbarHeight), collectionViewLayout: search_layout)
@@ -152,15 +165,43 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         tabBarController?.tabBar.isHidden = false
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
         commentsReference.removeAllObservers()
         self.delegate?.didCloseMessage()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        NotificationCenter.default.post(name: NSNotification.Name("tabBarClear"), object: nil)
     }
     
     @objc private func fetchComments() {
         guard let postId = groupPost?.id else { return }
         Database.database().fetchCommentsForPost(withId: postId, completion: { (comments) in
             self.comments = comments
-            self.commentsCollectionView.reloadData()
+            
+            if comments.count == 0 {
+                UIView.animate(withDuration: 0.3) {
+                    self.commentsCollectionView.alpha = 1
+                    self.activityIndicatorView.alpha = 0
+                }
+                Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { timer in
+                    self.activityIndicatorView.isHidden = true
+                }
+            }
+            
+            if self.commentsCollectionView != nil {
+                self.commentsCollectionView.reloadData()
+            }
+            else {
+                return
+            }
+            
+            self.fetched_initial_comments = true
+            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { timer in
+                self.commentsCollectionView!.scrollToItem(at: IndexPath.init(row: self.comments.count - 1, section: 0), at: UICollectionView.ScrollPosition.bottom, animated: true)
+            }
+            
             self.commentsCollectionView.performBatchUpdates(nil, completion: {
                 (result) in
                 if self.comments.count > 5 {
@@ -170,58 +211,77 @@ class MessagesController: UIViewController, UICollectionViewDataSource, UICollec
                     let navbarHeight = self.navigationController?.navigationBar.frame.size.height ?? 0
                     self.commentsCollectionView.frame = CGRect(x: 0, y: 20, width: UIScreen.main.bounds.width, height: 550 - 70 - navbarHeight - 50)
                 }
-            })
-        }) { (err) in }
-        
-        // this will continuously listen for refreshes in comments
-        commentsReference = Database.database().reference().child("comments").child(postId)
-        commentsReference.queryOrderedByKey().queryLimited(toLast: 1).observe(.value) { snapshot in
-            
-            guard let dictionaries = snapshot.value as? [String: Any] else {
-                return
-            }
-            
-            var comments = [Comment]()
-                
-            let sync = DispatchGroup()
-            dictionaries.forEach({ (key, value) in
-                guard let commentDictionary = value as? [String: Any] else { return }
-                guard let uid = commentDictionary["uid"] as? String else { return }
-                sync.enter()
-                Database.database().userExists(withUID: uid, completion: { (exists) in
-                    if exists{
-                        Database.database().fetchUser(withUID: uid) { (user) in
-                            let comment = Comment(user: user, dictionary: commentDictionary)
+                // this will continuously listen for refreshes in comments
+                self.commentsReference = Database.database().reference().child("comments").child(postId)
+                self.commentsReference.queryOrderedByKey().queryLimited(toLast: 1).observe(.value) { snapshot in
+                    guard let dictionaries = snapshot.value as? [String: Any] else {
+                        return
+                    }
+                    
+                    var comments = [Comment]()
+                        
+                    let sync = DispatchGroup()
+                    dictionaries.forEach({ (key, value) in
+                        guard let commentDictionary = value as? [String: Any] else { return }
+                        guard let uid = commentDictionary["uid"] as? String else { return }
+                        
+                        print(commentDictionary)
+                        
+                        if uid == "bot" {
+                            let botUserValues = ["username": "Groupbot", "name": "Bot", "bio": "", "profileImageUrl": ""]
+                            let comment = Comment(user: User(uid: "bot", dictionary: botUserValues), dictionary: commentDictionary)
                             comments.append(comment)
-                            sync.leave()
+                        }
+                        else {
+                            sync.enter()
+                            Database.database().userExists(withUID: uid, completion: { (exists) in
+                                if exists{
+                                    Database.database().fetchUser(withUID: uid) { (user) in
+                                        let comment = Comment(user: user, dictionary: commentDictionary)
+                                        comments.append(comment)
+                                        sync.leave()
+                                    }
+                                }
+                                else{
+                                    sync.leave()
+                                }
+                            })
+                        }
+                    })
+                    sync.notify(queue: .main) {
+                        // check if the first comment is the same as previous one and don't put if there
+                        if !(self.comments.count > 0 && comments.count > 0 && self.comments[self.comments.count-1].creationDate == comments[0].creationDate) {
+                            if self.fetched_initial_comments {
+                                self.comments += comments
+                            }
+                        }
+                        
+                        // new message was sent so update the lastestViewedMessage
+                        if self.groupPost != nil && self.groupPost!.id != "" {
+                            Database.database().setLatestViewPostMessage(postId: self.groupPost!.id, completion: { _ in })
+                        }
+                        
+                        self.comments.sort(by: { (comment1, comment2) -> Bool in
+                            return comment1.creationDate.compare(comment2.creationDate) == .orderedAscending
+                        })
+                        if self.commentsCollectionView != nil {
+                            self.commentsCollectionView.reloadData()
+                        }
+
+                        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { timer in
+                            self.commentsCollectionView!.scrollToItem(at: IndexPath.init(row: self.comments.count - 1, section: 0), at: UICollectionView.ScrollPosition.bottom, animated: true)
+                            UIView.animate(withDuration: 0.3) {
+                                self.commentsCollectionView.alpha = 1
+                                self.activityIndicatorView.alpha = 0
+                            }
+                            Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { timer in
+                                self.activityIndicatorView.isHidden = true
+                            }
                         }
                     }
-                    else{
-                        sync.leave()
-                    }
-                })
+                }
             })
-            sync.notify(queue: .main) {
-                // check if the first comment is the same as previous one and don't put if there
-                if !(self.comments.count > 0 && comments.count > 0 && self.comments[self.comments.count-1].creationDate == comments[0].creationDate) {
-                    self.comments += comments
-                }
-                
-                // new message was sent so update the lastestViewedMessage
-                if self.groupPost != nil && self.groupPost!.id != "" {
-                    Database.database().setLatestViewPostMessage(postId: self.groupPost!.id, completion: { _ in })
-                }
-                
-                self.comments.sort(by: { (comment1, comment2) -> Bool in
-                    return comment1.creationDate.compare(comment2.creationDate) == .orderedAscending
-                })
-                self.commentsCollectionView.reloadData()
-
-                Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { timer in
-                    self.commentsCollectionView!.scrollToItem(at: IndexPath.init(row: self.comments.count - 1, section: 0), at: UICollectionView.ScrollPosition.bottom, animated: true)
-                }
-            }
-        }
+        }) { (err) in }
     }
         
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -425,6 +485,10 @@ extension MessagesController: MessageCellDelegate {
         userProfileController.user = user
         userProfileController.modalPresentationStyle = .fullScreen
         navigationController?.pushViewController(userProfileController, animated: true)
+        
+        self.dismiss(animated: true, completion: {
+            self.delegate?.didTapUser(user: user)
+        })
     }
     
     func didTapReply(username: String) {

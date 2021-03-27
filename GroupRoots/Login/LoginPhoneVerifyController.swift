@@ -10,9 +10,16 @@ class LoginPhoneVerifyController: UIViewController, UINavigationControllerDelega
     var phone: String? {
         didSet {
             guard let phone = phone else { return }
-            let attributedText = NSMutableAttributedString(string: "Enter a verification code\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
-            attributedText.append(NSMutableAttributedString(string: "A verification code was just sent to " + phone, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-            phoneExpLabel.attributedText = attributedText
+            let phoneNumberKit = PhoneNumberKit()
+            do {
+                let phoneNumber = try phoneNumberKit.parse(phone)
+                let attributedText = NSMutableAttributedString(string: "Verification code sent to\n" + phoneNumberKit.format(phoneNumber, toType: .national), attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 22)])
+                phoneExpLabel.attributedText = attributedText
+            }
+            catch {
+                let attributedText = NSMutableAttributedString(string: "Verification code sent to\n" + phone, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 22)])
+                phoneExpLabel.attributedText = attributedText
+            }
         }
     }
     
@@ -22,9 +29,10 @@ class LoginPhoneVerifyController: UIViewController, UINavigationControllerDelega
         let tf = UITextField()
         tf.placeholder = "Verification code"
         tf.backgroundColor = UIColor(white: 0, alpha: 0)
-        tf.borderStyle = .roundedRect
+        tf.borderStyle = .none
         tf.keyboardType = .phonePad
-        tf.font = UIFont.systemFont(ofSize: 16)
+        tf.textAlignment = .center
+        tf.font = UIFont.systemFont(ofSize: 27)
         tf.delegate = self
         tf.addTarget(self, action: #selector(handleTextInputChange), for: .editingChanged)
         return tf
@@ -54,7 +62,7 @@ class LoginPhoneVerifyController: UIViewController, UINavigationControllerDelega
         let button = UIButton(type: .system)
         button.setTitle("Verify", for: .normal)
         button.backgroundColor = UIColor(red: 0/255, green: 166/255, blue: 107/255, alpha: 1)
-        button.layer.cornerRadius = 5
+        button.layer.cornerRadius = 20
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(handleVerify), for: .touchUpInside)
@@ -84,10 +92,10 @@ class LoginPhoneVerifyController: UIViewController, UINavigationControllerDelega
         let stackView = UIStackView(arrangedSubviews: [verificationTextField, verifyButton])
         stackView.distribution = .fillEqually
         stackView.axis = .vertical
-        stackView.spacing = 10
+        stackView.spacing = 25
         
         view.addSubview(stackView)
-        stackView.anchor(top: view.topAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 300, paddingLeft: 40, paddingRight: 40, height: 105)
+        stackView.anchor(top: view.topAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 300, paddingLeft: 40, paddingRight: 40, height: 115)
     }
     
     private func resetInputFields() {

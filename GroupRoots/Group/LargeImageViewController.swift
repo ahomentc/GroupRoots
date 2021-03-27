@@ -22,7 +22,7 @@ protocol LargeImageViewControllerDelegate {
     func didExitLargeImageView()
 }
 
-class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate, ViewersControllerDelegate {
+class LargeImageViewController: UICollectionViewController, InnerPostCellDelegate, FeedMembersCellDelegate, ViewersControllerDelegate, MessagesControllerDelegate {
     
     override var prefersStatusBarHidden: Bool { return false }
     // the group posts loaded so far
@@ -52,6 +52,8 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     var isScrolling = false
     
     var isInverted = true
+    
+    var shouldOpenMessage = false
     
     let header = LargeImageViewHeader()
     
@@ -302,6 +304,10 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                         self.collectionView.reloadData()
                         self.scrollToIndexPath()
                         self.configureHeader()
+                        
+                        UIView.animate(withDuration: 0.3) {
+                            self.collectionView.alpha = 1
+                        }
                     }
                 }) { (_) in }
             }
@@ -322,6 +328,17 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
                     break
                 }
                 index += 1
+            }
+            if shouldOpenMessage {
+                // timer to let time for the scroll to happen
+                Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { timer in
+                    // get cell at index
+                    if let cell = self.collectionView?.cellForItem(at: IndexPath(item: index, section: 0)) as? FeedPostCell {
+                        if cell.groupPost != nil {
+                            self.didTapComment(groupPost: cell.groupPost!)
+                        }
+                    }
+                }
             }
         }
     }
@@ -345,6 +362,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.isPagingEnabled = true
         collectionView.contentInsetAdjustmentBehavior = .never
+        collectionView.alpha = 0
 //        collectionView?.semanticContentAttribute = .forceRightToLeft
         
         self.configureNavigationBar()
@@ -406,6 +424,10 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         }
     }
     
+    func didCloseMessage() {
+        
+    }
+    
     func sendCloseNotifications(animatedScroll: Bool){
         guard let group = group else { return }
         var row = -1
@@ -460,7 +482,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
     }
     
     func requestZoomCapability(for cell: FeedPostCell) {
-        addZoombehavior(for: cell.photoImageView, settings: .instaZoomSettings)
+        addZoombehavior(for: cell.photoImageView, settings: Settings.customSettings1)
     }
     
     override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -653,6 +675,7 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         let messagesController = MessagesController()
         messagesController.groupPost = groupPost
         messagesController.modalPresentationStyle = .overCurrentContext
+        messagesController.delegate = self
         presentPanModal(messagesController)
         
 //        let commentsController = CommentsController()
@@ -681,9 +704,11 @@ class LargeImageViewController: UICollectionViewController, InnerPostCellDelegat
         viewersController.viewers = viewers
         viewersController.viewsCount = numViews
         viewersController.delegate = self
-        let navController = UINavigationController(rootViewController: viewersController)
-        navController.modalPresentationStyle = .popover
-        self.present(navController, animated: true, completion: nil)
+//        let navController = UINavigationController(rootViewController: viewersController)
+//        navController.modalPresentationStyle = .popover
+//        self.present(navController, animated: true, completion: nil)
+        viewersController.modalPresentationStyle = .overCurrentContext
+        presentPanModal(viewersController)
     }
     
     func didView(groupPost: GroupPost) {

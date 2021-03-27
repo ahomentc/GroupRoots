@@ -247,6 +247,7 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
                     editTempVideoController.videoUrl = video.url
                     editTempVideoController.isTempPost = self.isTempPost
                     editTempVideoController.suggestedLocation = location
+                    editTempVideoController.notFromCamera = true
                     if self.preSelectedGroup != nil {
                         editTempVideoController.selectedGroup = self.preSelectedGroup
                         editTempVideoController.setupWithSelectedGroupWithAnim = false
@@ -310,6 +311,10 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
             self.blankButton.isHidden = true
             self.memeButton.isHidden = true
             self.cameraFlipButton.isHidden = true
+            
+            self.blankTextButton.isHidden = true
+            self.memeTextButton.isHidden = true
+            self.galleryTextButton.isHidden = true
         }
         if longPressGestureRecognizer.state == .ended {
             stopVideoRecording()

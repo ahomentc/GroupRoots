@@ -146,7 +146,7 @@ class SelectGroupController: UIViewController, UICollectionViewDelegate, UIColle
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
         
-        self.collectionView = UICollectionView(frame: CGRect(x: 0, y: 100, width: displayWidth, height: UIScreen.main.bounds.height - barHeight - 100), collectionViewLayout: layout)
+        self.collectionView = UICollectionView(frame: CGRect(x: 0, y: 100, width: displayWidth, height: UIScreen.main.bounds.height - barHeight - 150), collectionViewLayout: layout)
         self.collectionView.delegate = self
         self.collectionView.dataSource = self
         self.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
