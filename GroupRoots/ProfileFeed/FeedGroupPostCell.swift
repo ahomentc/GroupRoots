@@ -385,7 +385,7 @@ class FeedGroupPostCell: UICollectionViewCell {
         self.readyToSetPicture = false
         
         // remove listener
-//        commentsReference.removeAllObservers()
+        commentsReference.removeAllObservers()
     }
     
     @objc func reloadNewDot(){

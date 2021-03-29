@@ -476,12 +476,16 @@ class TempPostCameraController: SwiftyCamViewController, SwiftyCamViewController
         // need a delegate for that too with the selectedMeme
 
         let memeBrowserController = MemeBrowserController()
+        if preSelectedGroup != nil {
+            memeBrowserController.group = self.preSelectedGroup
+        }
         memeBrowserController.didFinishPicking { [unowned memeBrowserController] img, cancelled in
             if cancelled {
-                print("Picker was canceled")
-                return
+                self.openBlankPhoto()
             }
-            self.didTapMeme(image: img)
+            else {
+                self.didTapMeme(image: img)
+            }
         }
         let navController = UINavigationController(rootViewController: memeBrowserController)
         navController.modalPresentationStyle = .fullScreen

@@ -17,6 +17,7 @@ PODS:
     - BSImageView (= 1.0.3)
   - BSImageView (1.0.3)
   - CenterTextLayer (0.0.2)
+  - CropViewController (2.6.0)
   - DGCollectionViewLeftAlignFlowLayout (1.0.4)
   - EasyPeasy (1.10.0)
   - Firebase/Analytics (6.29.0):
@@ -179,6 +180,7 @@ PODS:
 DEPENDENCIES:
   - BSImagePicker (~> 2.8)
   - CenterTextLayer
+  - CropViewController
   - DGCollectionViewLeftAlignFlowLayout
   - EasyPeasy
   - Firebase/Analytics
@@ -212,6 +214,7 @@ SPEC REPOS:
     - BSImagePicker
     - BSImageView
     - CenterTextLayer
+    - CropViewController
     - DGCollectionViewLeftAlignFlowLayout
     - EasyPeasy
     - Firebase
@@ -266,6 +269,7 @@ SPEC CHECKSUMS:
   BSImagePicker: 07404254f2fcdaf5a2eb403c0f8c337267ce8738
   BSImageView: a149459433a2687157d034c78e059d30ac7f2544
   CenterTextLayer: 7fe5dab46ba3372c527f09a518a84f8be4a89e38
+  CropViewController: 7093b39ec3cb508531b22d35773e06cecd7378d8
   DGCollectionViewLeftAlignFlowLayout: a0fa58797373ded039cafba8133e79373d048399
   EasyPeasy: b9b1bae024d21a7dfa9bad26d6826d88348cc6f1
   Firebase: 57957c8d6eb3d8b80a560b1dc58be24724b89ff2
@@ -313,6 +317,6 @@ SPEC CHECKSUMS:
   YPImagePicker: 7a34eabd0ef544ae8fbf9785c3df9ec5bbf242e3
   Zoomy: 598d7a6d52567e4f8bf2e557907bbd9d7e725664
 
-PODFILE CHECKSUM: 3017a51d10204e40ad0abc33a7835fcca07d4364
+PODFILE CHECKSUM: 7d54116489cb8a9c41d7f2ed9f0268d6464af63d
 
 COCOAPODS: 1.9.3

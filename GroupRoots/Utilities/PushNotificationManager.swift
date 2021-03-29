@@ -63,6 +63,8 @@ class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCe
         // this will handle what happens when the app is open in background when the notification is recieved
         print("notification recieved when app in background")
         
+//        integrate with: viewNotification
+        
         if response.notification.request.content.categoryIdentifier.contains("open_post") {
             let layout = UICollectionViewFlowLayout()
             layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
@@ -73,6 +75,8 @@ class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCe
             let postIdAndGroupIdArr = postIdAndGroupId.split(separator: "*")
             let postId = String(postIdAndGroupIdArr[0])
             let groupId = String(postIdAndGroupIdArr[1])
+            
+            Database.database().addToViewedPosts(postId: postId, completion: { _ in })
 
             Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
                 let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
@@ -106,29 +110,13 @@ class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCe
             let postIdAndGroupIdArr = postIdAndGroupId.split(separator: "*")
             let postId = String(postIdAndGroupIdArr[0])
             let groupId = String(postIdAndGroupIdArr[1])
-
-            Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
-                let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
-                largeImageViewController.group = post.group
-                largeImageViewController.postToScrollToId = post.id
-                largeImageViewController.shouldOpenMessage = true
-                if let topController = UIApplication.topViewController() {
-                    if type(of: topController) == ProfileFeedController.self {
-                        let profileFeedController = topController as? ProfileFeedController
-                        largeImageViewController.delegate = profileFeedController
-                    }
-                }
-                
-                NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
-                NotificationCenter.default.post(name: NSNotification.Name.updateGroupProfile, object: nil)
-                
-                let navController = UINavigationController(rootViewController: largeImageViewController)
-                navController.modalPresentationStyle = .overCurrentContext
-                
-                let viewController = UIApplication.shared.keyWindow!.rootViewController as! MainTabBarController
-                viewController.present(navController, animated: true, completion: nil)
-                
-            })
+            
+            Database.database().addToViewedPosts(postId: postId, completion: { _ in })
+            
+            Timer.scheduledTimer(withTimeInterval: 2, repeats: false) { timer in
+                let messageDataDict:[String: String] = ["groupId": groupId, "postId": postId]
+                NotificationCenter.default.post(name: NSNotification.Name("openMessage"), object: nil, userInfo: messageDataDict)
+            }
         }
     }
 
@@ -147,6 +135,8 @@ class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCe
             let postIdAndGroupIdArr = postIdAndGroupId.split(separator: "*")
             let postId = String(postIdAndGroupIdArr[0])
             let groupId = String(postIdAndGroupIdArr[1])
+            
+            Database.database().addToViewedPosts(postId: postId, completion: { _ in })
             
             if let topController = UIApplication.topViewController() {
                 if type(of: topController) == MessagesController.self {
@@ -226,6 +216,8 @@ class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCe
             let postId = String(postIdAndGroupIdArr[0])
             let groupId = String(postIdAndGroupIdArr[1])
             
+            Database.database().addToViewedPosts(postId: postId, completion: { _ in })
+            
             if let topController = UIApplication.topViewController() {
                 if type(of: topController) == MessagesController.self {
                     let messagesController = topController as? MessagesController
@@ -249,6 +241,7 @@ class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCe
                 banner.layer.borderWidth = 1
                 banner.layer.borderColor = UIColor.init(white: 0.8, alpha: 1).cgColor
                 banner.onTap = {
+                    
                     if let topController = UIApplication.topViewController() {
                         if type(of: topController) == LargeImageViewController.self {
                             let largeImageViewController = topController as? LargeImageViewController
@@ -270,27 +263,8 @@ class PushNotificationManager: NSObject, MessagingDelegate, UNUserNotificationCe
                     }
                     
                     Timer.scheduledTimer(withTimeInterval: 1 , repeats: false) { timer in
-                        let layout = UICollectionViewFlowLayout()
-                        layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
-                        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-                        layout.minimumLineSpacing = CGFloat(0)
-                        
-                        let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
-                        largeImageViewController.group = post.group
-                        largeImageViewController.postToScrollToId = post.id
-                        largeImageViewController.shouldOpenMessage = true
-                        
-                        if let topController = UIApplication.topViewController() {
-                            if type(of: topController) == ProfileFeedController.self {
-                                let profileFeedController = topController as? ProfileFeedController
-                                largeImageViewController.delegate = profileFeedController
-                            }
-                        }
-                        let navController = UINavigationController(rootViewController: largeImageViewController)
-                        navController.modalPresentationStyle = .overCurrentContext
-                        
-                        let viewController = UIApplication.shared.keyWindow!.rootViewController as! MainTabBarController
-                        viewController.present(navController, animated: true, completion: nil)
+                        let messageDataDict:[String: String] = ["groupId": groupId, "postId": postId]
+                        NotificationCenter.default.post(name: NSNotification.Name("openMessage"), object: nil, userInfo: messageDataDict)
                     }
                 
                 }

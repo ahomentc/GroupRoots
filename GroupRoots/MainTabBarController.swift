@@ -285,15 +285,15 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
             let postId = String(postIdAndGroupIdArr[0])
             let groupId = String(postIdAndGroupIdArr[1])
 
-            Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
-                let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
-                largeImageViewController.group = post.group
-                largeImageViewController.postToScrollToId = post.id
-                largeImageViewController.delegate = self
-                let navController = UINavigationController(rootViewController: largeImageViewController)
-                navController.modalPresentationStyle = .overCurrentContext
-                self.present(navController, animated: true, completion: nil)
-            })
+//            Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
+//                let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
+//                largeImageViewController.group = post.group
+//                largeImageViewController.postToScrollToId = post.id
+//                largeImageViewController.delegate = self
+//                let navController = UINavigationController(rootViewController: largeImageViewController)
+//                navController.modalPresentationStyle = .overCurrentContext
+//                self.present(navController, animated: true, completion: nil)
+//            })
         }
         else if self.postAndGroupToOpenWithMessage != "" {
             UIApplication.shared.applicationIconBadgeNumber = 0
@@ -307,16 +307,16 @@ class MainTabBarController: UITabBarController, LargeImageViewControllerDelegate
             let postId = String(postIdAndGroupIdArr[0])
             let groupId = String(postIdAndGroupIdArr[1])
 
-            Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
-                let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
-                largeImageViewController.group = post.group
-                largeImageViewController.postToScrollToId = post.id
-                largeImageViewController.shouldOpenMessage = true
-                largeImageViewController.delegate = self
-                let navController = UINavigationController(rootViewController: largeImageViewController)
-                navController.modalPresentationStyle = .overCurrentContext
-                self.present(navController, animated: true, completion: nil)
-            })
+//            Database.database().fetchGroupPost(groupId: groupId, postId: postId, completion: { (post) in
+//                let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
+//                largeImageViewController.group = post.group
+//                largeImageViewController.postToScrollToId = post.id
+//                largeImageViewController.shouldOpenMessage = true
+//                largeImageViewController.delegate = self
+//                let navController = UINavigationController(rootViewController: largeImageViewController)
+//                navController.modalPresentationStyle = .overCurrentContext
+//                self.present(navController, animated: true, completion: nil)
+//            })
         }
     }
     

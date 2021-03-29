@@ -631,6 +631,7 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name.updateUserProfileFeed, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleRefresh), name: NSNotification.Name(rawValue: "createdGroup"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(showFirstFollowPopup), name: NSNotification.Name(rawValue: "showFirstFollowPopupHomescreen"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.openMessage(_:)), name: NSNotification.Name(rawValue: "openMessage"), object: nil)
         
         configureNavigationBar()
         
@@ -662,9 +663,9 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.reloadButton.isHidden = false
             self.noInternetLabel.isHidden = false
             self.noInternetBackground.isHidden = false
-        }
+        }        
     }
-    
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         // Show the navigation bar on other view controllers
@@ -677,6 +678,16 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         if self.hasDisappeared {
             self.collectionView.contentOffset = self.collectionViewOffset
             self.hasDisappeared = false
+        }
+    }
+    
+    @objc private func openMessage(_ notification: NSNotification){
+        if let dict = notification.userInfo as NSDictionary? {
+            if let groupId = dict["groupId"] as? String, let postId = dict["postId"] as? String {
+                Database.database().fetchGroup(groupId: groupId, completion: { (group) in
+                    self.viewMessage(group: group, groupPostId: postId)
+                })
+            }
         }
     }
     
@@ -1599,6 +1610,27 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         largeImageViewController.postToScrollToId = groupPostId
         largeImageViewController.delegate = self
         largeImageViewController.isInverted = true
+        let navController = UINavigationController(rootViewController: largeImageViewController)
+        navController.modalPresentationStyle = .overFullScreen
+        self.present(navController, animated: true, completion: nil)
+    }
+    
+    func viewMessage(group: Group, groupPostId: String) {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = UICollectionView.ScrollDirection.horizontal
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        layout.minimumLineSpacing = CGFloat(0)
+        
+        // save postion of group
+        self.scrollViewOffset = Double(collectionView.contentOffset.y)
+        let largeImageViewController = LargeImageViewController(collectionViewLayout: layout)
+        print(group)
+        largeImageViewController.group = group
+//        largeImageViewController.indexPath = indexPath
+        largeImageViewController.postToScrollToId = groupPostId
+        largeImageViewController.delegate = self
+        largeImageViewController.isInverted = true
+        largeImageViewController.shouldOpenMessage = true
         let navController = UINavigationController(rootViewController: largeImageViewController)
         navController.modalPresentationStyle = .overFullScreen
         self.present(navController, animated: true, completion: nil)

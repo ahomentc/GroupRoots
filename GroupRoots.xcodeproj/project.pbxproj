@@ -53,6 +53,7 @@
 		757B35D12474DBB200C9AFE1 /* ProfileFeedCellHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757B35D02474DBB200C9AFE1 /* ProfileFeedCellHeader.swift */; };
 		7582758F23DD65BC00D64D4C /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7582758E23DD65BC00D64D4C /* Notification.swift */; };
 		75914804244592E600285546 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 75914803244592E600285546 /* GoogleService-Info.plist */; };
+		75970475260F32D300F73DE6 /* MemeTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75970474260F32D300F73DE6 /* MemeTemplate.swift */; };
 		759912C523DD446200B415EB /* PushNotificationSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759912C423DD446200B415EB /* PushNotificationSender.swift */; };
 		759CB61123D593E000178673 /* LargeImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759CB61023D593E000178673 /* LargeImageViewController.swift */; };
 		759CB61323D62CE100178673 /* MembersHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759CB61223D62CE100178673 /* MembersHeader.swift */; };
@@ -256,6 +257,7 @@
 		757B35D02474DBB200C9AFE1 /* ProfileFeedCellHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileFeedCellHeader.swift; sourceTree = "<group>"; };
 		7582758E23DD65BC00D64D4C /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notification.swift; sourceTree = "<group>"; };
 		75914803244592E600285546 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "GroupRoots/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		75970474260F32D300F73DE6 /* MemeTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemeTemplate.swift; sourceTree = "<group>"; };
 		759912C423DD446200B415EB /* PushNotificationSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationSender.swift; sourceTree = "<group>"; };
 		759CB61023D593E000178673 /* LargeImageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeImageViewController.swift; sourceTree = "<group>"; };
 		759CB61223D62CE100178673 /* MembersHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersHeader.swift; sourceTree = "<group>"; };
@@ -744,6 +746,7 @@
 				75D86CC12536B8A200939301 /* PostLocation.swift */,
 				75C6923125E602D50096194F /* Meme.swift */,
 				75C41CD325FC85F7009B8501 /* Sticker.swift */,
+				75970474260F32D300F73DE6 /* MemeTemplate.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -979,6 +982,7 @@
 				"${BUILT_PRODUCTS_DIR}/BSImagePicker/BSImagePicker.framework",
 				"${BUILT_PRODUCTS_DIR}/BSImageView/BSImageView.framework",
 				"${BUILT_PRODUCTS_DIR}/CenterTextLayer/CenterTextLayer.framework",
+				"${BUILT_PRODUCTS_DIR}/CropViewController/CropViewController.framework",
 				"${BUILT_PRODUCTS_DIR}/DGCollectionViewLeftAlignFlowLayout/DGCollectionViewLeftAlignFlowLayout.framework",
 				"${BUILT_PRODUCTS_DIR}/EasyPeasy/EasyPeasy.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMAppAuth/GTMAppAuth.framework",
@@ -1021,6 +1025,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/BSImagePicker.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/BSImageView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CenterTextLayer.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CropViewController.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DGCollectionViewLeftAlignFlowLayout.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/EasyPeasy.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMAppAuth.framework",
@@ -1175,6 +1180,7 @@
 				75D07D0225FBF7D50034409C /* CreateStickerController.swift in Sources */,
 				ADAC0808210FD4C900615E62 /* FirebaseUtilities.swift in Sources */,
 				75677FE925F1C67500C81180 /* MessageCell.swift in Sources */,
+				75970475260F32D300F73DE6 /* MemeTemplate.swift in Sources */,
 				AD3164D221152935001F5DA7 /* CommentCell.swift in Sources */,
 				75C6922F25E600F70096194F /* MemeBrowserController.swift in Sources */,
 				750FA45223D41B3600D33CF8 /* MembersController.swift in Sources */,

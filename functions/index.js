@@ -153,62 +153,70 @@ exports.autoSubscribeFollowers = functions.database.ref('/groups/{groupId}/membe
 				new_member_followers.forEach(function(member_follower) {
 					var member_follower_id = member_follower.key;
 					var token = sync.enter()
-					snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id).once('value', in_subscriber_snapshot => {
-						let is_subscribed = (in_subscriber_snapshot.val() !== null);
-						var current_time = parseFloat(Date.now()/1000)
-						if (is_subscribed) {
-							// if the user is already subscribed to the group, 
-							// just add uid to membersFollowing of the group for new_member_follower_id				
-							let promise = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/membersFollowing/' + new_member_id).set(current_time);
-							promises.push(promise);
-							sync.leave(token);
-							// tested with 1 follower
+
+					snapshot.ref.root.child('/groupMembersCount/' + group_id).once('value', counter_value => {
+						if (parseInt(counter_value.val()) < 20) {
+							snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id).once('value', in_subscriber_snapshot => {
+								let is_subscribed = (in_subscriber_snapshot.val() !== null);
+								var current_time = parseFloat(Date.now()/1000)
+								if (is_subscribed) {
+									// if the user is already subscribed to the group, 
+									// just add uid to membersFollowing of the group for new_member_follower_id				
+									let promise = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/membersFollowing/' + new_member_id).set(current_time);
+									promises.push(promise);
+									sync.leave(token);
+									// tested with 1 follower
+								}
+								else {
+									if (is_private) {
+										// add to groupFollowPending with autoSubscribed: true... what if they were already in groupFollowPending with autoSubscribed as false?
+										// add new_member_id to membersFollowing for groupFollowPending of new_member_follower_id
+			
+										// var lower_sync = new DispatchGroup();
+										// var lower_token = lower_sync.enter();
+										// snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id).once('value', in_follow_pending_snapshot => {
+										// 	let is_in_follow_pending = (in_follow_pending_snapshot.val() !== null);
+										// 	if (is_in_follow_pending) {
+										// 		// do nothing
+										// 	}
+										// 	else {
+										// 		// add user to groupFollowPending with autoSubscribed: true
+										// 		let promise = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id + '/autoSubscribed').set(true);
+										// 		promises.push(promise);
+										// 	}
+										// 	lower_sync.leave(lower_token);
+										// });						
+
+										// lower_sync.notify(function() {
+		        //            	 				let promise = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id + '/membersFollowing/' + new_member_id).set(current_time);
+										// 	promises.push(promise);
+										// 	sync.leave(token);
+		        //         				})
+		                				// tested with 1 follower
+
+		                				sync.leave(token);
+									}
+									else {
+										// add to followers/following and autoFollow (since group is public would have auto became subscribed if manually clicked subscribe button)
+										// add new_member_id to membersFollowing for the group
+										let promise_followers = snapshot.ref.root.child('/groupFollowers/' + group_id + '/' + member_follower_id).set(current_time);
+										let promise_following = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/lastPostedDate').set(post_date);
+										let promise_following_auto = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/autoSubscribed').set("true");
+										let promise_membersFollowing = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/membersFollowing/' + new_member_id).set(current_time);
+										promises.push(promise_followers);
+										promises.push(promise_following);
+										promises.push(promise_following_auto);
+										promises.push(promise_membersFollowing);
+										sync.leave(token);
+										// tested with 1 follower
+									}
+								}	
+							});
 						}
 						else {
-							if (is_private) {
-								// add to groupFollowPending with autoSubscribed: true... what if they were already in groupFollowPending with autoSubscribed as false?
-								// add new_member_id to membersFollowing for groupFollowPending of new_member_follower_id
-	
-								// var lower_sync = new DispatchGroup();
-								// var lower_token = lower_sync.enter();
-								// snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id).once('value', in_follow_pending_snapshot => {
-								// 	let is_in_follow_pending = (in_follow_pending_snapshot.val() !== null);
-								// 	if (is_in_follow_pending) {
-								// 		// do nothing
-								// 	}
-								// 	else {
-								// 		// add user to groupFollowPending with autoSubscribed: true
-								// 		let promise = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id + '/autoSubscribed').set(true);
-								// 		promises.push(promise);
-								// 	}
-								// 	lower_sync.leave(lower_token);
-								// });						
-
-								// lower_sync.notify(function() {
-        //            	 				let promise = snapshot.ref.root.child('/groupFollowPending/' + group_id + '/' + member_follower_id + '/membersFollowing/' + new_member_id).set(current_time);
-								// 	promises.push(promise);
-								// 	sync.leave(token);
-        //         				})
-                				// tested with 1 follower
-
-                				sync.leave(token);
-							}
-							else {
-								// add to followers/following and autoFollow (since group is public would have auto became subscribed if manually clicked subscribe button)
-								// add new_member_id to membersFollowing for the group
-								let promise_followers = snapshot.ref.root.child('/groupFollowers/' + group_id + '/' + member_follower_id).set(current_time);
-								let promise_following = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/lastPostedDate').set(post_date);
-								let promise_following_auto = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/autoSubscribed').set("true");
-								let promise_membersFollowing = snapshot.ref.root.child('/groupsFollowing/' + member_follower_id + '/' + group_id + '/membersFollowing/' + new_member_id).set(current_time);
-								promises.push(promise_followers);
-								promises.push(promise_following);
-								promises.push(promise_following_auto);
-								promises.push(promise_membersFollowing);
-								sync.leave(token);
-								// tested with 1 follower
-							}
-						}	
-					});
+							sync.leave(token);
+						}
+					}).catch(() => {return null});
 				});
 				sync.leave(token_0);
 				sync.notify(function() {
@@ -1417,7 +1425,7 @@ exports.sendPostToInvited = functions.database.ref('/posts/{group_id}/{post_id}'
 													    if (caption !== ""){
 													    	message1 += ': "' + caption + '"'
 													    }
-														message1 += '... view more with GroupRoots: https://apps.apple.com/us/app/id1525863510'
+														message1 += '... view more with GroupRoots: https://testflight.apple.com/join/5zCu1oG6'
 
 													    const postedMessage = {
 													        body: message1,

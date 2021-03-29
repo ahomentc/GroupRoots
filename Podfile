@@ -37,4 +37,5 @@ target 'GroupRoots' do
   pod 'PanModal'
   pod 'NotificationBannerSwift'
   pod 'CenterTextLayer'
+  pod 'CropViewController'
 end
