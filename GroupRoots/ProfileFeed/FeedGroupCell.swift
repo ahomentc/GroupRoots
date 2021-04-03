@@ -405,10 +405,11 @@ class FeedGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
             }
         }
         else if collectionView == self.headerCollectionView {
+            var num = (groupMembers?.count ?? -1) + 1
             if self.isInGroup {
-                return (groupMembers?.count ?? -1) + 2 // extra space for share button
+                num = (groupMembers?.count ?? -1) + 2 // extra space for share button
             }
-            return (groupMembers?.count ?? -1) + 1
+            return num
         }
         else {
             if groupPosts?.count ?? 0 > 0 {

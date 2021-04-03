@@ -88,7 +88,6 @@ class GroupFollowersController: UICollectionViewController, loadMoreSubscribersC
         NotificationCenter.default.addObserver(self, selector: #selector(self.removeASubscribeRequestor(_:)), name: NSNotification.Name(rawValue: "removeASubscribeRequestor"), object: nil)
         
         NotificationCenter.default.post(name: NSNotification.Name("tabBarColor"), object: nil)
-
     }
 
     // make this be limited and expand when reach bottom

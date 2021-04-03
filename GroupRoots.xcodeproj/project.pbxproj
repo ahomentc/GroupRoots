@@ -10,6 +10,7 @@
 		750FA44A23D3055900D33CF8 /* NotificationsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750FA44923D3055900D33CF8 /* NotificationsController.swift */; };
 		750FA45223D41B3600D33CF8 /* MembersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750FA45123D41B3600D33CF8 /* MembersController.swift */; };
 		750FA45423D4201E00D33CF8 /* UserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750FA45323D4201E00D33CF8 /* UserCell.swift */; };
+		751528B22612BB7F000A0B0A /* AccessCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751528B12612BB7F000A0B0A /* AccessCodeController.swift */; };
 		751E3163259AEDC3001BECCB /* InstaPromoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751E3162259AEDC3001BECCB /* InstaPromoController.swift */; };
 		7521C74E24BD428E003FCFB4 /* ForceUpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521C74D24BD428E003FCFB4 /* ForceUpdateController.swift */; };
 		7521D0482434506A0028FC9C /* SearchHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7521D0472434506A0028FC9C /* SearchHeader.swift */; };
@@ -208,6 +209,7 @@
 		750FA44923D3055900D33CF8 /* NotificationsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsController.swift; sourceTree = "<group>"; };
 		750FA45123D41B3600D33CF8 /* MembersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersController.swift; sourceTree = "<group>"; };
 		750FA45323D4201E00D33CF8 /* UserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCell.swift; sourceTree = "<group>"; };
+		751528B12612BB7F000A0B0A /* AccessCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessCodeController.swift; sourceTree = "<group>"; };
 		751E3162259AEDC3001BECCB /* InstaPromoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstaPromoController.swift; sourceTree = "<group>"; };
 		7521C74D24BD428E003FCFB4 /* ForceUpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForceUpdateController.swift; sourceTree = "<group>"; };
 		7521D0472434506A0028FC9C /* SearchHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchHeader.swift; sourceTree = "<group>"; };
@@ -717,6 +719,7 @@
 				75BE32DB24E22E1800310BA4 /* ResetController.swift */,
 				75A5B04025DE17480056AE97 /* IntroDescriptionController.swift */,
 				75A5B04325DE176A0056AE97 /* IntroGroupStepController.swift */,
+				751528B12612BB7F000A0B0A /* AccessCodeController.swift */,
 			);
 			path = Login;
 			sourceTree = "<group>";
@@ -1198,6 +1201,7 @@
 				75BB489123DACD5100CF008F /* FeedPostCell.swift in Sources */,
 				AD2A2CB1205C88DE0023D5C8 /* AppDelegate.swift in Sources */,
 				75ACAFC523F6768A00DAE747 /* FollowPageController.swift in Sources */,
+				751528B22612BB7F000A0B0A /* AccessCodeController.swift in Sources */,
 				AD32EF752114D05000BB7B56 /* PreviewPhotoContainerView.swift in Sources */,
 				AD3164D621167401001F5DA7 /* CommentInputAccessoryView.swift in Sources */,
 				75677FE625F1B47600C81180 /* MessageInputAccessoryView.swift in Sources */,
@@ -1281,7 +1285,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = GroupRootsClip/GroupRootsClip.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 37;
 				DEVELOPMENT_ASSET_PATHS = "\"GroupRootsClip/Preview Content\"";
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				ENABLE_PREVIEWS = YES;
@@ -1307,7 +1311,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = GroupRootsClip/GroupRootsClip.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 37;
 				DEVELOPMENT_ASSET_PATHS = "\"GroupRootsClip/Preview Content\"";
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				ENABLE_PREVIEWS = YES;
@@ -1526,7 +1530,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GroupRoots.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 37;
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				INFOPLIST_FILE = GroupRoots/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -1546,7 +1550,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GroupRoots.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 37;
 				DEVELOPMENT_TEAM = PVFH9G54XH;
 				INFOPLIST_FILE = GroupRoots/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

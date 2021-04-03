@@ -205,7 +205,7 @@ class EditProfileController: UIViewController, UINavigationControllerDelegate {
     @objc private func handleSave() {
         guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
         
-        let username = usernameTextField.text
+        let username = usernameTextField.text?.lowercasingFirstLetter()
         let name = nameTextField.text
         let bio = bioTextField.text
     

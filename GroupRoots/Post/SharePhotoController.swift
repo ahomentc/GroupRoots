@@ -666,17 +666,21 @@ class SharePhotoController: UIViewController, UICollectionViewDelegate, UICollec
                     Database.database().fetchGroup(groupId: self.selectedGroupId, completion: { (group) in
                         Database.database().fetchGroupPost(groupId: group.groupId, postId: postId, completion: { (post) in
                             // send the notification each each user in the group
-                            Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
-                                members.forEach({ (member) in
-                                    if member.uid != currentLoggedInUserId{
-                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: group, groupPost: post) { (err) in
-                                            if err != nil {
-                                                return
+                            Database.database().numberOfMembersForGroup(groupId: group.groupId) { (membersCount) in
+                                if membersCount < 20 {
+                                    Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
+                                        members.forEach({ (member) in
+                                            if member.uid != currentLoggedInUserId{
+                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: group, groupPost: post) { (err) in
+                                                    if err != nil {
+                                                        return
+                                                    }
+                                                }
                                             }
-                                        }
-                                    }
-                                })
-                            }) { (_) in}
+                                        })
+                                    }) { (_) in}
+                                }
+                            } 
                         })
                     })
                 }

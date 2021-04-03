@@ -425,12 +425,16 @@ class GroupInviteController: UIViewController, UINavigationControllerDelegate {
                     Database.database().groupExists(groupId: groupId, completion: { (exists) in
                         if exists {
                             Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                                Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
-                                    users.forEach({ (user) in
-                                        Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinRequest, group: group) { (err) in
-                                        }
-                                    })
-                                }) { (_) in}
+                                Database.database().numberOfMembersForGroup(groupId: groupId) { (membersCount) in
+                                    if membersCount < 20 {
+                                        Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
+                                            users.forEach({ (user) in
+                                                Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinRequest, group: group) { (err) in
+                                                }
+                                            })
+                                        }) { (_) in}
+                                    }
+                                }
                             })
                         }
                     })

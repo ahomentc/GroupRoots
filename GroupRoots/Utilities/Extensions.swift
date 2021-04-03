@@ -178,6 +178,16 @@ extension String {
 }
 
 extension String {
+    func lowercasingFirstLetter() -> String {
+        return prefix(1).lowercased() + dropFirst()
+    }
+
+    mutating func lowercaseFirstLetter() {
+        self = self.lowercasingFirstLetter()
+    }
+}
+
+extension String {
 
     func fromBase64() -> String? {
         guard let data = Data(base64Encoded: self) else {

@@ -89,6 +89,7 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
                 self.hourglassButton.alpha = 0
                 UIView.animate(withDuration: 0.2, delay: 0.0, options: [.allowUserInteraction, .curveEaseIn], animations: {
                     self.hourglassButton.alpha = 1
+                    self.downloadButton.frame = CGRect(x: 20, y: UIScreen.main.bounds.height - 140, width: 50, height: 50)
                 }, completion: nil)
                 
                 //nextButton postButton
@@ -232,6 +233,16 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         return button
     }()
     
+    let downloadButton: UIButton = {
+        let button = UIButton()
+        button.setImage(#imageLiteral(resourceName: "download_icon"), for: .normal)
+        button.backgroundColor = .clear
+        button.imageEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        button.layer.zPosition = 100
+//        button.addTarget(self, action: #selector(handleDownload), for: .touchUpInside)
+        return button
+    }()
+    
     private let textEditBackground: UIView = {
         let backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 250))
         backgroundView.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.3)
@@ -323,6 +334,24 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         textView.isHidden = true
         return textView
+    }()
+    
+    let savedLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Saved"
+        label.textColor = UIColor.white
+        label.backgroundColor = .clear
+        label.font = UIFont.systemFont(ofSize: 20)
+        label.textAlignment = .center
+        label.layer.zPosition = 100
+        label.isHidden = true
+        
+        label.layer.backgroundColor = UIColor.clear.cgColor
+        label.layer.shadowColor = UIColor.black.cgColor
+        label.layer.shadowOffset = CGSize(width: 0, height: 1.0)
+        label.layer.shadowOpacity = 0.2
+        label.layer.shadowRadius = 2.0
+        return label
     }()
     
     let activityIndicatorView: NVActivityIndicatorView = {
@@ -427,6 +456,18 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         
         trashIcon.frame = CGRect(x: UIScreen.main.bounds.width/2 - 25, y: UIScreen.main.bounds.height - 70, width: 50, height: 50)
         self.view.insertSubview(trashIcon, at: 12)
+        
+//        savedLabel.frame = CGRect(x: UIScreen.main.bounds.width/2 - 50, y: UIScreen.main.bounds.height/2 - 50, width: 100, height: 100)
+//        self.view.insertSubview(savedLabel, at: 100)
+//
+//        if self.selectedGroup != nil {
+//            self.downloadButton.frame = CGRect(x: 20, y: UIScreen.main.bounds.height - 140, width: 50, height: 50)
+//            self.view.insertSubview(downloadButton, at: 100)
+//        }
+//        else {
+//            downloadButton.frame = CGRect(x: 20, y: UIScreen.main.bounds.height - 65, width: 50, height: 50)
+//            self.view.insertSubview(downloadButton, at: 100)
+//        }
         
         self.view.addSubview(selectedGroupLabel)
         self.selectedGroupLabel.anchor(top: self.postButton.topAnchor, left: self.hourglassButton.rightAnchor, bottom: self.postButton.bottomAnchor, right: self.postButton.leftAnchor, paddingLeft: 10, paddingRight: 20)
@@ -1048,6 +1089,10 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
         }
     }
     
+//    @objc private func handleDownload(url: Url) {
+//        print("download")
+//    }
+    
     @objc private func close() {
         self.player.pause()
         _ = navigationController?.popViewController(animated: false)
@@ -1262,17 +1307,21 @@ class EditTempVideoController: UIViewController, UIGestureRecognizerDelegate, UI
                     if exists {
                         Database.database().fetchGroupPost(groupId: selectedGroup.groupId, postId: postId, completion: { (post) in
                             // send the notification each each user in the group
-                            Database.database().fetchGroupMembers(groupId: selectedGroup.groupId, completion: { (members) in
-                                members.forEach({ (member) in
-                                    if member.uid != currentLoggedInUserId{
-                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: selectedGroup, groupPost: post) { (err) in
-                                            if err != nil {
-                                                return
+                            Database.database().numberOfMembersForGroup(groupId: selectedGroup.groupId) { (membersCount) in
+                                if membersCount < 20 {
+                                    Database.database().fetchGroupMembers(groupId: selectedGroup.groupId, completion: { (members) in
+                                        members.forEach({ (member) in
+                                            if member.uid != currentLoggedInUserId{
+                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: selectedGroup, groupPost: post) { (err) in
+                                                    if err != nil {
+                                                        return
+                                                    }
+                                                }
                                             }
-                                        }
-                                    }
-                                })
-                            }) { (_) in}
+                                        })
+                                    }) { (_) in}
+                                }
+                            }
                         })
                     }
                     else {

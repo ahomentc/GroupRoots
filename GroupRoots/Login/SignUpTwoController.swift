@@ -155,7 +155,7 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
         guard let passwordMatch = passwordMatchTextField.text else { return }
         guard let code = invitationTextField.text else { return }
         guard let email = email else { return }
-        guard let username = username else { return }
+        guard let username = username?.lowercasingFirstLetter() else { return }
         guard let name = name else { return }
         guard let bio = bio else { return }
         
@@ -211,12 +211,16 @@ class SignUpTwoController: UIViewController, UINavigationControllerDelegate {
                         Database.database().groupExists(groupId: groupId, completion: { (exists) in
                             if exists {
                                 Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                                    Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
-                                        users.forEach({ (user) in
-                                            Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinRequest, group: group) { (err) in
-                                            }
-                                        })
-                                    }) { (_) in}
+                                    Database.database().numberOfMembersForGroup(groupId: groupId) { (membersCount) in
+                                        if membersCount < 20 {
+                                            Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
+                                                users.forEach({ (user) in
+                                                    Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinRequest, group: group) { (err) in
+                                                    }
+                                                })
+                                            }) { (_) in}
+                                        }
+                                    }
                                 })
                             }
                         })

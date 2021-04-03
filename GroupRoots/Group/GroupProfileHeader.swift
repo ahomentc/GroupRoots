@@ -621,17 +621,22 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                                 Database.database().groupExists(groupId: groupId, completion: { (exists) in
                                     if exists {
                                         Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                                            Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
-                                                members.forEach({ (member) in
-                                                    if user.uid != member.uid {
-                                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
-                                                            if err != nil {
-                                                                return
+                                            Database.database().numberOfMembersForGroup(groupId: groupId) { (membersCount) in
+                                                if membersCount < 20 {
+                                                    Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
+                                                        members.forEach({ (member) in
+                                                            if user.uid != member.uid {
+                                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
+                                                                    if err != nil {
+                                                                        return
+                                                                    }
+                                                                }
                                                             }
-                                                        }
-                                                    }
-                                                })
-                                            }) { (_) in}
+                                                        })
+                                                    }) { (_) in}
+                                                }
+                                            }
+                                            
                                         })
                                     }
                                     else {
@@ -654,17 +659,21 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                         self.reloadInviteCode()
                         
                         // send the notification each each user in the group
-                        Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
-                            users.forEach({ (user) in
-                                if user.uid != currentLoggedInUserId {
-                                    Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinRequest, group: self.group!) { (err) in
-                                        if err != nil {
-                                            return
+                        Database.database().numberOfMembersForGroup(groupId: groupId) { (membersCount) in
+                            if membersCount < 20 {
+                                Database.database().fetchGroupMembers(groupId: groupId, completion: { (users) in
+                                    users.forEach({ (user) in
+                                        if user.uid != currentLoggedInUserId {
+                                            Database.database().createNotification(to: user, notificationType: NotificationType.groupJoinRequest, group: self.group!) { (err) in
+                                                if err != nil {
+                                                    return
+                                                }
+                                            }
                                         }
-                                    }
-                                }
-                            })
-                        }) { (_) in}
+                                    })
+                                }) { (_) in}
+                            }
+                        }
                     }
                 }
             }) { (err) in
@@ -730,29 +739,33 @@ class GroupProfileHeader: UICollectionViewCell, UICollectionViewDataSource, UICo
                     if exists {
                         Database.database().fetchGroup(groupId: groupId, completion: { (group) in
                             Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
-                                Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
-                                    guard let isPrivate = group.isPrivate else { return }
-                                    members.forEach({ (member) in
-                                        if user.uid != member.uid {
-                                            if isPrivate {
-                                                // send notification for subscription request to all members of group
-                                                Database.database().createNotification(to: member, notificationType: NotificationType.groupSubscribeRequest, subjectUser: user, group: group) { (err) in
-                                                    if err != nil {
-                                                        return
+                                Database.database().numberOfMembersForGroup(groupId: groupId) { (membersCount) in
+                                    if membersCount < 20 {
+                                        Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                            guard let isPrivate = group.isPrivate else { return }
+                                            members.forEach({ (member) in
+                                                if user.uid != member.uid {
+                                                    if isPrivate {
+                                                        // send notification for subscription request to all members of group
+                                                        Database.database().createNotification(to: member, notificationType: NotificationType.groupSubscribeRequest, subjectUser: user, group: group) { (err) in
+                                                            if err != nil {
+                                                                return
+                                                            }
+                                                        }
+                                                    }
+                                                    else {
+                                                        // send notification for did subscribe to all members of group
+                                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupSubscribe, subjectUser: user, group: group) { (err) in
+                                                            if err != nil {
+                                                                return
+                                                            }
+                                                        }
                                                     }
                                                 }
-                                            }
-                                            else {
-                                                // send notification for did subscribe to all members of group
-                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupSubscribe, subjectUser: user, group: group) { (err) in
-                                                    if err != nil {
-                                                        return
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    })
-                                }) { (_) in}
+                                            })
+                                        }) { (_) in}
+                                    }
+                                }
                             })
                         })
                     }

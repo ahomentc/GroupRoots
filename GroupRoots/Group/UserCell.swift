@@ -133,17 +133,21 @@ class UserCell: UICollectionViewCell {
             }
             guard let currentLoggedInUserId = Auth.auth().currentUser?.uid else { return }
             // notification that member is now in group
-            Database.database().fetchGroupMembers(groupId: self.group.groupId, completion: { (members) in
-                members.forEach({ (member) in
-                    if member.uid != currentLoggedInUserId{
-                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: self.user!, group: self.group!) { (err) in
-                            if err != nil {
-                                return
+            Database.database().numberOfMembersForGroup(groupId: self.group.groupId) { (membersCount) in
+                if membersCount < 20 {
+                    Database.database().fetchGroupMembers(groupId: self.group.groupId, completion: { (members) in
+                        members.forEach({ (member) in
+                            if member.uid != currentLoggedInUserId{
+                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: self.user!, group: self.group!) { (err) in
+                                    if err != nil {
+                                        return
+                                    }
+                                }
                             }
-                        }
-                    }
-                })
-            }) { (_) in}
+                        })
+                    }) { (_) in}
+                }
+            }
             
             // notification to refresh
             NotificationCenter.default.post(name: NSNotification.Name("updateMembers"), object: nil)

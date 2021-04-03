@@ -19,6 +19,7 @@ import SearchTextField
 import FirebaseStorage
 import YPImagePicker
 import Photos
+import StoreKit
 
 class ProfileFeedController: UICollectionViewController, UICollectionViewDelegateFlowLayout, ViewersControllerDelegate, FeedGroupCellDelegate, CreateGroupControllerDelegate, CreateSchoolGroupControllerDelegate, InviteToGroupWhenCreateControllerDelegate, EmptyFeedPostCellDelegate, CreateGroupCellDelegate, LargeImageViewControllerDelegate {
         
@@ -113,8 +114,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.isHidden = true
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
-        attributedText.append(NSMutableAttributedString(string: "Photos and videos from groups you\nfollow will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "Photos, videos, and memes from\ngroups you follow will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "You can post to a group\nwhen you're a member.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
     }()
@@ -127,8 +128,8 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         label.isHidden = true
         label.textAlignment = .center
         let attributedText = NSMutableAttributedString(string: "Welcome to GroupRoots!\n\n", attributes: [NSAttributedString.Key.font : UIFont.boldSystemFont(ofSize: 20)])
-        attributedText.append(NSMutableAttributedString(string: "Photos and videos from groups you\nfollow will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
-        attributedText.append(NSMutableAttributedString(string: "When you join a group as a member,\nyou’ll be able to post to it.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "Photos, videos, and memes from\ngroups you follow will appear here.\n\n", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
+        attributedText.append(NSMutableAttributedString(string: "You can post to a group\nwhen you're a member.", attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)]))
         label.attributedText = attributedText
         return label
     }()
@@ -663,7 +664,15 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
             self.reloadButton.isHidden = false
             self.noInternetLabel.isHidden = false
             self.noInternetBackground.isHidden = false
-        }        
+        }
+        
+        Database.database().reference().child("numTimesOpenedApp").child(currentLoggedInUserId).observeSingleEvent(of: .value) { (snapshot) in
+            if let val = snapshot.value as? Int {
+                if val == 10 {
+                    SKStoreReviewController.requestReview()
+                }
+            }
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -1485,9 +1494,22 @@ class ProfileFeedController: UICollectionViewController, UICollectionViewDelegat
         
         Database.database().isInGroup(groupId: groupPost.group.groupId, completion: { (inGroup) in
             if inGroup {
-                if let deleteAction = self.deleteAction(forPost: groupPost) {
-                    alertController.addAction(deleteAction)
-                    self.present(alertController, animated: true, completion: nil)
+                // if over 20 members in group remove the delete option for people other than the poster
+                if groupPost.user.uid != currentLoggedInUserId {
+                    Database.database().numberOfMembersForGroup(groupId: groupPost.group.groupId) { (membersCount) in
+                        if membersCount < 20 {
+                            if let deleteAction = self.deleteAction(forPost: groupPost) {
+                                alertController.addAction(deleteAction)
+                                self.present(alertController, animated: true, completion: nil)
+                            }
+                        }
+                    }
+                }
+                else {
+                    if let deleteAction = self.deleteAction(forPost: groupPost) {
+                        alertController.addAction(deleteAction)
+                        self.present(alertController, animated: true, completion: nil)
+                    }
                 }
             }
             else{

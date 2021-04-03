@@ -538,17 +538,21 @@ class NotificationCell: UICollectionViewCell {
                                 }
                                 // notification that member is now in group
                                 Database.database().fetchUser(withUID: currentLoggedInUser, completion: { (user) in
-                                    Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
-                                        members.forEach({ (member) in
-                                            if user.uid != member.uid {
-                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
-                                                    if err != nil {
-                                                        return
+                                    Database.database().numberOfMembersForGroup(groupId: group.groupId) { (membersCount) in
+                                        if membersCount < 20 {
+                                            Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
+                                                members.forEach({ (member) in
+                                                    if user.uid != member.uid {
+                                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
+                                                            if err != nil {
+                                                                return
+                                                            }
+                                                        }
                                                     }
-                                                }
-                                            }
-                                        })
-                                    }) { (_) in}
+                                                })
+                                            }) { (_) in}
+                                        }
+                                    }
                                 })
                                 
                                 self.reloadActionButton()

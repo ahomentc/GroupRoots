@@ -353,17 +353,21 @@ class GroupProfileController: HomePostCellViewController, LargeImageViewControll
                     Database.database().groupExists(groupId: group.groupId, completion: { (exists) in
                         if exists {
                             Database.database().fetchGroup(groupId: group.groupId, completion: { (group) in
-                                Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
-                                    members.forEach({ (member) in
-                                        if user.uid != member.uid {
-                                            Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
-                                                if err != nil {
-                                                    return
+                                Database.database().numberOfMembersForGroup(groupId: group.groupId) { (membersCount) in
+                                    if membersCount < 20 {
+                                        Database.database().fetchGroupMembers(groupId: group.groupId, completion: { (members) in
+                                            members.forEach({ (member) in
+                                                if user.uid != member.uid {
+                                                    Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
+                                                        if err != nil {
+                                                            return
+                                                        }
+                                                    }
                                                 }
-                                            }
-                                        }
-                                    })
-                                }) { (_) in}
+                                            })
+                                        }) { (_) in}
+                                    }
+                                }
                             })
                         }
                         else {

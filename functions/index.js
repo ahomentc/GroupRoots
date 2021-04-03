@@ -1275,7 +1275,7 @@ exports.sendInvite = functions.database.ref('/invitedContacts/{number}/{group_id
 							    	message += ' just added you to group "' + groupname.split("_-a-_").join(" ").split("_-b-_").join("'") + '"'
 							    }
 
-							    message += " on GroupRoots Beta! Download the app from: https://testflight.apple.com/join/5zCu1oG6"
+							    message += " on GroupRoots! Download the app from: https://apps.apple.com/in/app/grouproots/id1525863510"
 
 							    const textMessageFirst = {
 							        body: message,
@@ -1425,7 +1425,7 @@ exports.sendPostToInvited = functions.database.ref('/posts/{group_id}/{post_id}'
 													    if (caption !== ""){
 													    	message1 += ': "' + caption + '"'
 													    }
-														message1 += '... view more with GroupRoots: https://testflight.apple.com/join/5zCu1oG6'
+														message1 += '... view more with GroupRoots: https://apps.apple.com/in/app/grouproots/id1525863510'
 
 													    const postedMessage = {
 													        body: message1,
@@ -1461,6 +1461,148 @@ exports.sendPostToInvited = functions.database.ref('/posts/{group_id}/{post_id}'
 // whenever a user joins a group
 // get the contacts that are invited (and that haven't done STOP)
 // send them a message letting them know the user has joined: user name if available else username
+exports.sendGroupJoinToInvited = functions.database.ref('/groups/{group_id}/members/{member_id}').onCreate((snapshot, context) => {
+	// var imagesRef = functions.storage.bucket('group_post_images');
+	
+	const new_member_id = context.params.member_id;
+	const group_id = context.params.group_id;
+	const twilio = require('twilio');
+	const accountSid = functions.config().twilio.sid
+	const authToken  = functions.config().twilio.token
+	const client = new twilio(accountSid, authToken);
+	// var imageRef = imagesRef.child(group_id).child(post_id);
+	// var path = imageRef.fullPath
+
+	return snapshot.ref.root.child('/invitedContactsForGroup/' + group_id).once('value', invited_numbers => {
+
+		var sync = new DispatchGroup();
+		var token_0 = sync.enter();
+		invited_numbers.forEach(function(number_obj) {
+			var token = sync.enter();
+        	var number = number_obj.key;
+
+        	// check to see that the user hasn't said STOP
+        	snapshot.ref.root.child('/invitedContactsForGroup/' + group_id + '/' + number).once('value', invited_number_snapshot => {
+        		// if the number has value of false, then it has unsubscribed from recieving messages
+        		if (invited_number_snapshot !== null && invited_number_snapshot.val() !== null && invited_number_snapshot.val().toString() === "false") {
+        			// return null;
+        		}
+        		else {
+        			// get the number for the new_member_id if any, if matches existing number then don't send
+        			snapshot.ref.root.child('/users/' + new_member_id + '/phoneNumber').once('value', new_member_phone_snapshot => {
+	        			var new_member_phone = new_member_phone_snapshot.val();
+						if(new_member_phone_snapshot === null || new_member_phone_snapshot.val() === null){
+							new_member_phone = "+10000000000"
+						}
+						if (new_member_phone !== number) {
+							// get the number that was used to send the first message
+				        	snapshot.ref.root.child('/invitedContacts/' + number + '/' + group_id + '/twilioNumber').once('value', twilio_number_snapshot => {
+				        		if (twilio_number_snapshot !== null && twilio_number_snapshot.val() !== null && twilio_number_snapshot.val() !== "0") {
+									let twilio_number = twilio_number_snapshot.val().toString();
+
+
+									snapshot.ref.root.child('/users/' + new_member_id + '/name').once('value', name_snapshot => {
+										var name = "";
+										if (name_snapshot !== null && name_snapshot.val() !== null) {
+											name = name_snapshot.val().toString();
+										}
+
+										snapshot.ref.root.child('/users/' + new_member_id + '/username').once('value', username_snapshot => {
+											var username = "";
+											if (username_snapshot !== null && username_snapshot.val() !== null) {
+												username = username_snapshot.val().toString();
+											}
+											snapshot.ref.root.child('/groups/' + group_id + '/groupname').once('value', groupname_snapshot => {
+												var groupname = "";
+												if (groupname_snapshot !== null && groupname_snapshot.val() !== null) {
+													groupname = groupname_snapshot.val().toString();
+												}
+
+												if ( !validE164(number) ) {
+											        throw new Error('number must be E164 format!')
+											    }
+
+											    // create the message
+											    var message1 = ""
+
+											    if (name === "") { message1 += username }
+											    else { message1 += name }
+
+											    message1 += " has joined "
+											    
+											    if (groupname === "") { message1 += 'the group' }
+											    else { message1 += groupname.split("_-a-_").join(" ").split("_-b-_").join("'") }
+
+												message1 += '... join with GroupRoots: https://apps.apple.com/us/app/id1525863510'
+
+											    const postedMessage = {
+											        body: message1,
+											        to: number,  // Text to this number
+											        from: twilio_number // From a valid Twilio number
+											    }
+											    client.messages.create(postedMessage)
+											    sync.leave(token)
+											}).catch(() => {return null});
+										}).catch(() => {return null});
+									}).catch(() => {return null});
+								}
+								else {
+									// return null;
+								}
+							}).catch(() => {return null});
+						}
+        			}).catch(() => {return null});
+        		}
+        	}).catch(() => {return null});        	
+		})
+		sync.leave(token_0)
+		sync.notify(function() {
+			return null;
+		})
+	}).catch(() => {return null});
+});
+
+// https://us-central1-grouproots-1c51f.cloudfunctions.net/send_patch_message
+exports.send_patch_message = functions.https.onRequest((req, res) => {
+	// var imagesRef = functions.storage.bucket('group_post_images');
+	
+	const group_id = "-MXIaMou9mDEXYHalqWy"
+	const twilio = require('twilio');
+	const accountSid = functions.config().twilio.sid
+	const authToken  = functions.config().twilio.token
+	const client = new twilio(accountSid, authToken);
+	// var imageRef = imagesRef.child(group_id).child(post_id);
+	// var path = imageRef.fullPath
+
+	return admin.database().ref('/invitedContactsForGroup/' + group_id).once('value', invited_numbers => {
+
+		var sync = new DispatchGroup();
+		var token_0 = sync.enter();
+		invited_numbers.forEach(function(number_obj) {
+			var token = sync.enter();
+			var number = number_obj.key;
+
+			if ( !validE164(number) ) {
+		   		throw new Error('number must be E164 format!')
+		    }
+
+			var message1 = 'Someone has joined the group "meme stream v 69"... join with GroupRoots: https://apps.apple.com/us/app/id1525863510'
+
+		    const postedMessage = {
+		        body: message1,
+		        to: number,  // Text to this number
+		        from: "+13232501061" // From a valid Twilio number
+		    }
+		    client.messages.create(postedMessage)
+		    sync.leave(token)      	
+		})
+		sync.leave(token_0)
+		sync.notify(function() {
+			return null;
+		})
+	}).catch(() => {return null});
+});
+
 exports.sendGroupJoinToInvited = functions.database.ref('/groups/{group_id}/members/{member_id}').onCreate((snapshot, context) => {
 	// var imagesRef = functions.storage.bucket('group_post_images');
 	

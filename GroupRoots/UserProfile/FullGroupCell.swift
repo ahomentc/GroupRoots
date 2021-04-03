@@ -652,29 +652,33 @@ class FullGroupCell: UICollectionViewCell, UICollectionViewDataSource, UICollect
                 if exists {
                     Database.database().fetchGroup(groupId: groupId, completion: { (group) in
                         Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
-                            Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
-                                guard let isPrivate = group.isPrivate else { return }
-                                members.forEach({ (member) in
-                                    if user.uid != member.uid {
-                                        if isPrivate {
-                                            // send notification for subscription request to all members of group
-                                            Database.database().createNotification(to: member, notificationType: NotificationType.groupSubscribeRequest, subjectUser: user, group: group) { (err) in
-                                                if err != nil {
-                                                    return
+                            Database.database().numberOfMembersForGroup(groupId: groupId) { (membersCount) in
+                                if membersCount < 20 {
+                                    Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                        guard let isPrivate = group.isPrivate else { return }
+                                        members.forEach({ (member) in
+                                            if user.uid != member.uid {
+                                                if isPrivate {
+                                                    // send notification for subscription request to all members of group
+                                                    Database.database().createNotification(to: member, notificationType: NotificationType.groupSubscribeRequest, subjectUser: user, group: group) { (err) in
+                                                        if err != nil {
+                                                            return
+                                                        }
+                                                    }
+                                                }
+                                                else {
+                                                    // send notification for did subscribe to all members of group
+                                                    Database.database().createNotification(to: member, notificationType: NotificationType.newGroupSubscribe, subjectUser: user, group: group) { (err) in
+                                                        if err != nil {
+                                                            return
+                                                        }
+                                                    }
                                                 }
                                             }
-                                        }
-                                        else {
-                                            // send notification for did subscribe to all members of group
-                                            Database.database().createNotification(to: member, notificationType: NotificationType.newGroupSubscribe, subjectUser: user, group: group) { (err) in
-                                                if err != nil {
-                                                    return
-                                                }
-                                            }
-                                        }
-                                    }
-                                })
-                            }) { (_) in}
+                                        })
+                                    }) { (_) in}
+                                }
+                            }
                         })
                     })
                 }

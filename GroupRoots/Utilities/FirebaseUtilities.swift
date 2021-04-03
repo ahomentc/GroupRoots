@@ -1371,8 +1371,31 @@ extension Database {
                 completion(err)
                 return
             }
+            Database.database().reference().child("numTimesOpenedApp").child(currentLoggedInUserId).observeSingleEvent(of: .value) { (snapshot) in
+                if let val = snapshot.value as? Int {
+                    let values = [currentLoggedInUserId: val + 1]
+                    Database.database().reference().child("numTimesOpenedApp").updateChildValues(values) { (err, ref) in
+                        if let err = err {
+                            completion(err)
+                            return
+                        }
+                        completion(nil)
+                    }
+                }
+                else {
+                    let values = [currentLoggedInUserId: 1]
+                    Database.database().reference().child("numTimesOpenedApp").updateChildValues(values) { (err, ref) in
+                        if let err = err {
+                            completion(err)
+                            return
+                        }
+                        completion(nil)
+                    }
+                }
+            }
             completion(nil)
         }
+        
     }
     
     func userPosted(completion: @escaping (Error?) -> ()) {
@@ -1444,17 +1467,21 @@ extension Database {
                             if !exists {
                                 // send notication for name change to all group members, this can be done asynchronously
                                 Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
-                                    Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
-                                        members.forEach({ (member) in
-                                            if user.uid != member.uid {
-                                                Database.database().createNotification(to: member, notificationType: NotificationType.groupProfileNameEdit, subjectUser: user, group: group) { (err) in
-                                                    if err != nil {
-                                                        return
+                                    Database.database().numberOfMembersForGroup(groupId: groupId) { (membersCount) in
+                                        if membersCount < 20 {
+                                            Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                                members.forEach({ (member) in
+                                                    if user.uid != member.uid {
+                                                        Database.database().createNotification(to: member, notificationType: NotificationType.groupProfileNameEdit, subjectUser: user, group: group) { (err) in
+                                                            if err != nil {
+                                                                return
+                                                            }
+                                                        }
                                                     }
-                                                }
-                                            }
-                                        })
-                                    }) { (_) in}
+                                                })
+                                            }) { (_) in}
+                                        }
+                                    }
                                 })
                                 
                                 // update the group and groupnames in database
@@ -1510,17 +1537,21 @@ extension Database {
                     if old_groupname != "" {
                         // send notication for name change to all group members, this can be done asynchronously
                         Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
-                           Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
-                               members.forEach({ (member) in
-                                   if user.uid != member.uid {
-                                       Database.database().createNotification(to: member, notificationType: NotificationType.groupProfileNameEdit, subjectUser: user, group: group) { (err) in
-                                           if err != nil {
-                                               return
-                                           }
-                                       }
-                                   }
-                               })
-                           }) { (_) in}
+                            Database.database().numberOfMembersForGroup(groupId: groupId) { (membersCount) in
+                                if membersCount < 20 {
+                                    Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                        members.forEach({ (member) in
+                                            if user.uid != member.uid {
+                                                Database.database().createNotification(to: member, notificationType: NotificationType.groupProfileNameEdit, subjectUser: user, group: group) { (err) in
+                                                    if err != nil {
+                                                        return
+                                                    }
+                                                }
+                                            }
+                                        })
+                                    }) { (_) in}
+                                }
+                            }
                         })
                         
                         updates_sync.enter()
@@ -1576,17 +1607,21 @@ extension Database {
                 if changedPrivacy {
                     // send notification of privacy change to all members of group
                     Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
-                        Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
-                            members.forEach({ (member) in
-                                if user.uid != member.uid {
-                                    Database.database().createNotification(to: member, notificationType: NotificationType.groupPrivacyChange, subjectUser: user, group: group) { (err) in
-                                        if err != nil {
-                                            return
+                        Database.database().numberOfMembersForGroup(groupId: groupId) { (membersCount) in
+                            if membersCount < 20 {
+                                Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                    members.forEach({ (member) in
+                                        if user.uid != member.uid {
+                                            Database.database().createNotification(to: member, notificationType: NotificationType.groupPrivacyChange, subjectUser: user, group: group) { (err) in
+                                                if err != nil {
+                                                    return
+                                                }
+                                            }
                                         }
-                                    }
-                                }
-                            })
-                        }) { (_) in}
+                                    })
+                                }) { (_) in}
+                            }
+                        }
                     })
                     updates_sync.enter()
                     guard let isPrivate = isPrivate else { return }
@@ -1605,17 +1640,21 @@ extension Database {
                 if profileImageUrl != "" {
                     // send notication for name change to all group members, this can be done asynchronously
                    Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
-                       Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
-                           members.forEach({ (member) in
-                               if user.uid != member.uid {
-                                   Database.database().createNotification(to: member, notificationType: NotificationType.groupProfilePicEdit, subjectUser: user, group: group) { (err) in
-                                       if err != nil {
-                                           return
-                                       }
-                                   }
-                               }
-                           })
-                       }) { (_) in}
+                        Database.database().numberOfMembersForGroup(groupId: groupId) { (membersCount) in
+                            if membersCount < 20 {
+                                Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                    members.forEach({ (member) in
+                                        if user.uid != member.uid {
+                                            Database.database().createNotification(to: member, notificationType: NotificationType.groupProfilePicEdit, subjectUser: user, group: group) { (err) in
+                                                if err != nil {
+                                                    return
+                                                }
+                                            }
+                                        }
+                                    })
+                                }) { (_) in}
+                            }
+                        }
                    })
                     
                     updates_sync.enter()
@@ -1725,7 +1764,7 @@ extension Database {
     
     func fetchGroupMembers(groupId: String, completion: @escaping ([User]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("groups").child(groupId).child("members")
-        ref.queryOrderedByKey().observeSingleEvent(of: .value, with: { (snapshot) in
+        ref.queryOrderedByKey().queryLimited(toLast: 100).observeSingleEvent(of: .value, with: { (snapshot) in
             var users = [User]()
             let sync = DispatchGroup()
             for child in snapshot.children.allObjects as! [DataSnapshot] {
@@ -2663,17 +2702,21 @@ extension Database {
                             // notification that member is now in group
                             Database.database().fetchUser(withUID: currentLoggedInUserId, completion: { (user) in
                                 Database.database().fetchGroup(groupId: groupId, completion: { (group) in
-                                    Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
-                                        members.forEach({ (member) in
-                                            if member.uid != currentLoggedInUserId {
-                                                Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
-                                                    if err != nil {
-                                                        return
+                                    Database.database().numberOfMembersForGroup(groupId: groupId) { (membersCount) in
+                                        if membersCount < 20 {
+                                            Database.database().fetchGroupMembers(groupId: groupId, completion: { (members) in
+                                                members.forEach({ (member) in
+                                                    if member.uid != currentLoggedInUserId {
+                                                        Database.database().createNotification(to: member, notificationType: NotificationType.newGroupJoin, subjectUser: user, group: group) { (err) in
+                                                            if err != nil {
+                                                                return
+                                                            }
+                                                        }
                                                     }
-                                                }
-                                            }
-                                        })
-                                    }) { (_) in}
+                                                })
+                                            }) { (_) in}
+                                        }
+                                    }
                                 })
                             })
                             

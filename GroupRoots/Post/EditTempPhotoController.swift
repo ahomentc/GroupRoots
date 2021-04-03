@@ -1919,17 +1919,21 @@ class EditTempPhotoController: UIViewController, UIGestureRecognizerDelegate, UI
                 if exists {
                     Database.database().fetchGroupPost(groupId: selectedGroup.groupId, postId: postId, completion: { (post) in
                         // send the notification each each user in the group
-                        Database.database().fetchGroupMembers(groupId: selectedGroup.groupId, completion: { (members) in
-                            members.forEach({ (member) in
-                                if member.uid != currentLoggedInUserId{
-                                    Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: selectedGroup, groupPost: post) { (err) in
-                                        if err != nil {
-                                            return
+                        Database.database().numberOfMembersForGroup(groupId: selectedGroup.groupId) { (membersCount) in
+                            if membersCount < 20 {
+                                Database.database().fetchGroupMembers(groupId: selectedGroup.groupId, completion: { (members) in
+                                    members.forEach({ (member) in
+                                        if member.uid != currentLoggedInUserId{
+                                            Database.database().createNotification(to: member, notificationType: NotificationType.newGroupPost, group: selectedGroup, groupPost: post) { (err) in
+                                                if err != nil {
+                                                    return
+                                                }
+                                            }
                                         }
-                                    }
-                                }
-                            })
-                        }) { (_) in}
+                                    })
+                                }) { (_) in}
+                            }
+                        }
                     })
                 }
                 else {

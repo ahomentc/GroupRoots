@@ -245,7 +245,7 @@ class SignUpAfterPhoneController: UIViewController, UINavigationControllerDelega
     
     @objc private func handleNext() {
         guard let email = emailTextField.text else { return }
-        guard let username = usernameTextField.text else { return }
+        guard let username = usernameTextField.text?.lowercasingFirstLetter() else { return }
         guard let name = nameTextField.text else { return }
         guard let bio = bioTextField.text else { return }
         guard let uid = uid else { return }

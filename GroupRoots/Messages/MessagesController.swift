@@ -462,15 +462,19 @@ extension MessagesController: MessageInputAccessoryViewDelegate {
 //            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
             
             // send the notification each each user in the group
-            Database.database().fetchGroupMembers(groupId: self.groupPost!.group.groupId, completion: { (users) in
-                users.forEach({ (user) in
-                    Database.database().createNotification(to: user, notificationType: NotificationType.groupPostComment, group: self.groupPost!.group, groupPost: self.groupPost!, message: comment) { (err) in
-                        if err != nil {
-                            return
-                        }
-                    }
-                })
-            }) { (_) in}
+            Database.database().numberOfMembersForGroup(groupId: self.groupPost!.group.groupId) { (membersCount) in
+                if membersCount < 50 {
+                    Database.database().fetchGroupMembers(groupId: self.groupPost!.group.groupId, completion: { (users) in
+                        users.forEach({ (user) in
+                            Database.database().createNotification(to: user, notificationType: NotificationType.groupPostComment, group: self.groupPost!.group, groupPost: self.groupPost!, message: comment) { (err) in
+                                if err != nil {
+                                    return
+                                }
+                            }
+                        })
+                    }) { (_) in}
+                }
+            }
             self.messageInputAccessoryView.clearCommentTextField()
 //            self.fetchComments()
         }
